@@ -1,0 +1,828 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Academic AI Advisor</title>
+
+<style>
+body {
+  font-family: Arial, sans-serif;
+  background: #f5f7fb;
+  margin: 0;
+  color: #172033;
+}
+
+.container {
+  max-width: 900px;
+  margin: 40px auto;
+  padding: 20px;
+}
+
+.card {
+  background: white;
+  border-radius: 16px;
+  padding: 22px;
+  margin-bottom: 20px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.07);
+  border: 1px solid #e6eaf2;
+}
+
+h1 { margin-bottom: 6px; }
+
+.subtitle {
+  color: #667085;
+  margin-top: 0;
+}
+
+.major-select {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin: 16px 0;
+  padding: 14px;
+  border: 1px solid #e6eaf2;
+  border-radius: 12px;
+  background: #f8fbff;
+}
+
+.major-select label {
+  font-weight: bold;
+  cursor: pointer;
+}
+
+textarea {
+  width: 100%;
+  min-height: 120px;
+  padding: 14px;
+  border-radius: 12px;
+  border: 1px solid #d7deea;
+  font-size: 16px;
+  resize: vertical;
+  box-sizing: border-box;
+}
+
+button {
+  margin-top: 12px;
+  padding: 12px 18px;
+  border: none;
+  border-radius: 12px;
+  background: #2563eb;
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+button:hover { background: #1d4ed8; }
+
+.answer {
+  line-height: 1.65;
+  white-space: pre-wrap;
+  font-size: 16px;
+}
+
+.meta {
+  margin-top: 14px;
+  padding: 12px;
+  background: #f8fbff;
+  border-radius: 12px;
+  border: 1px solid #e6eaf2;
+  color: #667085;
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+.warning {
+  color: #b42318;
+  font-weight: bold;
+}
+
+.perf-bar-bg {
+  background: #e6eaf2;
+  border-radius: 8px;
+  height: 16px;
+  margin-top: 6px;
+  overflow: hidden;
+}
+
+.perf-bar {
+  background: #2563eb;
+  height: 16px;
+  width: 0%;
+  border-radius: 8px;
+  transition: width 0.25s ease;
+}
+
+.graph-link {
+  display: inline-block;
+  padding: 10px 16px;
+  background: #334155;
+  color: white;
+  text-decoration: none;
+  border-radius: 12px;
+  font-weight: bold;
+}
+
+.graph-link:hover {
+  background: #1d4ed8;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+  <h1>Academic FAQ Advisor</h1>
+  <p class="subtitle"></p>
+
+<div style="margin: 16px 0;">
+  <a href="progress_graph.html" target="_blank" class="graph-link">
+    Open Academic Progress Graph
+  </a>
+</div>
+
+  <div class="card">
+    <h3>Select Major</h3>
+
+    <div class="major-select">
+      <label><input type="radio" name="major" value="CS" checked> Computer Science</label>
+      <label><input type="radio" name="major" value="CIS"> CIS</label>
+      <label><input type="radio" name="major" value="CNT"> CNT</label>
+    </div>
+
+    <h3>Ask a question</h3>
+    <textarea id="question" placeholder="Example: Can I take MAT 302 before MAT 301?"></textarea>
+
+    <button onclick="answerQuestion()">Ask</button>
+  </div>
+
+  <div class="card">
+    <h3>Answer</h3>
+    <div id="answer" class="answer">Waiting for a question...</div>
+
+    <div id="meta" class="meta">Match details will appear here.</div>
+
+    <div class="meta">
+      <strong>Performance</strong>
+      <div id="perfText">No measurement yet.</div>
+
+      <div style="margin-top:10px;">
+        <div>Response time</div>
+        <div class="perf-bar-bg">
+          <div id="timeBar" class="perf-bar"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const FAQ_PATHS = {
+  CS: "../docs/faq_cs.txt",
+  CIS: "../docs/faq_cis.txt",
+  CNT: "../docs/faq_cnt.txt"
+};
+
+const MAJOR_NAMES = {
+  CS: "Computer Science",
+  CIS: "Computer Information Systems",
+  CNT: "Computer Network Technology"
+};
+
+const FALLBACK_URL = "http://127.0.0.1:8001/fallback-ask";
+const SIMILARITY_THRESHOLD = 0.48;
+
+let faqCache = {};
+
+const PREREQ_MAP = {
+  CS: {
+    "CSC 111": ["CSC 101", "MAT 206"],
+    "CSC 211": ["CSC 111"],
+    "CSC 215": ["CSC 111"],
+    "CSC 231": ["CSC 111", "MAT 301"],
+    "CSC 331": ["CSC 211", "CSC 231"],
+    "CSC 350": ["CSC 211"],
+    "MAT 301": ["MAT 206"],
+    "MAT 302": ["MAT 301"]
+  },
+  CIS: {
+    "CSC 210": ["CSC 110 or CSC 111"],
+    "CIS 345": ["CSC 110 or CSC 111"],
+    "CIS 385": ["CSC 110 or CSC 111"],
+    "CIS 395": ["CSC 110 or CSC 111"],
+    "CIS 440": ["CSC 110 or CSC 111"],
+    "CIS 485": ["CSC 210", "CIS 385"],
+    "CIS 495": ["CIS 395"]
+  },
+  CNT: {
+    "CIS 165": ["CSC 101"],
+    "CIS 255": ["CIS 165"],
+    "CIS 345": ["CSC 110 or CSC 111"],
+    "CIS 445": ["CIS 345"],
+    "CIS 455": ["CIS 345"],
+    "CIS 440": ["CSC 110 or CSC 111"]
+  }
+};
+
+const STOPWORDS = new Set([
+  "i", "am", "a", "an", "the", "for", "to", "of", "in", "on", "my",
+  "what", "which", "do", "does", "are", "is", "before", "take",
+  "taking", "need", "must", "have", "has", "class", "classes",
+  "course", "courses", "major", "student", "as", "be", "can",
+  "used", "instead", "please", "tell", "me", "about", "should"
+]);
+
+const SYNONYMS = [
+  [/prereqs?/g, "prerequisites"],
+  [/pre reqs?/g, "prerequisites"],
+  [/pre\-reqs?/g, "prerequisites"],
+  [/requirements/g, "required"],
+  [/requirement/g, "required"],
+  [/need to take/g, "required"],
+  [/have to take/g, "required"],
+  [/prior to/g, "before"],
+  [/previously/g, "before"],
+  [/class/g, "course"],
+  [/classes/g, "courses"],
+  [/units/g, "credits"],
+  [/worth/g, "credits"],
+  [/substitute/g, "alternative"],
+  [/replacement/g, "alternative"],
+  [/replace/g, "alternative"]
+];
+
+const COURSE_ALIASES = {
+  "principles in information technology and computation": "CSC 101",
+  "intro to programming": "CSC 111",
+  "introduction to programming": "CSC 111",
+  "advanced programming": "CSC 211",
+  "advanced programming techniques": "CSC 211",
+  "fundamentals of computer systems": "CSC 215",
+  "computer systems": "CSC 215",
+  "discrete structures": "CSC 231",
+  "discrete structures and applications": "CSC 231",
+  "data structures": "CSC 331",
+  "software development": "CSC 350",
+  "precalculus": "MAT 206",
+  "calculus i": "MAT 301",
+  "calculus 1": "MAT 301",
+  "analytic geometry and calculus i": "MAT 301",
+  "calculus ii": "MAT 302",
+  "calculus 2": "MAT 302",
+  "analytic geometry and calculus ii": "MAT 302",
+
+  "accounting principles": "ACC 122",
+  "accounting principles i": "ACC 122",
+  "introduction to business": "BUS 104",
+  "computer programming i": "CSC 110",
+  "computer programming 1": "CSC 110",
+  "computer programming ii": "CSC 210",
+  "computer programming 2": "CSC 210",
+  "telecommunication network i": "CIS 345",
+  "telecommunication network 1": "CIS 345",
+  "web programming i": "CIS 385",
+  "web programming 1": "CIS 385",
+  "database system i": "CIS 395",
+  "database system 1": "CIS 395",
+  "unix": "CIS 440",
+  "web programming ii": "CIS 485",
+  "web programming 2": "CIS 485",
+  "database system ii": "CIS 495",
+  "database system 2": "CIS 495",
+  "general physics": "PHY 110",
+
+  "introduction to operating systems": "CIS 165",
+  "operating systems": "CIS 165",
+  "computer software": "CIS 255",
+  "telecommunication network ii": "CIS 445",
+  "telecommunication network 2": "CIS 445",
+  "lan": "CIS 445",
+  "network security": "CIS 455"
+};
+
+function normalize(text) {
+  let t = text.toLowerCase();
+
+  for (const [pattern, replacement] of SYNONYMS) {
+    t = t.replace(pattern, replacement);
+  }
+
+  for (const alias in COURSE_ALIASES) {
+    if (t.includes(alias)) {
+      t += " " + COURSE_ALIASES[alias].toLowerCase();
+    }
+  }
+
+  return t
+    .replace(/([a-z]{3})(\d{3})/gi, "$1 $2")
+    .replace(/[^a-z0-9\s]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function tokenize(text) {
+  return normalize(text)
+    .split(" ")
+    .filter(t => t && !STOPWORDS.has(t));
+}
+
+function extractCourseCodes(text) {
+  const normalized = normalize(text).toUpperCase();
+  const matches = normalized.match(/\b[A-Z]{3}\s?\d{3}[A-Z]?\b/g);
+  if (!matches) return [];
+  return [...new Set(matches.map(m => m.replace(/\s+/g, " ")))];
+}
+
+function detectIntent(text) {
+  const q = normalize(text);
+
+  if (
+    q.includes("can i take") &&
+    (q.includes("before") || q.includes("after") || q.includes("without"))
+  ) return "directional prerequisite check";
+
+  if (
+    q.includes("prerequisite") ||
+    q.includes("before") ||
+    q.includes("in order to take")
+  ) return "prerequisites";
+
+  if (q.includes("credit") || q.includes("credits")) return "credits";
+
+  if (
+    q.includes("alternative") ||
+    q.includes("instead") ||
+    q.includes("replace")
+  ) return "alternatives";
+
+  if (
+    q.includes("title") ||
+    q.includes("what is") ||
+    q.includes("what course")
+  ) return "course title";
+
+  if (
+    q.includes("required") ||
+    q.includes("part of my major") ||
+    q.includes("program requirements") ||
+    q.includes("courses required") ||
+    q.includes("classes do i need")
+  ) return "major requirement";
+
+  if (
+    q.includes("next") ||
+    q.includes("what can i take") ||
+    q.includes("eligible")
+  ) return "next/eligibility";
+
+  return "general";
+}
+
+function prereqListFor(major, course) {
+  return (PREREQ_MAP[major] && PREREQ_MAP[major][course]) ? PREREQ_MAP[major][course] : [];
+}
+
+function prereqText(list) {
+  if (!list.length) return "no prerequisites";
+  if (list.length === 1) return list[0];
+  if (list.length === 2) return `${list[0]} and ${list[1]}`;
+  return list.slice(0, -1).join(", ") + ", and " + list[list.length - 1];
+}
+
+function prereqContains(prereqList, course) {
+  return prereqList.some(p => {
+    if (p === course) return true;
+    const parts = p.split(/\s+or\s+/i).map(x => x.trim());
+    return parts.includes(course);
+  });
+}
+
+function answerDirectionalCourseQuestion(question, major) {
+  const q = normalize(question);
+  const codes = extractCourseCodes(question);
+  const majorName = MAJOR_NAMES[major] || major;
+
+  if (codes.length < 2) return null;
+
+  const first = codes[0];
+  const second = codes[1];
+
+  if (q.includes("can i take") && q.includes("before")) {
+    const target = first;
+    const other = second;
+
+    const targetPrereqs = prereqListFor(major, target);
+    const otherPrereqs = prereqListFor(major, other);
+
+    if (prereqContains(targetPrereqs, other)) {
+      return {
+        answer: `No. As a ${majorName} student, you should complete ${other} before taking ${target}, because ${other} is a prerequisite for ${target}.`,
+        intent: "directional prerequisite check",
+        about: `${target}, ${other}`,
+        confidence: 1.0,
+        source: "deterministic prerequisite rule"
+      };
+    }
+
+    if (prereqContains(otherPrereqs, target)) {
+      return {
+        answer: `Yes. Based on the listed prerequisites for the ${majorName} program, ${target} is a prerequisite for ${other}, so ${target} should normally be taken before ${other}.`,
+        intent: "directional prerequisite check",
+        about: `${target}, ${other}`,
+        confidence: 1.0,
+        source: "deterministic prerequisite rule"
+      };
+    }
+
+    return {
+      answer: `The listed prerequisites for the ${majorName} program do not show that ${other} is required before ${target}. However, confirm with an advisor if there are placement, scheduling, or permission rules not shown in the FAQ.`,
+      intent: "directional prerequisite check",
+      about: `${target}, ${other}`,
+      confidence: 0.85,
+      source: "deterministic prerequisite rule"
+    };
+  }
+
+  if (q.includes("can i take") && q.includes("after")) {
+    const target = first;
+    const completed = second;
+
+    const targetPrereqs = prereqListFor(major, target);
+
+    if (prereqContains(targetPrereqs, completed)) {
+      return {
+        answer: `Yes. As a ${majorName} student, ${completed} satisfies the prerequisite requirement for ${target}.`,
+        intent: "directional prerequisite check",
+        about: `${target}, ${completed}`,
+        confidence: 1.0,
+        source: "deterministic prerequisite rule"
+      };
+    }
+
+    if (!targetPrereqs.length) {
+      return {
+        answer: `Yes. As a ${majorName} student, ${target} has no listed prerequisites.`,
+        intent: "directional prerequisite check",
+        about: `${target}, ${completed}`,
+        confidence: 1.0,
+        source: "deterministic prerequisite rule"
+      };
+    }
+
+    return {
+      answer: `Not necessarily. As a ${majorName} student, the listed prerequisite(s) for ${target} are ${prereqText(targetPrereqs)}. ${completed} alone does not clearly satisfy that full prerequisite requirement.`,
+      intent: "directional prerequisite check",
+      about: `${target}, ${completed}`,
+      confidence: 0.9,
+      source: "deterministic prerequisite rule"
+    };
+  }
+
+  if (q.includes("can i take") && q.includes("without")) {
+    const target = first;
+    const missing = second;
+
+    const targetPrereqs = prereqListFor(major, target);
+
+    if (prereqContains(targetPrereqs, missing)) {
+      return {
+        answer: `No. As a ${majorName} student, ${missing} is a listed prerequisite for ${target}, so you should complete ${missing} before taking ${target}.`,
+        intent: "directional prerequisite check",
+        about: `${target}, ${missing}`,
+        confidence: 1.0,
+        source: "deterministic prerequisite rule"
+      };
+    }
+
+    return {
+      answer: `The listed prerequisites for ${target} do not show ${missing} as required. The listed prerequisite(s) for ${target} are ${prereqText(targetPrereqs)}.`,
+      intent: "directional prerequisite check",
+      about: `${target}, ${missing}`,
+      confidence: 0.9,
+      source: "deterministic prerequisite rule"
+    };
+  }
+
+  return null;
+}
+
+function parseFAQ(text) {
+  const pairs = [];
+  const blocks = text.split(/\n(?=Q:\s)/g);
+
+  for (const block of blocks) {
+    const qMatch = block.match(/Q:\s*([\s\S]*?)\nA:\s*/);
+    const aMatch = block.match(/A:\s*([\s\S]*)/);
+
+    if (!qMatch || !aMatch) continue;
+
+    const question = qMatch[1].trim();
+    const answer = aMatch[1].trim();
+
+    if (question && answer) {
+      pairs.push({
+        question,
+        answer,
+        tokens: tokenize(question),
+        codes: extractCourseCodes(question),
+        intent: detectIntent(question)
+      });
+    }
+  }
+
+  return pairs;
+}
+
+async function loadFAQ(major) {
+  if (faqCache[major]) return faqCache[major];
+
+  const res = await fetch(FAQ_PATHS[major]);
+  if (!res.ok) throw new Error(`Could not load ${FAQ_PATHS[major]}`);
+
+  const txt = await res.text();
+  faqCache[major] = parseFAQ(txt);
+  return faqCache[major];
+}
+
+function tf(tokens) {
+  const map = {};
+  tokens.forEach(t => map[t] = (map[t] || 0) + 1);
+  return map;
+}
+
+function cosine(a, b) {
+  let dot = 0, na = 0, nb = 0;
+
+  for (let k in a) {
+    na += a[k] * a[k];
+    if (b[k]) dot += a[k] * b[k];
+  }
+
+  for (let k in b) nb += b[k] * b[k];
+
+  return na && nb ? dot / (Math.sqrt(na) * Math.sqrt(nb)) : 0;
+}
+
+function charNgrams(text, n = 3) {
+  const s = normalize(text).replace(/\s+/g, "");
+  const grams = new Set();
+
+  for (let i = 0; i <= s.length - n; i++) {
+    grams.add(s.slice(i, i + n));
+  }
+
+  return grams;
+}
+
+function jaccard(a, b) {
+  if (!a.size || !b.size) return 0;
+
+  let intersection = 0;
+  for (const item of a) {
+    if (b.has(item)) intersection++;
+  }
+
+  const union = a.size + b.size - intersection;
+  return intersection / union;
+}
+
+function scoreMatch(userQuestion, item, userCodes, userIntent) {
+  const userTokens = tokenize(userQuestion);
+  const v1 = tf(userTokens);
+  const v2 = tf(item.tokens);
+
+  const cosineScore = cosine(v1, v2);
+  const charScore = jaccard(charNgrams(userQuestion), charNgrams(item.question));
+
+  const courseMatch =
+    userCodes.length > 0 &&
+    userCodes.some(code => item.codes.includes(code));
+
+  const intentMatch =
+    userIntent === item.intent ||
+    userIntent === "general" ||
+    item.intent === "general";
+
+  let score = 0;
+  score += cosineScore * 0.50;
+  score += charScore * 0.12;
+
+  if (courseMatch) score += 0.28;
+  if (intentMatch) score += 0.18;
+
+  if (userCodes.length && !courseMatch) score -= 0.25;
+
+  if (
+    userIntent !== "general" &&
+    item.intent !== "general" &&
+    userIntent !== item.intent
+  ) {
+    score -= 0.18;
+  }
+
+  return Math.max(0, Math.min(score, 1));
+}
+
+function narrowFAQ(faq, userCodes, userIntent) {
+  let narrowed = faq;
+
+  if (userCodes.length > 0) {
+    const courseFiltered = faq.filter(item =>
+      userCodes.some(code => item.codes.includes(code))
+    );
+
+    if (courseFiltered.length > 0) narrowed = courseFiltered;
+  }
+
+  if (userIntent !== "general" && userIntent !== "directional prerequisite check") {
+    const intentFiltered = narrowed.filter(item =>
+      item.intent === userIntent || item.intent === "general"
+    );
+
+    if (intentFiltered.length > 0) narrowed = intentFiltered;
+  }
+
+  return narrowed;
+}
+
+function findBestMatches(userQuestion, faq, limit = 3) {
+  const userCodes = extractCourseCodes(userQuestion);
+  const userIntent = detectIntent(userQuestion);
+
+  const narrowedFAQ = narrowFAQ(faq, userCodes, userIntent);
+
+  const scored = narrowedFAQ.map(item => ({
+    item,
+    score: scoreMatch(userQuestion, item, userCodes, userIntent)
+  }));
+
+  scored.sort((a, b) => b.score - a.score);
+
+  return {
+    matches: scored.slice(0, limit),
+    userCodes,
+    userIntent,
+    searchedCount: narrowedFAQ.length,
+    totalCount: faq.length
+  };
+}
+
+function updatePerformance(startTime, endTime, mode, searchedCount = null) {
+  const elapsed = endTime - startTime;
+  const maxMs = 3000;
+  const percent = Math.min((elapsed / maxMs) * 100, 100);
+
+  document.getElementById("timeBar").style.width = percent + "%";
+
+  document.getElementById("perfText").innerHTML = `
+    Mode: <strong>${escapeHtml(mode)}</strong><br>
+    Response time: <strong>${elapsed.toFixed(1)} ms</strong><br>
+    FAQ entries searched: <strong>${searchedCount ?? "N/A"}</strong><br>
+    Approx. compute cost: <strong>${mode.includes("Ollama") ? "High" : "Very low"}</strong>
+  `;
+}
+
+async function askOllamaFallback(q, majorName, result) {
+  const response = await fetch(FALLBACK_URL, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      user_question: q,
+      major: majorName,
+      detected_courses: result.userCodes,
+      detected_intent: result.userIntent,
+      candidates: result.matches.map(m => ({
+        question: m.item.question,
+        answer: m.item.answer,
+        score: m.score
+      }))
+    })
+  });
+
+  if (!response.ok) {
+    throw new Error(`Fallback API error: ${response.status}`);
+  }
+
+  return await response.json();
+}
+
+async function answerQuestion() {
+  const startTime = performance.now();
+
+  const q = document.getElementById("question").value.trim();
+  const major = document.querySelector('input[name="major"]:checked').value;
+  const majorName = MAJOR_NAMES[major] || major;
+
+  const answerBox = document.getElementById("answer");
+  const meta = document.getElementById("meta");
+
+  if (!q) return;
+
+  answerBox.textContent = "Searching FAQ...";
+  meta.textContent = "";
+
+  try {
+    const ruleAnswer = answerDirectionalCourseQuestion(q, major);
+
+    if (ruleAnswer) {
+      answerBox.textContent = ruleAnswer.answer;
+
+      meta.innerHTML = `
+        Confidence: ${ruleAnswer.confidence.toFixed(3)}<br>
+        Selected major: ${escapeHtml(majorName)}<br>
+        Question is about: ${escapeHtml(ruleAnswer.about)}<br>
+        Relationship asked: ${escapeHtml(ruleAnswer.intent)}<br>
+        Source: ${escapeHtml(ruleAnswer.source)}
+      `;
+
+      updatePerformance(startTime, performance.now(), "Deterministic rule engine", 0);
+      return;
+    }
+
+    const faq = await loadFAQ(major);
+    const result = findBestMatches(q, faq, 3);
+    const best = result.matches[0];
+
+    const aboutText = result.userCodes.length
+      ? result.userCodes.join(", ")
+      : "no specific course detected";
+
+    if (!best || best.score < SIMILARITY_THRESHOLD) {
+      answerBox.textContent = "Low confidence. Asking lightweight Ollama fallback...";
+
+      try {
+        const fallbackData = await askOllamaFallback(q, majorName, result);
+
+        answerBox.textContent = fallbackData.answer;
+
+        meta.innerHTML = `
+          Confidence: ${best ? best.score.toFixed(3) : "0.000"}<br>
+          Threshold: ${SIMILARITY_THRESHOLD}<br>
+          Selected major: ${escapeHtml(majorName)}<br>
+          Question is about: ${escapeHtml(aboutText)}<br>
+          Relationship asked: ${escapeHtml(result.userIntent)}<br>
+          Source: Ollama fallback over top FAQ candidates<br>
+          FAQ entries searched: ${result.searchedCount} of ${result.totalCount}<br><br>
+          Candidate matches sent to Ollama:<br>
+          ${result.matches.map((m, idx) => `
+            ${idx + 1}. ${escapeHtml(m.item.question)}
+            <br><em>Score: ${m.score.toFixed(3)}</em><br>
+          `).join("<br>")}
+        `;
+
+        updatePerformance(startTime, performance.now(), "Ollama fallback", result.searchedCount);
+        return;
+
+      } catch (err) {
+        answerBox.innerHTML =
+          `<span class="warning">I didn’t understand the question well enough, and the Ollama fallback is not available.</span>`;
+
+        meta.innerHTML = `
+          Confidence: ${best ? best.score.toFixed(3) : "0.000"}<br>
+          Threshold: ${SIMILARITY_THRESHOLD}<br>
+          Selected major: ${escapeHtml(majorName)}<br>
+          Question is about: ${escapeHtml(aboutText)}<br>
+          Relationship asked: ${escapeHtml(result.userIntent)}<br>
+          Fallback error: ${escapeHtml(err.message)}
+        `;
+
+        updatePerformance(startTime, performance.now(), "Failed Ollama fallback", result.searchedCount);
+        return;
+      }
+    }
+
+    answerBox.textContent = best.item.answer;
+
+    meta.innerHTML = `
+      Confidence: ${best.score.toFixed(3)}<br>
+      Selected major: ${escapeHtml(majorName)}<br>
+      Question is about: ${escapeHtml(aboutText)}<br>
+      Relationship asked: ${escapeHtml(result.userIntent)}<br>
+      FAQ entries searched: ${result.searchedCount} of ${result.totalCount}<br>
+      Matched FAQ question:<br>
+      <strong>${escapeHtml(best.item.question)}</strong>
+    `;
+
+    updatePerformance(startTime, performance.now(), "Deterministic FAQ matching", result.searchedCount);
+
+  } catch (err) {
+    answerBox.innerHTML =
+      `<span class="warning">Error. Make sure the FAQ files and fallback backend are available.</span>`;
+    meta.textContent = err.message;
+    updatePerformance(startTime, performance.now(), "Error", null);
+  }
+}
+
+function escapeHtml(text) {
+  return String(text)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+</script>
+
+</body>
+</html>

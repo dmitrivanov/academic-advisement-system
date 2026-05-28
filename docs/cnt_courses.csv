@@ -1,0 +1,11 @@
+code,title,credits,prerequisites,alternatives
+CSC 101,Principles in Information Technology and Computation,3,,
+CSC 110,Computer Programming I,4,,CSC 111
+CIS 165,Introduction to Operating Systems,3,CSC 101,
+CIS 255,Computer Software,3,CIS 165,
+CIS 345,Telecommunication Network I,3,CSC 110 or CSC 111,
+CIS 445,Telecommunication Network II / LAN,3,CIS 345,
+CIS 455,Network Security,3,CIS 345,
+CIS 440,Unix,3,CSC 110 or CSC 111,
+PHY 110,General Physics,4,,AST 110
+MAT 206,Precalculus,4,,MAT 301

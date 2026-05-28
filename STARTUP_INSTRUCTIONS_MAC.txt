@@ -1,0 +1,99 @@
+ACADEMIC ADVISOR BOT — STARTUP INSTRUCTIONS (MAC)
+
+Project folder expected:
+~/Downloads/advisor_bot
+
+Files expected:
+advisor_bot/
+  faq_fallback_api.py
+  frontend/
+    faq_chat_hybrid.html
+    progress_graph.html
+  docs/
+    faq_cs.txt
+    faq_cis.txt
+    faq_cnt.txt
+  venv/
+
+ONE-TIME SETUP ON A NEW MAC
+---------------------------
+
+1. Install Ollama:
+   https://ollama.com
+
+2. Open Terminal and install lightweight model:
+   ollama pull llama3.2
+
+3. Go to project folder:
+   cd ~/Downloads/advisor_bot
+
+4. Create virtual environment if it does not exist:
+   python3 -m venv venv
+
+5. Activate venv:
+   source venv/bin/activate
+
+6. Install dependencies:
+   pip install fastapi uvicorn requests
+
+NORMAL STARTUP
+--------------
+
+You need three services:
+
+1. Ollama
+2. FastAPI fallback backend
+3. Static frontend server
+
+MANUAL STARTUP
+--------------
+
+Terminal 1 — check/start Ollama:
+   ollama serve
+
+If you see:
+   address already in use
+
+That means Ollama is already running. This is OK.
+
+Terminal 2 — start backend:
+   cd ~/Downloads/advisor_bot
+   source venv/bin/activate
+   python3 -m uvicorn faq_fallback_api:app --reload --port 8001
+
+Terminal 3 — start frontend:
+   cd ~/Downloads/advisor_bot
+   python3 -m http.server 5500
+
+Open browser:
+   http://127.0.0.1:5500/frontend/faq_chat_hybrid.html
+
+Progress graph:
+   http://127.0.0.1:5500/frontend/progress_graph.html
+
+STOPPING THE APP
+----------------
+
+Press Ctrl + C in backend/frontend terminal windows.
+
+Ollama can remain running in the background.
+
+COMMON ERRORS
+-------------
+
+1. "address already in use" on port 11434:
+   Ollama is already running. Continue.
+
+2. "No module named uvicorn":
+   Activate venv and install dependencies:
+   source venv/bin/activate
+   pip install fastapi uvicorn requests
+
+3. Browser shows raw HTML:
+   Run the page through local server:
+   python3 -m http.server 5500
+
+4. Ollama fallback not available:
+   Make sure backend is running on port 8001 and Ollama has llama3.2:
+   ollama list
+   python3 -m uvicorn faq_fallback_api:app --reload --port 8001

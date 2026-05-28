@@ -1,0 +1,555 @@
+COMPUTER SCIENCE FAQ
+Q: I am a Computer Science major. What courses are required?
+A: For a Computer Science student, required courses include CSC 101, CSC 111, CSC 211, CSC 215, CSC 231, CSC 331, CSC 350, MAT 206, MAT 301, and MAT 302.
+
+Q: I am a Computer Science major. What are the program requirements?
+A: For a Computer Science student, the program requirements include CSC 101, CSC 111, CSC 211, CSC 215, CSC 231, CSC 331, CSC 350, MAT 206, MAT 301, and MAT 302.
+
+Q: I am a Computer Science major. What classes do I need for the major?
+A: For a Computer Science student, courses required for the major include CSC 101, CSC 111, CSC 211, CSC 215, CSC 231, CSC 331, CSC 350, MAT 206, MAT 301, and MAT 302.
+
+Q: I am a Computer Science major. What are the prerequisites for CSC 101?
+A: For a Computer Science student, CSC 101 has no prerequisites.
+
+Q: I am a Computer Science major. Which classes must I take before CSC 101?
+A: As a Computer Science student, you do not need to complete any classes before taking CSC 101.
+
+Q: I am a Computer Science major. What do I need before CSC 101?
+A: As a Computer Science student, you do not need any prerequisite classes before taking CSC 101.
+
+Q: I am a Computer Science major. Does CSC 101 have prerequisites?
+A: CSC 101 does not have prerequisites.
+
+Q: I am a Computer Science major. Do I need any classes before CSC 101?
+A: As a Computer Science student, you do not need any prerequisite classes before taking CSC 101.
+
+Q: I am a Computer Science major. How many credits is CSC 101?
+A: CSC 101 is worth 3 credits.
+
+Q: I am a Computer Science major. How many credits do I get for CSC 101?
+A: As a Computer Science student, you receive 3 credits for CSC 101.
+
+Q: I am a Computer Science major. How many credits is CSC 101 worth?
+A: CSC 101 is worth 3 credits.
+
+Q: I am a Computer Science major. What is CSC 101?
+A: As a Computer Science student, CSC 101 is Principles in Information Technology and Computation.
+
+Q: I am a Computer Science major. What course is CSC 101?
+A: As a Computer Science student, CSC 101 is Principles in Information Technology and Computation.
+
+Q: I am a Computer Science major. What is the title of CSC 101?
+A: As a Computer Science student, the title of CSC 101 is Principles in Information Technology and Computation.
+
+Q: I am a Computer Science major. Is CSC 101 required?
+A: For s a Computer Science student, yes, CSC 101 is a required course in the Computer Science program.
+
+Q: I am a Computer Science major. Is CSC 101 part of my major requirements?
+A: For a Computer Science student, yes, CSC 101 is part of the Computer Science program requirements.
+
+Q: I am a Computer Science major. What are the prerequisites for CSC 111?
+A: As a Computer Science student, the prerequisites for CSC 111 are CSC 101 and MAT 206.
+
+Q: I am a Computer Science major. Which classes must I take before CSC 111?
+A: As a Computer Science student, you must complete CSC 101 and MAT 206 before taking CSC 111.
+
+Q: I am a Computer Science major. What do I need before CSC 111?
+A: As a Computer Science student, you need CSC 101 and MAT 206 before taking CSC 111.
+
+Q: I am a Computer Science major. What do I have to take before CSC 111?
+A: As a Computer Science student, you must take CSC 101 and MAT 206 before taking CSC 111.
+
+Q: I am a Computer Science major. What courses do I need before CSC 111?
+A: As a Computer Science student, you need CSC 101 and MAT 206 before taking CSC 111.
+
+Q: I am a Computer Science major. What courses are required before CSC 111?
+A: As a Computer Science student, CSC 101 and MAT 206 are required before CSC 111.
+
+Q: I am a Computer Science major. Before taking CSC 111, what should I complete?
+A: As a Computer Science student, you should complete CSC 101 and MAT 206 before taking CSC 111.
+
+Q: I am a Computer Science major. What do I need to complete before CSC 111?
+A: As a Computer Science student, you need to complete CSC 101 and MAT 206 before taking CSC 111.
+
+Q: I am a Computer Science major. What classes are needed before CSC 111?
+A: As a Computer Science student, you need CSC 101 and MAT 206 before taking CSC 111.
+
+Q: I am a Computer Science major. What do I need in order to take CSC 111?
+A: As a Computer Science student, you need CSC 101 and MAT 206 in order to take CSC 111.
+
+Q: I am a Computer Science major. What should I finish before CSC 111?
+A: As a Computer Science student, you should finish CSC 101 and MAT 206 before taking CSC 111.
+
+Q: I am a Computer Science major. How many credits is CSC 111?
+A: CSC 111 is worth 4 credits.
+
+Q: I am a Computer Science major. How many credits do I get for CSC 111?
+A: As a Computer Science student, you receive 4 credits for CSC 111.
+
+Q: I am a Computer Science major. How many credits is CSC 111 worth?
+A: CSC 111 is worth 4 credits.
+
+Q: I am a Computer Science major. What is CSC 111?
+A: As a Computer Science student, CSC 111 is Introduction to Programming.
+
+Q: I am a Computer Science major. What course is CSC 111?
+A: As a Computer Science student, CSC 111 is Introduction to Programming.
+
+Q: I am a Computer Science major. What is the title of CSC 111?
+A: As a Computer Science student, the title of CSC 111 is Introduction to Programming.
+
+Q: I am a Computer Science major. Is CSC 111 required?
+A: For s a Computer Science student, yes, CSC 111 is a required course in the Computer Science program.
+
+Q: I am a Computer Science major. Is CSC 111 part of my major requirements?
+A: For a Computer Science student, yes, CSC 111 is part of the Computer Science program requirements.
+
+Q: I am a Computer Science major. What are the prerequisites for CSC 211?
+A: As a Computer Science student, the prerequisite for CSC 211 is CSC 111.
+
+Q: I am a Computer Science major. Which classes must I take before CSC 211?
+A: As a Computer Science student, you must complete CSC 111 before taking CSC 211.
+
+Q: I am a Computer Science major. What do I need before CSC 211?
+A: As a Computer Science student, you need CSC 111 before taking CSC 211.
+
+Q: I am a Computer Science major. What do I have to take before CSC 211?
+A: As a Computer Science student, you must take CSC 111 before taking CSC 211.
+
+Q: I am a Computer Science major. What courses do I need before CSC 211?
+A: As a Computer Science student, you need CSC 111 before taking CSC 211.
+
+Q: I am a Computer Science major. What courses are required before CSC 211?
+A: As a Computer Science student, CSC 111 is required before CSC 211.
+
+Q: I am a Computer Science major. Before taking CSC 211, what should I complete?
+A: As a Computer Science student, you should complete CSC 111 before taking CSC 211.
+
+Q: I am a Computer Science major. What do I need to complete before CSC 211?
+A: As a Computer Science student, you need to complete CSC 111 before taking CSC 211.
+
+Q: I am a Computer Science major. What classes are needed before CSC 211?
+A: As a Computer Science student, you need CSC 111 before taking CSC 211.
+
+Q: I am a Computer Science major. What do I need in order to take CSC 211?
+A: As a Computer Science student, you need CSC 111 in order to take CSC 211.
+
+Q: I am a Computer Science major. What should I finish before CSC 211?
+A: As a Computer Science student, you should finish CSC 111 before taking CSC 211.
+
+Q: I am a Computer Science major. How many credits is CSC 211?
+A: CSC 211 is worth 3 credits.
+
+Q: I am a Computer Science major. How many credits do I get for CSC 211?
+A: As a Computer Science student, you receive 3 credits for CSC 211.
+
+Q: I am a Computer Science major. How many credits is CSC 211 worth?
+A: CSC 211 is worth 3 credits.
+
+Q: I am a Computer Science major. What is CSC 211?
+A: As a Computer Science student, CSC 211 is Advanced Programming Techniques.
+
+Q: I am a Computer Science major. What course is CSC 211?
+A: As a Computer Science student, CSC 211 is Advanced Programming Techniques.
+
+Q: I am a Computer Science major. What is the title of CSC 211?
+A: As a Computer Science student, the title of CSC 211 is Advanced Programming Techniques.
+
+Q: I am a Computer Science major. Is CSC 211 required?
+A: For s a Computer Science student, yes, CSC 211 is a required course in the Computer Science program.
+
+Q: I am a Computer Science major. Is CSC 211 part of my major requirements?
+A: For a Computer Science student, yes, CSC 211 is part of the Computer Science program requirements.
+
+Q: I am a Computer Science major. What are the prerequisites for CSC 215?
+A: As a Computer Science student, the prerequisite for CSC 215 is CSC 111.
+
+Q: I am a Computer Science major. Which classes must I take before CSC 215?
+A: As a Computer Science student, you must complete CSC 111 before taking CSC 215.
+
+Q: I am a Computer Science major. What do I need before CSC 215?
+A: As a Computer Science student, you need CSC 111 before taking CSC 215.
+
+Q: I am a Computer Science major. What do I have to take before CSC 215?
+A: As a Computer Science student, you must take CSC 111 before taking CSC 215.
+
+Q: I am a Computer Science major. What courses do I need before CSC 215?
+A: As a Computer Science student, you need CSC 111 before taking CSC 215.
+
+Q: I am a Computer Science major. What courses are required before CSC 215?
+A: As a Computer Science student, CSC 111 is required before CSC 215.
+
+Q: I am a Computer Science major. Before taking CSC 215, what should I complete?
+A: As a Computer Science student, you should complete CSC 111 before taking CSC 215.
+
+Q: I am a Computer Science major. What do I need to complete before CSC 215?
+A: As a Computer Science student, you need to complete CSC 111 before taking CSC 215.
+
+Q: I am a Computer Science major. What classes are needed before CSC 215?
+A: As a Computer Science student, you need CSC 111 before taking CSC 215.
+
+Q: I am a Computer Science major. What do I need in order to take CSC 215?
+A: As a Computer Science student, you need CSC 111 in order to take CSC 215.
+
+Q: I am a Computer Science major. What should I finish before CSC 215?
+A: As a Computer Science student, you should finish CSC 111 before taking CSC 215.
+
+Q: I am a Computer Science major. How many credits is CSC 215?
+A: CSC 215 is worth 3 credits.
+
+Q: I am a Computer Science major. How many credits do I get for CSC 215?
+A: As a Computer Science student, you receive 3 credits for CSC 215.
+
+Q: I am a Computer Science major. How many credits is CSC 215 worth?
+A: CSC 215 is worth 3 credits.
+
+Q: I am a Computer Science major. What is CSC 215?
+A: As a Computer Science student, CSC 215 is Fundamentals of Computer Systems.
+
+Q: I am a Computer Science major. What course is CSC 215?
+A: As a Computer Science student, CSC 215 is Fundamentals of Computer Systems.
+
+Q: I am a Computer Science major. What is the title of CSC 215?
+A: As a Computer Science student, the title of CSC 215 is Fundamentals of Computer Systems.
+
+Q: I am a Computer Science major. Is CSC 215 required?
+A: For s a Computer Science student, yes, CSC 215 is a required course in the Computer Science program.
+
+Q: I am a Computer Science major. Is CSC 215 part of my major requirements?
+A: For a Computer Science student, yes, CSC 215 is part of the Computer Science program requirements.
+
+Q: I am a Computer Science major. What are the prerequisites for CSC 231?
+A: The prerequisites for CSC 231 are CSC 111 and MAT 301.
+
+Q: I am a Computer Science major. Which classes must I take before CSC 231?
+A: As a Computer Science student, you must complete CSC 111 and MAT 301 before taking CSC 231.
+
+Q: I am a Computer Science major. What do I need before CSC 231?
+A: As a Computer Science student, you need CSC 111 and MAT 301 before taking CSC 231.
+
+Q: I am a Computer Science major. What do I have to take before CSC 231?
+A: As a Computer Science student, you must take CSC 111 and MAT 301 before taking CSC 231.
+
+Q: I am a Computer Science major. What courses do I need before CSC 231?
+A: As a Computer Science student, you need CSC 111 and MAT 301 before taking CSC 231.
+
+Q: I am a Computer Science major. What courses are required before CSC 231?
+A: As a Computer Science student, CSC 111 and MAT 301 are required before CSC 231.
+
+Q: I am a Computer Science major. Before taking CSC 231, what should I complete?
+A: As a Computer Science student, you should complete CSC 111 and MAT 301 before taking CSC 231.
+
+Q: I am a Computer Science major. What do I need to complete before CSC 231?
+A: As a Computer Science student, you need to complete CSC 111 and MAT 301 before taking CSC 231.
+
+Q: I am a Computer Science major. What classes are needed before CSC 231?
+A: As a Computer Science student, you need CSC 111 and MAT 301 before taking CSC 231.
+
+Q: I am a Computer Science major. What do I need in order to take CSC 231?
+A: As a Computer Science student, you need CSC 111 and MAT 301 in order to take CSC 231.
+
+Q: I am a Computer Science major. What should I finish before CSC 231?
+A: As a Computer Science student, you should finish CSC 111 and MAT 301 before taking CSC 231.
+
+Q: I am a Computer Science major. How many credits is CSC 231?
+A: CSC 231 is worth 4 credits.
+
+Q: I am a Computer Science major. How many credits do I get for CSC 231?
+A: As a Computer Science student, you receive 4 credits for CSC 231.
+
+Q: I am a Computer Science major. How many credits is CSC 231 worth?
+A: CSC 231 is worth 4 credits.
+
+Q: I am a Computer Science major. What is CSC 231?
+A: As a Computer Science student, CSC 231 is Discrete Structures and Applications to Computer Science.
+
+Q: I am a Computer Science major. What course is CSC 231?
+A: As a Computer Science student, CSC 231 is Discrete Structures and Applications to Computer Science.
+
+Q: I am a Computer Science major. What is the title of CSC 231?
+A: As a Computer Science student, the title of CSC 231 is Discrete Structures and Applications to Computer Science.
+
+Q: I am a Computer Science major. Is CSC 231 required?
+A: For s a Computer Science student, yes, CSC 231 is a required course in the Computer Science program.
+
+Q: I am a Computer Science major. Is CSC 231 part of my major requirements?
+A: For a Computer Science student, yes, CSC 231 is part of the Computer Science program requirements.
+
+Q: I am a Computer Science major. What are the prerequisites for CSC 331?
+A: As a Computer Science student, the prerequisites for CSC 331 are CSC 211 and CSC 231.
+
+Q: I am a Computer Science major. Which classes must I take before CSC 331?
+A: As a Computer Science student, you must complete CSC 211 and CSC 231 before taking CSC 331.
+
+Q: I am a Computer Science major. What do I need before CSC 331?
+A: As a Computer Science student, you need CSC 211 and CSC 231 before taking CSC 331.
+
+Q: I am a Computer Science major. What do I have to take before CSC 331?
+A: As a Computer Science student, you must take CSC 211 and CSC 231 before taking CSC 331.
+
+Q: I am a Computer Science major. What courses do I need before CSC 331?
+A: As a Computer Science student, you need CSC 211 and CSC 231 before taking CSC 331.
+
+Q: I am a Computer Science major. What courses are required before CSC 331?
+A: As a Computer Science student, CSC 211 and CSC 231 are required before CSC 331.
+
+Q: I am a Computer Science major. Before taking CSC 331, what should I complete?
+A: As a Computer Science student, you should complete CSC 211 and CSC 231 before taking CSC 331.
+
+Q: I am a Computer Science major. What do I need to complete before CSC 331?
+A: As a Computer Science student, you need to complete CSC 211 and CSC 231 before taking CSC 331.
+
+Q: I am a Computer Science major. What classes are needed before CSC 331?
+A: As a Computer Science student, you need CSC 211 and CSC 231 before taking CSC 331.
+
+Q: I am a Computer Science major. What do I need in order to take CSC 331?
+A: As a Computer Science student, you need CSC 211 and CSC 231 in order to take CSC 331.
+
+Q: I am a Computer Science major. What should I finish before CSC 331?
+A: As a Computer Science student, you should finish CSC 211 and CSC 231 before taking CSC 331.
+
+Q: I am a Computer Science major. How many credits is CSC 331?
+A: CSC 331 is worth 3 credits.
+
+Q: I am a Computer Science major. How many credits do I get for CSC 331?
+A: As a Computer Science student, you receive 3 credits for CSC 331.
+
+Q: I am a Computer Science major. How many credits is CSC 331 worth?
+A: CSC 331 is worth 3 credits.
+
+Q: I am a Computer Science major. What is CSC 331?
+A: As a Computer Science student, CSC 331 is Data Structures.
+
+Q: I am a Computer Science major. What course is CSC 331?
+A: As a Computer Science student, CSC 331 is Data Structures.
+
+Q: I am a Computer Science major. What is the title of CSC 331?
+A: As a Computer Science student, the title of CSC 331 is Data Structures.
+
+Q: I am a Computer Science major. Is CSC 331 required?
+A: For s a Computer Science student, yes, CSC 331 is a required course in the Computer Science program.
+
+Q: I am a Computer Science major. Is CSC 331 part of my major requirements?
+A: For a Computer Science student, yes, CSC 331 is part of the Computer Science program requirements.
+
+Q: I am a Computer Science major. What are the prerequisites for CSC 350?
+A: As a Computer Science student, the prerequisite for CSC 350 is CSC 211.
+
+Q: I am a Computer Science major. Which classes must I take before CSC 350?
+A: As a Computer Science student, you must complete CSC 211 before taking CSC 350.
+
+Q: I am a Computer Science major. What do I need before CSC 350?
+A: As a Computer Science student, you need CSC 211 before taking CSC 350.
+
+Q: I am a Computer Science major. What do I have to take before CSC 350?
+A: As a Computer Science student, you must take CSC 211 before taking CSC 350.
+
+Q: I am a Computer Science major. What courses do I need before CSC 350?
+A: As a Computer Science student, you need CSC 211 before taking CSC 350.
+
+Q: I am a Computer Science major. What courses are required before CSC 350?
+A: As a Computer Science student, CSC 211 is required before CSC 350.
+
+Q: I am a Computer Science major. Before taking CSC 350, what should I complete?
+A: As a Computer Science student, you should complete CSC 211 before taking CSC 350.
+
+Q: I am a Computer Science major. What do I need to complete before CSC 350?
+A: As a Computer Science student, you need to complete CSC 211 before taking CSC 350.
+
+Q: I am a Computer Science major. What classes are needed before CSC 350?
+A: As a Computer Science student, you need CSC 211 before taking CSC 350.
+
+Q: I am a Computer Science major. What do I need in order to take CSC 350?
+A: As a Computer Science student, you need CSC 211 in order to take CSC 350.
+
+Q: I am a Computer Science major. What should I finish before CSC 350?
+A: As a Computer Science student, you should finish CSC 211 before taking CSC 350.
+
+Q: I am a Computer Science major. How many credits is CSC 350?
+A: CSC 350 is worth 3 credits.
+
+Q: I am a Computer Science major. How many credits do I get for CSC 350?
+A: As a Computer Science student, you receive 3 credits for CSC 350.
+
+Q: I am a Computer Science major. How many credits is CSC 350 worth?
+A: CSC 350 is worth 3 credits.
+
+Q: I am a Computer Science major. What is CSC 350?
+A: As a Computer Science student, CSC 350 is Software Development.
+
+Q: I am a Computer Science major. What course is CSC 350?
+A: As a Computer Science student, CSC 350 is Software Development.
+
+Q: I am a Computer Science major. What is the title of CSC 350?
+A: As a Computer Science student, the title of CSC 350 is Software Development.
+
+Q: I am a Computer Science major. Is CSC 350 required?
+A: For s a Computer Science student, yes, CSC 350 is a required course in the Computer Science program.
+
+Q: I am a Computer Science major. Is CSC 350 part of my major requirements?
+A: For a Computer Science student, yes, CSC 350 is part of the Computer Science program requirements.
+
+Q: I am a Computer Science major. What are the prerequisites for MAT 206?
+A: For a Computer Science student, MAT 206 has no prerequisites.
+
+Q: I am a Computer Science major. Which classes must I take before MAT 206?
+A: As a Computer Science student, you do not need to complete any classes before taking MAT 206.
+
+Q: I am a Computer Science major. What do I need before MAT 206?
+A: As a Computer Science student, you do not need any prerequisite classes before taking MAT 206.
+
+Q: I am a Computer Science major. Does MAT 206 have prerequisites?
+A: MAT 206 does not have prerequisites.
+
+Q: I am a Computer Science major. Do I need any classes before MAT 206?
+A: As a Computer Science student, you do not need any prerequisite classes before taking MAT 206.
+
+Q: I am a Computer Science major. How many credits is MAT 206?
+A: MAT 206 is worth 4 credits.
+
+Q: I am a Computer Science major. How many credits do I get for MAT 206?
+A: As a Computer Science student, you receive 4 credits for MAT 206.
+
+Q: I am a Computer Science major. How many credits is MAT 206 worth?
+A: MAT 206 is worth 4 credits.
+
+Q: I am a Computer Science major. Can MAT 301 be used instead of MAT 206?
+A: MAT 301 is listed as an alternative to MAT 206.
+
+Q: I am a Computer Science major. Can MAT 206 be replaced by MAT 301?
+A: MAT 301 can be used in place of MAT 206.
+
+Q: I am a Computer Science major. Is MAT 301 an alternative to MAT 206?
+A: yes, MAT 301 is listed as an alternative to MAT 206.
+
+Q: I am a Computer Science major. Can I use MAT 301 instead of MAT 206?
+A: As a Computer Science student, yes, you can use MAT 301 in place of MAT 206.
+
+Q: I am a Computer Science major. What is MAT 206?
+A: As a Computer Science student, MAT 206 is Precalculus.
+
+Q: I am a Computer Science major. What course is MAT 206?
+A: As a Computer Science student, MAT 206 is Precalculus.
+
+Q: I am a Computer Science major. What is the title of MAT 206?
+A: As a Computer Science student, the title of MAT 206 is Precalculus.
+
+Q: I am a Computer Science major. Is MAT 206 required?
+A: For s a Computer Science student, yes, MAT 206 is a required course in the Computer Science program.
+
+Q: I am a Computer Science major. Is MAT 206 part of my major requirements?
+A: For a Computer Science student, yes, MAT 206 is part of the Computer Science program requirements.
+
+Q: I am a Computer Science major. What are the prerequisites for MAT 301?
+A: As a Computer Science student, the prerequisite for MAT 301 is MAT 206.
+
+Q: I am a Computer Science major. Which classes must I take before MAT 301?
+A: As a Computer Science student, you must complete MAT 206 before taking MAT 301.
+
+Q: I am a Computer Science major. What do I need before MAT 301?
+A: As a Computer Science student, you need MAT 206 before taking MAT 301.
+
+Q: I am a Computer Science major. What do I have to take before MAT 301?
+A: As a Computer Science student, you must take MAT 206 before taking MAT 301.
+
+Q: I am a Computer Science major. What courses do I need before MAT 301?
+A: As a Computer Science student, you need MAT 206 before taking MAT 301.
+
+Q: I am a Computer Science major. What courses are required before MAT 301?
+A: As a Computer Science student, MAT 206 is required before MAT 301.
+
+Q: I am a Computer Science major. Before taking MAT 301, what should I complete?
+A: As a Computer Science student, you should complete MAT 206 before taking MAT 301.
+
+Q: I am a Computer Science major. What do I need to complete before MAT 301?
+A: As a Computer Science student, you need to complete MAT 206 before taking MAT 301.
+
+Q: I am a Computer Science major. What classes are needed before MAT 301?
+A: As a Computer Science student, you need MAT 206 before taking MAT 301.
+
+Q: I am a Computer Science major. What do I need in order to take MAT 301?
+A: As a Computer Science student, you need MAT 206 in order to take MAT 301.
+
+Q: I am a Computer Science major. What should I finish before MAT 301?
+A: As a Computer Science student, you should finish MAT 206 before taking MAT 301.
+
+Q: I am a Computer Science major. How many credits is MAT 301?
+A: MAT 301 is worth 4 credits.
+
+Q: I am a Computer Science major. How many credits do I get for MAT 301?
+A: As a Computer Science student, you receive 4 credits for MAT 301.
+
+Q: I am a Computer Science major. How many credits is MAT 301 worth?
+A: MAT 301 is worth 4 credits.
+
+Q: I am a Computer Science major. What is MAT 301?
+A: As a Computer Science student, MAT 301 is Analytic Geometry and Calculus I.
+
+Q: I am a Computer Science major. What course is MAT 301?
+A: As a Computer Science student, MAT 301 is Analytic Geometry and Calculus I.
+
+Q: I am a Computer Science major. What is the title of MAT 301?
+A: As a Computer Science student, the title of MAT 301 is Analytic Geometry and Calculus I.
+
+Q: I am a Computer Science major. Is MAT 301 required?
+A: For s a Computer Science student, yes, MAT 301 is a required course in the Computer Science program.
+
+Q: I am a Computer Science major. Is MAT 301 part of my major requirements?
+A: For a Computer Science student, yes, MAT 301 is part of the Computer Science program requirements.
+
+Q: I am a Computer Science major. What are the prerequisites for MAT 302?
+A: As a Computer Science student, the prerequisite for MAT 302 is MAT 301.
+
+Q: I am a Computer Science major. Which classes must I take before MAT 302?
+A: As a Computer Science student, you must complete MAT 301 before taking MAT 302.
+
+Q: I am a Computer Science major. What do I need before MAT 302?
+A: As a Computer Science student, you need MAT 301 before taking MAT 302.
+
+Q: I am a Computer Science major. What do I have to take before MAT 302?
+A: As a Computer Science student, you must take MAT 301 before taking MAT 302.
+
+Q: I am a Computer Science major. What courses do I need before MAT 302?
+A: As a Computer Science student, you need MAT 301 before taking MAT 302.
+
+Q: I am a Computer Science major. What courses are required before MAT 302?
+A: As a Computer Science student, MAT 301 is required before MAT 302.
+
+Q: I am a Computer Science major. Before taking MAT 302, what should I complete?
+A: As a Computer Science student, you should complete MAT 301 before taking MAT 302.
+
+Q: I am a Computer Science major. What do I need to complete before MAT 302?
+A: As a Computer Science student, you need to complete MAT 301 before taking MAT 302.
+
+Q: I am a Computer Science major. What classes are needed before MAT 302?
+A: As a Computer Science student, you need MAT 301 before taking MAT 302.
+
+Q: I am a Computer Science major. What do I need in order to take MAT 302?
+A: As a Computer Science student, you need MAT 301 in order to take MAT 302.
+
+Q: I am a Computer Science major. What should I finish before MAT 302?
+A: As a Computer Science student, you should finish MAT 301 before taking MAT 302.
+
+Q: I am a Computer Science major. How many credits is MAT 302?
+A: MAT 302 is worth 4 credits.
+
+Q: I am a Computer Science major. How many credits do I get for MAT 302?
+A: As a Computer Science student, you receive 4 credits for MAT 302.
+
+Q: I am a Computer Science major. How many credits is MAT 302 worth?
+A: MAT 302 is worth 4 credits.
+
+Q: I am a Computer Science major. What is MAT 302?
+A: As a Computer Science student, MAT 302 is Analytic Geometry and Calculus II.
+
+Q: I am a Computer Science major. What course is MAT 302?
+A: As a Computer Science student, MAT 302 is Analytic Geometry and Calculus II.
+
+Q: I am a Computer Science major. What is the title of MAT 302?
+A: The title of MAT 302 is Analytic Geometry and Calculus II.
+
+Q: I am a Computer Science major. Is MAT 302 required?
+A: For s a Computer Science student, yes, MAT 302 is a required course in the Computer Science program.
+
+Q: I am a Computer Science major. Is MAT 302 part of my major requirements?
+A: For a Computer Science student, yes, MAT 302 is part of the Computer Science program requirements.

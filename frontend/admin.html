@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Panel – Academic Advisement Assistant</title>
+  <style>
+    :root {
+      --bg: #f5f7fb;
+      --card: #ffffff;
+      --text: #172033;
+      --muted: #667085;
+      --line: #e6eaf2;
+      --primary: #2563eb;
+      --primary-dark: #1d4ed8;
+      --accent: #eef4ff;
+      --success: #0f9d58;
+      --danger: #c62828;
+      --shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
+      --radius: 18px;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Inter, Arial, sans-serif;
+      background: linear-gradient(180deg, #f8fbff 0%, var(--bg) 100%);
+      color: var(--text);
+    }
+
+    .shell {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 28px 18px 40px;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 22px;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .brand-badge {
+      width: 46px;
+      height: 46px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, var(--primary), #60a5fa);
+      color: white;
+      display: grid;
+      place-items: center;
+      font-weight: 700;
+      font-size: 18px;
+      box-shadow: var(--shadow);
+    }
+
+    .brand h1 {
+      margin: 0;
+      font-size: 24px;
+      line-height: 1.15;
+    }
+
+    .brand p {
+      margin: 4px 0 0;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .nav {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .nav a {
+      text-decoration: none;
+      color: var(--text);
+      background: white;
+      border: 1px solid var(--line);
+      padding: 10px 14px;
+      border-radius: 12px;
+      font-weight: 600;
+      transition: 0.2s ease;
+    }
+
+    .nav a:hover {
+      border-color: #c9d6ee;
+      transform: translateY(-1px);
+    }
+
+    .nav a.active {
+      background: var(--accent);
+      color: var(--primary-dark);
+      border-color: #c8dafd;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 1.15fr 0.85fr;
+      gap: 20px;
+    }
+
+    @media (max-width: 900px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 22px;
+    }
+
+    .section-title {
+      margin: 0 0 8px;
+      font-size: 20px;
+    }
+
+    .section-subtitle {
+      margin: 0 0 18px;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    .upload-box {
+      border: 2px dashed #bfd0f2;
+      border-radius: 18px;
+      background: #fbfdff;
+      padding: 24px;
+      text-align: center;
+    }
+
+    .upload-box p {
+      margin: 0 0 12px;
+      color: var(--muted);
+    }
+
+    input[type="file"] {
+      display: block;
+      margin: 12px auto 0;
+    }
+
+    .actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 18px;
+    }
+
+    button {
+      border: none;
+      border-radius: 12px;
+      padding: 12px 18px;
+      font: inherit;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 0.15s ease, background 0.2s ease;
+    }
+
+    button:hover {
+      transform: translateY(-1px);
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: var(--primary-dark);
+    }
+
+    .btn-secondary {
+      background: #edf2fb;
+      color: #24406c;
+    }
+
+    .status-box {
+      margin-top: 16px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: #fbfcff;
+      padding: 14px 16px;
+      color: var(--muted);
+      min-height: 56px;
+      line-height: 1.6;
+    }
+
+    .file-list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .file-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 14px 16px;
+      background: #fcfdff;
+    }
+
+    .file-name {
+      font-weight: 700;
+      color: #1f2a44;
+      word-break: break-word;
+    }
+
+    .file-meta {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .chip {
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: #eef4ff;
+      color: #2b5bbb;
+      font-size: 12px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .empty {
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .note {
+      margin-top: 16px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.5;
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <div class="topbar">
+      <div class="brand">
+        <div class="brand-badge">AA</div>
+        <div>
+          <h1>Admin Panel</h1>
+          <p>Upload source files and refresh the document base used by the advisement assistant.</p>
+        </div>
+      </div>
+
+      <div class="nav">
+        <a href="index.html">Chat</a>
+        <a href="admin.html" class="active">Admin</a>
+      </div>
+    </div>
+
+    <div class="layout">
+      <div class="card">
+        <h2 class="section-title">Upload source files</h2>
+        <p class="section-subtitle">
+          Add PDF or TXT documents to the local <code>docs</code> folder through the backend.
+        </p>
+
+        <div class="upload-box">
+          <p>Select one or more PDF/TXT files.</p>
+          <input id="fileInput" type="file" multiple accept=".pdf,.txt" />
+        </div>
+
+        <div class="actions">
+          <button class="btn-primary" onclick="uploadFiles()">Upload Files</button>
+          <button class="btn-secondary" onclick="reindexDocs()">Reindex Documents</button>
+          <button class="btn-secondary" onclick="loadFiles()">Refresh File List</button>
+        </div>
+
+        <div id="statusBox" class="status-box">
+          Waiting for action.
+        </div>
+
+        <div class="note">
+          This page expects backend endpoints like <code>/upload-docs</code>, <code>/reindex</code>, and <code>/files</code>.
+        </div>
+      </div>
+
+      <div class="card">
+        <h2 class="section-title">Current source files</h2>
+        <p class="section-subtitle">
+          Files currently available for indexing and retrieval.
+        </p>
+
+        <div id="fileList" class="file-list">
+          <div class="empty">No files loaded yet.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const API_BASE = "http://127.0.0.1:8000";
+
+    function setStatus(message, isError = false) {
+      const box = document.getElementById("statusBox");
+      box.style.color = isError ? "#c62828" : "#667085";
+      box.textContent = message;
+    }
+
+    async function uploadFiles() {
+      const input = document.getElementById("fileInput");
+      const files = input.files;
+
+      if (!files.length) {
+        setStatus("Please choose at least one file before uploading.", true);
+        return;
+      }
+
+      const formData = new FormData();
+      for (const file of files) {
+        formData.append("files", file);
+      }
+
+      setStatus("Uploading files...");
+
+      try {
+        const res = await fetch(`${API_BASE}/upload-docs`, {
+          method: "POST",
+          body: formData
+        });
+
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+        const data = await res.json();
+        setStatus(`Upload complete. ${data.message || "Files saved."}`);
+        input.value = "";
+        loadFiles();
+      } catch (err) {
+        setStatus("Upload failed. Make sure the backend upload endpoint exists.", true);
+      }
+    }
+
+    async function reindexDocs() {
+      setStatus("Reindexing documents...");
+
+      try {
+        const res = await fetch(`${API_BASE}/reindex`, {
+          method: "POST"
+        });
+
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+        const data = await res.json();
+        setStatus(data.message || "Reindex complete.");
+      } catch (err) {
+        setStatus("Reindex failed. Make sure the backend reindex endpoint exists.", true);
+      }
+    }
+
+    async function loadFiles() {
+      const container = document.getElementById("fileList");
+      container.innerHTML = `<div class="empty">Loading files...</div>`;
+
+      try {
+        const res = await fetch(`${API_BASE}/files`);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+        const data = await res.json();
+        const files = data.files || [];
+
+        if (!files.length) {
+          container.innerHTML = `<div class="empty">No files found.</div>`;
+          return;
+        }
+
+        container.innerHTML = files.map(file => `
+          <div class="file-item">
+            <div>
+              <div class="file-name">${escapeHtml(file.name || "Unknown file")}</div>
+              <div class="file-meta">${escapeHtml(file.type || "Unknown type")}</div>
+            </div>
+            <div class="chip">${escapeHtml(file.size || "")}</div>
+          </div>
+        `).join("");
+      } catch (err) {
+        container.innerHTML = `<div class="empty">Could not load file list.</div>`;
+      }
+    }
+
+    function escapeHtml(text) {
+      return String(text)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    loadFiles();
+  </script>
+</body>
+</html>

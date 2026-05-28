@@ -1,0 +1,14 @@
+code,title,credits,prerequisites,alternatives
+ACC 122,Accounting Principles I,3,,
+BUS 104,Introduction to Business,3,,
+CSC 101,Principles in Information Technology and Computation,3,,
+CSC 110,Computer Programming I,4,CSC 101,CSC 111
+CSC 210,Computer Programming II,3,CSC 110 or CSC 111,
+CIS 345,Telecommunication Network I,3,CSC 110 or CSC 111,
+CIS 385,Web Programming I,3,CSC 110 or CSC 111,
+CIS 395,Database System I,3,CSC 110 or CSC 111,
+CIS 440,Unix,3,CSC 110 or CSC 111,
+CIS 485,Web Programming II,3,CIS 385|CSC 210,
+CIS 495,Database System II,3,CIS 395,
+PHY 110,General Physics,4,,AST 110
+MAT 206,Precalculus,4,,MAT 301

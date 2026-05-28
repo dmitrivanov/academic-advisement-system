@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Academic Advisement Assistant</title>
+  <style>
+    :root {
+      --bg: #f5f7fb;
+      --card: #ffffff;
+      --text: #172033;
+      --muted: #667085;
+      --line: #e6eaf2;
+      --primary: #2563eb;
+      --primary-dark: #1d4ed8;
+      --accent: #eef4ff;
+      --success: #0f9d58;
+      --shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
+      --radius: 18px;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Inter, Arial, sans-serif;
+      background: linear-gradient(180deg, #f8fbff 0%, var(--bg) 100%);
+      color: var(--text);
+    }
+
+    .shell {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 28px 18px 40px;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 22px;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .brand-badge {
+      width: 46px;
+      height: 46px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, var(--primary), #60a5fa);
+      color: white;
+      display: grid;
+      place-items: center;
+      font-weight: 700;
+      font-size: 18px;
+      box-shadow: var(--shadow);
+    }
+
+    .brand h1 {
+      margin: 0;
+      font-size: 24px;
+      line-height: 1.15;
+    }
+
+    .brand p {
+      margin: 4px 0 0;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .nav {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .nav a {
+      text-decoration: none;
+      color: var(--text);
+      background: white;
+      border: 1px solid var(--line);
+      padding: 10px 14px;
+      border-radius: 12px;
+      font-weight: 600;
+      transition: 0.2s ease;
+    }
+
+    .nav a:hover {
+      border-color: #c9d6ee;
+      transform: translateY(-1px);
+    }
+
+    .nav a.active {
+      background: var(--accent);
+      color: var(--primary-dark);
+      border-color: #c8dafd;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 1.7fr 0.95fr;
+      gap: 20px;
+    }
+
+    @media (max-width: 900px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+
+    .chat-card {
+      padding: 22px;
+    }
+
+    .section-title {
+      margin: 0 0 8px;
+      font-size: 20px;
+    }
+
+    .section-subtitle {
+      margin: 0 0 18px;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    .input-wrap {
+      display: grid;
+      gap: 12px;
+    }
+
+    textarea {
+      width: 100%;
+      min-height: 120px;
+      resize: vertical;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 14px 16px;
+      font: inherit;
+      color: var(--text);
+      background: #fcfdff;
+      outline: none;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    textarea:focus {
+      border-color: #9bbcff;
+      box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.08);
+    }
+
+    .actions {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .hint {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    button {
+      border: none;
+      border-radius: 12px;
+      padding: 12px 18px;
+      font: inherit;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 0.15s ease, background 0.2s ease, opacity 0.2s ease;
+    }
+
+    button:hover {
+      transform: translateY(-1px);
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: var(--primary-dark);
+    }
+
+    .btn-secondary {
+      background: #edf2fb;
+      color: #24406c;
+    }
+
+    .result-card {
+      padding: 22px;
+      display: grid;
+      gap: 18px;
+    }
+
+    .status {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      width: fit-content;
+      padding: 8px 12px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 700;
+      background: #eef2ff;
+      color: #3949ab;
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: currentColor;
+    }
+
+    .answer-box {
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 18px;
+      background: linear-gradient(180deg, #ffffff 0%, #fbfcff 100%);
+      min-height: 220px;
+    }
+
+    .answer-box h3 {
+      margin: 0 0 12px;
+      font-size: 16px;
+    }
+
+    .answer-content {
+      color: var(--text);
+      line-height: 1.7;
+      font-size: 15px;
+      white-space: pre-wrap;
+    }
+
+    .answer-content p {
+      margin: 0 0 12px;
+    }
+
+    .sources {
+      display: grid;
+      gap: 10px;
+    }
+
+    .source-card {
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 14px 16px;
+      background: #fcfdff;
+    }
+
+    .source-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .source-name {
+      font-weight: 700;
+      color: #1f2a44;
+    }
+
+    .source-chip {
+      font-size: 12px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: #eef4ff;
+      color: #2b5bbb;
+      font-weight: 700;
+    }
+
+    .empty {
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .footer-note {
+      margin-top: 16px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    .small-link {
+      color: var(--primary);
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    .small-link:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <div class="topbar">
+      <div class="brand">
+        <div class="brand-badge">AA</div>
+        <div>
+          <h1>Academic Advisement Assistant</h1>
+          <p></p>
+        </div>
+      </div>
+
+      <div class="nav">
+        <a href="index.html" class="active">Student</a>
+        <a href="admin.html">Admin</a>
+      </div>
+    </div>
+
+    <div class="layout">
+      <div class="card chat-card">
+        <h2 class="section-title">Ask a question</h2>
+        <p class="section-subtitle">
+          Ask about course sequences, prerequisites, curriculum structure, or policies that are present in your uploaded files.
+        </p>
+
+        <div class="input-wrap">
+          <textarea id="question" placeholder="Example: What courses should a Computer Science student take before Physics I?"></textarea>
+
+          <div class="actions">
+            <div class="hint">
+              The assistant answers only from indexed source documents.
+            </div>
+            <div style="display:flex; gap:10px;">
+              <button class="btn-secondary" onclick="clearQuestion()">Clear</button>
+              <button class="btn-primary" onclick="askQuestion()">Ask</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="footer-note">
+          Tip: clearer, narrower questions usually give better grounded answers.
+        </div>
+      </div>
+
+      <div class="card result-card">
+        <div id="status" class="status">
+          <span class="status-dot"></span>
+          Ready
+        </div>
+
+        <div class="answer-box">
+          <h3>Response</h3>
+          <div id="answer" class="answer-content">Waiting for your question.</div>
+        </div>
+
+        <div>
+          <h3 style="margin:0 0 12px;">Sources</h3>
+          <div id="sources" class="sources">
+            <div class="empty">No sources yet.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const API_URL = "http://127.0.0.1:8000/ask";
+
+    function setStatus(text) {
+      document.getElementById("status").innerHTML = `<span class="status-dot"></span>${text}`;
+    }
+
+    function clearQuestion() {
+      document.getElementById("question").value = "";
+    }
+
+    function formatAnswer(text) {
+      const lines = text.split(/\n+/).map(line => line.trim()).filter(Boolean);
+      if (!lines.length) return "No answer returned.";
+      return lines.map(line => `<p>${escapeHtml(line)}</p>`).join("");
+    }
+
+    function renderSources(sources) {
+      const container = document.getElementById("sources");
+
+      if (!sources || !sources.length) {
+        container.innerHTML = `<div class="empty">No sources returned.</div>`;
+        return;
+      }
+
+      container.innerHTML = sources.map(src => `
+        <div class="source-card">
+          <div class="source-top">
+            <div class="source-name">${escapeHtml(src.source ?? "Unknown source")}</div>
+            <div class="source-chip">Chunk ${escapeHtml(String(src.chunk ?? "?"))}</div>
+          </div>
+        </div>
+      `).join("");
+    }
+
+    function escapeHtml(text) {
+      return text
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    async function askQuestion() {
+      const question = document.getElementById("question").value.trim();
+      if (!question) return;
+
+      setStatus("Thinking...");
+      document.getElementById("answer").innerHTML = "<p>Searching documents and generating an answer...</p>";
+      document.getElementById("sources").innerHTML = `<div class="empty">Loading sources...</div>`;
+
+      try {
+        const res = await fetch(API_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ question })
+        });
+
+        if (!res.ok) {
+          throw new Error(`HTTP ${res.status}`);
+        }
+
+        const data = await res.json();
+        document.getElementById("answer").innerHTML = formatAnswer(data.answer || "");
+        renderSources(data.sources || []);
+        setStatus("Answer ready");
+      } catch (err) {
+        document.getElementById("answer").innerHTML =
+          "<p>Could not contact the backend. Make sure the FastAPI server is running on port 8000.</p>";
+        document.getElementById("sources").innerHTML = `<div class="empty">No sources available.</div>`;
+        setStatus("Connection error");
+      }
+    }
+  </script>
+</body>
+</html>

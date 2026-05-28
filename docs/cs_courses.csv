@@ -1,0 +1,11 @@
+code,title,credits,prerequisites,alternatives
+CSC 101,Principles in Information Technology and Computation,3,,
+CSC 111,Introduction to Programming,4,CSC 101|MAT 206,
+CSC 211,Advanced Programming Techniques,3,CSC 111,
+CSC 215,Fundamentals of Computer Systems,3,CSC 111,
+CSC 231,Discrete Structures and Applications to Computer Science,4,CSC 111|MAT 301,
+CSC 331,Data Structures,3,CSC 211|CSC 231,
+CSC 350,Software Development,3,CSC 211,
+MAT 206,Precalculus,4,,MAT 301
+MAT 301,Analytic Geometry and Calculus I,4,MAT 206,
+MAT 302,Analytic Geometry and Calculus II,4,MAT 301,

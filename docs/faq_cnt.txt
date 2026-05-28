@@ -1,0 +1,543 @@
+COMPUTER SCIENCE FAQ
+Q: I am a Computer Network Technology major. What courses are required?
+A: For a CNT student, required courses include CSC 101, CSC 110, CIS 165, CIS 255, CIS 345, CIS 445, CIS 455, CIS 440, PHY 110, and MAT 206.
+
+Q: I am a Computer Network Technology major. What are the program requirements?
+A: For a CNT student, the program requirements include CSC 101, CSC 110, CIS 165, CIS 255, CIS 345, CIS 445, CIS 455, CIS 440, PHY 110, and MAT 206.
+
+Q: I am a Computer Network Technology major. What classes do I need for the major?
+A: For a CNT student, courses required for the major include CSC 101, CSC 110, CIS 165, CIS 255, CIS 345, CIS 445, CIS 455, CIS 440, PHY 110, and MAT 206.
+
+Q: I am a Computer Network Technology major. What are the prerequisites for CSC 101?
+A: For a CNT student, CSC 101 has no prerequisites.
+
+Q: I am a Computer Network Technology major. Which classes must I take before CSC 101?
+A: As a CNT student, you do not need to complete any classes before taking CSC 101.
+
+Q: I am a Computer Network Technology major. What do I need before CSC 101?
+A: As a CNT student, you do not need any prerequisite classes before taking CSC 101.
+
+Q: I am a Computer Network Technology major. Does CSC 101 have prerequisites?
+A: CSC 101 does not have prerequisites.
+
+Q: I am a Computer Network Technology major. Do I need any classes before CSC 101?
+A: As a CNT student, you do not need any prerequisite classes before taking CSC 101.
+
+Q: I am a Computer Network Technology major. How many credits is CSC 101?
+A: CSC 101 is worth 3 credits.
+
+Q: I am a Computer Network Technology major. How many credits do I get for CSC 101?
+A: As a CNT student, you receive 3 credits for CSC 101.
+
+Q: I am a Computer Network Technology major. How many credits is CSC 101 worth?
+A: CSC 101 is worth 3 credits.
+
+Q: I am a Computer Network Technology major. What is CSC 101?
+A: As a CNT student, CSC 101 is Principles in Information Technology and Computation.
+
+Q: I am a Computer Network Technology major. What course is CSC 101?
+A: As a CNT student, CSC 101 is Principles in Information Technology and Computation.
+
+Q: I am a Computer Network Technology major. What is the title of CSC 101?
+A: As a CNT student, the title of CSC 101 is Principles in Information Technology and Computation.
+
+Q: I am a Computer Network Technology major. Is CSC 101 required?
+A: For s a CNT student, yes, CSC 101 is a required course in the Computer Network Technology program.
+
+Q: I am a Computer Network Technology major. Is CSC 101 part of my major requirements?
+A: For a CNT student, yes, CSC 101 is part of the Computer Network Technology program requirements.
+
+Q: I am a Computer Network Technology major. What are the prerequisites for CSC 110?
+A: For a CNT student, CSC 110 has no prerequisites.
+
+Q: I am a Computer Network Technology major. Which classes must I take before CSC 110?
+A: As a CNT student, you do not need to complete any classes before taking CSC 110.
+
+Q: I am a Computer Network Technology major. What do I need before CSC 110?
+A: As a CNT student, you do not need any prerequisite classes before taking CSC 110.
+
+Q: I am a Computer Network Technology major. Does CSC 110 have prerequisites?
+A: CSC 110 does not have prerequisites.
+
+Q: I am a Computer Network Technology major. Do I need any classes before CSC 110?
+A: As a CNT student, you do not need any prerequisite classes before taking CSC 110.
+
+Q: I am a Computer Network Technology major. How many credits is CSC 110?
+A: CSC 110 is worth 4 credits.
+
+Q: I am a Computer Network Technology major. How many credits do I get for CSC 110?
+A: As a CNT student, you receive 4 credits for CSC 110.
+
+Q: I am a Computer Network Technology major. How many credits is CSC 110 worth?
+A: CSC 110 is worth 4 credits.
+
+Q: I am a Computer Network Technology major. Can CSC 111 be used instead of CSC 110?
+A: CSC 111 is listed as an alternative to CSC 110.
+
+Q: I am a Computer Network Technology major. Can CSC 110 be replaced by CSC 111?
+A: CSC 111 can be used in place of CSC 110.
+
+Q: I am a Computer Network Technology major. Is CSC 111 an alternative to CSC 110?
+A: yes, CSC 111 is listed as an alternative to CSC 110.
+
+Q: I am a Computer Network Technology major. Can I use CSC 111 instead of CSC 110?
+A: As a CNT student, yes, you can use CSC 111 in place of CSC 110.
+
+Q: I am a Computer Network Technology major. What is CSC 110?
+A: As a CNT student, CSC 110 is Computer Programming I.
+
+Q: I am a Computer Network Technology major. What course is CSC 110?
+A: As a CNT student, CSC 110 is Computer Programming I.
+
+Q: I am a Computer Network Technology major. What is the title of CSC 110?
+A: As a CNT student, the title of CSC 110 is Computer Programming I.
+
+Q: I am a Computer Network Technology major. Is CSC 110 required?
+A: For s a CNT student, yes, CSC 110 is a required course in the Computer Network Technology program.
+
+Q: I am a Computer Network Technology major. Is CSC 110 part of my major requirements?
+A: For a CNT student, yes, CSC 110 is part of the Computer Network Technology program requirements.
+
+Q: I am a Computer Network Technology major. What are the prerequisites for CIS 165?
+A: As a CNT student, the prerequisite for CIS 165 is CSC 101.
+
+Q: I am a Computer Network Technology major. Which classes must I take before CIS 165?
+A: As a CNT student, you must complete CSC 101 before taking CIS 165.
+
+Q: I am a Computer Network Technology major. What do I need before CIS 165?
+A: As a CNT student, you need CSC 101 before taking CIS 165.
+
+Q: I am a Computer Network Technology major. What do I have to take before CIS 165?
+A: As a CNT student, you must take CSC 101 before taking CIS 165.
+
+Q: I am a Computer Network Technology major. What courses do I need before CIS 165?
+A: As a CNT student, you need CSC 101 before taking CIS 165.
+
+Q: I am a Computer Network Technology major. What courses are required before CIS 165?
+A: As a CNT student, CSC 101 is required before CIS 165.
+
+Q: I am a Computer Network Technology major. Before taking CIS 165, what should I complete?
+A: As a CNT student, you should complete CSC 101 before taking CIS 165.
+
+Q: I am a Computer Network Technology major. What do I need to complete before CIS 165?
+A: As a CNT student, you need to complete CSC 101 before taking CIS 165.
+
+Q: I am a Computer Network Technology major. What classes are needed before CIS 165?
+A: As a CNT student, you need CSC 101 before taking CIS 165.
+
+Q: I am a Computer Network Technology major. What do I need in order to take CIS 165?
+A: As a CNT student, you need CSC 101 in order to take CIS 165.
+
+Q: I am a Computer Network Technology major. What should I finish before CIS 165?
+A: As a CNT student, you should finish CSC 101 before taking CIS 165.
+
+Q: I am a Computer Network Technology major. How many credits is CIS 165?
+A: CIS 165 is worth 3 credits.
+
+Q: I am a Computer Network Technology major. How many credits do I get for CIS 165?
+A: As a CNT student, you receive 3 credits for CIS 165.
+
+Q: I am a Computer Network Technology major. How many credits is CIS 165 worth?
+A: CIS 165 is worth 3 credits.
+
+Q: I am a Computer Network Technology major. What is CIS 165?
+A: As a CNT student, CIS 165 is Introduction to Operating Systems.
+
+Q: I am a Computer Network Technology major. What course is CIS 165?
+A: As a CNT student, CIS 165 is Introduction to Operating Systems.
+
+Q: I am a Computer Network Technology major. What is the title of CIS 165?
+A: As a CNT student, the title of CIS 165 is Introduction to Operating Systems.
+
+Q: I am a Computer Network Technology major. Is CIS 165 required?
+A: For s a CNT student, yes, CIS 165 is a required course in the Computer Network Technology program.
+
+Q: I am a Computer Network Technology major. Is CIS 165 part of my major requirements?
+A: For a CNT student, yes, CIS 165 is part of the Computer Network Technology program requirements.
+
+Q: I am a Computer Network Technology major. What are the prerequisites for CIS 255?
+A: As a CNT student, the prerequisite for CIS 255 is CIS 165.
+
+Q: I am a Computer Network Technology major. Which classes must I take before CIS 255?
+A: As a CNT student, you must complete CIS 165 before taking CIS 255.
+
+Q: I am a Computer Network Technology major. What do I need before CIS 255?
+A: As a CNT student, you need CIS 165 before taking CIS 255.
+
+Q: I am a Computer Network Technology major. What do I have to take before CIS 255?
+A: As a CNT student, you must take CIS 165 before taking CIS 255.
+
+Q: I am a Computer Network Technology major. What courses do I need before CIS 255?
+A: As a CNT student, you need CIS 165 before taking CIS 255.
+
+Q: I am a Computer Network Technology major. What courses are required before CIS 255?
+A: As a CNT student, CIS 165 is required before CIS 255.
+
+Q: I am a Computer Network Technology major. Before taking CIS 255, what should I complete?
+A: As a CNT student, you should complete CIS 165 before taking CIS 255.
+
+Q: I am a Computer Network Technology major. What do I need to complete before CIS 255?
+A: As a CNT student, you need to complete CIS 165 before taking CIS 255.
+
+Q: I am a Computer Network Technology major. What classes are needed before CIS 255?
+A: As a CNT student, you need CIS 165 before taking CIS 255.
+
+Q: I am a Computer Network Technology major. What do I need in order to take CIS 255?
+A: As a CNT student, you need CIS 165 in order to take CIS 255.
+
+Q: I am a Computer Network Technology major. What should I finish before CIS 255?
+A: As a CNT student, you should finish CIS 165 before taking CIS 255.
+
+Q: I am a Computer Network Technology major. How many credits is CIS 255?
+A: CIS 255 is worth 3 credits.
+
+Q: I am a Computer Network Technology major. How many credits do I get for CIS 255?
+A: As a CNT student, you receive 3 credits for CIS 255.
+
+Q: I am a Computer Network Technology major. How many credits is CIS 255 worth?
+A: CIS 255 is worth 3 credits.
+
+Q: I am a Computer Network Technology major. What is CIS 255?
+A: As a CNT student, CIS 255 is Computer Software.
+
+Q: I am a Computer Network Technology major. What course is CIS 255?
+A: As a CNT student, CIS 255 is Computer Software.
+
+Q: I am a Computer Network Technology major. What is the title of CIS 255?
+A: As a CNT student, the title of CIS 255 is Computer Software.
+
+Q: I am a Computer Network Technology major. Is CIS 255 required?
+A: For s a CNT student, yes, CIS 255 is a required course in the Computer Network Technology program.
+
+Q: I am a Computer Network Technology major. Is CIS 255 part of my major requirements?
+A: For a CNT student, yes, CIS 255 is part of the Computer Network Technology program requirements.
+
+Q: I am a Computer Network Technology major. What are the prerequisites for CIS 345?
+A: As a CNT student, the prerequisite for CIS 345 is CSC 110 or CSC 111.
+
+Q: I am a Computer Network Technology major. Which classes must I take before CIS 345?
+A: As a CNT student, you must complete CSC 110 or CSC 111 before taking CIS 345.
+
+Q: I am a Computer Network Technology major. What do I need before CIS 345?
+A: As a CNT student, you need CSC 110 or CSC 111 before taking CIS 345.
+
+Q: I am a Computer Network Technology major. What do I have to take before CIS 345?
+A: As a CNT student, you must take CSC 110 or CSC 111 before taking CIS 345.
+
+Q: I am a Computer Network Technology major. What courses do I need before CIS 345?
+A: As a CNT student, you need CSC 110 or CSC 111 before taking CIS 345.
+
+Q: I am a Computer Network Technology major. What courses are required before CIS 345?
+A: As a CNT student, CSC 110 or CSC 111 is required before CIS 345.
+
+Q: I am a Computer Network Technology major. Before taking CIS 345, what should I complete?
+A: As a CNT student, you should complete CSC 110 or CSC 111 before taking CIS 345.
+
+Q: I am a Computer Network Technology major. What do I need to complete before CIS 345?
+A: As a CNT student, you need to complete CSC 110 or CSC 111 before taking CIS 345.
+
+Q: I am a Computer Network Technology major. What classes are needed before CIS 345?
+A: As a CNT student, you need CSC 110 or CSC 111 before taking CIS 345.
+
+Q: I am a Computer Network Technology major. What do I need in order to take CIS 345?
+A: As a CNT student, you need CSC 110 or CSC 111 in order to take CIS 345.
+
+Q: I am a Computer Network Technology major. What should I finish before CIS 345?
+A: As a CNT student, you should finish CSC 110 or CSC 111 before taking CIS 345.
+
+Q: I am a Computer Network Technology major. How many credits is CIS 345?
+A: CIS 345 is worth 3 credits.
+
+Q: I am a Computer Network Technology major. How many credits do I get for CIS 345?
+A: As a CNT student, you receive 3 credits for CIS 345.
+
+Q: I am a Computer Network Technology major. How many credits is CIS 345 worth?
+A: CIS 345 is worth 3 credits.
+
+Q: I am a Computer Network Technology major. What is CIS 345?
+A: As a CNT student, CIS 345 is Telecommunication Network I.
+
+Q: I am a Computer Network Technology major. What course is CIS 345?
+A: As a CNT student, CIS 345 is Telecommunication Network I.
+
+Q: I am a Computer Network Technology major. What is the title of CIS 345?
+A: As a CNT student, the title of CIS 345 is Telecommunication Network I.
+
+Q: I am a Computer Network Technology major. Is CIS 345 required?
+A: For s a CNT student, yes, CIS 345 is a required course in the Computer Network Technology program.
+
+Q: I am a Computer Network Technology major. Is CIS 345 part of my major requirements?
+A: For a CNT student, yes, CIS 345 is part of the Computer Network Technology program requirements.
+
+Q: I am a Computer Network Technology major. What are the prerequisites for CIS 445?
+A: As a CNT student, the prerequisite for CIS 445 is CIS 345.
+
+Q: I am a Computer Network Technology major. Which classes must I take before CIS 445?
+A: As a CNT student, you must complete CIS 345 before taking CIS 445.
+
+Q: I am a Computer Network Technology major. What do I need before CIS 445?
+A: As a CNT student, you need CIS 345 before taking CIS 445.
+
+Q: I am a Computer Network Technology major. What do I have to take before CIS 445?
+A: As a CNT student, you must take CIS 345 before taking CIS 445.
+
+Q: I am a Computer Network Technology major. What courses do I need before CIS 445?
+A: As a CNT student, you need CIS 345 before taking CIS 445.
+
+Q: I am a Computer Network Technology major. What courses are required before CIS 445?
+A: As a CNT student, CIS 345 is required before CIS 445.
+
+Q: I am a Computer Network Technology major. Before taking CIS 445, what should I complete?
+A: As a CNT student, you should complete CIS 345 before taking CIS 445.
+
+Q: I am a Computer Network Technology major. What do I need to complete before CIS 445?
+A: As a CNT student, you need to complete CIS 345 before taking CIS 445.
+
+Q: I am a Computer Network Technology major. What classes are needed before CIS 445?
+A: As a CNT student, you need CIS 345 before taking CIS 445.
+
+Q: I am a Computer Network Technology major. What do I need in order to take CIS 445?
+A: As a CNT student, you need CIS 345 in order to take CIS 445.
+
+Q: I am a Computer Network Technology major. What should I finish before CIS 445?
+A: As a CNT student, you should finish CIS 345 before taking CIS 445.
+
+Q: I am a Computer Network Technology major. How many credits is CIS 445?
+A: CIS 445 is worth 3 credits.
+
+Q: I am a Computer Network Technology major. How many credits do I get for CIS 445?
+A: As a CNT student, you receive 3 credits for CIS 445.
+
+Q: I am a Computer Network Technology major. How many credits is CIS 445 worth?
+A: CIS 445 is worth 3 credits.
+
+Q: I am a Computer Network Technology major. What is CIS 445?
+A: As a CNT student, CIS 445 is Telecommunication Network II / LAN.
+
+Q: I am a Computer Network Technology major. What course is CIS 445?
+A: As a CNT student, CIS 445 is Telecommunication Network II / LAN.
+
+Q: I am a Computer Network Technology major. What is the title of CIS 445?
+A: As a CNT student, the title of CIS 445 is Telecommunication Network II / LAN.
+
+Q: I am a Computer Network Technology major. Is CIS 445 required?
+A: For s a CNT student, yes, CIS 445 is a required course in the Computer Network Technology program.
+
+Q: I am a Computer Network Technology major. Is CIS 445 part of my major requirements?
+A: For a CNT student, yes, CIS 445 is part of the Computer Network Technology program requirements.
+
+Q: I am a Computer Network Technology major. What are the prerequisites for CIS 455?
+A: As a CNT student, the prerequisite for CIS 455 is CIS 345.
+
+Q: I am a Computer Network Technology major. Which classes must I take before CIS 455?
+A: As a CNT student, you must complete CIS 345 before taking CIS 455.
+
+Q: I am a Computer Network Technology major. What do I need before CIS 455?
+A: As a CNT student, you need CIS 345 before taking CIS 455.
+
+Q: I am a Computer Network Technology major. What do I have to take before CIS 455?
+A: As a CNT student, you must take CIS 345 before taking CIS 455.
+
+Q: I am a Computer Network Technology major. What courses do I need before CIS 455?
+A: As a CNT student, you need CIS 345 before taking CIS 455.
+
+Q: I am a Computer Network Technology major. What courses are required before CIS 455?
+A: As a CNT student, CIS 345 is required before CIS 455.
+
+Q: I am a Computer Network Technology major. Before taking CIS 455, what should I complete?
+A: As a CNT student, you should complete CIS 345 before taking CIS 455.
+
+Q: I am a Computer Network Technology major. What do I need to complete before CIS 455?
+A: As a CNT student, you need to complete CIS 345 before taking CIS 455.
+
+Q: I am a Computer Network Technology major. What classes are needed before CIS 455?
+A: As a CNT student, you need CIS 345 before taking CIS 455.
+
+Q: I am a Computer Network Technology major. What do I need in order to take CIS 455?
+A: As a CNT student, you need CIS 345 in order to take CIS 455.
+
+Q: I am a Computer Network Technology major. What should I finish before CIS 455?
+A: As a CNT student, you should finish CIS 345 before taking CIS 455.
+
+Q: I am a Computer Network Technology major. How many credits is CIS 455?
+A: CIS 455 is worth 3 credits.
+
+Q: I am a Computer Network Technology major. How many credits do I get for CIS 455?
+A: As a CNT student, you receive 3 credits for CIS 455.
+
+Q: I am a Computer Network Technology major. How many credits is CIS 455 worth?
+A: CIS 455 is worth 3 credits.
+
+Q: I am a Computer Network Technology major. What is CIS 455?
+A: As a CNT student, CIS 455 is Network Security.
+
+Q: I am a Computer Network Technology major. What course is CIS 455?
+A: As a CNT student, CIS 455 is Network Security.
+
+Q: I am a Computer Network Technology major. What is the title of CIS 455?
+A: As a CNT student, the title of CIS 455 is Network Security.
+
+Q: I am a Computer Network Technology major. Is CIS 455 required?
+A: For s a CNT student, yes, CIS 455 is a required course in the Computer Network Technology program.
+
+Q: I am a Computer Network Technology major. Is CIS 455 part of my major requirements?
+A: For a CNT student, yes, CIS 455 is part of the Computer Network Technology program requirements.
+
+Q: I am a Computer Network Technology major. What are the prerequisites for CIS 440?
+A: As a CNT student, the prerequisite for CIS 440 is CSC 110 or CSC 111.
+
+Q: I am a Computer Network Technology major. Which classes must I take before CIS 440?
+A: As a CNT student, you must complete CSC 110 or CSC 111 before taking CIS 440.
+
+Q: I am a Computer Network Technology major. What do I need before CIS 440?
+A: As a CNT student, you need CSC 110 or CSC 111 before taking CIS 440.
+
+Q: I am a Computer Network Technology major. What do I have to take before CIS 440?
+A: As a CNT student, you must take CSC 110 or CSC 111 before taking CIS 440.
+
+Q: I am a Computer Network Technology major. What courses do I need before CIS 440?
+A: As a CNT student, you need CSC 110 or CSC 111 before taking CIS 440.
+
+Q: I am a Computer Network Technology major. What courses are required before CIS 440?
+A: As a CNT student, CSC 110 or CSC 111 is required before CIS 440.
+
+Q: I am a Computer Network Technology major. Before taking CIS 440, what should I complete?
+A: As a CNT student, you should complete CSC 110 or CSC 111 before taking CIS 440.
+
+Q: I am a Computer Network Technology major. What do I need to complete before CIS 440?
+A: As a CNT student, you need to complete CSC 110 or CSC 111 before taking CIS 440.
+
+Q: I am a Computer Network Technology major. What classes are needed before CIS 440?
+A: As a CNT student, you need CSC 110 or CSC 111 before taking CIS 440.
+
+Q: I am a Computer Network Technology major. What do I need in order to take CIS 440?
+A: As a CNT student, you need CSC 110 or CSC 111 in order to take CIS 440.
+
+Q: I am a Computer Network Technology major. What should I finish before CIS 440?
+A: As a CNT student, you should finish CSC 110 or CSC 111 before taking CIS 440.
+
+Q: I am a Computer Network Technology major. How many credits is CIS 440?
+A: CIS 440 is worth 3 credits.
+
+Q: I am a Computer Network Technology major. How many credits do I get for CIS 440?
+A: As a CNT student, you receive 3 credits for CIS 440.
+
+Q: I am a Computer Network Technology major. How many credits is CIS 440 worth?
+A: CIS 440 is worth 3 credits.
+
+Q: I am a Computer Network Technology major. What is CIS 440?
+A: As a CNT student, CIS 440 is Unix.
+
+Q: I am a Computer Network Technology major. What course is CIS 440?
+A: As a CNT student, CIS 440 is Unix.
+
+Q: I am a Computer Network Technology major. What is the title of CIS 440?
+A: As a CNT student, the title of CIS 440 is Unix.
+
+Q: I am a Computer Network Technology major. Is CIS 440 required?
+A: For s a CNT student, yes, CIS 440 is a required course in the Computer Network Technology program.
+
+Q: I am a Computer Network Technology major. Is CIS 440 part of my major requirements?
+A: For a CNT student, yes, CIS 440 is part of the Computer Network Technology program requirements.
+
+Q: I am a Computer Network Technology major. What are the prerequisites for PHY 110?
+A: For a CNT student, PHY 110 has no prerequisites.
+
+Q: I am a Computer Network Technology major. Which classes must I take before PHY 110?
+A: As a CNT student, you do not need to complete any classes before taking PHY 110.
+
+Q: I am a Computer Network Technology major. What do I need before PHY 110?
+A: As a CNT student, you do not need any prerequisite classes before taking PHY 110.
+
+Q: I am a Computer Network Technology major. Does PHY 110 have prerequisites?
+A: PHY 110 does not have prerequisites.
+
+Q: I am a Computer Network Technology major. Do I need any classes before PHY 110?
+A: As a CNT student, you do not need any prerequisite classes before taking PHY 110.
+
+Q: I am a Computer Network Technology major. How many credits is PHY 110?
+A: PHY 110 is worth 4 credits.
+
+Q: I am a Computer Network Technology major. How many credits do I get for PHY 110?
+A: As a CNT student, you receive 4 credits for PHY 110.
+
+Q: I am a Computer Network Technology major. How many credits is PHY 110 worth?
+A: PHY 110 is worth 4 credits.
+
+Q: I am a Computer Network Technology major. Can AST 110 be used instead of PHY 110?
+A: AST 110 is listed as an alternative to PHY 110.
+
+Q: I am a Computer Network Technology major. Can PHY 110 be replaced by AST 110?
+A: AST 110 can be used in place of PHY 110.
+
+Q: I am a Computer Network Technology major. Is AST 110 an alternative to PHY 110?
+A: yes, AST 110 is listed as an alternative to PHY 110.
+
+Q: I am a Computer Network Technology major. Can I use AST 110 instead of PHY 110?
+A: As a CNT student, yes, you can use AST 110 in place of PHY 110.
+
+Q: I am a Computer Network Technology major. What is PHY 110?
+A: As a CNT student, PHY 110 is General Physics.
+
+Q: I am a Computer Network Technology major. What course is PHY 110?
+A: As a CNT student, PHY 110 is General Physics.
+
+Q: I am a Computer Network Technology major. What is the title of PHY 110?
+A: As a CNT student, the title of PHY 110 is General Physics.
+
+Q: I am a Computer Network Technology major. Is PHY 110 required?
+A: For s a CNT student, yes, PHY 110 is a required course in the Computer Network Technology program.
+
+Q: I am a Computer Network Technology major. Is PHY 110 part of my major requirements?
+A: For a CNT student, yes, PHY 110 is part of the Computer Network Technology program requirements.
+
+Q: I am a Computer Network Technology major. What are the prerequisites for MAT 206?
+A: For a CNT student, MAT 206 has no prerequisites.
+
+Q: I am a Computer Network Technology major. Which classes must I take before MAT 206?
+A: As a CNT student, you do not need to complete any classes before taking MAT 206.
+
+Q: I am a Computer Network Technology major. What do I need before MAT 206?
+A: As a CNT student, you do not need any prerequisite classes before taking MAT 206.
+
+Q: I am a Computer Network Technology major. Does MAT 206 have prerequisites?
+A: MAT 206 does not have prerequisites.
+
+Q: I am a Computer Network Technology major. Do I need any classes before MAT 206?
+A: As a CNT student, you do not need any prerequisite classes before taking MAT 206.
+
+Q: I am a Computer Network Technology major. How many credits is MAT 206?
+A: MAT 206 is worth 4 credits.
+
+Q: I am a Computer Network Technology major. How many credits do I get for MAT 206?
+A: As a CNT student, you receive 4 credits for MAT 206.
+
+Q: I am a Computer Network Technology major. How many credits is MAT 206 worth?
+A: MAT 206 is worth 4 credits.
+
+Q: I am a Computer Network Technology major. Can MAT 301 be used instead of MAT 206?
+A: MAT 301 is listed as an alternative to MAT 206.
+
+Q: I am a Computer Network Technology major. Can MAT 206 be replaced by MAT 301?
+A: MAT 301 can be used in place of MAT 206.
+
+Q: I am a Computer Network Technology major. Is MAT 301 an alternative to MAT 206?
+A: yes, MAT 301 is listed as an alternative to MAT 206.
+
+Q: I am a Computer Network Technology major. Can I use MAT 301 instead of MAT 206?
+A: As a CNT student, yes, you can use MAT 301 in place of MAT 206.
+
+Q: I am a Computer Network Technology major. What is MAT 206?
+A: As a CNT student, MAT 206 is Precalculus.
+
+Q: I am a Computer Network Technology major. What course is MAT 206?
+A: As a CNT student, MAT 206 is Precalculus.
+
+Q: I am a Computer Network Technology major. What is the title of MAT 206?
+A: As a CNT student, the title of MAT 206 is Precalculus.
+
+Q: I am a Computer Network Technology major. Is MAT 206 required?
+A: For s a CNT student, yes, MAT 206 is a required course in the Computer Network Technology program.
+
+Q: I am a Computer Network Technology major. Is MAT 206 part of my major requirements?
+A: For a CNT student, yes, MAT 206 is part of the Computer Network Technology program requirements.

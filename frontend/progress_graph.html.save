@@ -1,0 +1,575 @@
+
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <meta http-equiv="Content-Style-Type" content="text/css">
+  <title></title>
+  <meta name="Generator" content="Cocoa HTML Writer">
+  <meta name="CocoaVersion" content="2575.5">
+  <style type="text/css">
+    p.p1 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px Helvetica}
+    p.p2 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px Helvetica; min-height: 14.0px}
+  </style>
+</head>
+<body>
+<p class="p1">&lt;!DOCTYPE html&gt;</p>
+<p class="p1">&lt;html lang="en"&gt;</p>
+<p class="p1">&lt;head&gt;</p>
+<p class="p1">&lt;meta charset="UTF-8"&gt;</p>
+<p class="p1">&lt;title&gt;Academic Progress Graph&lt;/title&gt;</p>
+<p class="p2"><br></p>
+<p class="p1">&lt;style&gt;</p>
+<p class="p1">body {</p>
+<p class="p1"><span class="Apple-converted-space">  </span>font-family: Arial, sans-serif;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>background: #f5f7fb;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>margin: 0;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>color: #172033;</p>
+<p class="p1">}</p>
+<p class="p2"><br></p>
+<p class="p1">.container {</p>
+<p class="p1"><span class="Apple-converted-space">  </span>max-width: 1100px;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>margin: 40px auto;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>padding: 20px;</p>
+<p class="p1">}</p>
+<p class="p2"><br></p>
+<p class="p1">.card {</p>
+<p class="p1"><span class="Apple-converted-space">  </span>background: white;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>border-radius: 16px;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>padding: 22px;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>margin-bottom: 20px;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>box-shadow: 0 10px 25px rgba(0,0,0,0.07);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>border: 1px solid #e6eaf2;</p>
+<p class="p1">}</p>
+<p class="p2"><br></p>
+<p class="p1">h1 {</p>
+<p class="p1"><span class="Apple-converted-space">  </span>margin-bottom: 6px;</p>
+<p class="p1">}</p>
+<p class="p2"><br></p>
+<p class="p1">.subtitle {</p>
+<p class="p1"><span class="Apple-converted-space">  </span>color: #667085;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>margin-top: 0;</p>
+<p class="p1">}</p>
+<p class="p2"><br></p>
+<p class="p1">.major-select {</p>
+<p class="p1"><span class="Apple-converted-space">  </span>display: flex;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>gap: 14px;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>flex-wrap: wrap;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>margin: 16px 0;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>padding: 14px;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>border: 1px solid #e6eaf2;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>border-radius: 12px;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>background: #f8fbff;</p>
+<p class="p1">}</p>
+<p class="p2"><br></p>
+<p class="p1">.major-select label {</p>
+<p class="p1"><span class="Apple-converted-space">  </span>font-weight: bold;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>cursor: pointer;</p>
+<p class="p1">}</p>
+<p class="p2"><br></p>
+<p class="p1">.checkbox-grid {</p>
+<p class="p1"><span class="Apple-converted-space">  </span>display: grid;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));</p>
+<p class="p1"><span class="Apple-converted-space">  </span>gap: 10px;</p>
+<p class="p1">}</p>
+<p class="p2"><br></p>
+<p class="p1">.checkbox-item {</p>
+<p class="p1"><span class="Apple-converted-space">  </span>background: #f8fbff;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>border: 1px solid #e6eaf2;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>border-radius: 10px;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>padding: 10px;</p>
+<p class="p1">}</p>
+<p class="p2"><br></p>
+<p class="p1">.graph {</p>
+<p class="p1"><span class="Apple-converted-space">  </span>display: flex;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>flex-direction: column;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>gap: 22px;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>margin-top: 20px;</p>
+<p class="p1">}</p>
+<p class="p2"><br></p>
+<p class="p1">.level {</p>
+<p class="p1"><span class="Apple-converted-space">  </span>display: flex;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>gap: 18px;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>flex-wrap: wrap;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>align-items: stretch;</p>
+<p class="p1">}</p>
+<p class="p2"><br></p>
+<p class="p1">.course {</p>
+<p class="p1"><span class="Apple-converted-space">  </span>min-width: 150px;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>max-width: 210px;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>padding: 14px;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>border-radius: 14px;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>border: 2px solid #cfd8e7;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>background: #eef2f7;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>box-shadow: 0 4px 10px rgba(0,0,0,0.05);</p>
+<p class="p1">}</p>
+<p class="p2"><br></p>
+<p class="p1">.course-code {</p>
+<p class="p1"><span class="Apple-converted-space">  </span>font-size: 18px;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>font-weight: bold;</p>
+<p class="p1">}</p>
+<p class="p2"><br></p>
+<p class="p1">.course-title {</p>
+<p class="p1"><span class="Apple-converted-space">  </span>font-size: 13px;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>margin-top: 6px;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>color: #475467;</p>
+<p class="p1">}</p>
+<p class="p2"><br></p>
+<p class="p1">.course-prereq {</p>
+<p class="p1"><span class="Apple-converted-space">  </span>font-size: 12px;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>margin-top: 8px;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>color: #667085;</p>
+<p class="p1">}</p>
+<p class="p2"><br></p>
+<p class="p1">.completed {</p>
+<p class="p1"><span class="Apple-converted-space">  </span>background: #dcfce7;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>border-color: #22c55e;</p>
+<p class="p1">}</p>
+<p class="p2"><br></p>
+<p class="p1">.available {</p>
+<p class="p1"><span class="Apple-converted-space">  </span>background: #dbeafe;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>border-color: #2563eb;</p>
+<p class="p1">}</p>
+<p class="p2"><br></p>
+<p class="p1">.locked {</p>
+<p class="p1"><span class="Apple-converted-space">  </span>background: #f1f5f9;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>border-color: #cbd5e1;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>opacity: 0.85;</p>
+<p class="p1">}</p>
+<p class="p2"><br></p>
+<p class="p1">.legend {</p>
+<p class="p1"><span class="Apple-converted-space">  </span>display: flex;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>gap: 16px;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>flex-wrap: wrap;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>margin-top: 12px;</p>
+<p class="p1">}</p>
+<p class="p2"><br></p>
+<p class="p1">.legend-item {</p>
+<p class="p1"><span class="Apple-converted-space">  </span>display: flex;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>align-items: center;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>gap: 8px;</p>
+<p class="p1">}</p>
+<p class="p2"><br></p>
+<p class="p1">.legend-dot {</p>
+<p class="p1"><span class="Apple-converted-space">  </span>width: 18px;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>height: 18px;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>border-radius: 6px;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>border: 2px solid #999;</p>
+<p class="p1">}</p>
+<p class="p2"><br></p>
+<p class="p1">.green { background: #dcfce7; border-color: #22c55e; }</p>
+<p class="p1">.blue { background: #dbeafe; border-color: #2563eb; }</p>
+<p class="p1">.gray { background: #f1f5f9; border-color: #cbd5e1; }</p>
+<p class="p2"><br></p>
+<p class="p1">.summary {</p>
+<p class="p1"><span class="Apple-converted-space">  </span>line-height: 1.6;</p>
+<p class="p1">}</p>
+<p class="p2"><br></p>
+<p class="p1">.next-list {</p>
+<p class="p1"><span class="Apple-converted-space">  </span>font-weight: bold;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>color: #1d4ed8;</p>
+<p class="p1">}</p>
+<p class="p2"><br></p>
+<p class="p1">button {</p>
+<p class="p1"><span class="Apple-converted-space">  </span>margin-top: 12px;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>padding: 10px 16px;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>border: none;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>border-radius: 12px;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>background: #2563eb;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>color: white;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>font-weight: bold;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>cursor: pointer;</p>
+<p class="p1">}</p>
+<p class="p2"><br></p>
+<p class="p1">button:hover {</p>
+<p class="p1"><span class="Apple-converted-space">  </span>background: #1d4ed8;</p>
+<p class="p1">}</p>
+<p class="p1">&lt;/style&gt;</p>
+<p class="p1">&lt;/head&gt;</p>
+<p class="p2"><br></p>
+<p class="p1">&lt;body&gt;</p>
+<p class="p2"><br></p>
+<p class="p1">&lt;div class="container"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;h1&gt;Academic Progress Graph&lt;/h1&gt;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;p class="subtitle"&gt;Select completed courses to visualize progress through the major prerequisite structure.&lt;/p&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;div class="card"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;h3&gt;Select Major&lt;/h3&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;div class="major-select"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;label&gt;&lt;input type="radio" name="major" value="CS" checked onchange="loadMajor()"&gt; Computer Science&lt;/label&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;label&gt;&lt;input type="radio" name="major" value="CIS" onchange="loadMajor()"&gt; CIS&lt;/label&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;label&gt;&lt;input type="radio" name="major" value="CNT" onchange="loadMajor()"&gt; CNT&lt;/label&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;div class="card"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;h3&gt;Completed Courses&lt;/h3&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;div id="courseCheckboxes" class="checkbox-grid"&gt;&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;button onclick="clearCompleted()"&gt;Clear Selection&lt;/button&gt;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;div class="card"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;h3&gt;Progress Summary&lt;/h3&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;div id="summary" class="summary"&gt;&lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;div class="legend"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;div class="legend-item"&gt;&lt;span class="legend-dot green"&gt;&lt;/span&gt; Completed&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;div class="legend-item"&gt;&lt;span class="legend-dot blue"&gt;&lt;/span&gt; Available Next&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;div class="legend-item"&gt;&lt;span class="legend-dot gray"&gt;&lt;/span&gt; Locked / Not Yet Available&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;div class="card"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;h3&gt;Prerequisite Hierarchy&lt;/h3&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;div id="graph" class="graph"&gt;&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;/div&gt;</p>
+<p class="p1">&lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p class="p1">&lt;script&gt;</p>
+<p class="p1">const MAJORS = {</p>
+<p class="p1"><span class="Apple-converted-space">  </span>CS: {</p>
+<p class="p1"><span class="Apple-converted-space">    </span>name: "Computer Science",</p>
+<p class="p1"><span class="Apple-converted-space">    </span>courses: {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>"CSC 101": {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>title: "Principles in Information Technology and Computation",</p>
+<p class="p1"><span class="Apple-converted-space">        </span>credits: 3,</p>
+<p class="p1"><span class="Apple-converted-space">        </span>prereqs: []</p>
+<p class="p1"><span class="Apple-converted-space">      </span>},</p>
+<p class="p1"><span class="Apple-converted-space">      </span>"MAT 206": {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>title: "Precalculus",</p>
+<p class="p1"><span class="Apple-converted-space">        </span>credits: 4,</p>
+<p class="p1"><span class="Apple-converted-space">        </span>prereqs: []</p>
+<p class="p1"><span class="Apple-converted-space">      </span>},</p>
+<p class="p1"><span class="Apple-converted-space">      </span>"CSC 111": {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>title: "Introduction to Programming",</p>
+<p class="p1"><span class="Apple-converted-space">        </span>credits: 4,</p>
+<p class="p1"><span class="Apple-converted-space">        </span>prereqs: ["CSC 101", "MAT 206"]</p>
+<p class="p1"><span class="Apple-converted-space">      </span>},</p>
+<p class="p1"><span class="Apple-converted-space">      </span>"MAT 301": {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>title: "Analytic Geometry and Calculus I",</p>
+<p class="p1"><span class="Apple-converted-space">        </span>credits: 4,</p>
+<p class="p1"><span class="Apple-converted-space">        </span>prereqs: ["MAT 206"]</p>
+<p class="p1"><span class="Apple-converted-space">      </span>},</p>
+<p class="p1"><span class="Apple-converted-space">      </span>"CSC 211": {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>title: "Advanced Programming Techniques",</p>
+<p class="p1"><span class="Apple-converted-space">        </span>credits: 3,</p>
+<p class="p1"><span class="Apple-converted-space">        </span>prereqs: ["CSC 111"]</p>
+<p class="p1"><span class="Apple-converted-space">      </span>},</p>
+<p class="p1"><span class="Apple-converted-space">      </span>"CSC 215": {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>title: "Fundamentals of Computer Systems",</p>
+<p class="p1"><span class="Apple-converted-space">        </span>credits: 3,</p>
+<p class="p1"><span class="Apple-converted-space">        </span>prereqs: ["CSC 111"]</p>
+<p class="p1"><span class="Apple-converted-space">      </span>},</p>
+<p class="p1"><span class="Apple-converted-space">      </span>"CSC 231": {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>title: "Discrete Structures and Applications to Computer Science",</p>
+<p class="p1"><span class="Apple-converted-space">        </span>credits: 4,</p>
+<p class="p1"><span class="Apple-converted-space">        </span>prereqs: ["CSC 111", "MAT 301"]</p>
+<p class="p1"><span class="Apple-converted-space">      </span>},</p>
+<p class="p1"><span class="Apple-converted-space">      </span>"MAT 302": {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>title: "Analytic Geometry and Calculus II",</p>
+<p class="p1"><span class="Apple-converted-space">        </span>credits: 4,</p>
+<p class="p1"><span class="Apple-converted-space">        </span>prereqs: ["MAT 301"]</p>
+<p class="p1"><span class="Apple-converted-space">      </span>},</p>
+<p class="p1"><span class="Apple-converted-space">      </span>"CSC 331": {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>title: "Data Structures",</p>
+<p class="p1"><span class="Apple-converted-space">        </span>credits: 3,</p>
+<p class="p1"><span class="Apple-converted-space">        </span>prereqs: ["CSC 211", "CSC 231"]</p>
+<p class="p1"><span class="Apple-converted-space">      </span>},</p>
+<p class="p1"><span class="Apple-converted-space">      </span>"CSC 350": {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>title: "Software Development",</p>
+<p class="p1"><span class="Apple-converted-space">        </span>credits: 3,</p>
+<p class="p1"><span class="Apple-converted-space">        </span>prereqs: ["CSC 211"]</p>
+<p class="p1"><span class="Apple-converted-space">      </span>}</p>
+<p class="p1"><span class="Apple-converted-space">    </span>},</p>
+<p class="p1"><span class="Apple-converted-space">    </span>layout: [</p>
+<p class="p1"><span class="Apple-converted-space">      </span>["CSC 101", "MAT 206"],</p>
+<p class="p1"><span class="Apple-converted-space">      </span>["CSC 111", "MAT 301"],</p>
+<p class="p1"><span class="Apple-converted-space">      </span>["CSC 211", "CSC 215", "CSC 231", "MAT 302"],</p>
+<p class="p1"><span class="Apple-converted-space">      </span>["CSC 331", "CSC 350"]</p>
+<p class="p1"><span class="Apple-converted-space">    </span>]</p>
+<p class="p1"><span class="Apple-converted-space">  </span>},</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">  </span>CIS: {</p>
+<p class="p1"><span class="Apple-converted-space">    </span>name: "Computer Information Systems",</p>
+<p class="p1"><span class="Apple-converted-space">    </span>courses: {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>"ACC 122": {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>title: "Accounting Principles I",</p>
+<p class="p1"><span class="Apple-converted-space">        </span>credits: 3,</p>
+<p class="p1"><span class="Apple-converted-space">        </span>prereqs: []</p>
+<p class="p1"><span class="Apple-converted-space">      </span>},</p>
+<p class="p1"><span class="Apple-converted-space">      </span>"BUS 104": {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>title: "Introduction to Business",</p>
+<p class="p1"><span class="Apple-converted-space">        </span>credits: 3,</p>
+<p class="p1"><span class="Apple-converted-space">        </span>prereqs: []</p>
+<p class="p1"><span class="Apple-converted-space">      </span>},</p>
+<p class="p1"><span class="Apple-converted-space">      </span>"CSC 101": {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>title: "Principles in Information Technology and Computation",</p>
+<p class="p1"><span class="Apple-converted-space">        </span>credits: 3,</p>
+<p class="p1"><span class="Apple-converted-space">        </span>prereqs: []</p>
+<p class="p1"><span class="Apple-converted-space">      </span>},</p>
+<p class="p1"><span class="Apple-converted-space">      </span>"CSC 110": {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>title: "Computer Programming I",</p>
+<p class="p1"><span class="Apple-converted-space">        </span>credits: 4,</p>
+<p class="p1"><span class="Apple-converted-space">        </span>prereqs: []</p>
+<p class="p1"><span class="Apple-converted-space">      </span>},</p>
+<p class="p1"><span class="Apple-converted-space">      </span>"MAT 206": {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>title: "Precalculus",</p>
+<p class="p1"><span class="Apple-converted-space">        </span>credits: 4,</p>
+<p class="p1"><span class="Apple-converted-space">        </span>prereqs: []</p>
+<p class="p1"><span class="Apple-converted-space">      </span>},</p>
+<p class="p1"><span class="Apple-converted-space">      </span>"PHY 110": {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>title: "General Physics",</p>
+<p class="p1"><span class="Apple-converted-space">        </span>credits: 4,</p>
+<p class="p1"><span class="Apple-converted-space">        </span>prereqs: []</p>
+<p class="p1"><span class="Apple-converted-space">      </span>},</p>
+<p class="p1"><span class="Apple-converted-space">      </span>"CSC 210": {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>title: "Computer Programming II",</p>
+<p class="p1"><span class="Apple-converted-space">        </span>credits: 3,</p>
+<p class="p1"><span class="Apple-converted-space">        </span>prereqs: [["CSC 110", "CSC 111"]]</p>
+<p class="p1"><span class="Apple-converted-space">      </span>},</p>
+<p class="p1"><span class="Apple-converted-space">      </span>"CIS 345": {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>title: "Telecommunication Network I",</p>
+<p class="p1"><span class="Apple-converted-space">        </span>credits: 3,</p>
+<p class="p1"><span class="Apple-converted-space">        </span>prereqs: [["CSC 110", "CSC 111"]]</p>
+<p class="p1"><span class="Apple-converted-space">      </span>},</p>
+<p class="p1"><span class="Apple-converted-space">      </span>"CIS 385": {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>title: "Web Programming I",</p>
+<p class="p1"><span class="Apple-converted-space">        </span>credits: 3,</p>
+<p class="p1"><span class="Apple-converted-space">        </span>prereqs: [["CSC 110", "CSC 111"]]</p>
+<p class="p1"><span class="Apple-converted-space">      </span>},</p>
+<p class="p1"><span class="Apple-converted-space">      </span>"CIS 395": {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>title: "Database System I",</p>
+<p class="p1"><span class="Apple-converted-space">        </span>credits: 3,</p>
+<p class="p1"><span class="Apple-converted-space">        </span>prereqs: [["CSC 110", "CSC 111"]]</p>
+<p class="p1"><span class="Apple-converted-space">      </span>},</p>
+<p class="p1"><span class="Apple-converted-space">      </span>"CIS 440": {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>title: "Unix",</p>
+<p class="p1"><span class="Apple-converted-space">        </span>credits: 3,</p>
+<p class="p1"><span class="Apple-converted-space">        </span>prereqs: [["CSC 110", "CSC 111"]]</p>
+<p class="p1"><span class="Apple-converted-space">      </span>},</p>
+<p class="p1"><span class="Apple-converted-space">      </span>"CIS 485": {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>title: "Web Programming II",</p>
+<p class="p1"><span class="Apple-converted-space">        </span>credits: 3,</p>
+<p class="p1"><span class="Apple-converted-space">        </span>prereqs: ["CSC 210", "CIS 385"]</p>
+<p class="p1"><span class="Apple-converted-space">      </span>},</p>
+<p class="p1"><span class="Apple-converted-space">      </span>"CIS 495": {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>title: "Database System II",</p>
+<p class="p1"><span class="Apple-converted-space">        </span>credits: 3,</p>
+<p class="p1"><span class="Apple-converted-space">        </span>prereqs: ["CIS 395"]</p>
+<p class="p1"><span class="Apple-converted-space">      </span>}</p>
+<p class="p1"><span class="Apple-converted-space">    </span>},</p>
+<p class="p1"><span class="Apple-converted-space">    </span>layout: [</p>
+<p class="p1"><span class="Apple-converted-space">      </span>["ACC 122", "BUS 104", "CSC 101", "CSC 110", "MAT 206", "PHY 110"],</p>
+<p class="p1"><span class="Apple-converted-space">      </span>["CSC 210", "CIS 345", "CIS 385", "CIS 395", "CIS 440"],</p>
+<p class="p1"><span class="Apple-converted-space">      </span>["CIS 485", "CIS 495"]</p>
+<p class="p1"><span class="Apple-converted-space">    </span>]</p>
+<p class="p1"><span class="Apple-converted-space">  </span>},</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">  </span>CNT: {</p>
+<p class="p1"><span class="Apple-converted-space">    </span>name: "Computer Network Technology",</p>
+<p class="p1"><span class="Apple-converted-space">    </span>courses: {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>"CSC 101": {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>title: "Principles in Information Technology and Computation",</p>
+<p class="p1"><span class="Apple-converted-space">        </span>credits: 3,</p>
+<p class="p1"><span class="Apple-converted-space">        </span>prereqs: []</p>
+<p class="p1"><span class="Apple-converted-space">      </span>},</p>
+<p class="p1"><span class="Apple-converted-space">      </span>"CSC 110": {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>title: "Computer Programming I",</p>
+<p class="p1"><span class="Apple-converted-space">        </span>credits: 4,</p>
+<p class="p1"><span class="Apple-converted-space">        </span>prereqs: []</p>
+<p class="p1"><span class="Apple-converted-space">      </span>},</p>
+<p class="p1"><span class="Apple-converted-space">      </span>"MAT 206": {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>title: "Precalculus",</p>
+<p class="p1"><span class="Apple-converted-space">        </span>credits: 4,</p>
+<p class="p1"><span class="Apple-converted-space">        </span>prereqs: []</p>
+<p class="p1"><span class="Apple-converted-space">      </span>},</p>
+<p class="p1"><span class="Apple-converted-space">      </span>"PHY 110": {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>title: "General Physics",</p>
+<p class="p1"><span class="Apple-converted-space">        </span>credits: 4,</p>
+<p class="p1"><span class="Apple-converted-space">        </span>prereqs: []</p>
+<p class="p1"><span class="Apple-converted-space">      </span>},</p>
+<p class="p1"><span class="Apple-converted-space">      </span>"CIS 165": {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>title: "Introduction to Operating Systems",</p>
+<p class="p1"><span class="Apple-converted-space">        </span>credits: 3,</p>
+<p class="p1"><span class="Apple-converted-space">        </span>prereqs: ["CSC 101"]</p>
+<p class="p1"><span class="Apple-converted-space">      </span>},</p>
+<p class="p1"><span class="Apple-converted-space">      </span>"CIS 255": {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>title: "Computer Software",</p>
+<p class="p1"><span class="Apple-converted-space">        </span>credits: 3,</p>
+<p class="p1"><span class="Apple-converted-space">        </span>prereqs: ["CIS 165"]</p>
+<p class="p1"><span class="Apple-converted-space">      </span>},</p>
+<p class="p1"><span class="Apple-converted-space">      </span>"CIS 345": {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>title: "Telecommunication Network I",</p>
+<p class="p1"><span class="Apple-converted-space">        </span>credits: 3,</p>
+<p class="p1"><span class="Apple-converted-space">        </span>prereqs: [["CSC 110", "CSC 111"]]</p>
+<p class="p1"><span class="Apple-converted-space">      </span>},</p>
+<p class="p1"><span class="Apple-converted-space">      </span>"CIS 440": {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>title: "Unix",</p>
+<p class="p1"><span class="Apple-converted-space">        </span>credits: 3,</p>
+<p class="p1"><span class="Apple-converted-space">        </span>prereqs: [["CSC 110", "CSC 111"]]</p>
+<p class="p1"><span class="Apple-converted-space">      </span>},</p>
+<p class="p1"><span class="Apple-converted-space">      </span>"CIS 445": {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>title: "Telecommunication Network II / LAN",</p>
+<p class="p1"><span class="Apple-converted-space">        </span>credits: 3,</p>
+<p class="p1"><span class="Apple-converted-space">        </span>prereqs: ["CIS 345"]</p>
+<p class="p1"><span class="Apple-converted-space">      </span>},</p>
+<p class="p1"><span class="Apple-converted-space">      </span>"CIS 455": {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>title: "Network Security",</p>
+<p class="p1"><span class="Apple-converted-space">        </span>credits: 3,</p>
+<p class="p1"><span class="Apple-converted-space">        </span>prereqs: ["CIS 345"]</p>
+<p class="p1"><span class="Apple-converted-space">      </span>}</p>
+<p class="p1"><span class="Apple-converted-space">    </span>},</p>
+<p class="p1"><span class="Apple-converted-space">    </span>layout: [</p>
+<p class="p1"><span class="Apple-converted-space">      </span>["CSC 101", "CSC 110", "MAT 206", "PHY 110"],</p>
+<p class="p1"><span class="Apple-converted-space">      </span>["CIS 165", "CIS 345", "CIS 440"],</p>
+<p class="p1"><span class="Apple-converted-space">      </span>["CIS 255", "CIS 445", "CIS 455"]</p>
+<p class="p1"><span class="Apple-converted-space">    </span>]</p>
+<p class="p1"><span class="Apple-converted-space">  </span>}</p>
+<p class="p1">};</p>
+<p class="p2"><br></p>
+<p class="p1">function getSelectedMajorCode() {</p>
+<p class="p1"><span class="Apple-converted-space">  </span>return document.querySelector('input[name="major"]:checked').value;</p>
+<p class="p1">}</p>
+<p class="p2"><br></p>
+<p class="p1">function getSelectedMajor() {</p>
+<p class="p1"><span class="Apple-converted-space">  </span>return MAJORS[getSelectedMajorCode()];</p>
+<p class="p1">}</p>
+<p class="p2"><br></p>
+<p class="p1">function getCompletedCourses() {</p>
+<p class="p1"><span class="Apple-converted-space">  </span>const checked = document.querySelectorAll(".completed-check:checked");</p>
+<p class="p1"><span class="Apple-converted-space">  </span>return new Set([...checked].map(cb =&gt; cb.value));</p>
+<p class="p1">}</p>
+<p class="p2"><br></p>
+<p class="p1">function prereqSatisfied(prereq, completed) {</p>
+<p class="p1"><span class="Apple-converted-space">  </span>if (Array.isArray(prereq)) {</p>
+<p class="p1"><span class="Apple-converted-space">    </span>return prereq.some(option =&gt; completed.has(option));</p>
+<p class="p1"><span class="Apple-converted-space">  </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">  </span>return completed.has(prereq);</p>
+<p class="p1">}</p>
+<p class="p2"><br></p>
+<p class="p1">function allPrereqsSatisfied(course, completed) {</p>
+<p class="p1"><span class="Apple-converted-space">  </span>return course.prereqs.every(prereq =&gt; prereqSatisfied(prereq, completed));</p>
+<p class="p1">}</p>
+<p class="p2"><br></p>
+<p class="p1">function formatPrereqs(prereqs) {</p>
+<p class="p1"><span class="Apple-converted-space">  </span>if (!prereqs.length) return "None";</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">  </span>return prereqs.map(p =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">    </span>if (Array.isArray(p)) {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>return p.join(" or ");</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p1"><span class="Apple-converted-space">    </span>return p;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>}).join(", ");</p>
+<p class="p1">}</p>
+<p class="p2"><br></p>
+<p class="p1">function getCourseStatus(courseCode, course, completed) {</p>
+<p class="p1"><span class="Apple-converted-space">  </span>if (completed.has(courseCode)) {</p>
+<p class="p1"><span class="Apple-converted-space">    </span>return "completed";</p>
+<p class="p1"><span class="Apple-converted-space">  </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">  </span>if (allPrereqsSatisfied(course, completed)) {</p>
+<p class="p1"><span class="Apple-converted-space">    </span>return "available";</p>
+<p class="p1"><span class="Apple-converted-space">  </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">  </span>return "locked";</p>
+<p class="p1">}</p>
+<p class="p2"><br></p>
+<p class="p1">function loadMajor() {</p>
+<p class="p1"><span class="Apple-converted-space">  </span>renderCheckboxes();</p>
+<p class="p1"><span class="Apple-converted-space">  </span>renderGraph();</p>
+<p class="p1">}</p>
+<p class="p2"><br></p>
+<p class="p1">function renderCheckboxes() {</p>
+<p class="p1"><span class="Apple-converted-space">  </span>const major = getSelectedMajor();</p>
+<p class="p1"><span class="Apple-converted-space">  </span>const container = document.getElementById("courseCheckboxes");</p>
+<p class="p1"><span class="Apple-converted-space">  </span>container.innerHTML = "";</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">  </span>Object.entries(major.courses).forEach(([code, course]) =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const div = document.createElement("label");</p>
+<p class="p1"><span class="Apple-converted-space">    </span>div.className = "checkbox-item";</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>div.innerHTML = `</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;input type="checkbox" class="completed-check" value="${code}" onchange="renderGraph()"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;strong&gt;${code}&lt;/strong&gt;&lt;br&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;span style="font-size:12px;color:#667085;"&gt;${course.title}&lt;/span&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>`;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>container.appendChild(div);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>});</p>
+<p class="p1">}</p>
+<p class="p2"><br></p>
+<p class="p1">function renderGraph() {</p>
+<p class="p1"><span class="Apple-converted-space">  </span>const major = getSelectedMajor();</p>
+<p class="p1"><span class="Apple-converted-space">  </span>const completed = getCompletedCourses();</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">  </span>const graph = document.getElementById("graph");</p>
+<p class="p1"><span class="Apple-converted-space">  </span>graph.innerHTML = "";</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">  </span>major.layout.forEach(levelCourses =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const levelDiv = document.createElement("div");</p>
+<p class="p1"><span class="Apple-converted-space">    </span>levelDiv.className = "level";</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>levelCourses.forEach(code =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const course = major.courses[code];</p>
+<p class="p1"><span class="Apple-converted-space">      </span>if (!course) return;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">      </span>const status = getCourseStatus(code, course, completed);</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">      </span>const courseDiv = document.createElement("div");</p>
+<p class="p1"><span class="Apple-converted-space">      </span>courseDiv.className = `course ${status}`;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">      </span>courseDiv.innerHTML = `</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;div class="course-code"&gt;${code}&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;div class="course-title"&gt;${course.title}&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;div class="course-prereq"&gt;Prereqs: ${formatPrereqs(course.prereqs)}&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>`;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">      </span>levelDiv.appendChild(courseDiv);</p>
+<p class="p1"><span class="Apple-converted-space">    </span>});</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>graph.appendChild(levelDiv);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>});</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">  </span>renderSummary();</p>
+<p class="p1">}</p>
+<p class="p2"><br></p>
+<p class="p1">function renderSummary() {</p>
+<p class="p1"><span class="Apple-converted-space">  </span>const major = getSelectedMajor();</p>
+<p class="p1"><span class="Apple-converted-space">  </span>const completed = getCompletedCourses();</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">  </span>const totalCourses = Object.keys(major.courses).length;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>const completedCount = completed.size;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">  </span>const available = [];</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">  </span>Object.entries(major.courses).forEach(([code, course]) =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">    </span>if (!completed.has(code) &amp;&amp; allPrereqsSatisfied(course, completed)) {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>available.push(code);</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p1"><span class="Apple-converted-space">  </span>});</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">  </span>const summary = document.getElementById("summary");</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">  </span>summary.innerHTML = `</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;strong&gt;Major:&lt;/strong&gt; ${major.name}&lt;br&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;strong&gt;Completed:&lt;/strong&gt; ${completedCount} of ${totalCourses} courses&lt;br&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;strong&gt;Available next:&lt;/strong&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;span class="next-list"&gt;${available.length ? available.join(", ") : "None"}&lt;/span&gt;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>`;</p>
+<p class="p1">}</p>
+<p class="p2"><br></p>
+<p class="p1">function clearCompleted() {</p>
+<p class="p1"><span class="Apple-converted-space">  </span>document.querySelectorAll(".completed-check").forEach(cb =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">    </span>cb.checked = false;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>});</p>
+<p class="p1"><span class="Apple-converted-space">  </span>renderGraph();</p>
+<p class="p1">}</p>
+<p class="p2"><br></p>
+<p class="p1">loadMajor();</p>
+<p class="p1">&lt;/script&gt;</p>
+<p class="p2"><br></p>
+<p class="p1">&lt;/body&gt;</p>
+<p class="p1">&lt;/html&gt;</p>
+</body>
+</html>

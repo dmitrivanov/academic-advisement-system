@@ -1,0 +1,678 @@
+COMPUTER SCIENCE FAQ
+Q: I am a Computer Information Systems major. What courses are required?
+A: For a CIS student, required courses include ACC 122, BUS 104, CSC 101, CSC 110, CSC 210, CIS 345, CIS 385, CIS 395, CIS 440, CIS 485, CIS 495, PHY 110, and MAT 206.
+
+Q: I am a Computer Information Systems major. What are the program requirements?
+A: For a CIS student, the program requirements include ACC 122, BUS 104, CSC 101, CSC 110, CSC 210, CIS 345, CIS 385, CIS 395, CIS 440, CIS 485, CIS 495, PHY 110, and MAT 206.
+
+Q: I am a Computer Information Systems major. What classes do I need for the major?
+A: For a CIS student, courses required for the major include ACC 122, BUS 104, CSC 101, CSC 110, CSC 210, CIS 345, CIS 385, CIS 395, CIS 440, CIS 485, CIS 495, PHY 110, and MAT 206.
+
+Q: I am a Computer Information Systems major. What are the prerequisites for ACC 122?
+A: For a CIS student, ACC 122 has no prerequisites.
+
+Q: I am a Computer Information Systems major. Which classes must I take before ACC 122?
+A: As a CIS student, you do not need to complete any classes before taking ACC 122.
+
+Q: I am a Computer Information Systems major. What do I need before ACC 122?
+A: As a CIS student, you do not need any prerequisite classes before taking ACC 122.
+
+Q: I am a Computer Information Systems major. Does ACC 122 have prerequisites?
+A: ACC 122 does not have prerequisites.
+
+Q: I am a Computer Information Systems major. Do I need any classes before ACC 122?
+A: As a CIS student, you do not need any prerequisite classes before taking ACC 122.
+
+Q: I am a Computer Information Systems major. How many credits is ACC 122?
+A: ACC 122 is worth 3 credits.
+
+Q: I am a Computer Information Systems major. How many credits do I get for ACC 122?
+A: As a CIS student, you receive 3 credits for ACC 122.
+
+Q: I am a Computer Information Systems major. How many credits is ACC 122 worth?
+A: ACC 122 is worth 3 credits.
+
+Q: I am a Computer Information Systems major. What is ACC 122?
+A: As a CIS student, ACC 122 is Accounting Principles I.
+
+Q: I am a Computer Information Systems major. What course is ACC 122?
+A: As a CIS student, ACC 122 is Accounting Principles I.
+
+Q: I am a Computer Information Systems major. What is the title of ACC 122?
+A: As a CIS student, the title of ACC 122 is Accounting Principles I.
+
+Q: I am a Computer Information Systems major. Is ACC 122 required?
+A: For s a CIS student, yes, ACC 122 is a required course in the Computer Information Systems program.
+
+Q: I am a Computer Information Systems major. Is ACC 122 part of my major requirements?
+A: For a CIS student, yes, ACC 122 is part of the Computer Information Systems program requirements.
+
+Q: I am a Computer Information Systems major. What are the prerequisites for BUS 104?
+A: For a CIS student, BUS 104 has no prerequisites.
+
+Q: I am a Computer Information Systems major. Which classes must I take before BUS 104?
+A: As a CIS student, you do not need to complete any classes before taking BUS 104.
+
+Q: I am a Computer Information Systems major. What do I need before BUS 104?
+A: As a CIS student, you do not need any prerequisite classes before taking BUS 104.
+
+Q: I am a Computer Information Systems major. Does BUS 104 have prerequisites?
+A: BUS 104 does not have prerequisites.
+
+Q: I am a Computer Information Systems major. Do I need any classes before BUS 104?
+A: As a CIS student, you do not need any prerequisite classes before taking BUS 104.
+
+Q: I am a Computer Information Systems major. How many credits is BUS 104?
+A: BUS 104 is worth 3 credits.
+
+Q: I am a Computer Information Systems major. How many credits do I get for BUS 104?
+A: As a CIS student, you receive 3 credits for BUS 104.
+
+Q: I am a Computer Information Systems major. How many credits is BUS 104 worth?
+A: BUS 104 is worth 3 credits.
+
+Q: I am a Computer Information Systems major. What is BUS 104?
+A: As a CIS student, BUS 104 is Introduction to Business.
+
+Q: I am a Computer Information Systems major. What course is BUS 104?
+A: As a CIS student, BUS 104 is Introduction to Business.
+
+Q: I am a Computer Information Systems major. What is the title of BUS 104?
+A: As a CIS student, the title of BUS 104 is Introduction to Business.
+
+Q: I am a Computer Information Systems major. Is BUS 104 required?
+A: For s a CIS student, yes, BUS 104 is a required course in the Computer Information Systems program.
+
+Q: I am a Computer Information Systems major. Is BUS 104 part of my major requirements?
+A: For a CIS student, yes, BUS 104 is part of the Computer Information Systems program requirements.
+
+Q: I am a Computer Information Systems major. What are the prerequisites for CSC 101?
+A: For a CIS student, CSC 101 has no prerequisites.
+
+Q: I am a Computer Information Systems major. Which classes must I take before CSC 101?
+A: As a CIS student, you do not need to complete any classes before taking CSC 101.
+
+Q: I am a Computer Information Systems major. What do I need before CSC 101?
+A: As a CIS student, you do not need any prerequisite classes before taking CSC 101.
+
+Q: I am a Computer Information Systems major. Does CSC 101 have prerequisites?
+A: CSC 101 does not have prerequisites.
+
+Q: I am a Computer Information Systems major. Do I need any classes before CSC 101?
+A: As a CIS student, you do not need any prerequisite classes before taking CSC 101.
+
+Q: I am a Computer Information Systems major. How many credits is CSC 101?
+A: CSC 101 is worth 3 credits.
+
+Q: I am a Computer Information Systems major. How many credits do I get for CSC 101?
+A: As a CIS student, you receive 3 credits for CSC 101.
+
+Q: I am a Computer Information Systems major. How many credits is CSC 101 worth?
+A: CSC 101 is worth 3 credits.
+
+Q: I am a Computer Information Systems major. What is CSC 101?
+A: As a CIS student, CSC 101 is Principles in Information Technology and Computation.
+
+Q: I am a Computer Information Systems major. What course is CSC 101?
+A: As a CIS student, CSC 101 is Principles in Information Technology and Computation.
+
+Q: I am a Computer Information Systems major. What is the title of CSC 101?
+A: As a CIS student, the title of CSC 101 is Principles in Information Technology and Computation.
+
+Q: I am a Computer Information Systems major. Is CSC 101 required?
+A: For s a CIS student, yes, CSC 101 is a required course in the Computer Information Systems program.
+
+Q: I am a Computer Information Systems major. Is CSC 101 part of my major requirements?
+A: For a CIS student, yes, CSC 101 is part of the Computer Information Systems program requirements.
+
+Q: I am a Computer Information Systems major. What are the prerequisites for CSC 110?
+A: For a CIS student, CSC 110 has no prerequisites.
+
+Q: I am a Computer Information Systems major. Which classes must I take before CSC 110?
+A: As a CIS student, you do not need to complete any classes before taking CSC 110.
+
+Q: I am a Computer Information Systems major. What do I need before CSC 110?
+A: As a CIS student, you do not need any prerequisite classes before taking CSC 110.
+
+Q: I am a Computer Information Systems major. Does CSC 110 have prerequisites?
+A: CSC 110 does not have prerequisites.
+
+Q: I am a Computer Information Systems major. Do I need any classes before CSC 110?
+A: As a CIS student, you do not need any prerequisite classes before taking CSC 110.
+
+Q: I am a Computer Information Systems major. How many credits is CSC 110?
+A: CSC 110 is worth 4 credits.
+
+Q: I am a Computer Information Systems major. How many credits do I get for CSC 110?
+A: As a CIS student, you receive 4 credits for CSC 110.
+
+Q: I am a Computer Information Systems major. How many credits is CSC 110 worth?
+A: CSC 110 is worth 4 credits.
+
+Q: I am a Computer Information Systems major. Can CSC 111 be used instead of CSC 110?
+A: CSC 111 is listed as an alternative to CSC 110.
+
+Q: I am a Computer Information Systems major. Can CSC 110 be replaced by CSC 111?
+A: CSC 111 can be used in place of CSC 110.
+
+Q: I am a Computer Information Systems major. Is CSC 111 an alternative to CSC 110?
+A: yes, CSC 111 is listed as an alternative to CSC 110.
+
+Q: I am a Computer Information Systems major. Can I use CSC 111 instead of CSC 110?
+A: As a CIS student, yes, you can use CSC 111 in place of CSC 110.
+
+Q: I am a Computer Information Systems major. What is CSC 110?
+A: As a CIS student, CSC 110 is Computer Programming I.
+
+Q: I am a Computer Information Systems major. What course is CSC 110?
+A: As a CIS student, CSC 110 is Computer Programming I.
+
+Q: I am a Computer Information Systems major. What is the title of CSC 110?
+A: As a CIS student, the title of CSC 110 is Computer Programming I.
+
+Q: I am a Computer Information Systems major. Is CSC 110 required?
+A: For s a CIS student, yes, CSC 110 is a required course in the Computer Information Systems program.
+
+Q: I am a Computer Information Systems major. Is CSC 110 part of my major requirements?
+A: For a CIS student, yes, CSC 110 is part of the Computer Information Systems program requirements.
+
+Q: I am a Computer Information Systems major. What are the prerequisites for CSC 210?
+A: As a CIS student, the prerequisite for CSC 210 is CSC 110 or CSC 111.
+
+Q: I am a Computer Information Systems major. Which classes must I take before CSC 210?
+A: As a CIS student, you must complete CSC 110 or CSC 111 before taking CSC 210.
+
+Q: I am a Computer Information Systems major. What do I need before CSC 210?
+A: As a CIS student, you need CSC 110 or CSC 111 before taking CSC 210.
+
+Q: I am a Computer Information Systems major. What do I have to take before CSC 210?
+A: As a CIS student, you must take CSC 110 or CSC 111 before taking CSC 210.
+
+Q: I am a Computer Information Systems major. What courses do I need before CSC 210?
+A: As a CIS student, you need CSC 110 or CSC 111 before taking CSC 210.
+
+Q: I am a Computer Information Systems major. What courses are required before CSC 210?
+A: As a CIS student, CSC 110 or CSC 111 is required before CSC 210.
+
+Q: I am a Computer Information Systems major. Before taking CSC 210, what should I complete?
+A: As a CIS student, you should complete CSC 110 or CSC 111 before taking CSC 210.
+
+Q: I am a Computer Information Systems major. What do I need to complete before CSC 210?
+A: As a CIS student, you need to complete CSC 110 or CSC 111 before taking CSC 210.
+
+Q: I am a Computer Information Systems major. What classes are needed before CSC 210?
+A: As a CIS student, you need CSC 110 or CSC 111 before taking CSC 210.
+
+Q: I am a Computer Information Systems major. What do I need in order to take CSC 210?
+A: As a CIS student, you need CSC 110 or CSC 111 in order to take CSC 210.
+
+Q: I am a Computer Information Systems major. What should I finish before CSC 210?
+A: As a CIS student, you should finish CSC 110 or CSC 111 before taking CSC 210.
+
+Q: I am a Computer Information Systems major. How many credits is CSC 210?
+A: CSC 210 is worth 3 credits.
+
+Q: I am a Computer Information Systems major. How many credits do I get for CSC 210?
+A: As a CIS student, you receive 3 credits for CSC 210.
+
+Q: I am a Computer Information Systems major. How many credits is CSC 210 worth?
+A: CSC 210 is worth 3 credits.
+
+Q: I am a Computer Information Systems major. What is CSC 210?
+A: As a CIS student, CSC 210 is Computer Programming II.
+
+Q: I am a Computer Information Systems major. What course is CSC 210?
+A: As a CIS student, CSC 210 is Computer Programming II.
+
+Q: I am a Computer Information Systems major. What is the title of CSC 210?
+A: As a CIS student, the title of CSC 210 is Computer Programming II.
+
+Q: I am a Computer Information Systems major. Is CSC 210 required?
+A: For s a CIS student, yes, CSC 210 is a required course in the Computer Information Systems program.
+
+Q: I am a Computer Information Systems major. Is CSC 210 part of my major requirements?
+A: For a CIS student, yes, CSC 210 is part of the Computer Information Systems program requirements.
+
+Q: I am a Computer Information Systems major. What are the prerequisites for CIS 345?
+A: As a CIS student, the prerequisite for CIS 345 is CSC 110 or CSC 111.
+
+Q: I am a Computer Information Systems major. Which classes must I take before CIS 345?
+A: As a CIS student, you must complete CSC 110 or CSC 111 before taking CIS 345.
+
+Q: I am a Computer Information Systems major. What do I need before CIS 345?
+A: As a CIS student, you need CSC 110 or CSC 111 before taking CIS 345.
+
+Q: I am a Computer Information Systems major. What do I have to take before CIS 345?
+A: As a CIS student, you must take CSC 110 or CSC 111 before taking CIS 345.
+
+Q: I am a Computer Information Systems major. What courses do I need before CIS 345?
+A: As a CIS student, you need CSC 110 or CSC 111 before taking CIS 345.
+
+Q: I am a Computer Information Systems major. What courses are required before CIS 345?
+A: As a CIS student, CSC 110 or CSC 111 is required before CIS 345.
+
+Q: I am a Computer Information Systems major. Before taking CIS 345, what should I complete?
+A: As a CIS student, you should complete CSC 110 or CSC 111 before taking CIS 345.
+
+Q: I am a Computer Information Systems major. What do I need to complete before CIS 345?
+A: As a CIS student, you need to complete CSC 110 or CSC 111 before taking CIS 345.
+
+Q: I am a Computer Information Systems major. What classes are needed before CIS 345?
+A: As a CIS student, you need CSC 110 or CSC 111 before taking CIS 345.
+
+Q: I am a Computer Information Systems major. What do I need in order to take CIS 345?
+A: As a CIS student, you need CSC 110 or CSC 111 in order to take CIS 345.
+
+Q: I am a Computer Information Systems major. What should I finish before CIS 345?
+A: As a CIS student, you should finish CSC 110 or CSC 111 before taking CIS 345.
+
+Q: I am a Computer Information Systems major. How many credits is CIS 345?
+A: CIS 345 is worth 3 credits.
+
+Q: I am a Computer Information Systems major. How many credits do I get for CIS 345?
+A: As a CIS student, you receive 3 credits for CIS 345.
+
+Q: I am a Computer Information Systems major. How many credits is CIS 345 worth?
+A: CIS 345 is worth 3 credits.
+
+Q: I am a Computer Information Systems major. What is CIS 345?
+A: As a CIS student, CIS 345 is Telecommunication Network I.
+
+Q: I am a Computer Information Systems major. What course is CIS 345?
+A: As a CIS student, CIS 345 is Telecommunication Network I.
+
+Q: I am a Computer Information Systems major. What is the title of CIS 345?
+A: As a CIS student, the title of CIS 345 is Telecommunication Network I.
+
+Q: I am a Computer Information Systems major. Is CIS 345 required?
+A: For s a CIS student, yes, CIS 345 is a required course in the Computer Information Systems program.
+
+Q: I am a Computer Information Systems major. Is CIS 345 part of my major requirements?
+A: For a CIS student, yes, CIS 345 is part of the Computer Information Systems program requirements.
+
+Q: I am a Computer Information Systems major. What are the prerequisites for CIS 385?
+A: As a CIS student, the prerequisite for CIS 385 is CSC 110 or CSC 111.
+
+Q: I am a Computer Information Systems major. Which classes must I take before CIS 385?
+A: As a CIS student, you must complete CSC 110 or CSC 111 before taking CIS 385.
+
+Q: I am a Computer Information Systems major. What do I need before CIS 385?
+A: As a CIS student, you need CSC 110 or CSC 111 before taking CIS 385.
+
+Q: I am a Computer Information Systems major. What do I have to take before CIS 385?
+A: As a CIS student, you must take CSC 110 or CSC 111 before taking CIS 385.
+
+Q: I am a Computer Information Systems major. What courses do I need before CIS 385?
+A: As a CIS student, you need CSC 110 or CSC 111 before taking CIS 385.
+
+Q: I am a Computer Information Systems major. What courses are required before CIS 385?
+A: As a CIS student, CSC 110 or CSC 111 is required before CIS 385.
+
+Q: I am a Computer Information Systems major. Before taking CIS 385, what should I complete?
+A: As a CIS student, you should complete CSC 110 or CSC 111 before taking CIS 385.
+
+Q: I am a Computer Information Systems major. What do I need to complete before CIS 385?
+A: As a CIS student, you need to complete CSC 110 or CSC 111 before taking CIS 385.
+
+Q: I am a Computer Information Systems major. What classes are needed before CIS 385?
+A: As a CIS student, you need CSC 110 or CSC 111 before taking CIS 385.
+
+Q: I am a Computer Information Systems major. What do I need in order to take CIS 385?
+A: As a CIS student, you need CSC 110 or CSC 111 in order to take CIS 385.
+
+Q: I am a Computer Information Systems major. What should I finish before CIS 385?
+A: As a CIS student, you should finish CSC 110 or CSC 111 before taking CIS 385.
+
+Q: I am a Computer Information Systems major. How many credits is CIS 385?
+A: CIS 385 is worth 3 credits.
+
+Q: I am a Computer Information Systems major. How many credits do I get for CIS 385?
+A: As a CIS student, you receive 3 credits for CIS 385.
+
+Q: I am a Computer Information Systems major. How many credits is CIS 385 worth?
+A: CIS 385 is worth 3 credits.
+
+Q: I am a Computer Information Systems major. What is CIS 385?
+A: As a CIS student, CIS 385 is Web Programming I.
+
+Q: I am a Computer Information Systems major. What course is CIS 385?
+A: As a CIS student, CIS 385 is Web Programming I.
+
+Q: I am a Computer Information Systems major. What is the title of CIS 385?
+A: As a CIS student, the title of CIS 385 is Web Programming I.
+
+Q: I am a Computer Information Systems major. Is CIS 385 required?
+A: For s a CIS student, yes, CIS 385 is a required course in the Computer Information Systems program.
+
+Q: I am a Computer Information Systems major. Is CIS 385 part of my major requirements?
+A: For a CIS student, yes, CIS 385 is part of the Computer Information Systems program requirements.
+
+Q: I am a Computer Information Systems major. What are the prerequisites for CIS 395?
+A: As a CIS student, the prerequisite for CIS 395 is CSC 110 or CSC 111.
+
+Q: I am a Computer Information Systems major. Which classes must I take before CIS 395?
+A: As a CIS student, you must complete CSC 110 or CSC 111 before taking CIS 395.
+
+Q: I am a Computer Information Systems major. What do I need before CIS 395?
+A: As a CIS student, you need CSC 110 or CSC 111 before taking CIS 395.
+
+Q: I am a Computer Information Systems major. What do I have to take before CIS 395?
+A: As a CIS student, you must take CSC 110 or CSC 111 before taking CIS 395.
+
+Q: I am a Computer Information Systems major. What courses do I need before CIS 395?
+A: As a CIS student, you need CSC 110 or CSC 111 before taking CIS 395.
+
+Q: I am a Computer Information Systems major. What courses are required before CIS 395?
+A: As a CIS student, CSC 110 or CSC 111 is required before CIS 395.
+
+Q: I am a Computer Information Systems major. Before taking CIS 395, what should I complete?
+A: As a CIS student, you should complete CSC 110 or CSC 111 before taking CIS 395.
+
+Q: I am a Computer Information Systems major. What do I need to complete before CIS 395?
+A: As a CIS student, you need to complete CSC 110 or CSC 111 before taking CIS 395.
+
+Q: I am a Computer Information Systems major. What classes are needed before CIS 395?
+A: As a CIS student, you need CSC 110 or CSC 111 before taking CIS 395.
+
+Q: I am a Computer Information Systems major. What do I need in order to take CIS 395?
+A: As a CIS student, you need CSC 110 or CSC 111 in order to take CIS 395.
+
+Q: I am a Computer Information Systems major. What should I finish before CIS 395?
+A: As a CIS student, you should finish CSC 110 or CSC 111 before taking CIS 395.
+
+Q: I am a Computer Information Systems major. How many credits is CIS 395?
+A: CIS 395 is worth 3 credits.
+
+Q: I am a Computer Information Systems major. How many credits do I get for CIS 395?
+A: As a CIS student, you receive 3 credits for CIS 395.
+
+Q: I am a Computer Information Systems major. How many credits is CIS 395 worth?
+A: CIS 395 is worth 3 credits.
+
+Q: I am a Computer Information Systems major. What is CIS 395?
+A: As a CIS student, CIS 395 is Database System I.
+
+Q: I am a Computer Information Systems major. What course is CIS 395?
+A: As a CIS student, CIS 395 is Database System I.
+
+Q: I am a Computer Information Systems major. What is the title of CIS 395?
+A: As a CIS student, the title of CIS 395 is Database System I.
+
+Q: I am a Computer Information Systems major. Is CIS 395 required?
+A: For s a CIS student, yes, CIS 395 is a required course in the Computer Information Systems program.
+
+Q: I am a Computer Information Systems major. Is CIS 395 part of my major requirements?
+A: For a CIS student, yes, CIS 395 is part of the Computer Information Systems program requirements.
+
+Q: I am a Computer Information Systems major. What are the prerequisites for CIS 440?
+A: As a CIS student, the prerequisite for CIS 440 is CSC 110 or CSC 111.
+
+Q: I am a Computer Information Systems major. Which classes must I take before CIS 440?
+A: As a CIS student, you must complete CSC 110 or CSC 111 before taking CIS 440.
+
+Q: I am a Computer Information Systems major. What do I need before CIS 440?
+A: As a CIS student, you need CSC 110 or CSC 111 before taking CIS 440.
+
+Q: I am a Computer Information Systems major. What do I have to take before CIS 440?
+A: As a CIS student, you must take CSC 110 or CSC 111 before taking CIS 440.
+
+Q: I am a Computer Information Systems major. What courses do I need before CIS 440?
+A: As a CIS student, you need CSC 110 or CSC 111 before taking CIS 440.
+
+Q: I am a Computer Information Systems major. What courses are required before CIS 440?
+A: As a CIS student, CSC 110 or CSC 111 is required before CIS 440.
+
+Q: I am a Computer Information Systems major. Before taking CIS 440, what should I complete?
+A: As a CIS student, you should complete CSC 110 or CSC 111 before taking CIS 440.
+
+Q: I am a Computer Information Systems major. What do I need to complete before CIS 440?
+A: As a CIS student, you need to complete CSC 110 or CSC 111 before taking CIS 440.
+
+Q: I am a Computer Information Systems major. What classes are needed before CIS 440?
+A: As a CIS student, you need CSC 110 or CSC 111 before taking CIS 440.
+
+Q: I am a Computer Information Systems major. What do I need in order to take CIS 440?
+A: As a CIS student, you need CSC 110 or CSC 111 in order to take CIS 440.
+
+Q: I am a Computer Information Systems major. What should I finish before CIS 440?
+A: As a CIS student, you should finish CSC 110 or CSC 111 before taking CIS 440.
+
+Q: I am a Computer Information Systems major. How many credits is CIS 440?
+A: CIS 440 is worth 3 credits.
+
+Q: I am a Computer Information Systems major. How many credits do I get for CIS 440?
+A: As a CIS student, you receive 3 credits for CIS 440.
+
+Q: I am a Computer Information Systems major. How many credits is CIS 440 worth?
+A: CIS 440 is worth 3 credits.
+
+Q: I am a Computer Information Systems major. What is CIS 440?
+A: As a CIS student, CIS 440 is Unix.
+
+Q: I am a Computer Information Systems major. What course is CIS 440?
+A: As a CIS student, CIS 440 is Unix.
+
+Q: I am a Computer Information Systems major. What is the title of CIS 440?
+A: As a CIS student, the title of CIS 440 is Unix.
+
+Q: I am a Computer Information Systems major. Is CIS 440 required?
+A: For s a CIS student, yes, CIS 440 is a required course in the Computer Information Systems program.
+
+Q: I am a Computer Information Systems major. Is CIS 440 part of my major requirements?
+A: For a CIS student, yes, CIS 440 is part of the Computer Information Systems program requirements.
+
+Q: I am a Computer Information Systems major. What are the prerequisites for CIS 485?
+A: As a CIS student, the prerequisites for CIS 485 are CIS 385 and CSC 210.
+
+Q: I am a Computer Information Systems major. Which classes must I take before CIS 485?
+A: As a CIS student, you must complete CIS 385 and CSC 210 before taking CIS 485.
+
+Q: I am a Computer Information Systems major. What do I need before CIS 485?
+A: As a CIS student, you need CIS 385 and CSC 210 before taking CIS 485.
+
+Q: I am a Computer Information Systems major. What do I have to take before CIS 485?
+A: As a CIS student, you must take CIS 385 and CSC 210 before taking CIS 485.
+
+Q: I am a Computer Information Systems major. What courses do I need before CIS 485?
+A: As a CIS student, you need CIS 385 and CSC 210 before taking CIS 485.
+
+Q: I am a Computer Information Systems major. What courses are required before CIS 485?
+A: As a CIS student, CIS 385 and CSC 210 are required before CIS 485.
+
+Q: I am a Computer Information Systems major. Before taking CIS 485, what should I complete?
+A: As a CIS student, you should complete CIS 385 and CSC 210 before taking CIS 485.
+
+Q: I am a Computer Information Systems major. What do I need to complete before CIS 485?
+A: As a CIS student, you need to complete CIS 385 and CSC 210 before taking CIS 485.
+
+Q: I am a Computer Information Systems major. What classes are needed before CIS 485?
+A: As a CIS student, you need CIS 385 and CSC 210 before taking CIS 485.
+
+Q: I am a Computer Information Systems major. What do I need in order to take CIS 485?
+A: As a CIS student, you need CIS 385 and CSC 210 in order to take CIS 485.
+
+Q: I am a Computer Information Systems major. What should I finish before CIS 485?
+A: As a CIS student, you should finish CIS 385 and CSC 210 before taking CIS 485.
+
+Q: I am a Computer Information Systems major. How many credits is CIS 485?
+A: CIS 485 is worth 3 credits.
+
+Q: I am a Computer Information Systems major. How many credits do I get for CIS 485?
+A: As a CIS student, you receive 3 credits for CIS 485.
+
+Q: I am a Computer Information Systems major. How many credits is CIS 485 worth?
+A: CIS 485 is worth 3 credits.
+
+Q: I am a Computer Information Systems major. What is CIS 485?
+A: As a CIS student, CIS 485 is Web Programming II.
+
+Q: I am a Computer Information Systems major. What course is CIS 485?
+A: As a CIS student, CIS 485 is Web Programming II.
+
+Q: I am a Computer Information Systems major. What is the title of CIS 485?
+A: As a CIS student, the title of CIS 485 is Web Programming II.
+
+Q: I am a Computer Information Systems major. Is CIS 485 required?
+A: For s a CIS student, yes, CIS 485 is a required course in the Computer Information Systems program.
+
+Q: I am a Computer Information Systems major. Is CIS 485 part of my major requirements?
+A: For a CIS student, yes, CIS 485 is part of the Computer Information Systems program requirements.
+
+Q: I am a Computer Information Systems major. What are the prerequisites for CIS 495?
+A: As a CIS student, the prerequisite for CIS 495 is CIS 395.
+
+Q: I am a Computer Information Systems major. Which classes must I take before CIS 495?
+A: As a CIS student, you must complete CIS 395 before taking CIS 495.
+
+Q: I am a Computer Information Systems major. What do I need before CIS 495?
+A: As a CIS student, you need CIS 395 before taking CIS 495.
+
+Q: I am a Computer Information Systems major. What do I have to take before CIS 495?
+A: As a CIS student, you must take CIS 395 before taking CIS 495.
+
+Q: I am a Computer Information Systems major. What courses do I need before CIS 495?
+A: As a CIS student, you need CIS 395 before taking CIS 495.
+
+Q: I am a Computer Information Systems major. What courses are required before CIS 495?
+A: As a CIS student, CIS 395 is required before CIS 495.
+
+Q: I am a Computer Information Systems major. Before taking CIS 495, what should I complete?
+A: As a CIS student, you should complete CIS 395 before taking CIS 495.
+
+Q: I am a Computer Information Systems major. What do I need to complete before CIS 495?
+A: As a CIS student, you need to complete CIS 395 before taking CIS 495.
+
+Q: I am a Computer Information Systems major. What classes are needed before CIS 495?
+A: As a CIS student, you need CIS 395 before taking CIS 495.
+
+Q: I am a Computer Information Systems major. What do I need in order to take CIS 495?
+A: As a CIS student, you need CIS 395 in order to take CIS 495.
+
+Q: I am a Computer Information Systems major. What should I finish before CIS 495?
+A: As a CIS student, you should finish CIS 395 before taking CIS 495.
+
+Q: I am a Computer Information Systems major. How many credits is CIS 495?
+A: CIS 495 is worth 3 credits.
+
+Q: I am a Computer Information Systems major. How many credits do I get for CIS 495?
+A: As a CIS student, you receive 3 credits for CIS 495.
+
+Q: I am a Computer Information Systems major. How many credits is CIS 495 worth?
+A: CIS 495 is worth 3 credits.
+
+Q: I am a Computer Information Systems major. What is CIS 495?
+A: As a CIS student, CIS 495 is Database System II.
+
+Q: I am a Computer Information Systems major. What course is CIS 495?
+A: As a CIS student, CIS 495 is Database System II.
+
+Q: I am a Computer Information Systems major. What is the title of CIS 495?
+A: As a CIS student, the title of CIS 495 is Database System II.
+
+Q: I am a Computer Information Systems major. Is CIS 495 required?
+A: For s a CIS student, yes, CIS 495 is a required course in the Computer Information Systems program.
+
+Q: I am a Computer Information Systems major. Is CIS 495 part of my major requirements?
+A: For a CIS student, yes, CIS 495 is part of the Computer Information Systems program requirements.
+
+Q: I am a Computer Information Systems major. What are the prerequisites for PHY 110?
+A: For a CIS student, PHY 110 has no prerequisites.
+
+Q: I am a Computer Information Systems major. Which classes must I take before PHY 110?
+A: As a CIS student, you do not need to complete any classes before taking PHY 110.
+
+Q: I am a Computer Information Systems major. What do I need before PHY 110?
+A: As a CIS student, you do not need any prerequisite classes before taking PHY 110.
+
+Q: I am a Computer Information Systems major. Does PHY 110 have prerequisites?
+A: PHY 110 does not have prerequisites.
+
+Q: I am a Computer Information Systems major. Do I need any classes before PHY 110?
+A: As a CIS student, you do not need any prerequisite classes before taking PHY 110.
+
+Q: I am a Computer Information Systems major. How many credits is PHY 110?
+A: PHY 110 is worth 4 credits.
+
+Q: I am a Computer Information Systems major. How many credits do I get for PHY 110?
+A: As a CIS student, you receive 4 credits for PHY 110.
+
+Q: I am a Computer Information Systems major. How many credits is PHY 110 worth?
+A: PHY 110 is worth 4 credits.
+
+Q: I am a Computer Information Systems major. Can AST 110 be used instead of PHY 110?
+A: AST 110 is listed as an alternative to PHY 110.
+
+Q: I am a Computer Information Systems major. Can PHY 110 be replaced by AST 110?
+A: AST 110 can be used in place of PHY 110.
+
+Q: I am a Computer Information Systems major. Is AST 110 an alternative to PHY 110?
+A: yes, AST 110 is listed as an alternative to PHY 110.
+
+Q: I am a Computer Information Systems major. Can I use AST 110 instead of PHY 110?
+A: As a CIS student, yes, you can use AST 110 in place of PHY 110.
+
+Q: I am a Computer Information Systems major. What is PHY 110?
+A: As a CIS student, PHY 110 is General Physics.
+
+Q: I am a Computer Information Systems major. What course is PHY 110?
+A: As a CIS student, PHY 110 is General Physics.
+
+Q: I am a Computer Information Systems major. What is the title of PHY 110?
+A: As a CIS student, the title of PHY 110 is General Physics.
+
+Q: I am a Computer Information Systems major. Is PHY 110 required?
+A: For s a CIS student, yes, PHY 110 is a required course in the Computer Information Systems program.
+
+Q: I am a Computer Information Systems major. Is PHY 110 part of my major requirements?
+A: For a CIS student, yes, PHY 110 is part of the Computer Information Systems program requirements.
+
+Q: I am a Computer Information Systems major. What are the prerequisites for MAT 206?
+A: For a CIS student, MAT 206 has no prerequisites.
+
+Q: I am a Computer Information Systems major. Which classes must I take before MAT 206?
+A: As a CIS student, you do not need to complete any classes before taking MAT 206.
+
+Q: I am a Computer Information Systems major. What do I need before MAT 206?
+A: As a CIS student, you do not need any prerequisite classes before taking MAT 206.
+
+Q: I am a Computer Information Systems major. Does MAT 206 have prerequisites?
+A: MAT 206 does not have prerequisites.
+
+Q: I am a Computer Information Systems major. Do I need any classes before MAT 206?
+A: As a CIS student, you do not need any prerequisite classes before taking MAT 206.
+
+Q: I am a Computer Information Systems major. How many credits is MAT 206?
+A: MAT 206 is worth 4 credits.
+
+Q: I am a Computer Information Systems major. How many credits do I get for MAT 206?
+A: As a CIS student, you receive 4 credits for MAT 206.
+
+Q: I am a Computer Information Systems major. How many credits is MAT 206 worth?
+A: MAT 206 is worth 4 credits.
+
+Q: I am a Computer Information Systems major. Can MAT 301 be used instead of MAT 206?
+A: MAT 301 is listed as an alternative to MAT 206.
+
+Q: I am a Computer Information Systems major. Can MAT 206 be replaced by MAT 301?
+A: MAT 301 can be used in place of MAT 206.
+
+Q: I am a Computer Information Systems major. Is MAT 301 an alternative to MAT 206?
+A: yes, MAT 301 is listed as an alternative to MAT 206.
+
+Q: I am a Computer Information Systems major. Can I use MAT 301 instead of MAT 206?
+A: As a CIS student, yes, you can use MAT 301 in place of MAT 206.
+
+Q: I am a Computer Information Systems major. What is MAT 206?
+A: As a CIS student, MAT 206 is Precalculus.
+
+Q: I am a Computer Information Systems major. What course is MAT 206?
+A: As a CIS student, MAT 206 is Precalculus.
+
+Q: I am a Computer Information Systems major. What is the title of MAT 206?
+A: As a CIS student, the title of MAT 206 is Precalculus.
+
+Q: I am a Computer Information Systems major. Is MAT 206 required?
+A: For s a CIS student, yes, MAT 206 is a required course in the Computer Information Systems program.
+
+Q: I am a Computer Information Systems major. Is MAT 206 part of my major requirements?
+A: For a CIS student, yes, MAT 206 is part of the Computer Information Systems program requirements.

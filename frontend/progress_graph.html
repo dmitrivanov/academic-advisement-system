@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Academic Progress Graph</title>
+
+<style>
+.status-section {
+  margin-top: 22px;
+  padding: 18px;
+  border-radius: 16px;
+  border: 1px solid #e6eaf2;
+  background: #ffffff;
+}
+
+.status-title {
+  font-size: 20px;
+  font-weight: bold;
+  margin-bottom: 12px;
+}
+
+.status-subtitle {
+  font-size: 13px;
+  color: #667085;
+  margin-bottom: 14px;
+}
+
+.status-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.empty-message {
+  color: #667085;
+  font-style: italic;
+}
+
+body {
+  font-family: Arial, sans-serif;
+  background: #f5f7fb;
+  margin: 0;
+  color: #172033;
+}
+
+.container {
+  max-width: 1100px;
+  margin: 40px auto;
+  padding: 20px;
+}
+
+.card {
+  background: white;
+  border-radius: 16px;
+  padding: 22px;
+  margin-bottom: 20px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.07);
+  border: 1px solid #e6eaf2;
+}
+
+h1 { margin-bottom: 6px; }
+
+.subtitle {
+  color: #667085;
+  margin-top: 0;
+}
+
+.major-select {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin: 16px 0;
+  padding: 14px;
+  border: 1px solid #e6eaf2;
+  border-radius: 12px;
+  background: #f8fbff;
+}
+
+.major-select label {
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.checkbox-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 10px;
+}
+
+.checkbox-item {
+  background: #f8fbff;
+  border: 1px solid #e6eaf2;
+  border-radius: 10px;
+  padding: 10px;
+}
+
+.graph {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  margin-top: 20px;
+}
+
+.level {
+  display: flex;
+  gap: 18px;
+  flex-wrap: wrap;
+  align-items: stretch;
+}
+
+.course {
+  min-width: 150px;
+  max-width: 210px;
+  padding: 14px;
+  border-radius: 14px;
+  border: 2px solid #cfd8e7;
+  background: #eef2f7;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+}
+
+.course-code {
+  font-size: 18px;
+  font-weight: bold;
+}
+
+.course-title {
+  font-size: 13px;
+  margin-top: 6px;
+  color: #475467;
+}
+
+.course-prereq {
+  font-size: 12px;
+  margin-top: 8px;
+  color: #667085;
+}
+
+.completed {
+  background: #dcfce7;
+  border-color: #22c55e;
+}
+
+.available {
+  background: #dbeafe;
+  border-color: #2563eb;
+}
+
+.locked {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+  opacity: 0.85;
+}
+
+.legend {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-top: 12px;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.legend-dot {
+  width: 18px;
+  height: 18px;
+  border-radius: 6px;
+  border: 2px solid #999;
+}
+
+.green { background: #dcfce7; border-color: #22c55e; }
+.blue { background: #dbeafe; border-color: #2563eb; }
+.gray { background: #f1f5f9; border-color: #cbd5e1; }
+
+.summary {
+  line-height: 1.6;
+}
+
+.next-list {
+  font-weight: bold;
+  color: #1d4ed8;
+}
+
+button {
+  margin-top: 12px;
+  padding: 10px 16px;
+  border: none;
+  border-radius: 12px;
+  background: #2563eb;
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+button:hover {
+  background: #1d4ed8;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+  <h1>Academic Progress Graph</h1>
+  <p class="subtitle">Select completed courses to visualize progress through the major prerequisite structure.</p>
+
+  <div class="card">
+    <h3>Select Major</h3>
+    <div id="majorSelector" class="major-select"></div>
+  </div>
+
+  <div class="card">
+    <h3>Completed Courses</h3>
+    <div id="courseCheckboxes" class="checkbox-grid"></div>
+    <button onclick="clearCompleted()">Clear Selection</button>
+  </div>
+
+  <div class="card">
+    <h3>Progress Summary</h3>
+    <div id="summary" class="summary"></div>
+
+    <div class="legend">
+      <div class="legend-item"><span class="legend-dot green"></span> Completed</div>
+      <div class="legend-item"><span class="legend-dot blue"></span> Available Next</div>
+      <div class="legend-item"><span class="legend-dot gray"></span> Locked / Not Yet Available</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Course Progress View</h3>
+    <div id="graph" class="graph"></div>
+  </div>
+</div>
+
+<script src="major_graph_data.js"></script>
+
+<script>
+function getSelectedMajorCode() {
+  const selected = document.querySelector('input[name="major"]:checked');
+  return selected ? selected.value : Object.keys(MAJORS)[0];
+}
+
+function getSelectedMajor() {
+  return MAJORS[getSelectedMajorCode()];
+}
+
+function renderMajorSelector() {
+  const container = document.getElementById("majorSelector");
+  container.innerHTML = "";
+
+  Object.entries(MAJORS).forEach(([code, major], index) => {
+    const label = document.createElement("label");
+
+    label.innerHTML = `
+      <input type="radio" name="major" value="${code}" ${index === 0 ? "checked" : ""} onchange="loadMajor()">
+      ${major.name}
+    `;
+
+    container.appendChild(label);
+  });
+}
+
+function getCompletedCourses() {
+  const checked = document.querySelectorAll(".completed-check:checked");
+  return new Set([...checked].map(cb => cb.value));
+}
+
+function prereqSatisfied(prereq, completed) {
+  if (Array.isArray(prereq)) {
+    return prereq.some(option => completed.has(option));
+  }
+
+  return completed.has(prereq);
+}
+
+function allPrereqsSatisfied(course, completed) {
+  return course.prereqs.every(prereq => prereqSatisfied(prereq, completed));
+}
+
+function formatPrereqs(prereqs) {
+  if (!prereqs || !prereqs.length) return "None";
+
+  return prereqs.map(p => {
+    if (Array.isArray(p)) {
+      return p.join(" or ");
+    }
+    return p;
+  }).join(", ");
+}
+
+function getCourseStatus(courseCode, course, completed) {
+  if (completed.has(courseCode)) return "completed";
+  if (allPrereqsSatisfied(course, completed)) return "available";
+  return "locked";
+}
+
+function loadMajor() {
+  renderCheckboxes();
+  renderGraph();
+}
+
+function renderCheckboxes() {
+  const major = getSelectedMajor();
+  const container = document.getElementById("courseCheckboxes");
+  container.innerHTML = "";
+
+  Object.entries(major.courses).forEach(([code, course]) => {
+    const div = document.createElement("label");
+    div.className = "checkbox-item";
+
+    div.innerHTML = `
+      <input type="checkbox" class="completed-check" value="${code}" onchange="renderGraph()">
+      <strong>${code}</strong><br>
+      <span style="font-size:12px;color:#667085;">${course.title}</span>
+    `;
+
+    container.appendChild(div);
+  });
+}
+
+function renderGraph() {
+  const major = getSelectedMajor();
+  const completed = getCompletedCourses();
+  const graph = document.getElementById("graph");
+
+  graph.innerHTML = "";
+
+  const takenCourses = [];
+  const availableCourses = [];
+  const lockedCourses = [];
+
+  Object.entries(major.courses).forEach(([code, course]) => {
+    const status = getCourseStatus(code, course, completed);
+
+    if (status === "completed") {
+      takenCourses.push([code, course, status]);
+    } else if (status === "available") {
+      availableCourses.push([code, course, status]);
+    } else {
+      lockedCourses.push([code, course, status]);
+    }
+  });
+
+  function renderStatusSection(title, subtitle, courses) {
+    const section = document.createElement("div");
+    section.className = "status-section";
+
+    const titleDiv = document.createElement("div");
+    titleDiv.className = "status-title";
+    titleDiv.textContent = title;
+
+    const subtitleDiv = document.createElement("div");
+    subtitleDiv.className = "status-subtitle";
+    subtitleDiv.textContent = subtitle;
+
+    const grid = document.createElement("div");
+    grid.className = "status-grid";
+
+    if (!courses.length) {
+      const empty = document.createElement("div");
+      empty.className = "empty-message";
+      empty.textContent = "No courses in this category.";
+      grid.appendChild(empty);
+    } else {
+      courses.forEach(([code, course, status]) => {
+        const courseDiv = document.createElement("div");
+        courseDiv.className = `course ${status}`;
+
+        courseDiv.innerHTML = `
+          <div class="course-code">${code}</div>
+          <div class="course-title">${course.title}</div>
+          <div class="course-prereq">Credits: ${course.credits}</div>
+          <div class="course-prereq">Prereqs: ${formatPrereqs(course.prereqs)}</div>
+        `;
+
+        grid.appendChild(courseDiv);
+      });
+    }
+
+    section.appendChild(titleDiv);
+    section.appendChild(subtitleDiv);
+    section.appendChild(grid);
+
+    graph.appendChild(section);
+  }
+
+  renderStatusSection(
+    "Taken Classes",
+    "Courses the student has already completed.",
+    takenCourses
+  );
+
+  renderStatusSection(
+    "Available Classes",
+    "Courses the student can take next based on completed prerequisites.",
+    availableCourses
+  );
+
+  renderStatusSection(
+    "Not Available Yet",
+    "Courses that still require missing prerequisites.",
+    lockedCourses
+  );
+
+  renderSummary();
+}
+
+function renderSummary() {
+  const major = getSelectedMajor();
+  const completed = getCompletedCourses();
+
+  const totalCourses = Object.keys(major.courses).length;
+  const completedCount = completed.size;
+
+  const available = [];
+
+  Object.entries(major.courses).forEach(([code, course]) => {
+    if (!completed.has(code) && allPrereqsSatisfied(course, completed)) {
+      available.push(code);
+    }
+  });
+
+  document.getElementById("summary").innerHTML = `
+    <strong>Major:</strong> ${major.name}<br>
+    <strong>Completed:</strong> ${completedCount} of ${totalCourses} courses<br>
+    <strong>Available next:</strong>
+    <span class="next-list">${available.length ? available.join(", ") : "None"}</span>
+  `;
+}
+
+function clearCompleted() {
+  document.querySelectorAll(".completed-check").forEach(cb => {
+    cb.checked = false;
+  });
+
+  renderGraph();
+}
+
+if (typeof MAJORS === "undefined") {
+  alert("major_graph_data.js was not loaded. Run python3 generate_graph_data.py first.");
+} else {
+  renderMajorSelector();
+  loadMajor();
+}
+</script>
+
+</body>
+</html>
