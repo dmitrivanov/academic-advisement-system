@@ -1,15 +1,8 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-Created on Thu Apr 30 16:57:34 2026
-
-@author: dmitriiivanov
-"""
-
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-import requests
+from google import genai
+import os
 
 app = FastAPI()
 
@@ -21,8 +14,14 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-OLLAMA_URL = "http://localhost:11434/api/generate"
-MODEL = "llama3.2"
+MODEL = "gemini-2.0-flash"
+
+GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
+
+if not GEMINI_API_KEY:
+    raise RuntimeError("GEMINI_API_KEY environment variable is not set.")
+
+client = genai.Client(api_key=GEMINI_API_KEY)
 
 
 class Candidate(BaseModel):
@@ -39,11 +38,21 @@ class FallbackRequest(BaseModel):
     candidates: list[Candidate]
 
 
+@app.get("/")
+def root():
+    return {"status": "Gemini fallback API is running"}
+
+
 @app.post("/fallback-ask")
 def fallback_ask(payload: FallbackRequest):
+    print("=== USING GEMINI FALLBACK ===")
+
     candidates_text = "\n\n".join(
         [
-            f"Candidate {i+1}\nQuestion: {c.question}\nAnswer: {c.answer}\nScore: {c.score}"
+            f"Candidate {i + 1}\n"
+            f"Question: {c.question}\n"
+            f"Answer: {c.answer}\n"
+            f"Score: {c.score:.3f}"
             for i, c in enumerate(payload.candidates)
         ]
     )
@@ -64,7 +73,7 @@ Detected intent:
 {payload.detected_intent}
 
 You may ONLY answer using one of the candidate FAQ answers below.
-Do not invent new prerequisites, requirements, policies, or course rules.
+Do not invent prerequisites, degree requirements, course policies, or exceptions.
 If none of the candidate answers clearly answer the user's question, respond exactly:
 I don't have enough information in the FAQ to answer that.
 
@@ -74,17 +83,9 @@ Candidates:
 Return the best answer only. Do not explain your reasoning.
 """.strip()
 
-    r = requests.post(
-        OLLAMA_URL,
-        json={
-            "model": MODEL,
-            "prompt": prompt,
-            "stream": False
-        },
-        timeout=120,
+    response = client.models.generate_content(
+        model=MODEL,
+        contents=prompt,
     )
-    r.raise_for_status()
 
-    return {
-        "answer": r.json()["response"]
-    }
+    return {"answer": "[GEMINI API ACTIVE]\n\n" + response.text}
