@@ -135,8 +135,9 @@ button:hover { background: #1d4ed8; }
   <p class="subtitle"></p>
 
 <div style="margin: 16px 0;">
-  <a href="progress_graph.html" target="_blank" class="graph-link">
+  <a href="/progress" target="_blank" class="graph-link">
     Open Academic Progress Graph
+
   </a>
 </div>
 
@@ -177,9 +178,10 @@ button:hover { background: #1d4ed8; }
 
 <script>
 const FAQ_PATHS = {
-  CS: "../docs/faq_cs.txt",
-  CIS: "../docs/faq_cis.txt",
-  CNT: "../docs/faq_cnt.txt"
+  CS: "/docs/faq_cs.txt",
+  CIS: "/docs/faq_cis.txt",
+  CNT: "/docs/faq_cnt.txt"
+
 };
 
 const MAJOR_NAMES = {
@@ -188,7 +190,7 @@ const MAJOR_NAMES = {
   CNT: "Computer Network Technology"
 };
 
-const FALLBACK_URL = "http://127.0.0.1:8001/fallback-ask";
+const FALLBACK_URL = "/fallback-ask";
 const SIMILARITY_THRESHOLD = 0.48;
 
 let faqCache = {};
@@ -749,7 +751,7 @@ async function answerQuestion() {
       : "no specific course detected";
 
     if (!best || best.score < SIMILARITY_THRESHOLD) {
-      answerBox.textContent = "Low confidence. Asking lightweight Ollama fallback...";
+      answerBox.textContent = "Low confidence. Asking Gemini fallback...";
 
       try {
         const fallbackData = await askOllamaFallback(q, majorName, result);
@@ -762,7 +764,7 @@ async function answerQuestion() {
           Selected major: ${escapeHtml(majorName)}<br>
           Question is about: ${escapeHtml(aboutText)}<br>
           Relationship asked: ${escapeHtml(result.userIntent)}<br>
-          Source: Ollama fallback over top FAQ candidates<br>
+          Source: Gemini fallback over top FAQ candidates<br>
           FAQ entries searched: ${result.searchedCount} of ${result.totalCount}<br><br>
           Candidate matches sent to Ollama:<br>
           ${result.matches.map((m, idx) => `
@@ -771,12 +773,12 @@ async function answerQuestion() {
           `).join("<br>")}
         `;
 
-        updatePerformance(startTime, performance.now(), "Ollama fallback", result.searchedCount);
+        updatePerformance(startTime, performance.now(), "Gemini fallback", result.searchedCount);
         return;
 
       } catch (err) {
         answerBox.innerHTML =
-          `<span class="warning">I didn’t understand the question well enough, and the Ollama fallback is not available.</span>`;
+          `<span class="warning">I didn’t understand the question well enough, and the Gemini fallback is not available.</span>`;
 
         meta.innerHTML = `
           Confidence: ${best ? best.score.toFixed(3) : "0.000"}<br>
