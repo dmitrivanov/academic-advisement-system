@@ -1,3 +1,4 @@
+from api_db_routes import router as db_router
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
@@ -7,6 +8,7 @@ from google import genai
 import os
 
 app = FastAPI()
+app.include_router(db_router)
 
 app.add_middleware(
     CORSMiddleware,
@@ -57,6 +59,9 @@ def serve_home():
 def serve_progress():
     return FileResponse("frontend/progress_graph.html")
 
+@app.get("/db-progress")
+def serve_db_progress():
+    return FileResponse("frontend/db_progress_graph.html")
 
 app.mount(
     "/frontend",

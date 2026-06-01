@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Database Progress Graph</title>
+
+<style>
+body {
+  font-family: Arial, sans-serif;
+  background: #f5f7fb;
+  margin: 0;
+  color: #172033;
+}
+
+.container {
+  max-width: 1100px;
+  margin: 40px auto;
+  padding: 20px;
+}
+
+.card {
+  background: white;
+  border-radius: 16px;
+  padding: 22px;
+  margin-bottom: 20px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.07);
+  border: 1px solid #e6eaf2;
+}
+
+h1 { margin-bottom: 6px; }
+
+.subtitle {
+  color: #667085;
+  margin-top: 0;
+}
+
+select {
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1px solid #d7deea;
+  font-size: 15px;
+}
+
+.checkbox-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 10px;
+}
+
+.checkbox-item {
+  background: #f8fbff;
+  border: 1px solid #e6eaf2;
+  border-radius: 10px;
+  padding: 10px;
+}
+
+.status-section {
+  margin-top: 22px;
+  padding: 18px;
+  border-radius: 16px;
+  border: 1px solid #e6eaf2;
+  background: #ffffff;
+}
+
+.status-title {
+  font-size: 20px;
+  font-weight: bold;
+  margin-bottom: 8px;
+}
+
+.status-subtitle {
+  font-size: 13px;
+  color: #667085;
+  margin-bottom: 14px;
+}
+
+.status-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.course {
+  min-width: 160px;
+  max-width: 230px;
+  padding: 14px;
+  border-radius: 14px;
+  border: 2px solid #cfd8e7;
+  background: #eef2f7;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+}
+
+.course-code {
+  font-size: 18px;
+  font-weight: bold;
+}
+
+.course-title {
+  font-size: 13px;
+  margin-top: 6px;
+  color: #475467;
+}
+
+.course-detail {
+  font-size: 12px;
+  margin-top: 8px;
+  color: #667085;
+}
+
+.completed {
+  background: #dcfce7;
+  border-color: #22c55e;
+}
+
+.available {
+  background: #dbeafe;
+  border-color: #2563eb;
+}
+
+.locked {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+  opacity: 0.85;
+}
+
+.empty-message {
+  color: #667085;
+  font-style: italic;
+}
+
+button {
+  margin-top: 12px;
+  padding: 10px 16px;
+  border: none;
+  border-radius: 12px;
+  background: #2563eb;
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+button:hover {
+  background: #1d4ed8;
+}
+
+.meta {
+  line-height: 1.6;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+  <h1>Database-Backed Academic Progress Graph</h1>
+  <p class="subtitle">
+    This experimental page loads majors, courses, prerequisites, and alternatives from the database API.
+  </p>
+
+  <div class="card">
+    <h3>Select Program</h3>
+    <select id="programSelect" onchange="loadProgramGraph()"></select>
+  </div>
+
+  <div class="card">
+    <h3>Completed Courses</h3>
+    <div id="courseCheckboxes" class="checkbox-grid"></div>
+    <button onclick="clearCompleted()">Clear Selection</button>
+  </div>
+
+  <div class="card">
+    <h3>Progress Summary</h3>
+    <div id="summary" class="meta">Loading...</div>
+  </div>
+
+  <div class="card">
+    <h3>Course Progress View</h3>
+    <div id="graph"></div>
+  </div>
+</div>
+
+<script>
+let PROGRAMS = [];
+let CURRENT_GRAPH = null;
+
+async function fetchJson(url) {
+  const response = await fetch(url);
+
+  if (!response.ok) {
+    throw new Error(`Request failed: ${url} (${response.status})`);
+  }
+
+  return await response.json();
+}
+
+async function loadPrograms() {
+  const select = document.getElementById("programSelect");
+  select.innerHTML = "";
+
+  PROGRAMS = await fetchJson("/api/db/programs");
+
+  PROGRAMS.forEach(program => {
+    const option = document.createElement("option");
+    option.value = program.code;
+    option.textContent = `${program.code} — ${program.name} (${program.catalog_year || "No catalog year"})`;
+    select.appendChild(option);
+  });
+
+  if (PROGRAMS.length > 0) {
+    await loadProgramGraph();
+  }
+}
+
+async function loadProgramGraph() {
+  const code = document.getElementById("programSelect").value;
+
+  CURRENT_GRAPH = await fetchJson(`/api/db/programs/${code}/graph`);
+
+  renderCheckboxes();
+  renderGraph();
+}
+
+function getCompletedCourses() {
+  const checked = document.querySelectorAll(".completed-check:checked");
+  return new Set([...checked].map(cb => cb.value));
+}
+
+function prereqSatisfied(prereq, completed) {
+  if (Array.isArray(prereq)) {
+    return prereq.some(option => completed.has(option));
+  }
+
+  return completed.has(prereq);
+}
+
+function allPrereqsSatisfied(course, completed) {
+  if (!course.prereqs || course.prereqs.length === 0) return true;
+
+  return course.prereqs.every(prereq => prereqSatisfied(prereq, completed));
+}
+
+function formatPrereqs(prereqs) {
+  if (!prereqs || prereqs.length === 0) return "None";
+
+  return prereqs.map(p => {
+    if (Array.isArray(p)) {
+      return p.join(" or ");
+    }
+    return p;
+  }).join(", ");
+}
+
+function formatAlternatives(alts) {
+  if (!alts || alts.length === 0) return "None";
+  return alts.join(", ");
+}
+
+function getCourseStatus(code, course, completed) {
+  if (completed.has(code)) return "completed";
+  if (allPrereqsSatisfied(course, completed)) return "available";
+  return "locked";
+}
+
+function renderCheckboxes() {
+  const container = document.getElementById("courseCheckboxes");
+  container.innerHTML = "";
+
+  const courses = CURRENT_GRAPH.courses;
+
+  Object.entries(courses).forEach(([code, course]) => {
+    const label = document.createElement("label");
+    label.className = "checkbox-item";
+
+    label.innerHTML = `
+      <input type="checkbox" class="completed-check" value="${code}" onchange="renderGraph()">
+      <strong>${code}</strong><br>
+      <span style="font-size:12px;color:#667085;">${course.title}</span>
+    `;
+
+    container.appendChild(label);
+  });
+}
+
+function renderGraph() {
+  const completed = getCompletedCourses();
+  const graph = document.getElementById("graph");
+
+  graph.innerHTML = "";
+
+  const takenCourses = [];
+  const availableCourses = [];
+  const lockedCourses = [];
+
+  Object.entries(CURRENT_GRAPH.courses).forEach(([code, course]) => {
+    const status = getCourseStatus(code, course, completed);
+
+    if (status === "completed") {
+      takenCourses.push([code, course, status]);
+    } else if (status === "available") {
+      availableCourses.push([code, course, status]);
+    } else {
+      lockedCourses.push([code, course, status]);
+    }
+  });
+
+  renderStatusSection(
+    "Taken Classes",
+    "Courses selected as already completed.",
+    takenCourses
+  );
+
+  renderStatusSection(
+    "Available Classes",
+    "Courses available now based on completed prerequisites.",
+    availableCourses
+  );
+
+  renderStatusSection(
+    "Not Available Yet",
+    "Courses still blocked by missing prerequisites.",
+    lockedCourses
+  );
+
+  renderSummary(takenCourses, availableCourses, lockedCourses);
+}
+
+function renderStatusSection(title, subtitle, courses) {
+  const graph = document.getElementById("graph");
+
+  const section = document.createElement("div");
+  section.className = "status-section";
+
+  const titleDiv = document.createElement("div");
+  titleDiv.className = "status-title";
+  titleDiv.textContent = title;
+
+  const subtitleDiv = document.createElement("div");
+  subtitleDiv.className = "status-subtitle";
+  subtitleDiv.textContent = subtitle;
+
+  const grid = document.createElement("div");
+  grid.className = "status-grid";
+
+  if (!courses.length) {
+    const empty = document.createElement("div");
+    empty.className = "empty-message";
+    empty.textContent = "No courses in this category.";
+    grid.appendChild(empty);
+  } else {
+    courses.forEach(([code, course, status]) => {
+      const div = document.createElement("div");
+      div.className = `course ${status}`;
+
+      div.innerHTML = `
+        <div class="course-code">${code}</div>
+        <div class="course-title">${course.title}</div>
+        <div class="course-detail">Credits: ${course.credits}</div>
+        <div class="course-detail">Prereqs: ${formatPrereqs(course.prereqs)}</div>
+        <div class="course-detail">Alternatives: ${formatAlternatives(course.alternatives)}</div>
+      `;
+
+      grid.appendChild(div);
+    });
+  }
+
+  section.appendChild(titleDiv);
+  section.appendChild(subtitleDiv);
+  section.appendChild(grid);
+
+  graph.appendChild(section);
+}
+
+function renderSummary(takenCourses, availableCourses, lockedCourses) {
+  const summary = document.getElementById("summary");
+  const program = CURRENT_GRAPH.program;
+
+  summary.innerHTML = `
+    <strong>Program:</strong> ${program.code} — ${program.name}<br>
+    <strong>Catalog year:</strong> ${program.catalog_year || "Not specified"}<br>
+    <strong>Total courses:</strong> ${Object.keys(CURRENT_GRAPH.courses).length}<br>
+    <strong>Taken:</strong> ${takenCourses.length}<br>
+    <strong>Available now:</strong> ${availableCourses.length}<br>
+    <strong>Locked:</strong> ${lockedCourses.length}
+  `;
+}
+
+function clearCompleted() {
+  document.querySelectorAll(".completed-check").forEach(cb => cb.checked = false);
+  renderGraph();
+}
+
+loadPrograms().catch(err => {
+  document.getElementById("summary").innerHTML =
+    `<span style="color:#b42318;font-weight:bold;">Error: ${err.message}</span>`;
+});
+</script>
+
+</body>
+</html>
