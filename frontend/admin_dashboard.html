@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Admin Dashboard | Academic Advisement System</title>
+<style>
+body {
+  font-family: Arial, sans-serif;
+  background: #f5f7fb;
+  margin: 0;
+  color: #172033;
+}
+
+.container {
+  max-width: 1100px;
+  margin: 40px auto;
+  padding: 20px;
+}
+
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.card {
+  background: white;
+  border-radius: 16px;
+  padding: 22px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.07);
+  border: 1px solid #e6eaf2;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 18px;
+}
+
+.admin-card {
+  background: white;
+  border-radius: 16px;
+  padding: 22px;
+  border: 1px solid #e6eaf2;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.05);
+}
+
+.admin-card h3 {
+  margin-top: 0;
+}
+
+.admin-card p {
+  color: #667085;
+  line-height: 1.5;
+}
+
+.badge {
+  display: inline-block;
+  padding: 5px 9px;
+  border-radius: 999px;
+  background: #eef4ff;
+  color: #1d4ed8;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+a.button {
+  display: inline-block;
+  margin-top: 10px;
+  padding: 10px 14px;
+  background: #2563eb;
+  color: white;
+  border-radius: 12px;
+  text-decoration: none;
+  font-weight: bold;
+}
+
+a.button:hover {
+  background: #1d4ed8;
+}
+
+.nav a {
+  margin-left: 12px;
+  color: #2563eb;
+  text-decoration: none;
+  font-weight: bold;
+}
+
+.subtitle {
+  color: #667085;
+  margin-top: 0;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+  <div class="topbar">
+    <div>
+      <h1>Admin Dashboard</h1>
+      <p class="subtitle">Administrative wireframe for future curriculum and advising management.</p>
+    </div>
+
+    <div class="nav">
+      <a href="/">Chatbot</a>
+      <a href="/db-progress">DB Graph</a>
+      <a href="/logout">Logout</a>
+    </div>
+  </div>
+
+  <div class="grid">
+
+    <div class="admin-card">
+      <span class="badge">Database</span>
+      <h3>Institutions</h3>
+      <p>Manage colleges or institutions such as BMCC, departments, and academic units.</p>
+      <a class="button" href="/api/db/institutions" target="_blank">View API</a>
+    </div>
+
+    <div class="admin-card">
+      <span class="badge">Database</span>
+      <h3>Departments</h3>
+      <p>View and manage academic departments connected to programs and courses.</p>
+      <a class="button" href="/api/db/departments" target="_blank">View API</a>
+    </div>
+
+    <div class="admin-card">
+      <span class="badge">Programs</span>
+      <h3>Majors / Programs</h3>
+      <p>Add, edit, and organize academic programs such as CS, CIS, and CNT.</p>
+      <a class="button" href="/api/db/programs" target="_blank">View API</a>
+    </div>
+
+    <div class="admin-card">
+      <span class="badge">Curriculum</span>
+      <h3>Courses</h3>
+      <p>Manage course codes, titles, credits, and program membership.</p>
+      <a class="button" href="/api/db/programs/CS/courses" target="_blank">Example</a>
+    </div>
+
+    <div class="admin-card">
+      <span class="badge">Logic</span>
+      <h3>Prerequisites</h3>
+      <p>Future editor for prerequisite relationships, alternatives, and course eligibility rules.</p>
+      <a class="button" href="/api/db/programs/CS/graph" target="_blank">View Graph JSON</a>
+    </div>
+
+    <div class="admin-card">
+      <span class="badge">AI</span>
+      <h3>FAQ Entries</h3>
+      <p>Future interface for editing FAQ questions and answers used by the advising engine.</p>
+      <a class="button" href="#">Coming Soon</a>
+    </div>
+
+    <div class="admin-card">
+      <span class="badge">Documents</span>
+      <h3>Official Documents</h3>
+      <p>Future upload area for catalogs, policies, and department documents for RAG search.</p>
+      <a class="button" href="#">Coming Soon</a>
+    </div>
+
+    <div class="admin-card">
+      <span class="badge">Analytics</span>
+      <h3>Usage Statistics</h3>
+      <p>Future dashboard for question logs, fallback usage, latency, and advising patterns.</p>
+      <a class="button" href="#">Coming Soon</a>
+    </div>
+
+  </div>
+</div>
+
+</body>
+</html>

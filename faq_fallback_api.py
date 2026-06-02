@@ -1,14 +1,25 @@
-from api_db_routes import router as db_router
-from fastapi import FastAPI
+
+from fastapi import FastAPI, Request, Form
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
+from starlette.middleware.sessions import SessionMiddleware
 from pydantic import BaseModel
 from google import genai
 import os
 
+from api_db_routes import router as db_router
+
+
 app = FastAPI()
 app.include_router(db_router)
+
+SESSION_SECRET = os.environ.get("SESSION_SECRET", "dev-secret-change-this")
+
+app.add_middleware(
+    SessionMiddleware,
+    secret_key=SESSION_SECRET
+)
 
 app.add_middleware(
     CORSMiddleware,
@@ -17,6 +28,11 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+def is_logged_in(request: Request):
+    return request.session.get("logged_in") is True
+
 
 MODEL = "gemini-2.5-flash"
 
@@ -27,10 +43,6 @@ if not GEMINI_API_KEY:
 
 client = genai.Client(api_key=GEMINI_API_KEY)
 
-
-# ==========================
-# DATA MODELS
-# ==========================
 
 class Candidate(BaseModel):
     question: str
@@ -46,41 +58,68 @@ class FallbackRequest(BaseModel):
     candidates: list[Candidate]
 
 
-# ==========================
-# FRONTEND ROUTES
-# ==========================
+@app.get("/login")
+def login_page():
+    return FileResponse("frontend/login.html")
+
+
+@app.post("/login")
+def login_submit(
+    request: Request,
+    username: str = Form(...),
+    password: str = Form(...)
+):
+    app_username = os.environ.get("APP_USERNAME", "admin")
+    app_password = os.environ.get("APP_PASSWORD", "admin")
+
+    if username == app_username and password == app_password:
+        request.session["logged_in"] = True
+        request.session["username"] = username
+        return RedirectResponse("/", status_code=303)
+
+    return RedirectResponse("/login?error=1", status_code=303)
+
+
+@app.get("/logout")
+def logout(request: Request):
+    request.session.clear()
+    return RedirectResponse("/login", status_code=303)
+
 
 @app.get("/")
-def serve_home():
+def serve_home(request: Request):
+    if not is_logged_in(request):
+        return RedirectResponse("/login", status_code=303)
     return FileResponse("frontend/faq_chat_hybrid.html")
 
 
 @app.get("/progress")
-def serve_progress():
+def serve_progress(request: Request):
+    if not is_logged_in(request):
+        return RedirectResponse("/login", status_code=303)
     return FileResponse("frontend/progress_graph.html")
 
+
 @app.get("/db-progress")
-def serve_db_progress():
+def serve_db_progress(request: Request):
+    if not is_logged_in(request):
+        return RedirectResponse("/login", status_code=303)
     return FileResponse("frontend/db_progress_graph.html")
 
-app.mount(
-    "/frontend",
-    StaticFiles(directory="frontend"),
-    name="frontend"
-)
-app.mount(
-    "/docs",
-    StaticFiles(directory="docs"),
-    name="docs"
-)
 
-# ==========================
-# GEMINI FALLBACK API
-# ==========================
+@app.get("/admin")
+def serve_admin(request: Request):
+    if not is_logged_in(request):
+        return RedirectResponse("/login", status_code=303)
+    return FileResponse("frontend/admin_dashboard.html")
+
+
+app.mount("/frontend", StaticFiles(directory="frontend"), name="frontend")
+app.mount("/docs", StaticFiles(directory="docs"), name="docs")
+
 
 @app.post("/fallback-ask")
 def fallback_ask(payload: FallbackRequest):
-
     print("=== USING GEMINI FALLBACK ===")
 
     candidates_text = "\n\n".join(
@@ -137,10 +176,6 @@ Do not explain your reasoning.
         "answer": "[GEMINI API ACTIVE]\n\n" + response.text
     }
 
-
-# ==========================
-# HEALTH CHECK
-# ==========================
 
 @app.get("/health")
 def health():
