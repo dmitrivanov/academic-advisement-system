@@ -5,168 +5,113 @@
 <title>Database Progress Graph</title>
 
 <style>
-body {
-  font-family: Arial, sans-serif;
-  background: #f5f7fb;
-  margin: 0;
-  color: #172033;
-}
-
-.container {
-  max-width: 1100px;
-  margin: 40px auto;
-  padding: 20px;
-}
-
-.card {
-  background: white;
-  border-radius: 16px;
-  padding: 22px;
-  margin-bottom: 20px;
-  box-shadow: 0 10px 25px rgba(0,0,0,0.07);
-  border: 1px solid #e6eaf2;
-}
-
-h1 { margin-bottom: 6px; }
-
-.subtitle {
-  color: #667085;
-  margin-top: 0;
-}
-
-select {
+body { font-family: Arial, sans-serif; background:#f5f7fb; margin:0; color:#172033; }
+.container { max-width:1200px; margin:40px auto; padding:20px; }
+.card { background:white; border-radius:16px; padding:22px; margin-bottom:20px; box-shadow:0 10px 25px rgba(0,0,0,.07); border:1px solid #e6eaf2; }
+h1 { margin-bottom:6px; }
+.subtitle { color:#667085; margin-top:0; }
+select { padding:10px 14px; border-radius:10px; border:1px solid #d7deea; font-size:15px; }
+.tabs { display:flex; gap:10px; flex-wrap:wrap; margin:18px 0; }
+.tab {
   padding: 10px 14px;
-  border-radius: 10px;
-  border: 1px solid #d7deea;
-  font-size: 15px;
-}
-
-.checkbox-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
-  gap: 10px;
-}
-
-.checkbox-item {
-  background: #f8fbff;
-  border: 1px solid #e6eaf2;
-  border-radius: 10px;
-  padding: 10px;
-}
-
-.status-section {
-  margin-top: 22px;
-  padding: 18px;
-  border-radius: 16px;
-  border: 1px solid #e6eaf2;
-  background: #ffffff;
-}
-
-.status-title {
-  font-size: 20px;
-  font-weight: bold;
-  margin-bottom: 8px;
-}
-
-.status-subtitle {
-  font-size: 13px;
-  color: #667085;
-  margin-bottom: 14px;
-}
-
-.status-grid {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 16px;
-}
-
-.course {
-  min-width: 160px;
-  max-width: 230px;
-  padding: 14px;
-  border-radius: 14px;
-  border: 2px solid #cfd8e7;
-  background: #eef2f7;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.05);
-}
-
-.course-code {
-  font-size: 18px;
-  font-weight: bold;
-}
-
-.course-title {
-  font-size: 13px;
-  margin-top: 6px;
-  color: #475467;
-}
-
-.course-detail {
-  font-size: 12px;
-  margin-top: 8px;
-  color: #667085;
-}
-
-.completed {
-  background: #dcfce7;
-  border-color: #22c55e;
-}
-
-.available {
-  background: #dbeafe;
-  border-color: #2563eb;
-}
-
-.locked {
-  background: #f1f5f9;
-  border-color: #cbd5e1;
-  opacity: 0.85;
-}
-
-.empty-message {
-  color: #667085;
-  font-style: italic;
-}
-
-button {
-  margin-top: 12px;
-  padding: 10px 16px;
-  border: none;
   border-radius: 12px;
+  border: 1px solid #2563eb;
   background: #2563eb;
   color: white;
-  font-weight: bold;
   cursor: pointer;
+  font-weight: bold;
+  opacity: 0.75;
+}
+.course-tab {
+  padding: 10px 14px;
+  border-radius: 12px;
+  border: 1px solid #2563eb;
+  background: #2563eb;
+  color: white;
+  cursor: pointer;
+  font-weight: bold;
+  opacity: .75;
 }
 
-button:hover {
-  background: #1d4ed8;
+.course-tab.active {
+  opacity: 1;
+}
+.tab:hover {
+  opacity: 0.9;
 }
 
-.meta {
-  line-height: 1.6;
+.tab.active {
+  background: #2563eb;
+  color: white;
+  border-color: #2563eb;
+  opacity: 1;
 }
+.checkbox-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(210px,1fr)); gap:10px; }
+.checkbox-item { background:#f8fbff; border:1px solid #e6eaf2; border-radius:10px; padding:10px; }
+.group-card { margin-top:20px; padding:18px; border-radius:16px; border:1px solid #e6eaf2; background:#fff; }
+.group-header { display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap; align-items:flex-start; }
+.group-title { font-size:21px; font-weight:bold; }
+.group-meta { color:#667085; font-size:13px; line-height:1.5; }
+.progress-pill { background:#eef4ff; color:#1d4ed8; padding:7px 10px; border-radius:999px; font-weight:bold; font-size:13px; }
+.status-section { margin-top:18px; padding:16px; border-radius:14px; border:1px solid #e6eaf2; background:#ffffff; }
+.status-title { font-size:18px; font-weight:bold; margin-bottom:8px; }
+.status-subtitle { font-size:13px; color:#667085; margin-bottom:14px; }
+.status-grid { display:flex; flex-wrap:wrap; gap:16px; }
+.course { min-width:160px; max-width:230px; padding:14px; border-radius:14px; border:2px solid #cfd8e7; background:#eef2f7; box-shadow:0 4px 10px rgba(0,0,0,.05); }
+.course-code { font-size:18px; font-weight:bold; }
+.course-title { font-size:13px; margin-top:6px; color:#475467; }
+.course-detail { font-size:12px; margin-top:8px; color:#667085; }
+.completed { background:#dcfce7; border-color:#22c55e; }
+.available { background:#dbeafe; border-color:#2563eb; }
+.locked { background:#f1f5f9; border-color:#cbd5e1; opacity:.85; }
+.empty-message { color:#667085; font-style:italic; }
+button { margin-top:12px; padding:10px 16px; border:none; border-radius:12px; background:#2563eb; color:white; font-weight:bold; cursor:pointer; }
+button:hover { background:#1d4ed8; }
+.meta { line-height:1.6; }
 </style>
+
 </head>
 
 <body>
 
 <div class="container">
   <h1>Database-Backed Academic Progress Graph</h1>
-  <p class="subtitle">
-    This experimental page loads majors, courses, prerequisites, and alternatives from the database API.
-  </p>
+  <p class="subtitle">This version organizes degree progress by requirement areas and loads data from PostgreSQL.</p>
 
   <div class="card">
     <h3>Select Program</h3>
-    <select id="programSelect" onchange="loadProgramGraph()"></select>
+    <select id="programSelect" onchange="loadProgramRequirements()"></select>
   </div>
 
   <div class="card">
-    <h3>Completed Courses</h3>
-    <div id="courseCheckboxes" class="checkbox-grid"></div>
-    <button onclick="clearCompleted()">Clear Selection</button>
+  <h3>Completed Courses</h3>
+
+  <div class="tabs">
+    <button class="course-tab active"
+            onclick="setCourseTab('program')">
+      Program Requirements
+    </button>
+
+    <button class="course-tab"
+            onclick="setCourseTab('electives')">
+      Program Electives
+    </button>
+
+    <button class="course-tab"
+            onclick="setCourseTab('common_core')">
+      Common Core
+    </button>
+
+    <button class="course-tab"
+            onclick="setCourseTab('flexible_core')">
+      Flexible Core
+    </button>
   </div>
+
+  <div id="courseCheckboxes" class="checkbox-grid"></div>
+
+  <button onclick="clearCompleted()">Clear Selection</button>
+</div>
 
   <div class="card">
     <h3>Progress Summary</h3>
@@ -174,22 +119,54 @@ button:hover {
   </div>
 
   <div class="card">
-    <h3>Course Progress View</h3>
+    <h3>Requirement Areas</h3>
+
+    <div class="tabs">
+      <button class="tab active" onclick="setTab('program')">Program Requirements</button>
+      <button class="tab" onclick="setTab('common_core')">Common Core</button>
+      <button class="tab" onclick="setTab('flexible_core')">Flexible Core</button>
+      <button class="tab" onclick="setTab('full')">Full Progress Graph</button>
+    </div>
+
     <div id="graph"></div>
   </div>
 </div>
 
 <script>
 let PROGRAMS = [];
-let CURRENT_GRAPH = null;
+let CURRENT_REQUIREMENTS = null;
+let CURRENT_TAB = "program";
+let CURRENT_COURSE_TAB = "program";
+const EMPTY_GROUPS = [
+  {
+    name: "Common Core",
+    group_type: "common_core",
+    required_credits: null,
+    required_course_count: null,
+    display_order: 10,
+    courses: []
+  },
+  {
+    name: "Flexible Core",
+    group_type: "flexible_core",
+    required_credits: null,
+    required_course_count: null,
+    display_order: 20,
+    courses: []
+  },
+  {
+    name: "Program Electives",
+    group_type: "program_elective",
+    required_credits: 6,
+    required_course_count: null,
+    display_order: 40,
+    courses: []
+  }
+];
 
 async function fetchJson(url) {
   const response = await fetch(url);
-
-  if (!response.ok) {
-    throw new Error(`Request failed: ${url} (${response.status})`);
-  }
-
+  if (!response.ok) throw new Error(`Request failed: ${url} (${response.status})`);
   return await response.json();
 }
 
@@ -206,18 +183,49 @@ async function loadPrograms() {
     select.appendChild(option);
   });
 
-  if (PROGRAMS.length > 0) {
-    await loadProgramGraph();
-  }
+  if (PROGRAMS.length > 0) await loadProgramRequirements();
 }
 
-async function loadProgramGraph() {
+async function loadProgramRequirements() {
   const code = document.getElementById("programSelect").value;
+  CURRENT_REQUIREMENTS = await fetchJson(`/api/db/programs/${code}/requirements`);
 
-  CURRENT_GRAPH = await fetchJson(`/api/db/programs/${code}/graph`);
-
+  ensurePlaceholderGroups();
   renderCheckboxes();
   renderGraph();
+}
+
+function ensurePlaceholderGroups() {
+  const existingTypes = new Set(CURRENT_REQUIREMENTS.groups.map(g => g.group_type));
+
+  EMPTY_GROUPS.forEach(group => {
+    if (!existingTypes.has(group.group_type)) {
+      CURRENT_REQUIREMENTS.groups.push(group);
+    }
+  });
+
+  CURRENT_REQUIREMENTS.groups.sort((a, b) => (a.display_order || 0) - (b.display_order || 0));
+}
+
+function setTab(tabName) {
+  CURRENT_TAB = tabName;
+
+  document.querySelectorAll(".tab").forEach(tab => tab.classList.remove("active"));
+  event.target.classList.add("active");
+
+  renderGraph();
+}
+
+function allCoursesFromGroups() {
+  const map = {};
+
+  CURRENT_REQUIREMENTS.groups.forEach(group => {
+    group.courses.forEach(course => {
+      map[course.code] = course;
+    });
+  });
+
+  return map;
 }
 
 function getCompletedCourses() {
@@ -226,28 +234,18 @@ function getCompletedCourses() {
 }
 
 function prereqSatisfied(prereq, completed) {
-  if (Array.isArray(prereq)) {
-    return prereq.some(option => completed.has(option));
-  }
-
+  if (Array.isArray(prereq)) return prereq.some(option => completed.has(option));
   return completed.has(prereq);
 }
 
 function allPrereqsSatisfied(course, completed) {
   if (!course.prereqs || course.prereqs.length === 0) return true;
-
   return course.prereqs.every(prereq => prereqSatisfied(prereq, completed));
 }
 
 function formatPrereqs(prereqs) {
   if (!prereqs || prereqs.length === 0) return "None";
-
-  return prereqs.map(p => {
-    if (Array.isArray(p)) {
-      return p.join(" or ");
-    }
-    return p;
-  }).join(", ");
+  return prereqs.map(p => Array.isArray(p) ? p.join(" or ") : p).join(", ");
 }
 
 function formatAlternatives(alts) {
@@ -262,71 +260,180 @@ function getCourseStatus(code, course, completed) {
 }
 
 function renderCheckboxes() {
-  const container = document.getElementById("courseCheckboxes");
+
+  const container =
+    document.getElementById("courseCheckboxes");
+
   container.innerHTML = "";
 
-  const courses = CURRENT_GRAPH.courses;
+  let groups = [];
 
-  Object.entries(courses).forEach(([code, course]) => {
+  if (CURRENT_COURSE_TAB === "program") {
+
+    groups =
+      CURRENT_REQUIREMENTS.groups.filter(
+        g => g.group_type === "program_required"
+      );
+
+  } else if (CURRENT_COURSE_TAB === "electives") {
+
+    groups =
+      CURRENT_REQUIREMENTS.groups.filter(
+        g => g.group_type === "program_elective"
+      );
+
+  } else if (CURRENT_COURSE_TAB === "common_core") {
+
+    groups =
+      CURRENT_REQUIREMENTS.groups.filter(
+        g => g.group_type === "common_core"
+      );
+
+  } else if (CURRENT_COURSE_TAB === "flexible_core") {
+
+    groups =
+      CURRENT_REQUIREMENTS.groups.filter(
+        g => g.group_type === "flexible_core"
+      );
+  }
+
+  const courseMap = {};
+
+  groups.forEach(group => {
+    group.courses.forEach(course => {
+      courseMap[course.code] = course;
+    });
+  });
+
+  const entries = Object.entries(courseMap);
+
+  if (entries.length === 0) {
+
+    container.innerHTML =
+      `<div class="empty-message">
+        No courses in this requirement area yet.
+      </div>`;
+
+    return;
+  }
+
+  entries.forEach(([code, course]) => {
+
     const label = document.createElement("label");
+
     label.className = "checkbox-item";
 
     label.innerHTML = `
-      <input type="checkbox" class="completed-check" value="${code}" onchange="renderGraph()">
+      <input
+        type="checkbox"
+        class="completed-check"
+        value="${code}"
+        onchange="renderGraph()">
+
       <strong>${code}</strong><br>
-      <span style="font-size:12px;color:#667085;">${course.title}</span>
+
+      <span style="
+        font-size:12px;
+        color:#667085;">
+        ${course.title}
+      </span>
     `;
 
     container.appendChild(label);
   });
 }
 
-function renderGraph() {
-  const completed = getCompletedCourses();
-  const graph = document.getElementById("graph");
+function groupsForCurrentTab() {
+  const groups = CURRENT_REQUIREMENTS.groups;
 
+  if (CURRENT_TAB === "common_core") {
+    return groups.filter(g => g.group_type === "common_core");
+  }
+
+  if (CURRENT_TAB === "flexible_core") {
+    return groups.filter(g => g.group_type === "flexible_core");
+  }
+
+  if (CURRENT_TAB === "program") {
+    return groups.filter(g =>
+      g.group_type === "program_required" ||
+      g.group_type === "program_elective"
+    );
+  }
+
+  return groups;
+}
+
+function renderGraph() {
+  const graph = document.getElementById("graph");
   graph.innerHTML = "";
 
-  const takenCourses = [];
-  const availableCourses = [];
-  const lockedCourses = [];
+  const groups = groupsForCurrentTab();
 
-  Object.entries(CURRENT_GRAPH.courses).forEach(([code, course]) => {
-    const status = getCourseStatus(code, course, completed);
+  if (!groups.length) {
+    graph.innerHTML = `<div class="empty-message">No requirement groups found for this tab.</div>`;
+    return;
+  }
+
+  groups.forEach(group => renderGroupCard(group));
+
+  renderSummary();
+}
+
+function renderGroupCard(group) {
+  const graph = document.getElementById("graph");
+  const completed = getCompletedCourses();
+
+  const taken = [];
+  const available = [];
+  const locked = [];
+
+  let completedCredits = 0;
+  let totalCredits = 0;
+
+  group.courses.forEach(course => {
+    totalCredits += Number(course.credits || 0);
+
+    const status = getCourseStatus(course.code, course, completed);
 
     if (status === "completed") {
-      takenCourses.push([code, course, status]);
+      taken.push([course.code, course, status]);
+      completedCredits += Number(course.credits || 0);
     } else if (status === "available") {
-      availableCourses.push([code, course, status]);
+      available.push([course.code, course, status]);
     } else {
-      lockedCourses.push([code, course, status]);
+      locked.push([course.code, course, status]);
     }
   });
 
-  renderStatusSection(
-    "Taken Classes",
-    "Courses selected as already completed.",
-    takenCourses
-  );
+  const card = document.createElement("div");
+  card.className = "group-card";
 
-  renderStatusSection(
-    "Available Classes",
-    "Courses available now based on completed prerequisites.",
-    availableCourses
-  );
+  const requiredText = group.required_credits
+    ? `${completedCredits} / ${group.required_credits} credits completed`
+    : `${completedCredits} completed credits`;
 
-  renderStatusSection(
-    "Not Available Yet",
-    "Courses still blocked by missing prerequisites.",
-    lockedCourses
-  );
+  card.innerHTML = `
+    <div class="group-header">
+      <div>
+        <div class="group-title">${group.name}</div>
+        <div class="group-meta">
+          Type: ${group.group_type}<br>
+          Courses in group: ${group.courses.length}
+        </div>
+      </div>
+      <div class="progress-pill">${requiredText}</div>
+    </div>
+  `;
 
-  renderSummary(takenCourses, availableCourses, lockedCourses);
+  graph.appendChild(card);
+
+  renderStatusSection(card, "Taken Classes", "Courses selected as already completed.", taken);
+  renderStatusSection(card, "Available Classes", "Courses available now based on prerequisites.", available);
+  renderStatusSection(card, "Not Available Yet", "Courses still blocked by missing prerequisites.", locked);
 }
 
-function renderStatusSection(title, subtitle, courses) {
-  const graph = document.getElementById("graph");
-
+function renderStatusSection(parent, title, subtitle, courses) {
   const section = document.createElement("div");
   section.className = "status-section";
 
@@ -366,27 +473,46 @@ function renderStatusSection(title, subtitle, courses) {
   section.appendChild(titleDiv);
   section.appendChild(subtitleDiv);
   section.appendChild(grid);
-
-  graph.appendChild(section);
+  parent.appendChild(section);
 }
 
-function renderSummary(takenCourses, availableCourses, lockedCourses) {
+function renderSummary() {
   const summary = document.getElementById("summary");
-  const program = CURRENT_GRAPH.program;
+  const program = CURRENT_REQUIREMENTS.program;
+  const courses = allCoursesFromGroups();
+  const completed = getCompletedCourses();
+
+  let completedCredits = 0;
+
+  Object.entries(courses).forEach(([code, course]) => {
+    if (completed.has(code)) completedCredits += Number(course.credits || 0);
+  });
 
   summary.innerHTML = `
     <strong>Program:</strong> ${program.code} — ${program.name}<br>
     <strong>Catalog year:</strong> ${program.catalog_year || "Not specified"}<br>
-    <strong>Total courses:</strong> ${Object.keys(CURRENT_GRAPH.courses).length}<br>
-    <strong>Taken:</strong> ${takenCourses.length}<br>
-    <strong>Available now:</strong> ${availableCourses.length}<br>
-    <strong>Locked:</strong> ${lockedCourses.length}
+    <strong>Requirement groups:</strong> ${CURRENT_REQUIREMENTS.groups.length}<br>
+    <strong>Total visible courses:</strong> ${Object.keys(courses).length}<br>
+    <strong>Selected completed courses:</strong> ${completed.size}<br>
+    <strong>Selected completed credits:</strong> ${completedCredits}
   `;
 }
 
 function clearCompleted() {
   document.querySelectorAll(".completed-check").forEach(cb => cb.checked = false);
   renderGraph();
+}
+function setCourseTab(tabName) {
+
+  CURRENT_COURSE_TAB = tabName;
+
+  document
+    .querySelectorAll(".course-tab")
+    .forEach(tab => tab.classList.remove("active"));
+
+  event.target.classList.add("active");
+
+  renderCheckboxes();
 }
 
 loadPrograms().catch(err => {
