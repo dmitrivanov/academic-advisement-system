@@ -122,3 +122,32 @@ class FAQEntry(Base):
     question = Column(String, nullable=False)
     answer = Column(String, nullable=False)
     intent = Column(String, nullable=True)
+
+class RequirementGroup(Base):
+    __tablename__ = "requirement_groups"
+
+    id = Column(Integer, primary_key=True, index=True)
+    program_id = Column(Integer, ForeignKey("programs.id"), nullable=False)
+
+    name = Column(String, nullable=False)
+    group_type = Column(String, nullable=False)
+
+    required_credits = Column(Integer, nullable=True)
+    required_course_count = Column(Integer, nullable=True)
+    display_order = Column(Integer, default=0)
+
+    __table_args__ = (
+        UniqueConstraint("program_id", "name", name="uq_program_requirement_group"),
+    )
+
+
+class RequirementGroupCourse(Base):
+    __tablename__ = "requirement_group_courses"
+
+    id = Column(Integer, primary_key=True, index=True)
+    requirement_group_id = Column(Integer, ForeignKey("requirement_groups.id"), nullable=False)
+    course_id = Column(Integer, ForeignKey("courses.id"), nullable=False)
+
+    __table_args__ = (
+        UniqueConstraint("requirement_group_id", "course_id", name="uq_group_course"),
+    )

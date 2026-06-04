@@ -10,6 +10,8 @@ from models import (
     ProgramCourse,
     CoursePrerequisite,
     CourseAlternative,
+    RequirementGroup,
+    RequirementGroupCourse,
 )
 
 router = APIRouter(prefix="/api/db", tags=["database"])
@@ -67,7 +69,7 @@ def get_program_courses(program_code: str, db: Session = Depends(get_db)):
                 "requirement_type": link.requirement_type,
             }
             for link in links
-        ]
+        ],
     }
 
 
@@ -101,7 +103,9 @@ def get_program_graph(program_code: str, db: Session = Depends(get_db)):
 
         for row in prereq_rows:
             prereq_course = db.query(Course).filter_by(id=row.prereq_course_id).first()
-            groups.setdefault(row.group_id, []).append(prereq_course.code)
+
+            if prereq_course:
+                groups.setdefault(row.group_id, []).append(prereq_course.code)
 
         prereqs = []
 
@@ -115,7 +119,9 @@ def get_program_graph(program_code: str, db: Session = Depends(get_db)):
 
         for row in alt_rows:
             alt_course = db.query(Course).filter_by(id=row.alternative_course_id).first()
-            alternatives.append(alt_course.code)
+
+            if alt_course:
+                alternatives.append(alt_course.code)
 
         courses[c.code] = {
             "title": c.title,
@@ -131,6 +137,101 @@ def get_program_graph(program_code: str, db: Session = Depends(get_db)):
             "catalog_year": program.catalog_year,
         },
         "courses": courses,
+    }
+
+
+@router.get("/programs/{program_code}/requirements")
+def get_program_requirements(program_code: str, db: Session = Depends(get_db)):
+    program = db.query(Program).filter_by(code=program_code).first()
+
+    if not program:
+        return {"error": "Program not found"}
+
+    groups = (
+        db.query(RequirementGroup)
+        .filter_by(program_id=program.id)
+        .order_by(RequirementGroup.display_order)
+        .all()
+    )
+
+    result_groups = []
+
+    for group in groups:
+        group_courses = (
+            db.query(RequirementGroupCourse)
+            .filter_by(requirement_group_id=group.id)
+            .all()
+        )
+
+        courses = []
+
+        for group_course in group_courses:
+            course = db.query(Course).filter_by(id=group_course.course_id).first()
+
+            if not course:
+                continue
+
+            prereq_rows = (
+                db.query(CoursePrerequisite)
+                .filter_by(program_id=program.id, course_id=course.id)
+                .all()
+            )
+
+            alt_rows = (
+                db.query(CourseAlternative)
+                .filter_by(program_id=program.id, course_id=course.id)
+                .all()
+            )
+
+            prereq_groups = {}
+
+            for row in prereq_rows:
+                prereq_course = db.query(Course).filter_by(id=row.prereq_course_id).first()
+
+                if prereq_course:
+                    prereq_groups.setdefault(row.group_id, []).append(prereq_course.code)
+
+            prereqs = []
+
+            for _, codes in sorted(prereq_groups.items()):
+                if len(codes) == 1:
+                    prereqs.append(codes[0])
+                else:
+                    prereqs.append(codes)
+
+            alternatives = []
+
+            for row in alt_rows:
+                alt_course = db.query(Course).filter_by(id=row.alternative_course_id).first()
+
+                if alt_course:
+                    alternatives.append(alt_course.code)
+
+            courses.append({
+                "code": course.code,
+                "title": course.title,
+                "credits": course.credits,
+                "prereqs": prereqs,
+                "alternatives": alternatives,
+            })
+
+        result_groups.append({
+            "id": group.id,
+            "name": group.name,
+            "group_type": group.group_type,
+            "required_credits": group.required_credits,
+            "required_course_count": group.required_course_count,
+            "display_order": group.display_order,
+            "courses": courses,
+        })
+
+    return {
+        "program": {
+            "code": program.code,
+            "name": program.name,
+            "catalog_year": program.catalog_year,
+        },
+        "groups": result_groups,
     }
 
 

@@ -11,6 +11,8 @@ from models import (
     CoursePrerequisite,
     CourseAlternative,
     FAQEntry,
+    RequirementGroup,
+    RequirementGroupCourse,
 )
 
 
@@ -40,12 +42,6 @@ MAJORS = {
 
 
 def parse_relationships(value):
-    """
-    Examples:
-    CSC 101
-    CSC 110 or CSC 111
-    CIS 385|CSC 210
-    """
     if not value or not value.strip():
         return []
 
@@ -74,12 +70,14 @@ def get_or_create(db, model, defaults=None, **kwargs):
         return obj
 
     values = dict(kwargs)
+
     if defaults:
         values.update(defaults)
 
     obj = model(**values)
     db.add(obj)
     db.flush()
+
     return obj
 
 
@@ -126,7 +124,7 @@ def seed():
         institution = get_or_create(
             db,
             Institution,
-            name="Borough of Manhattan Community College"
+            name="Borough of Manhattan Community College",
         )
 
         for program_code, info in MAJORS.items():
@@ -135,7 +133,9 @@ def seed():
                 Department,
                 institution_id=institution.id,
                 code=info["department_code"],
-                defaults={"name": info["department"]}
+                defaults={
+                    "name": info["department"],
+                },
             )
 
             program = get_or_create(
@@ -147,7 +147,20 @@ def seed():
                 defaults={
                     "name": info["name"],
                     "degree_type": "AS",
-                }
+                },
+            )
+
+            required_group = get_or_create(
+                db,
+                RequirementGroup,
+                program_id=program.id,
+                name="Required Program Courses",
+                defaults={
+                    "group_type": "program_required",
+                    "required_credits": None,
+                    "required_course_count": None,
+                    "display_order": 1,
+                },
             )
 
             csv_path = Path(info["csv"])
@@ -175,7 +188,7 @@ def seed():
                         defaults={
                             "title": title,
                             "credits": credits,
-                        }
+                        },
                     )
 
                     get_or_create(
@@ -183,12 +196,20 @@ def seed():
                         ProgramCourse,
                         program_id=program.id,
                         course_id=course.id,
-                        defaults={"requirement_type": "required"}
+                        defaults={
+                            "requirement_type": "required",
+                        },
+                    )
+
+                    get_or_create(
+                        db,
+                        RequirementGroupCourse,
+                        requirement_group_id=required_group.id,
+                        course_id=course.id,
                     )
 
                 db.flush()
 
-            # relationships pass
             for row in rows:
                 course_code = row["code"].strip()
                 course = db.query(Course).filter_by(code=course_code).first()
@@ -207,7 +228,7 @@ def seed():
                                 defaults={
                                     "title": prereq_code,
                                     "credits": 0,
-                                }
+                                },
                             )
 
                         get_or_create(
@@ -233,7 +254,7 @@ def seed():
                                 defaults={
                                     "title": alt_code,
                                     "credits": 0,
-                                }
+                                },
                             )
 
                         get_or_create(
@@ -244,8 +265,11 @@ def seed():
                             alternative_course_id=alt.id,
                         )
 
-            # FAQ
-            existing_faq_count = db.query(FAQEntry).filter_by(program_id=program.id).count()
+            existing_faq_count = (
+                db.query(FAQEntry)
+                .filter_by(program_id=program.id)
+                .count()
+            )
 
             if existing_faq_count == 0:
                 for question, answer in parse_faq_file(info["faq"]):
@@ -254,7 +278,7 @@ def seed():
                             program_id=program.id,
                             question=question,
                             answer=answer,
-                            intent=None
+                            intent=None,
                         )
                     )
 
