@@ -1,8 +1,10 @@
 program_code,program_name,catalog_year,group_name,group_type,required_credits,course_code,title,credits,prerequisites,alternatives
-CS,Computer Science,2026,Required Common Core,common_core,12,CC-ENG-COMP,English Composition requirement,6,,
-CS,Computer Science,2026,Required Common Core,common_core,12,CC-MATH-QR,Mathematical and Quantitative Reasoning requirement,3,,
-CS,Computer Science,2026,Required Common Core,common_core,12,CC-LIFE-PHYS,Life and Physical Sciences requirement,3,,
-CS,Computer Science,2026,Flexible Core,flexible_core,18,FC-CREATIVE,Creative Expression requirement,3,,
+CS,Computer Science,2026,Required Common Core,common_core,12,ENG 101,English Composition,3,,
+CS,Computer Science,2026,Required Common Core,common_core,12,ENG 201,Introduction to Literature,3,ENG 101,
+CS,Computer Science,2026,Required Common Core,common_core,12,MAT 206,Precalculus,4,,MAT 301
+CS,Computer Science,2026,Required Common Core,common_core,12,PHY 215,Life and Physical Sciences requirement,4,MAT 301,
+CS,Computer Science,2026,Flexible Core,flexible_core,18,SPE 102,Fundamentals of Public Speaking ,3,,SPE 100
+CS,Computer Science,2026,Flexible Core,flexible_core,18,SPE 100,Fundamentals of Public Speaking for Non-Native Speakers,3,,SPE 102
 CS,Computer Science,2026,Flexible Core,flexible_core,18,FC-INDIVIDUAL,Individual and Society requirement,3,,
 CS,Computer Science,2026,Flexible Core,flexible_core,18,FC-SCI-WORLD,Scientific World requirement,6,,
 CS,Computer Science,2026,Flexible Core,flexible_core,18,FC-US-EXP,U.S. Experience in Its Diversity requirement,3,,
@@ -14,11 +16,8 @@ CS,Computer Science,2026,Program Requirements,program_required,30,CSC 215,Fundam
 CS,Computer Science,2026,Program Requirements,program_required,30,CSC 231,Discrete Structures and Applications to Computer Science,4,CSC 111|MAT 301,
 CS,Computer Science,2026,Program Requirements,program_required,30,CSC 331,Data Structures,3,CSC 211|CSC 231,
 CS,Computer Science,2026,Program Requirements,program_required,30,CSC 350,Software Development,3,CSC 211,
-CS,Computer Science,2026,Program Requirements,program_required,30,MAT 206,Precalculus,4,,MAT 301
 CS,Computer Science,2026,Program Requirements,program_required,30,MAT 301,Analytic Geometry and Calculus I,4,MAT 206,
 CS,Computer Science,2026,Program Requirements,program_required,30,MAT 302,Analytic Geometry and Calculus II,4,MAT 301,
-CS,Computer Science,2026,Program Requirements,program_required,30,PHY 215,University Physics I,4,MAT 301,
-CS,Computer Science,2026,Program Requirements,program_required,30,GEN-ELECTIVE,General Elective,4,,
 CS,Computer Science,2026,Program Electives,program_elective,6,CIS 317,Introduction to Cryptography,4,,
 CS,Computer Science,2026,Program Electives,program_elective,6,CIS 345,Telecommunication Networks I,3,CSC 110 or CSC 111 or CIS 165,
 CS,Computer Science,2026,Program Electives,program_elective,6,CIS 359,Information Assurance,3,CSC 110 or CSC 111 or CIS 165,
