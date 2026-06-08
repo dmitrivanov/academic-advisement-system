@@ -5,13 +5,200 @@
 <title>Database Progress Graph</title>
 
 <style>
-body { font-family: Arial, sans-serif; background:#f5f7fb; margin:0; color:#172033; }
-.container { max-width:1200px; margin:40px auto; padding:20px; }
-.card { background:white; border-radius:16px; padding:22px; margin-bottom:20px; box-shadow:0 10px 25px rgba(0,0,0,.07); border:1px solid #e6eaf2; }
-h1 { margin-bottom:6px; }
-.subtitle { color:#667085; margin-top:0; }
-select { padding:10px 14px; border-radius:10px; border:1px solid #d7deea; font-size:15px; }
-.tabs { display:flex; gap:10px; flex-wrap:wrap; margin:18px 0; }
+body {
+  font-family: Arial, sans-serif;
+  background: #f5f7fb;
+  margin: 0;
+  color: #172033;
+}
+
+.container {
+  max-width: 1250px;
+  margin: 40px auto;
+  padding: 20px;
+}
+
+.card {
+  background: white;
+  border-radius: 16px;
+  padding: 22px;
+  margin-bottom: 20px;
+  box-shadow: 0 10px 25px rgba(0,0,0,.07);
+  border: 1px solid #e6eaf2;
+}
+
+h1 {
+  margin-bottom: 6px;
+}
+
+.subtitle {
+  color: #667085;
+  margin-top: 0;
+}
+
+select {
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1px solid #d7deea;
+  font-size: 15px;
+}
+
+.audit-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(220px, 1fr));
+  gap: 18px;
+  margin-top: 18px;
+}
+
+.audit-column {
+  border: 2px solid #d7deea;
+  border-radius: 20px;
+  padding: 16px;
+  min-height: 300px;
+  background: #fbfdff;
+}
+
+.audit-column h3 {
+  margin-top: 0;
+  text-align: center;
+}
+
+.course-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.course-card {
+  border: 2px solid #cfd8e7;
+  border-radius: 14px;
+  padding: 12px;
+  background: #f1f5f9;
+  cursor: pointer;
+  transition: 0.15s;
+}
+
+.course-card:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 5px 14px rgba(0,0,0,0.08);
+}
+
+.course-card.completed {
+  background: #dcfce7;
+  border-color: #22c55e;
+}
+
+.course-card.available {
+  background: #dbeafe;
+  border-color: #2563eb;
+}
+
+.course-card.locked {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+  opacity: 0.8;
+}
+
+.course-code {
+  font-size: 17px;
+  font-weight: bold;
+}
+
+.course-title {
+  font-size: 13px;
+  color: #475467;
+  margin-top: 5px;
+}
+
+.course-detail {
+  font-size: 12px;
+  color: #667085;
+  margin-top: 7px;
+  line-height: 1.35;
+}
+
+.course-check {
+  margin-right: 6px;
+}
+
+.status-legend {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 14px;
+  font-size: 13px;
+  color: #667085;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.legend-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 4px;
+  border: 1px solid #cbd5e1;
+}
+
+.legend-completed {
+  background: #dcfce7;
+  border-color: #22c55e;
+}
+
+.legend-available {
+  background: #dbeafe;
+  border-color: #2563eb;
+}
+
+.legend-locked {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+}
+
+.recommendation-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-top: 15px;
+}
+
+.recommendation-card {
+  min-width: 190px;
+  max-width: 240px;
+  padding: 14px;
+  border-radius: 14px;
+  background: #eef4ff;
+  border: 2px solid #2563eb;
+}
+
+.recommendation-title {
+  font-weight: bold;
+  font-size: 17px;
+}
+
+.recommendation-meta {
+  font-size: 13px;
+  color: #475467;
+  margin-top: 6px;
+  line-height: 1.4;
+}
+
+.recommendation-summary {
+  margin-top: 10px;
+  color: #475467;
+  line-height: 1.5;
+}
+
+.tabs {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin: 18px 0;
+}
+
 .tab {
   padding: 10px 14px;
   border-radius: 12px;
@@ -22,61 +209,148 @@ select { padding:10px 14px; border-radius:10px; border:1px solid #d7deea; font-s
   font-weight: bold;
   opacity: 0.75;
 }
-.course-tab {
-  padding: 10px 14px;
-  border-radius: 12px;
-  border: 1px solid #2563eb;
-  background: #2563eb;
-  color: white;
-  cursor: pointer;
-  font-weight: bold;
-  opacity: .75;
-}
 
-.course-tab.active {
-  opacity: 1;
-}
 .tab:hover {
   opacity: 0.9;
 }
 
 .tab.active {
-  background: #2563eb;
-  color: white;
-  border-color: #2563eb;
   opacity: 1;
 }
-.checkbox-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(210px,1fr)); gap:10px; }
-.checkbox-item { background:#f8fbff; border:1px solid #e6eaf2; border-radius:10px; padding:10px; }
-.group-card { margin-top:20px; padding:18px; border-radius:16px; border:1px solid #e6eaf2; background:#fff; }
-.group-header { display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap; align-items:flex-start; }
-.group-title { font-size:21px; font-weight:bold; }
-.group-meta { color:#667085; font-size:13px; line-height:1.5; }
-.progress-pill { background:#eef4ff; color:#1d4ed8; padding:7px 10px; border-radius:999px; font-weight:bold; font-size:13px; }
-.status-section { margin-top:18px; padding:16px; border-radius:14px; border:1px solid #e6eaf2; background:#ffffff; }
-.status-title { font-size:18px; font-weight:bold; margin-bottom:8px; }
-.status-subtitle { font-size:13px; color:#667085; margin-bottom:14px; }
-.status-grid { display:flex; flex-wrap:wrap; gap:16px; }
-.course { min-width:160px; max-width:230px; padding:14px; border-radius:14px; border:2px solid #cfd8e7; background:#eef2f7; box-shadow:0 4px 10px rgba(0,0,0,.05); }
-.course-code { font-size:18px; font-weight:bold; }
-.course-title { font-size:13px; margin-top:6px; color:#475467; }
-.course-detail { font-size:12px; margin-top:8px; color:#667085; }
-.completed { background:#dcfce7; border-color:#22c55e; }
-.available { background:#dbeafe; border-color:#2563eb; }
-.locked { background:#f1f5f9; border-color:#cbd5e1; opacity:.85; }
-.empty-message { color:#667085; font-style:italic; }
-button { margin-top:12px; padding:10px 16px; border:none; border-radius:12px; background:#2563eb; color:white; font-weight:bold; cursor:pointer; }
-button:hover { background:#1d4ed8; }
-.meta { line-height:1.6; }
-</style>
 
+.group-card {
+  margin-top: 20px;
+  padding: 18px;
+  border-radius: 16px;
+  border: 1px solid #e6eaf2;
+  background: #fff;
+}
+
+.group-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  align-items: flex-start;
+}
+
+.group-title {
+  font-size: 21px;
+  font-weight: bold;
+}
+
+.group-meta {
+  color: #667085;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.progress-pill {
+  background: #eef4ff;
+  color: #1d4ed8;
+  padding: 7px 10px;
+  border-radius: 999px;
+  font-weight: bold;
+  font-size: 13px;
+}
+
+.status-section {
+  margin-top: 18px;
+  padding: 16px;
+  border-radius: 14px;
+  border: 1px solid #e6eaf2;
+  background: #ffffff;
+}
+
+.status-title {
+  font-size: 18px;
+  font-weight: bold;
+  margin-bottom: 8px;
+}
+
+.status-subtitle {
+  font-size: 13px;
+  color: #667085;
+  margin-bottom: 14px;
+}
+
+.status-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.status-course {
+  min-width: 160px;
+  max-width: 230px;
+  padding: 14px;
+  border-radius: 14px;
+  border: 2px solid #cfd8e7;
+  background: #eef2f7;
+  box-shadow: 0 4px 10px rgba(0,0,0,.05);
+}
+
+.status-course.completed {
+  background: #dcfce7;
+  border-color: #22c55e;
+}
+
+.status-course.available {
+  background: #dbeafe;
+  border-color: #2563eb;
+}
+
+.status-course.locked {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+  opacity: .85;
+}
+
+.empty-message {
+  color: #667085;
+  font-style: italic;
+}
+
+button {
+  margin-top: 12px;
+  padding: 10px 16px;
+  border: none;
+  border-radius: 12px;
+  background: #2563eb;
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+button:hover {
+  background: #1d4ed8;
+}
+
+.meta {
+  line-height: 1.6;
+}
+
+@media (max-width: 1000px) {
+  .audit-grid {
+    grid-template-columns: repeat(2, minmax(220px, 1fr));
+  }
+}
+
+@media (max-width: 620px) {
+  .audit-grid {
+    grid-template-columns: 1fr;
+  }
+}
+</style>
 </head>
 
 <body>
 
 <div class="container">
-  <h1>Database-Backed Academic Progress Graph</h1>
-  <p class="subtitle">This version organizes degree progress by requirement areas and loads data from PostgreSQL.</p>
+  <h1>Academic Progress Graph</h1>
+  <p class="subtitle">
+    This page organizes degree progress by requirement areas and recommends next-semester courses.
+  </p>
 
   <div class="card">
     <h3>Select Program</h3>
@@ -84,34 +358,27 @@ button:hover { background:#1d4ed8; }
   </div>
 
   <div class="card">
-  <h3>Completed Courses</h3>
+    <h2 style="text-align:center;">Completed Courses</h2>
+    <p class="subtitle" style="text-align:center;">
+      Select courses already completed. Green = completed, blue = available now, gray = locked by prerequisites.
+    </p>
 
-  <div class="tabs">
-    <button class="course-tab active"
-            onclick="setCourseTab('program')">
-      Program Requirements
-    </button>
+    <div class="status-legend">
+      <div class="legend-item"><span class="legend-dot legend-completed"></span> Completed</div>
+      <div class="legend-item"><span class="legend-dot legend-available"></span> Available now</div>
+      <div class="legend-item"><span class="legend-dot legend-locked"></span> Not available yet</div>
+    </div>
 
-    <button class="course-tab"
-            onclick="setCourseTab('electives')">
-      Program Electives
-    </button>
+    <div id="completedCourseGrid" class="audit-grid"></div>
 
-    <button class="course-tab"
-            onclick="setCourseTab('common_core')">
-      Common Core
-    </button>
-
-    <button class="course-tab"
-            onclick="setCourseTab('flexible_core')">
-      Flexible Core
-    </button>
+    <button onclick="clearCompleted()">Clear Selection</button>
   </div>
 
-  <div id="courseCheckboxes" class="checkbox-grid"></div>
-
-  <button onclick="clearCompleted()">Clear Selection</button>
-</div>
+  <div class="card">
+    <h3 id="recommendationTitle">Next Semester Recommendation</h3>
+    <div id="recommendationSummary" class="recommendation-summary">Loading...</div>
+    <div id="recommendations" class="recommendation-grid"></div>
+  </div>
 
   <div class="card">
     <h3>Progress Summary</h3>
@@ -122,10 +389,10 @@ button:hover { background:#1d4ed8; }
     <h3>Requirement Areas</h3>
 
     <div class="tabs">
-      <button class="tab active" onclick="setTab('program')">Program Requirements</button>
-      <button class="tab" onclick="setTab('common_core')">Common Core</button>
-      <button class="tab" onclick="setTab('flexible_core')">Flexible Core</button>
-      <button class="tab" onclick="setTab('full')">Full Progress Graph</button>
+      <button class="tab active" onclick="setTab('program', event)">Program Requirements</button>
+      <button class="tab" onclick="setTab('common_core', event)">Common Core</button>
+      <button class="tab" onclick="setTab('flexible_core', event)">Flexible Core</button>
+      <button class="tab" onclick="setTab('full', event)">Full Progress Graph</button>
     </div>
 
     <div id="graph"></div>
@@ -136,7 +403,8 @@ button:hover { background:#1d4ed8; }
 let PROGRAMS = [];
 let CURRENT_REQUIREMENTS = null;
 let CURRENT_TAB = "program";
-let CURRENT_COURSE_TAB = "program";
+let COMPLETED_COURSES = new Set();
+
 const EMPTY_GROUPS = [
   {
     name: "Common Core",
@@ -164,6 +432,25 @@ const EMPTY_GROUPS = [
   }
 ];
 
+const DISPLAY_AREAS = [
+  {
+    title: "Program Requirements",
+    types: ["program_required"]
+  },
+  {
+    title: "Program Electives",
+    types: ["program_elective"]
+  },
+  {
+    title: "Common Core",
+    types: ["common_core"]
+  },
+  {
+    title: "Flexible Core",
+    types: ["flexible_core"]
+  }
+];
+
 async function fetchJson(url) {
   const response = await fetch(url);
   if (!response.ok) throw new Error(`Request failed: ${url} (${response.status})`);
@@ -183,7 +470,9 @@ async function loadPrograms() {
     select.appendChild(option);
   });
 
-  if (PROGRAMS.length > 0) await loadProgramRequirements();
+  if (PROGRAMS.length > 0) {
+    await loadProgramRequirements();
+  }
 }
 
 async function loadProgramRequirements() {
@@ -191,8 +480,10 @@ async function loadProgramRequirements() {
   CURRENT_REQUIREMENTS = await fetchJson(`/api/db/programs/${code}/requirements`);
 
   ensurePlaceholderGroups();
-  renderCheckboxes();
+  renderCompletedCourseGrid();
   renderGraph();
+  renderSummary();
+  renderRecommendations();
 }
 
 function ensurePlaceholderGroups() {
@@ -207,7 +498,7 @@ function ensurePlaceholderGroups() {
   CURRENT_REQUIREMENTS.groups.sort((a, b) => (a.display_order || 0) - (b.display_order || 0));
 }
 
-function setTab(tabName) {
+function setTab(tabName, event) {
   CURRENT_TAB = tabName;
 
   document.querySelectorAll(".tab").forEach(tab => tab.classList.remove("active"));
@@ -221,20 +512,30 @@ function allCoursesFromGroups() {
 
   CURRENT_REQUIREMENTS.groups.forEach(group => {
     group.courses.forEach(course => {
-      map[course.code] = course;
+      map[course.code] = {
+        ...course,
+        group_type: group.group_type,
+        group_name: group.name
+      };
     });
   });
 
   return map;
 }
 
+function getGroupsByTypes(types) {
+  return CURRENT_REQUIREMENTS.groups.filter(group => types.includes(group.group_type));
+}
+
 function getCompletedCourses() {
-  const checked = document.querySelectorAll(".completed-check:checked");
-  return new Set([...checked].map(cb => cb.value));
+  return new Set(COMPLETED_COURSES);
 }
 
 function prereqSatisfied(prereq, completed) {
-  if (Array.isArray(prereq)) return prereq.some(option => completed.has(option));
+  if (Array.isArray(prereq)) {
+    return prereq.some(option => completed.has(option));
+  }
+
   return completed.has(prereq);
 }
 
@@ -259,88 +560,96 @@ function getCourseStatus(code, course, completed) {
   return "locked";
 }
 
-function renderCheckboxes() {
-
-  const container =
-    document.getElementById("courseCheckboxes");
-
+function renderCompletedCourseGrid() {
+  const container = document.getElementById("completedCourseGrid");
   container.innerHTML = "";
 
-  let groups = [];
+  DISPLAY_AREAS.forEach(area => {
+    const column = document.createElement("div");
+    column.className = "audit-column";
 
-  if (CURRENT_COURSE_TAB === "program") {
+    const title = document.createElement("h3");
+    title.textContent = area.title;
+    column.appendChild(title);
 
-    groups =
-      CURRENT_REQUIREMENTS.groups.filter(
-        g => g.group_type === "program_required"
-      );
+    const list = document.createElement("div");
+    list.className = "course-list";
 
-  } else if (CURRENT_COURSE_TAB === "electives") {
+    const groups = getGroupsByTypes(area.types);
+    let courses = [];
 
-    groups =
-      CURRENT_REQUIREMENTS.groups.filter(
-        g => g.group_type === "program_elective"
-      );
-
-  } else if (CURRENT_COURSE_TAB === "common_core") {
-
-    groups =
-      CURRENT_REQUIREMENTS.groups.filter(
-        g => g.group_type === "common_core"
-      );
-
-  } else if (CURRENT_COURSE_TAB === "flexible_core") {
-
-    groups =
-      CURRENT_REQUIREMENTS.groups.filter(
-        g => g.group_type === "flexible_core"
-      );
-  }
-
-  const courseMap = {};
-
-  groups.forEach(group => {
-    group.courses.forEach(course => {
-      courseMap[course.code] = course;
+    groups.forEach(group => {
+      courses = courses.concat(group.courses.map(course => ({
+        ...course,
+        group_type: group.group_type,
+        group_name: group.name
+      })));
     });
+
+    if (courses.length === 0) {
+      const empty = document.createElement("div");
+      empty.className = "empty-message";
+      empty.textContent = "No courses in this area yet.";
+      list.appendChild(empty);
+    } else {
+      courses.forEach(course => {
+        list.appendChild(createSelectableCourseCard(course));
+      });
+    }
+
+    column.appendChild(list);
+    container.appendChild(column);
   });
+}
 
-  const entries = Object.entries(courseMap);
+function createSelectableCourseCard(course) {
+  const completed = getCompletedCourses();
+  const status = getCourseStatus(course.code, course, completed);
 
-  if (entries.length === 0) {
+  const label = document.createElement("label");
+  label.className = `course-card ${status}`;
 
-    container.innerHTML =
-      `<div class="empty-message">
-        No courses in this requirement area yet.
-      </div>`;
+  const checked = completed.has(course.code) ? "checked" : "";
 
-    return;
-  }
-
-  entries.forEach(([code, course]) => {
-
-    const label = document.createElement("label");
-
-    label.className = "checkbox-item";
-
-    label.innerHTML = `
+  label.innerHTML = `
+    <div class="course-code">
       <input
         type="checkbox"
-        class="completed-check"
-        value="${code}"
-        onchange="renderGraph()">
+        class="completed-check course-check"
+        value="${course.code}"
+        ${checked}
+        onchange="handleCourseCheckboxChange(this)">
+      ${course.code}
+    </div>
+    <div class="course-title">${course.title}</div>
+    <div class="course-detail">Credits: ${course.credits}</div>
+    <div class="course-detail">Prereqs: ${formatPrereqs(course.prereqs)}</div>
+    <div class="course-detail">Area: ${course.group_name}</div>
+  `;
 
-      <strong>${code}</strong><br>
+  return label;
+}
 
-      <span style="
-        font-size:12px;
-        color:#667085;">
-        ${course.title}
-      </span>
-    `;
+function handleCourseCheckboxChange(checkbox) {
+  if (checkbox.checked) {
+    COMPLETED_COURSES.add(checkbox.value);
+  } else {
+    COMPLETED_COURSES.delete(checkbox.value);
+  }
 
-    container.appendChild(label);
-  });
+  renderCompletedCourseGrid();
+  renderGraph();
+  renderSummary();
+  renderRecommendations();
+}
+
+function clearCompleted() {
+  COMPLETED_COURSES.clear();
+
+  renderCompletedCourseGrid();
+  renderGraph();
+  renderSummary();
+  renderRecommendations();
 }
 
 function groupsForCurrentTab() {
@@ -376,8 +685,6 @@ function renderGraph() {
   }
 
   groups.forEach(group => renderGroupCard(group));
-
-  renderSummary();
 }
 
 function renderGroupCard(group) {
@@ -389,11 +696,8 @@ function renderGroupCard(group) {
   const locked = [];
 
   let completedCredits = 0;
-  let totalCredits = 0;
 
   group.courses.forEach(course => {
-    totalCredits += Number(course.credits || 0);
-
     const status = getCourseStatus(course.code, course, completed);
 
     if (status === "completed") {
@@ -456,7 +760,7 @@ function renderStatusSection(parent, title, subtitle, courses) {
   } else {
     courses.forEach(([code, course, status]) => {
       const div = document.createElement("div");
-      div.className = `course ${status}`;
+      div.className = `status-course ${status}`;
 
       div.innerHTML = `
         <div class="course-code">${code}</div>
@@ -485,7 +789,9 @@ function renderSummary() {
   let completedCredits = 0;
 
   Object.entries(courses).forEach(([code, course]) => {
-    if (completed.has(code)) completedCredits += Number(course.credits || 0);
+    if (completed.has(code)) {
+      completedCredits += Number(course.credits || 0);
+    }
   });
 
   summary.innerHTML = `
@@ -498,21 +804,213 @@ function renderSummary() {
   `;
 }
 
-function clearCompleted() {
-  document.querySelectorAll(".completed-check").forEach(cb => cb.checked = false);
-  renderGraph();
+function detectNextSemester(date = new Date()) {
+  const month = date.getMonth() + 1;
+  const year = date.getFullYear();
+
+  if (month === 12) {
+    return {
+      name: `Winter ${year + 1}`,
+      minCredits: 3,
+      maxCredits: 4,
+      targetCredits: 4,
+      maxCourses: 1
+    };
+  }
+
+  if (month === 1 || month === 2) {
+    return {
+      name: `Spring ${year}`,
+      minCredits: 13,
+      maxCredits: 17,
+      targetCredits: 15,
+      maxCourses: 5
+    };
+  }
+
+  if (month === 5) {
+    return {
+      name: `Summer ${year}`,
+      minCredits: 6,
+      maxCredits: 8,
+      targetCredits: 7,
+      maxCourses: 2
+    };
+  }
+
+  if (month >= 6 && month <= 8) {
+    return {
+      name: `Fall ${year}`,
+      minCredits: 13,
+      maxCredits: 17,
+      targetCredits: 15,
+      maxCourses: 5
+    };
+  }
+
+  if (month >= 9 && month <= 11) {
+    return {
+      name: `Spring ${year + 1}`,
+      minCredits: 13,
+      maxCredits: 17,
+      targetCredits: 15,
+      maxCourses: 5
+    };
+  }
+
+  return {
+    name: `Fall ${year}`,
+    minCredits: 13,
+    maxCredits: 17,
+    targetCredits: 15,
+    maxCourses: 5
+  };
 }
-function setCourseTab(tabName) {
 
-  CURRENT_COURSE_TAB = tabName;
+function groupPriority(groupType) {
+  const priorities = {
+    program_required: 50,
+    common_core: 25,
+    flexible_core: 20,
+    program_elective: 10
+  };
 
-  document
-    .querySelectorAll(".course-tab")
-    .forEach(tab => tab.classList.remove("active"));
+  return priorities[groupType] || 5;
+}
 
-  event.target.classList.add("active");
+function countUnlocks(course, completed) {
+  const courses = allCoursesFromGroups();
+  const newCompleted = new Set(completed);
+  newCompleted.add(course.code);
 
-  renderCheckboxes();
+  let unlocks = 0;
+
+  Object.entries(courses).forEach(([code, otherCourse]) => {
+    if (completed.has(code)) return;
+
+    const currentlyAvailable = allPrereqsSatisfied(otherCourse, completed);
+    const availableAfter = allPrereqsSatisfied(otherCourse, newCompleted);
+
+    if (!currentlyAvailable && availableAfter) {
+      unlocks++;
+    }
+  });
+
+  return unlocks;
+}
+
+function recommendationScore(course, completed, selectedGroupTypes) {
+  const unlocks = countUnlocks(course, completed);
+  let score = unlocks * 10 + groupPriority(course.group_type);
+
+  if (!selectedGroupTypes.has(course.group_type)) {
+    score += 8;
+  }
+
+  return score;
+}
+
+function getAvailableCoursesForRecommendation() {
+  const completed = getCompletedCourses();
+  const courses = allCoursesFromGroups();
+
+  return Object.values(courses).filter(course => {
+    if (completed.has(course.code)) return false;
+    return allPrereqsSatisfied(course, completed);
+  });
+}
+
+function chooseRecommendedCourses() {
+  const semester = detectNextSemester();
+  const completed = getCompletedCourses();
+
+  let available = getAvailableCoursesForRecommendation();
+
+  const selected = [];
+  const selectedCodes = new Set();
+  const selectedGroupTypes = new Set();
+  let credits = 0;
+
+  while (available.length > 0 && selected.length < semester.maxCourses) {
+    available.sort((a, b) => {
+      const scoreA = recommendationScore(a, completed, selectedGroupTypes);
+      const scoreB = recommendationScore(b, completed, selectedGroupTypes);
+      return scoreB - scoreA;
+    });
+
+    let chosen = null;
+
+    for (const course of available) {
+      const courseCredits = Number(course.credits || 0);
+
+      if (credits + courseCredits <= semester.maxCredits) {
+        chosen = course;
+        break;
+      }
+    }
+
+    if (!chosen) break;
+
+    selected.push(chosen);
+    selectedCodes.add(chosen.code);
+    selectedGroupTypes.add(chosen.group_type);
+    credits += Number(chosen.credits || 0);
+
+    available = available.filter(course => !selectedCodes.has(course.code));
+
+    if (credits >= semester.minCredits && credits >= semester.targetCredits - 1) {
+      break;
+    }
+  }
+
+  return {
+    semester,
+    selected,
+    credits
+  };
+}
+
+function renderRecommendations() {
+  const title = document.getElementById("recommendationTitle");
+  const summary = document.getElementById("recommendationSummary");
+  const container = document.getElementById("recommendations");
+
+  container.innerHTML = "";
+
+  const result = chooseRecommendedCourses();
+  const semester = result.semester;
+
+  title.textContent = `Next Semester Recommendation — ${semester.name}`;
+
+  if (!result.selected.length) {
+    summary.innerHTML = `
+      No recommended courses found. This may happen if all available courses are completed or if prerequisites are missing.
+    `;
+    return;
+  }
+
+  summary.innerHTML = `
+    Recommended load: <strong>${result.credits} credits</strong>.
+    Target for ${semester.name}: ${semester.minCredits}-${semester.maxCredits} credits.
+    The recommendation prioritizes courses that unlock future courses, program requirements, and category diversity.
+  `;
+
+  result.selected.forEach(course => {
+    const div = document.createElement("div");
+    div.className = "recommendation-card";
+
+    div.innerHTML = `
+      <div class="recommendation-title">${course.code}</div>
+      <div class="recommendation-meta">
+        ${course.title}<br>
+        Credits: ${course.credits}<br>
+        Area: ${course.group_name}<br>
+        Unlocks: ${countUnlocks(course, getCompletedCourses())}
+      </div>
+    `;
+
+    container.appendChild(div);
+  });
 }
 
 loadPrograms().catch(err => {
