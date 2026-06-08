@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <title>Admin Dashboard | Academic Advisement System</title>
+
 <style>
 body {
   font-family: Arial, sans-serif;
@@ -12,7 +13,7 @@ body {
 }
 
 .container {
-  max-width: 1100px;
+  max-width: 1200px;
   margin: 40px auto;
   padding: 20px;
 }
@@ -24,10 +25,23 @@ body {
   margin-bottom: 24px;
 }
 
+.nav a {
+  margin-left: 12px;
+  color: #2563eb;
+  text-decoration: none;
+  font-weight: bold;
+}
+
+.subtitle {
+  color: #667085;
+  margin-top: 0;
+}
+
 .card {
   background: white;
   border-radius: 16px;
   padding: 22px;
+  margin-bottom: 20px;
   box-shadow: 0 10px 25px rgba(0,0,0,0.07);
   border: 1px solid #e6eaf2;
 }
@@ -44,6 +58,13 @@ body {
   padding: 22px;
   border: 1px solid #e6eaf2;
   box-shadow: 0 8px 20px rgba(0,0,0,0.05);
+  cursor: pointer;
+  transition: 0.15s;
+}
+
+.admin-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 28px rgba(0,0,0,0.08);
 }
 
 .admin-card h3 {
@@ -65,7 +86,7 @@ body {
   font-weight: bold;
 }
 
-a.button {
+.button {
   display: inline-block;
   margin-top: 10px;
   padding: 10px 14px;
@@ -76,20 +97,99 @@ a.button {
   font-weight: bold;
 }
 
-a.button:hover {
-  background: #1d4ed8;
-}
-
-.nav a {
-  margin-left: 12px;
-  color: #2563eb;
-  text-decoration: none;
+.disabled-button {
+  display: inline-block;
+  margin-top: 10px;
+  padding: 10px 14px;
+  background: #e5e7eb;
+  color: #667085;
+  border-radius: 12px;
   font-weight: bold;
 }
 
-.subtitle {
+.summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 14px;
+  margin-bottom: 20px;
+}
+
+.summary-card {
+  background: #f8fbff;
+  border: 1px solid #e6eaf2;
+  border-radius: 14px;
+  padding: 16px;
+}
+
+.summary-number {
+  font-size: 28px;
+  font-weight: bold;
+  color: #2563eb;
+}
+
+.summary-label {
   color: #667085;
-  margin-top: 0;
+  font-size: 13px;
+}
+
+.table-wrap {
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+th {
+  text-align: left;
+  background: #eef4ff;
+  color: #172033;
+  padding: 10px;
+  border-bottom: 1px solid #d7deea;
+}
+
+td {
+  padding: 10px;
+  border-bottom: 1px solid #e6eaf2;
+  vertical-align: top;
+}
+
+tr:hover {
+  background: #f8fbff;
+}
+
+.empty {
+  color: #667085;
+  font-style: italic;
+}
+
+.table-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.table-title {
+  font-size: 22px;
+  font-weight: bold;
+}
+
+.close-button {
+  background: #e5e7eb;
+  color: #172033;
+  border: none;
+  border-radius: 10px;
+  padding: 8px 12px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.close-button:hover {
+  background: #d1d5db;
 }
 </style>
 </head>
@@ -101,7 +201,7 @@ a.button:hover {
   <div class="topbar">
     <div>
       <h1>Admin Dashboard</h1>
-      <p class="subtitle">Administrative wireframe for future curriculum and advising management.</p>
+      <p class="subtitle">Administrative dashboard for curriculum and advising management.</p>
     </div>
 
     <div class="nav">
@@ -111,66 +211,242 @@ a.button:hover {
     </div>
   </div>
 
+  <div class="card">
+    <h3>Database Summary</h3>
+    <div id="summary" class="summary-grid">Loading...</div>
+  </div>
+
   <div class="grid">
 
-    <div class="admin-card">
+    <div class="admin-card" onclick="openTable('institutions')">
       <span class="badge">Database</span>
       <h3>Institutions</h3>
-      <p>Manage colleges or institutions such as BMCC, departments, and academic units.</p>
-      <a class="button" href="/api/db/institutions" target="_blank">View API</a>
+      <p>View colleges or institutions such as BMCC and connected academic structures.</p>
+      <span class="button">View Table</span>
     </div>
 
-    <div class="admin-card">
+    <div class="admin-card" onclick="openTable('departments')">
       <span class="badge">Database</span>
       <h3>Departments</h3>
-      <p>View and manage academic departments connected to programs and courses.</p>
-      <a class="button" href="/api/db/departments" target="_blank">View API</a>
+      <p>View academic departments connected to programs and curriculum structures.</p>
+      <span class="button">View Table</span>
     </div>
 
-    <div class="admin-card">
+    <div class="admin-card" onclick="openTable('programs')">
       <span class="badge">Programs</span>
       <h3>Majors / Programs</h3>
-      <p>Add, edit, and organize academic programs such as CS, CIS, and CNT.</p>
-      <a class="button" href="/api/db/programs" target="_blank">View API</a>
+      <p>View academic programs such as CS, CIS, CNT, catalog years, and degree types.</p>
+      <span class="button">View Table</span>
     </div>
 
-    <div class="admin-card">
+    <div class="admin-card" onclick="openTable('courses')">
       <span class="badge">Curriculum</span>
       <h3>Courses</h3>
-      <p>Manage course codes, titles, credits, and program membership.</p>
-      <a class="button" href="/api/db/programs/CS/courses" target="_blank">Example</a>
+      <p>View course codes, titles, credits, and database course records.</p>
+      <span class="button">View Table</span>
+    </div>
+
+    <div class="admin-card" onclick="openTable('requirement-groups')">
+      <span class="badge">Requirements</span>
+      <h3>Requirement Groups</h3>
+      <p>View groups such as Program Requirements, Program Electives, Common Core, and Flexible Core.</p>
+      <span class="button">View Table</span>
     </div>
 
     <div class="admin-card">
       <span class="badge">Logic</span>
       <h3>Prerequisites</h3>
       <p>Future editor for prerequisite relationships, alternatives, and course eligibility rules.</p>
-      <a class="button" href="/api/db/programs/CS/graph" target="_blank">View Graph JSON</a>
+      <span class="disabled-button">Coming Soon</span>
     </div>
 
     <div class="admin-card">
       <span class="badge">AI</span>
       <h3>FAQ Entries</h3>
       <p>Future interface for editing FAQ questions and answers used by the advising engine.</p>
-      <a class="button" href="#">Coming Soon</a>
+      <span class="disabled-button">Coming Soon</span>
     </div>
 
     <div class="admin-card">
       <span class="badge">Documents</span>
       <h3>Official Documents</h3>
       <p>Future upload area for catalogs, policies, and department documents for RAG search.</p>
-      <a class="button" href="#">Coming Soon</a>
+      <span class="disabled-button">Coming Soon</span>
     </div>
 
     <div class="admin-card">
       <span class="badge">Analytics</span>
       <h3>Usage Statistics</h3>
       <p>Future dashboard for question logs, fallback usage, latency, and advising patterns.</p>
-      <a class="button" href="#">Coming Soon</a>
+      <span class="disabled-button">Coming Soon</span>
     </div>
 
   </div>
+
+  <div id="tableCard" class="card" style="display:none; margin-top:20px;">
+    <div class="table-header">
+      <div id="tableTitle" class="table-title">Table</div>
+      <button class="close-button" onclick="closeTable()">Close</button>
+    </div>
+
+    <div class="table-wrap">
+      <div id="tableArea">Loading...</div>
+    </div>
+  </div>
+
 </div>
+
+<script>
+const API_MAP = {
+  "institutions": {
+    title: "Institutions",
+    url: "/api/db/institutions"
+  },
+  "departments": {
+    title: "Departments",
+    url: "/api/db/departments"
+  },
+  "programs": {
+    title: "Majors / Programs",
+    url: "/api/db/programs"
+  },
+  "courses": {
+    title: "Courses",
+    url: "/api/db/courses"
+  },
+  "requirement-groups": {
+    title: "Requirement Groups",
+    url: "/api/db/requirement-groups"
+  }
+};
+
+async function fetchJson(url) {
+  const response = await fetch(url);
+
+  if (!response.ok) {
+    throw new Error(`Request failed: ${url} (${response.status})`);
+  }
+
+  return await response.json();
+}
+
+async function openTable(tableName) {
+  const config = API_MAP[tableName];
+
+  document.getElementById("tableCard").style.display = "block";
+  document.getElementById("tableTitle").textContent = config.title;
+  document.getElementById("tableArea").innerHTML = "Loading...";
+
+  try {
+    const data = await fetchJson(config.url);
+    renderTable(data);
+  } catch (err) {
+    document.getElementById("tableArea").innerHTML =
+      `<span style="color:#b42318;font-weight:bold;">${err.message}</span>`;
+  }
+
+  document.getElementById("tableCard").scrollIntoView({ behavior: "smooth" });
+}
+
+function closeTable() {
+  document.getElementById("tableCard").style.display = "none";
+}
+
+function renderTable(data) {
+  const area = document.getElementById("tableArea");
+
+  if (!data || data.length === 0) {
+    area.innerHTML = `<div class="empty">No records found.</div>`;
+    return;
+  }
+
+  const columns = Object.keys(data[0]);
+
+  let html = "<table><thead><tr>";
+
+  columns.forEach(col => {
+    html += `<th>${formatColumnName(col)}</th>`;
+  });
+
+  html += "</tr></thead><tbody>";
+
+  data.forEach(row => {
+    html += "<tr>";
+
+    columns.forEach(col => {
+      html += `<td>${formatCell(row[col])}</td>`;
+    });
+
+    html += "</tr>";
+  });
+
+  html += "</tbody></table>";
+
+  area.innerHTML = html;
+}
+
+function formatColumnName(col) {
+  return col
+    .replaceAll("_", " ")
+    .replace(/\b\w/g, c => c.toUpperCase());
+}
+
+function formatCell(value) {
+  if (value === null || value === undefined || value === "") {
+    return `<span class="empty">—</span>`;
+  }
+
+  if (Array.isArray(value)) {
+    return value.join(", ");
+  }
+
+  if (typeof value === "object") {
+    return JSON.stringify(value);
+  }
+
+  if (typeof value === "string" && value.length > 100) {
+    return value.slice(0, 100) + "...";
+  }
+
+  return String(value);
+}
+
+async function loadSummary() {
+  try {
+    const institutions = await fetchJson("/api/db/institutions");
+    const departments = await fetchJson("/api/db/departments");
+    const programs = await fetchJson("/api/db/programs");
+    const courses = await fetchJson("/api/db/courses");
+
+    document.getElementById("summary").innerHTML = `
+      <div class="summary-card">
+        <div class="summary-number">${institutions.length}</div>
+        <div class="summary-label">Institutions</div>
+      </div>
+
+      <div class="summary-card">
+        <div class="summary-number">${departments.length}</div>
+        <div class="summary-label">Departments</div>
+      </div>
+
+      <div class="summary-card">
+        <div class="summary-number">${programs.length}</div>
+        <div class="summary-label">Majors</div>
+      </div>
+
+      <div class="summary-card">
+        <div class="summary-number">${courses.length}</div>
+        <div class="summary-label">Courses</div>
+      </div>
+    `;
+  } catch (err) {
+    document.getElementById("summary").innerHTML =
+      `<span style="color:#b42318;font-weight:bold;">${err.message}</span>`;
+  }
+}
+
+loadSummary();
+</script>
 
 </body>
 </html>
