@@ -98,7 +98,11 @@ select {
   border-color: #cbd5e1;
   opacity: 0.8;
 }
-
+.course-card.not_needed {
+  background: #fee2e2;
+  border-color: #dc2626;
+  color: #991b1b;
+}
 .course-code {
   font-size: 17px;
   font-weight: bold;
@@ -156,6 +160,11 @@ select {
 .legend-locked {
   background: #f1f5f9;
   border-color: #cbd5e1;
+}
+
+.legend-not-needed {
+  background: #fee2e2;
+  border-color: #ef4444;
 }
 
 .recommendation-grid {
@@ -303,6 +312,12 @@ select {
 .status-course.locked {
   background: #f1f5f9;
   border-color: #cbd5e1;
+  opacity: .85;
+}
+
+.status-course.not_needed {
+  background: #fee2e2;
+  border-color: #ef4444;
   opacity: .85;
 }
 
@@ -467,6 +482,7 @@ button:hover {
       <div class="legend-item"><span class="legend-dot legend-completed"></span> Completed</div>
       <div class="legend-item"><span class="legend-dot legend-available"></span> Available now</div>
       <div class="legend-item"><span class="legend-dot legend-locked"></span> Not available yet</div>
+      <div class="legend-item"><span class="legend-dot legend-not-needed"></span> Not needed / alternative satisfied</div>
     </div>
 
     <div id="completedCourseGrid" class="audit-grid"></div>
@@ -655,8 +671,89 @@ function formatAlternatives(alts) {
   return alts.join(", ");
 }
 
+function getAlternativeSet(code) {
+  const courses = allCoursesFromGroups();
+  const alternatives = new Set();
+
+  if (courses[code] && courses[code].alternatives) {
+    courses[code].alternatives.forEach(alt => alternatives.add(alt));
+  }
+
+  Object.values(courses).forEach(course => {
+    if (course.alternatives && course.alternatives.includes(code)) {
+      alternatives.add(course.code);
+    }
+  });
+
+  return alternatives;
+}
+
+function hasCompletedAlternative(code, completed) {
+  const alternatives = getAlternativeSet(code);
+
+  for (const altCode of alternatives) {
+    if (completed.has(altCode)) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+function groupCreditsCompleted(group, completed) {
+  let credits = 0;
+
+  group.courses.forEach(course => {
+    if (completed.has(course.code)) {
+      credits += Number(course.credits || 0);
+    }
+  });
+
+  return credits;
+}
+
+function groupRequirementSatisfied(group, completed) {
+  if (group.required_credits) {
+    return groupCreditsCompleted(group, completed) >= Number(group.required_credits);
+  }
+
+  if (group.required_course_count) {
+    const completedCount = group.courses.filter(course => completed.has(course.code)).length;
+    return completedCount >= Number(group.required_course_count);
+  }
+
+  return false;
+}
+
+function findCourseGroup(courseCode) {
+  for (const group of CURRENT_REQUIREMENTS.groups) {
+    if (group.courses.some(course => course.code === courseCode)) {
+      return group;
+    }
+  }
+
+  return null;
+}
+
+function isNotNeeded(code, course, completed) {
+  if (completed.has(code)) return false;
+
+  if (hasCompletedAlternative(code, completed)) {
+    return true;
+  }
+
+  const group = findCourseGroup(code);
+
+  if (group && groupRequirementSatisfied(group, completed)) {
+    return true;
+  }
+
+  return false;
+}
+
 function getCourseStatus(code, course, completed) {
   if (completed.has(code)) return "completed";
+  if (isNotNeeded(code, course, completed)) return "not_needed";
   if (allPrereqsSatisfied(course, completed)) return "available";
   return "locked";
 }
@@ -711,6 +808,10 @@ function createSelectableCourseCard(course) {
   label.className = `course-card ${status}`;
 
   const checked = completed.has(course.code) ? "checked" : "";
+  const disabled = status === "not_needed" ? "disabled" : "";
+  const statusText = status === "not_needed"
+    ? `<div class="course-detail"><strong>Status:</strong> Not needed / alternative satisfied</div>`
+    : "";
 
   label.innerHTML = `
     <div class="course-code">
@@ -719,13 +820,16 @@ function createSelectableCourseCard(course) {
         class="completed-check course-check"
         value="${course.code}"
         ${checked}
+        ${disabled}
         onchange="handleCourseCheckboxChange(this)">
       ${course.code}
     </div>
     <div class="course-title">${course.title}</div>
     <div class="course-detail">Credits: ${course.credits}</div>
     <div class="course-detail">Prereqs: ${formatPrereqs(course.prereqs)}</div>
+    <div class="course-detail">Alternatives: ${formatAlternatives(course.alternatives)}</div>
     <div class="course-detail">Area: ${course.group_name}</div>
+    ${statusText}
   `;
 
   return label;
@@ -797,6 +901,7 @@ function renderGroupCard(group) {
   const taken = [];
   const available = [];
   const locked = [];
+  const notNeeded = [];
 
   let completedCredits = 0;
 
@@ -808,6 +913,8 @@ function renderGroupCard(group) {
       completedCredits += Number(course.credits || 0);
     } else if (status === "available") {
       available.push([course.code, course, status]);
+    } else if (status === "not_needed") {
+      notNeeded.push([course.code, course, status]);
     } else {
       locked.push([course.code, course, status]);
     }
@@ -837,6 +944,7 @@ function renderGroupCard(group) {
 
   renderStatusSection(card, "Taken Classes", "Courses selected as already completed.", taken);
   renderStatusSection(card, "Available Classes", "Courses available now based on prerequisites.", available);
+  renderStatusSection(card, "Not Needed", "Courses skipped because an alternative or elective requirement is already satisfied.", notNeeded);
   renderStatusSection(card, "Not Available Yet", "Courses still blocked by missing prerequisites.", locked);
 }
 
@@ -994,7 +1102,7 @@ function countUnlocks(course, completed) {
     const currentlyAvailable = allPrereqsSatisfied(otherCourse, completed);
     const availableAfter = allPrereqsSatisfied(otherCourse, newCompleted);
 
-    if (!currentlyAvailable && availableAfter) {
+    if (!currentlyAvailable && availableAfter && !isNotNeeded(code, otherCourse, newCompleted)) {
       unlocks++;
     }
   });
@@ -1019,6 +1127,7 @@ function getAvailableCoursesForRecommendation() {
 
   return Object.values(courses).filter(course => {
     if (completed.has(course.code)) return false;
+    if (isNotNeeded(course.code, course, completed)) return false;
     return allPrereqsSatisfied(course, completed);
   });
 }
