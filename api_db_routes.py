@@ -261,3 +261,37 @@ def get_departments(db: Session = Depends(get_db)):
         }
         for d in departments
     ]
+@router.get("/courses")
+def get_all_courses(db: Session = Depends(get_db)):
+    courses = db.query(Course).order_by(Course.code).all()
+
+    return [
+        {
+            "id": c.id,
+            "code": c.code,
+            "title": c.title,
+            "credits": c.credits,
+        }
+        for c in courses
+    ]
+
+
+@router.get("/requirement-groups")
+def get_all_requirement_groups(db: Session = Depends(get_db)):
+    groups = db.query(RequirementGroup).order_by(RequirementGroup.display_order).all()
+
+    result = []
+
+    for g in groups:
+        program = db.query(Program).filter_by(id=g.program_id).first()
+
+        result.append({
+            "id": g.id,
+            "program": program.code if program else None,
+            "name": g.name,
+            "group_type": g.group_type,
+            "required_credits": g.required_credits,
+            "display_order": g.display_order,
+        })
+
+    return result
