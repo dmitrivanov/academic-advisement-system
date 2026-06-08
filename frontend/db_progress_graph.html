@@ -341,6 +341,93 @@ button:hover {
     grid-template-columns: 1fr;
   }
 }
+.progress-widget {
+  position: fixed;
+  top: 22px;
+  right: 22px;
+  z-index: 1000;
+  background: white;
+  border: 1px solid #e6eaf2;
+  border-radius: 18px;
+  padding: 14px;
+  box-shadow: 0 10px 25px rgba(0,0,0,.12);
+  cursor: pointer;
+  width: 150px;
+}
+
+.progress-circle {
+  width: 110px;
+  height: 110px;
+  border-radius: 50%;
+  margin: 0 auto;
+  background: conic-gradient(#2563eb 0deg, #e5e7eb 0deg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.progress-circle-inner {
+  width: 82px;
+  height: 82px;
+  border-radius: 50%;
+  background: white;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.progress-circle-inner div {
+  font-size: 24px;
+  font-weight: bold;
+}
+
+.progress-circle-inner small {
+  color: #667085;
+  font-size: 11px;
+}
+
+.progress-details {
+  margin-top: 14px;
+  border-top: 1px solid #e6eaf2;
+  padding-top: 12px;
+}
+
+.progress-details h4 {
+  margin: 0 0 10px 0;
+  font-size: 15px;
+}
+
+.progress-row {
+  margin-bottom: 10px;
+}
+
+.progress-row-label {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: #475467;
+  margin-bottom: 4px;
+}
+
+.progress-bar {
+  height: 8px;
+  background: #e5e7eb;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  background: #2563eb;
+  border-radius: 999px;
+}
+
+.hidden {
+  display: none;
+}
+
+
 </style>
 </head>
 
@@ -351,6 +438,19 @@ button:hover {
   <p class="subtitle">
     This page organizes degree progress by requirement areas and recommends next-semester courses.
   </p>
+<div id="progressWidget" class="progress-widget" onclick="toggleProgressDetails()">
+  <div class="progress-circle" id="overallProgressCircle">
+    <div class="progress-circle-inner">
+      <div id="overallProgressPercent">0%</div>
+      <small>complete</small>
+    </div>
+  </div>
+
+  <div id="progressDetails" class="progress-details hidden">
+    <h4>Degree Progress</h4>
+    <div id="progressDetailsContent"></div>
+  </div>
+</div>
 
   <div class="card">
     <h3>Select Program</h3>
@@ -484,6 +584,7 @@ async function loadProgramRequirements() {
   renderGraph();
   renderSummary();
   renderRecommendations();
+  updateProgressWidget();
 }
 
 function ensurePlaceholderGroups() {
@@ -641,6 +742,7 @@ function handleCourseCheckboxChange(checkbox) {
   renderGraph();
   renderSummary();
   renderRecommendations();
+  updateProgressWidget();
 }
 
 function clearCompleted() {
@@ -650,6 +752,7 @@ function clearCompleted() {
   renderGraph();
   renderSummary();
   renderRecommendations();
+  updateProgressWidget();
 }
 
 function groupsForCurrentTab() {
@@ -1017,6 +1120,100 @@ loadPrograms().catch(err => {
   document.getElementById("summary").innerHTML =
     `<span style="color:#b42318;font-weight:bold;">Error: ${err.message}</span>`;
 });
+
+function toggleProgressDetails() {
+  document.getElementById("progressDetails").classList.toggle("hidden");
+}
+
+function calculateGroupProgress(group) {
+  const completed = getCompletedCourses();
+
+  let completedCredits = 0;
+  let totalCredits = 0;
+
+  group.courses.forEach(course => {
+    const credits = Number(course.credits || 0);
+
+    totalCredits += credits;
+
+    if (completed.has(course.code)) {
+      completedCredits += credits;
+    }
+  });
+
+  const denominator = group.required_credits || totalCredits || 1;
+  const percent = Math.min(100, Math.round((completedCredits / denominator) * 100));
+
+  return {
+    completedCredits,
+    totalCredits,
+    requiredCredits: group.required_credits,
+    percent
+  };
+}
+
+function updateProgressWidget() {
+  if (!CURRENT_REQUIREMENTS) return;
+
+  const groups = CURRENT_REQUIREMENTS.groups;
+  const completed = getCompletedCourses();
+
+  let completedCredits = 0;
+  let totalCredits = 0;
+
+  groups.forEach(group => {
+    const groupProgress = calculateGroupProgress(group);
+
+    completedCredits += groupProgress.completedCredits;
+
+    if (group.required_credits) {
+      totalCredits += group.required_credits;
+    } else {
+      totalCredits += groupProgress.totalCredits;
+    }
+  });
+
+  const overallPercent = totalCredits
+    ? Math.min(100, Math.round((completedCredits / totalCredits) * 100))
+    : 0;
+
+  const degrees = overallPercent * 3.6;
+
+  document.getElementById("overallProgressCircle").style.background =
+    `conic-gradient(#2563eb ${degrees}deg, #e5e7eb ${degrees}deg)`;
+
+  document.getElementById("overallProgressPercent").textContent =
+    `${overallPercent}%`;
+
+  const details = document.getElementById("progressDetailsContent");
+  details.innerHTML = "";
+
+  groups.forEach(group => {
+    const p = calculateGroupProgress(group);
+
+    const requiredText = group.required_credits
+      ? `${p.completedCredits}/${group.required_credits} cr`
+      : `${p.completedCredits}/${p.totalCredits} cr`;
+
+    const row = document.createElement("div");
+    row.className = "progress-row";
+
+    row.innerHTML = `
+      <div class="progress-row-label">
+        <span>${group.name}</span>
+        <span>${requiredText}</span>
+      </div>
+      <div class="progress-bar">
+        <div class="progress-bar-fill" style="width:${p.percent}%"></div>
+      </div>
+    `;
+
+    details.appendChild(row);
+  });
+}
+
+
+
 </script>
 
 </body>
