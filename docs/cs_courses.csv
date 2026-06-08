@@ -1,7 +1,7 @@
 program_code,program_name,catalog_year,group_name,group_type,required_credits,course_code,title,credits,prerequisites,alternatives
 CS,Computer Science,2026,Required Common Core,common_core,12,ENG 101,English Composition,3,,
 CS,Computer Science,2026,Required Common Core,common_core,12,ENG 201,Introduction to Literature,3,ENG 101,
-CS,Computer Science,2026,Required Common Core,common_core,12,MAT 206,Precalculus,4,,MAT 301
+CS,Computer Science,2026,Required Common Core,common_core,12,MAT 206,Precalculus,4,,
 CS,Computer Science,2026,Required Common Core,common_core,12,PHY 215,Life and Physical Sciences requirement,4,MAT 301,
 CS,Computer Science,2026,Flexible Core,flexible_core,18,SPE 102,Fundamentals of Public Speaking ,3,,SPE 100
 CS,Computer Science,2026,Flexible Core,flexible_core,18,SPE 100,Fundamentals of Public Speaking for Non-Native Speakers,3,,SPE 102
