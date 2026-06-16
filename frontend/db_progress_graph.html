@@ -619,6 +619,26 @@ button:hover {
   font-size: 12px;
 }
 
+.advisor-message-meta {
+  margin-top: 8px;
+  padding-top: 6px;
+  border-top: 1px solid #e6eaf2;
+  color: #667085;
+  font-size: 11px;
+  line-height: 1.35;
+}
+
+.advisor-metrics-pill {
+  display: inline-block;
+  margin-top: 8px;
+  padding: 5px 8px;
+  border-radius: 999px;
+  background: #eef4ff;
+  color: #1d4ed8;
+  font-size: 11px;
+  font-weight: bold;
+}
+
 .suggested-question {
   display: inline-block;
   margin: 6px 6px 0 0;
@@ -722,6 +742,7 @@ button:hover {
     <div>
       <h3>AI Academic Advisor</h3>
       <p>Ask questions using the current progress page context: selected completed courses, available/locked courses, not-needed alternatives, and next-semester recommendation.</p>
+      <div id="advisorLastMetrics" class="advisor-metrics-pill">No AI call yet</div>
     </div>
     <button class="advisor-close" onclick="closeAdvisorDrawer()">Close</button>
   </div>
@@ -1531,11 +1552,41 @@ function useSuggestedQuestion(text) {
   document.getElementById("advisorQuestion").focus();
 }
 
-function addAdvisorMessage(role, text) {
+function formatAdvisorUsage(usage) {
+  if (!usage) return "";
+
+  const responseSeconds = usage.response_time_ms
+    ? (usage.response_time_ms / 1000).toFixed(2) + "s"
+    : "unavailable";
+
+  const totalTokens = usage.total_tokens ?? "unavailable";
+  const promptTokens = usage.prompt_tokens ?? "—";
+  const completionTokens = usage.completion_tokens ?? "—";
+
+  return `Response time: ${responseSeconds} · Tokens: ${totalTokens} · Prompt: ${promptTokens} · Reply: ${completionTokens}`;
+}
+
+function addAdvisorMessage(role, text, usage = null) {
   const messages = document.getElementById("advisorMessages");
   const div = document.createElement("div");
   div.className = `advisor-message ${role}`;
-  div.textContent = text;
+
+  const textDiv = document.createElement("div");
+  textDiv.textContent = text;
+  div.appendChild(textDiv);
+
+  if (usage) {
+    const meta = document.createElement("div");
+    meta.className = "advisor-message-meta";
+    meta.textContent = formatAdvisorUsage(usage);
+    div.appendChild(meta);
+
+    const metrics = document.getElementById("advisorLastMetrics");
+    if (metrics) {
+      metrics.textContent = formatAdvisorUsage(usage);
+    }
+  }
+
   messages.appendChild(div);
   messages.scrollTop = messages.scrollHeight;
 }
@@ -1615,7 +1666,7 @@ async function sendAdvisorQuestion() {
     }
 
     const data = await response.json();
-    addAdvisorMessage("assistant", data.answer || "I could not generate an answer.");
+    addAdvisorMessage("assistant", data.answer || "I could not generate an answer.", data.usage || null);
   } catch (err) {
     addAdvisorMessage("assistant", `Error: ${err.message}`);
   } finally {

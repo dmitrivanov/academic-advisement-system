@@ -8,6 +8,9 @@ from pydantic import BaseModel
 from google import genai
 import os
 import json
+import time
+from datetime import datetime, timezone
+from pathlib import Path
 
 from api_db_routes import router as db_router
 
@@ -43,6 +46,52 @@ if not GEMINI_API_KEY:
     raise RuntimeError("GEMINI_API_KEY environment variable is not set.")
 
 client = genai.Client(api_key=GEMINI_API_KEY)
+
+
+LOG_DIR = Path(os.environ.get("ADVISOR_LOG_DIR", "logs"))
+LOG_FILE = LOG_DIR / "advisor_chat_logs.jsonl"
+
+
+def get_client_ip(request: Request):
+    forwarded_for = request.headers.get("x-forwarded-for")
+    if forwarded_for:
+        return forwarded_for.split(",")[0].strip()
+
+    if request.client:
+        return request.client.host
+
+    return "unknown"
+
+
+def extract_usage_metadata(response):
+    usage = getattr(response, "usage_metadata", None)
+
+    if not usage:
+        return {
+            "prompt_tokens": None,
+            "completion_tokens": None,
+            "total_tokens": None,
+        }
+
+    prompt_tokens = getattr(usage, "prompt_token_count", None)
+    completion_tokens = getattr(usage, "candidates_token_count", None)
+    total_tokens = getattr(usage, "total_token_count", None)
+
+    return {
+        "prompt_tokens": prompt_tokens,
+        "completion_tokens": completion_tokens,
+        "total_tokens": total_tokens,
+    }
+
+
+def write_advisor_log(log_record: dict):
+    try:
+        LOG_DIR.mkdir(parents=True, exist_ok=True)
+
+        with LOG_FILE.open("a", encoding="utf-8") as f:
+            f.write(json.dumps(log_record, ensure_ascii=False) + "\n")
+    except Exception as exc:
+        print(f"Advisor log write failed: {exc}")
 
 
 class Candidate(BaseModel):
@@ -185,8 +234,12 @@ Do not explain your reasoning.
 
 
 @app.post("/progress-advisor-ask")
-def progress_advisor_ask(payload: ProgressAdvisorRequest):
+def progress_advisor_ask(request: Request, payload: ProgressAdvisorRequest):
     print("=== USING PROGRESS PAGE ADVISOR ===")
+
+    started_at = time.perf_counter()
+    timestamp = datetime.now(timezone.utc).isoformat()
+    client_ip = get_client_ip(request)
 
     context_text = json.dumps(
         payload.page_context,
@@ -217,9 +270,66 @@ Answer the user directly.
         contents=prompt,
     )
 
+    response_time_ms = round((time.perf_counter() - started_at) * 1000)
+    usage = extract_usage_metadata(response)
+    usage["response_time_ms"] = response_time_ms
+    usage["model"] = MODEL
+
+    answer = response.text or ""
+
+    write_advisor_log({
+        "timestamp": timestamp,
+        "ip": client_ip,
+        "model": MODEL,
+        "question": payload.user_question,
+        "answer": answer,
+        "usage": usage,
+        "page_context_summary": {
+            "program": payload.page_context.get("program"),
+            "completed_courses": payload.page_context.get("completed_courses"),
+            "recommended_courses": payload.page_context.get("recommended_courses"),
+            "recommended_total_credits": payload.page_context.get("recommended_total_credits"),
+        },
+    })
+
     return {
-        "answer": response.text
+        "answer": answer,
+        "usage": usage,
     }
+
+
+@app.get("/api/db/advisor-logs")
+def get_advisor_logs(limit: int = 100):
+    if not LOG_FILE.exists():
+        return []
+
+    try:
+        lines = LOG_FILE.read_text(encoding="utf-8").splitlines()[-limit:]
+        records = []
+
+        for line in reversed(lines):
+            try:
+                record = json.loads(line)
+                usage = record.get("usage", {})
+
+                records.append({
+                    "timestamp": record.get("timestamp"),
+                    "ip": record.get("ip"),
+                    "model": record.get("model"),
+                    "question": record.get("question"),
+                    "answer": record.get("answer"),
+                    "prompt_tokens": usage.get("prompt_tokens"),
+                    "completion_tokens": usage.get("completion_tokens"),
+                    "total_tokens": usage.get("total_tokens"),
+                    "response_time_ms": usage.get("response_time_ms"),
+                })
+            except json.JSONDecodeError:
+                continue
+
+        return records
+
+    except Exception as exc:
+        return {"error": f"Could not read advisor logs: {exc}"}
 
 
 @app.get("/health")

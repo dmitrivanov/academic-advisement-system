@@ -274,6 +274,14 @@ tr:hover {
       <span class="disabled-button">Coming Soon</span>
     </div>
 
+
+    <div class="admin-card" onclick="openTable('advisor-logs')">
+      <span class="badge">Analytics</span>
+      <h3>Advisor Chat Logs</h3>
+      <p>View recent AI advisor questions, answers, response time, and token usage.</p>
+      <span class="button">View Table</span>
+    </div>
+
     <div class="admin-card">
       <span class="badge">Analytics</span>
       <h3>Usage Statistics</h3>
@@ -317,6 +325,10 @@ const API_MAP = {
   "requirement-groups": {
     title: "Requirement Groups",
     url: "/api/db/requirement-groups"
+  },
+  "advisor-logs": {
+    title: "Advisor Chat Logs",
+    url: "/api/db/advisor-logs"
   }
 };
 
