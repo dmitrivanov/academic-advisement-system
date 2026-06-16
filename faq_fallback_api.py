@@ -7,6 +7,7 @@ from starlette.middleware.sessions import SessionMiddleware
 from pydantic import BaseModel
 from google import genai
 import os
+import json
 
 from api_db_routes import router as db_router
 
@@ -56,6 +57,11 @@ class FallbackRequest(BaseModel):
     detected_courses: list[str]
     detected_intent: str
     candidates: list[Candidate]
+
+
+class ProgressAdvisorRequest(BaseModel):
+    user_question: str
+    page_context: dict
 
 
 @app.get("/login")
@@ -175,6 +181,44 @@ Do not explain your reasoning.
 
     return {
         "answer": "[GEMINI API ACTIVE]\n\n" + response.text
+    }
+
+
+@app.post("/progress-advisor-ask")
+def progress_advisor_ask(payload: ProgressAdvisorRequest):
+    print("=== USING PROGRESS PAGE ADVISOR ===")
+
+    context_text = json.dumps(
+        payload.page_context,
+        ensure_ascii=False,
+        indent=2
+    )
+
+    prompt = f"""
+You are an academic advising assistant inside a degree progress page.
+
+Use ONLY the page context below. Do not invent official degree requirements, course policies, prerequisites, transfer rules, or exceptions.
+
+If the page context does not contain enough information, say that clearly and suggest what information is missing.
+
+Be practical and concise. Explain locked courses, completed courses, not-needed alternatives, elective completion, and next-semester recommendations when relevant.
+
+The user asked:
+{payload.user_question}
+
+Current page context JSON:
+{context_text}
+
+Answer the user directly.
+""".strip()
+
+    response = client.models.generate_content(
+        model=MODEL,
+        contents=prompt,
+    )
+
+    return {
+        "answer": response.text
     }
 
 

@@ -500,6 +500,141 @@ button:hover {
   font-style: italic;
 }
 
+
+.advisor-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.28);
+  z-index: 1800;
+}
+
+.advisor-drawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  height: 100vh;
+  width: min(460px, 92vw);
+  background: white;
+  z-index: 1900;
+  box-shadow: -14px 0 35px rgba(0,0,0,0.18);
+  transform: translateX(110%);
+  transition: transform 0.22s ease;
+  display: flex;
+  flex-direction: column;
+}
+
+.advisor-drawer.open {
+  transform: translateX(0);
+}
+
+.advisor-header {
+  padding: 18px;
+  border-bottom: 1px solid #e6eaf2;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.advisor-header h3 {
+  margin: 0 0 4px 0;
+}
+
+.advisor-header p {
+  margin: 0;
+  color: #667085;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.advisor-close {
+  background: #e5e7eb;
+  color: #172033;
+  border-radius: 10px;
+  padding: 8px 11px;
+  margin-top: 0;
+}
+
+.advisor-body {
+  padding: 16px;
+  overflow-y: auto;
+  flex: 1;
+  background: #f8fbff;
+}
+
+.advisor-message {
+  padding: 12px 14px;
+  border-radius: 14px;
+  margin-bottom: 12px;
+  line-height: 1.45;
+  font-size: 14px;
+  white-space: pre-wrap;
+}
+
+.advisor-message.user {
+  background: #dbeafe;
+  border: 1px solid #2563eb;
+  margin-left: 28px;
+}
+
+.advisor-message.assistant {
+  background: white;
+  border: 1px solid #e6eaf2;
+  margin-right: 28px;
+}
+
+.advisor-message.system {
+  background: #fff7ed;
+  border: 1px solid #fed7aa;
+  color: #7c2d12;
+}
+
+.advisor-input-area {
+  padding: 14px;
+  border-top: 1px solid #e6eaf2;
+  background: white;
+}
+
+.advisor-input-area textarea {
+  width: 100%;
+  min-height: 82px;
+  border: 1px solid #d7deea;
+  border-radius: 12px;
+  padding: 11px;
+  font-family: Arial, sans-serif;
+  font-size: 14px;
+  box-sizing: border-box;
+  resize: vertical;
+}
+
+.advisor-actions {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  align-items: center;
+}
+
+.advisor-small-note {
+  color: #667085;
+  font-size: 12px;
+}
+
+.suggested-question {
+  display: inline-block;
+  margin: 6px 6px 0 0;
+  padding: 7px 10px;
+  border-radius: 999px;
+  border: 1px solid #bfdbfe;
+  background: #eff6ff;
+  color: #1d4ed8;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.suggested-question:hover {
+  background: #dbeafe;
+}
+
 </style>
 </head>
 
@@ -528,7 +663,7 @@ button:hover {
     <h3>Select Program</h3>
     <div class="top-actions">
       <select id="programSelect" onchange="loadProgramRequirements()"></select>
-      <a class="secondary-button" href="/">Ask AI Advisor</a>
+      <button class="secondary-button" onclick="openAdvisorDrawer()">Ask AI Advisor</button>
     </div>
   </div>
 
@@ -579,6 +714,38 @@ button:hover {
     <div id="graph"></div>
   </div>
 </div>
+
+<div id="advisorBackdrop" class="advisor-backdrop hidden" onclick="closeAdvisorDrawer()"></div>
+
+<div id="advisorDrawer" class="advisor-drawer">
+  <div class="advisor-header">
+    <div>
+      <h3>AI Academic Advisor</h3>
+      <p>Ask questions using the current progress page context: selected completed courses, available/locked courses, not-needed alternatives, and next-semester recommendation.</p>
+    </div>
+    <button class="advisor-close" onclick="closeAdvisorDrawer()">Close</button>
+  </div>
+
+  <div id="advisorMessages" class="advisor-body">
+    <div class="advisor-message system">
+      I can answer based on the curriculum and selections currently shown on this page. Try asking: "Why is this course locked?" or "What should I take next?"
+      <div style="margin-top:8px;">
+        <span class="suggested-question" onclick="useSuggestedQuestion('What should I take next semester and why?')">What should I take next?</span>
+        <span class="suggested-question" onclick="useSuggestedQuestion('Which selected courses are unlocking the most future courses?')">What unlocks the most?</span>
+        <span class="suggested-question" onclick="useSuggestedQuestion('Are there any electives or alternatives I no longer need?')">What is not needed?</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="advisor-input-area">
+    <textarea id="advisorQuestion" placeholder="Ask about your progress, locked courses, electives, prerequisites, or next semester plan..."></textarea>
+    <div class="advisor-actions">
+      <span class="advisor-small-note">Uses the current page state.</span>
+      <button id="advisorSendButton" onclick="sendAdvisorQuestion()">Ask</button>
+    </div>
+  </div>
+</div>
+
 
 <script>
 let PROGRAMS = [];
@@ -1346,6 +1513,127 @@ function renderRecommendations() {
     container.appendChild(div);
   });
 }
+
+
+function openAdvisorDrawer() {
+  document.getElementById("advisorBackdrop").classList.remove("hidden");
+  document.getElementById("advisorDrawer").classList.add("open");
+  setTimeout(() => document.getElementById("advisorQuestion").focus(), 150);
+}
+
+function closeAdvisorDrawer() {
+  document.getElementById("advisorDrawer").classList.remove("open");
+  document.getElementById("advisorBackdrop").classList.add("hidden");
+}
+
+function useSuggestedQuestion(text) {
+  document.getElementById("advisorQuestion").value = text;
+  document.getElementById("advisorQuestion").focus();
+}
+
+function addAdvisorMessage(role, text) {
+  const messages = document.getElementById("advisorMessages");
+  const div = document.createElement("div");
+  div.className = `advisor-message ${role}`;
+  div.textContent = text;
+  messages.appendChild(div);
+  messages.scrollTop = messages.scrollHeight;
+}
+
+function getCoursesWithStatuses() {
+  const completed = getCompletedCourses();
+  const courses = allCoursesFromGroups();
+
+  return Object.values(courses).map(course => ({
+    code: course.code,
+    title: course.title,
+    credits: course.credits,
+    area: course.group_name,
+    group_type: course.group_type,
+    prerequisites: course.prereqs || [],
+    alternatives: course.alternatives || [],
+    status: getCourseStatus(course.code, course, completed),
+    unlocks: countUnlocks(course, completed)
+  }));
+}
+
+function buildAdvisorPageContext() {
+  const completed = [...getCompletedCourses()];
+  const recommendation = chooseRecommendedCourses();
+
+  return {
+    program: CURRENT_REQUIREMENTS ? CURRENT_REQUIREMENTS.program : null,
+    completed_courses: completed,
+    show_not_needed_courses: SHOW_NOT_NEEDED,
+    next_semester: recommendation.semester,
+    recommended_courses: recommendation.selected.map(course => ({
+      code: course.code,
+      title: course.title,
+      credits: course.credits,
+      area: course.group_name,
+      group_type: course.group_type,
+      unlocks: countUnlocks(course, getCompletedCourses())
+    })),
+    recommended_total_credits: recommendation.credits,
+    courses: getCoursesWithStatuses(),
+    requirement_groups: CURRENT_REQUIREMENTS ? CURRENT_REQUIREMENTS.groups.map(group => ({
+      name: group.name,
+      group_type: group.group_type,
+      required_credits: group.required_credits,
+      required_course_count: group.required_course_count,
+      completed_credits: calculateGroupProgress(group).completedCredits,
+      total_credits: calculateGroupProgress(group).totalCredits,
+      percent_complete: calculateGroupProgress(group).percent
+    })) : []
+  };
+}
+
+async function sendAdvisorQuestion() {
+  const input = document.getElementById("advisorQuestion");
+  const button = document.getElementById("advisorSendButton");
+  const question = input.value.trim();
+
+  if (!question) return;
+
+  addAdvisorMessage("user", question);
+  input.value = "";
+  button.disabled = true;
+  button.textContent = "Thinking...";
+
+  try {
+    const response = await fetch("/progress-advisor-ask", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        user_question: question,
+        page_context: buildAdvisorPageContext()
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error(`Advisor request failed (${response.status})`);
+    }
+
+    const data = await response.json();
+    addAdvisorMessage("assistant", data.answer || "I could not generate an answer.");
+  } catch (err) {
+    addAdvisorMessage("assistant", `Error: ${err.message}`);
+  } finally {
+    button.disabled = false;
+    button.textContent = "Ask";
+  }
+}
+
+document.addEventListener("keydown", function(event) {
+  if (event.key === "Escape") {
+    closeAdvisorDrawer();
+  }
+
+  if ((event.metaKey || event.ctrlKey) && event.key === "Enter") {
+    const drawerOpen = document.getElementById("advisorDrawer").classList.contains("open");
+    if (drawerOpen) sendAdvisorQuestion();
+  }
+});
 
 loadPrograms().catch(err => {
   document.getElementById("summary").innerHTML =
