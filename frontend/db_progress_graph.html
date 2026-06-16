@@ -442,6 +442,63 @@ button:hover {
   display: none;
 }
 
+.top-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.secondary-button {
+  display: inline-block;
+  margin-top: 12px;
+  padding: 10px 16px;
+  border: none;
+  border-radius: 12px;
+  background: #0f766e;
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.secondary-button:hover {
+  background: #115e59;
+}
+
+.toggle-button {
+  margin-left: 10px;
+  background: #475467;
+}
+
+.toggle-button.active {
+  background: #dc2626;
+}
+
+.course-details {
+  margin-top: 8px;
+  font-size: 12px;
+  color: #667085;
+}
+
+.course-details summary {
+  cursor: pointer;
+  font-weight: bold;
+  color: #2563eb;
+  margin-top: 8px;
+}
+
+.course-details div {
+  margin-top: 6px;
+  line-height: 1.35;
+}
+
+.hidden-note {
+  margin-top: 10px;
+  color: #667085;
+  font-size: 13px;
+  font-style: italic;
+}
 
 </style>
 </head>
@@ -469,7 +526,16 @@ button:hover {
 
   <div class="card">
     <h3>Select Program</h3>
-    <select id="programSelect" onchange="loadProgramRequirements()"></select>
+    <div class="top-actions">
+      <select id="programSelect" onchange="loadProgramRequirements()"></select>
+      <a class="secondary-button" href="/">Ask AI Advisor</a>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3 id="recommendationTitle">Next Semester Recommendation</h3>
+    <div id="recommendationSummary" class="recommendation-summary">Loading...</div>
+    <div id="recommendations" class="recommendation-grid"></div>
   </div>
 
   <div class="card">
@@ -485,15 +551,14 @@ button:hover {
       <div class="legend-item"><span class="legend-dot legend-not-needed"></span> Not needed / alternative satisfied</div>
     </div>
 
+    <div class="top-actions">
+      <button onclick="clearCompleted()">Clear Selection</button>
+      <button id="toggleSatisfiedButton" class="toggle-button" onclick="toggleSatisfiedCourses()">
+        Show satisfied / not-needed courses
+      </button>
+    </div>
+
     <div id="completedCourseGrid" class="audit-grid"></div>
-
-    <button onclick="clearCompleted()">Clear Selection</button>
-  </div>
-
-  <div class="card">
-    <h3 id="recommendationTitle">Next Semester Recommendation</h3>
-    <div id="recommendationSummary" class="recommendation-summary">Loading...</div>
-    <div id="recommendations" class="recommendation-grid"></div>
   </div>
 
   <div class="card">
@@ -520,6 +585,7 @@ let PROGRAMS = [];
 let CURRENT_REQUIREMENTS = null;
 let CURRENT_TAB = "program";
 let COMPLETED_COURSES = new Set();
+let SHOW_NOT_NEEDED = false;
 
 const EMPTY_GROUPS = [
   {
@@ -784,15 +850,36 @@ function renderCompletedCourseGrid() {
       })));
     });
 
-    if (courses.length === 0) {
+    const completed = getCompletedCourses();
+    let hiddenSatisfiedCount = 0;
+
+    const visibleCourses = courses.filter(course => {
+      const status = getCourseStatus(course.code, course, completed);
+
+      if (status === "not_needed" && !SHOW_NOT_NEEDED) {
+        hiddenSatisfiedCount += 1;
+        return false;
+      }
+
+      return true;
+    });
+
+    if (visibleCourses.length === 0) {
       const empty = document.createElement("div");
       empty.className = "empty-message";
-      empty.textContent = "No courses in this area yet.";
+      empty.textContent = "No visible courses in this area.";
       list.appendChild(empty);
     } else {
-      courses.forEach(course => {
+      visibleCourses.forEach(course => {
         list.appendChild(createSelectableCourseCard(course));
       });
+    }
+
+    if (hiddenSatisfiedCount > 0 && !SHOW_NOT_NEEDED) {
+      const note = document.createElement("div");
+      note.className = "hidden-note";
+      note.textContent = `${hiddenSatisfiedCount} satisfied / not-needed course(s) hidden.`;
+      list.appendChild(note);
     }
 
     column.appendChild(list);
@@ -809,6 +896,7 @@ function createSelectableCourseCard(course) {
 
   const checked = completed.has(course.code) ? "checked" : "";
   const disabled = status === "not_needed" ? "disabled" : "";
+
   const statusText = status === "not_needed"
     ? `<div class="course-detail"><strong>Status:</strong> Not needed / alternative satisfied</div>`
     : "";
@@ -825,16 +913,37 @@ function createSelectableCourseCard(course) {
       ${course.code}
     </div>
     <div class="course-title">${course.title}</div>
-    <div class="course-detail">Credits: ${course.credits}</div>
-    <div class="course-detail">Prereqs: ${formatPrereqs(course.prereqs)}</div>
-    <div class="course-detail">Alternatives: ${formatAlternatives(course.alternatives)}</div>
-    <div class="course-detail">Area: ${course.group_name}</div>
+
+    <details class="course-details">
+      <summary>Class details</summary>
+      <div>Credits: ${course.credits}</div>
+      <div>Prereqs: ${formatPrereqs(course.prereqs)}</div>
+      <div>Alternatives: ${formatAlternatives(course.alternatives)}</div>
+      <div>Area: ${course.group_name}</div>
+    </details>
+
     ${statusText}
   `;
 
   return label;
 }
 
+function toggleSatisfiedCourses() {
+  SHOW_NOT_NEEDED = !SHOW_NOT_NEEDED;
+
+  const button = document.getElementById("toggleSatisfiedButton");
+
+  if (SHOW_NOT_NEEDED) {
+    button.textContent = "Hide satisfied / not-needed courses";
+    button.classList.add("active");
+  } else {
+    button.textContent = "Show satisfied / not-needed courses";
+    button.classList.remove("active");
+  }
+
+  renderCompletedCourseGrid();
+  renderGraph();
+}
 function handleCourseCheckboxChange(checkbox) {
   if (checkbox.checked) {
     COMPLETED_COURSES.add(checkbox.value);
@@ -944,7 +1053,16 @@ function renderGroupCard(group) {
 
   renderStatusSection(card, "Taken Classes", "Courses selected as already completed.", taken);
   renderStatusSection(card, "Available Classes", "Courses available now based on prerequisites.", available);
-  renderStatusSection(card, "Not Needed", "Courses skipped because an alternative or elective requirement is already satisfied.", notNeeded);
+
+  if (SHOW_NOT_NEEDED) {
+    renderStatusSection(card, "Not Needed", "Courses skipped because an alternative or elective requirement is already satisfied.", notNeeded);
+  } else if (notNeeded.length > 0) {
+    const hidden = document.createElement("div");
+    hidden.className = "hidden-note";
+    hidden.textContent = `${notNeeded.length} not-needed course(s) hidden. Use “Show satisfied / not-needed courses” above to view them.`;
+    card.appendChild(hidden);
+  }
+
   renderStatusSection(card, "Not Available Yet", "Courses still blocked by missing prerequisites.", locked);
 }
 
@@ -976,9 +1094,13 @@ function renderStatusSection(parent, title, subtitle, courses) {
       div.innerHTML = `
         <div class="course-code">${code}</div>
         <div class="course-title">${course.title}</div>
-        <div class="course-detail">Credits: ${course.credits}</div>
-        <div class="course-detail">Prereqs: ${formatPrereqs(course.prereqs)}</div>
-        <div class="course-detail">Alternatives: ${formatAlternatives(course.alternatives)}</div>
+
+        <details class="course-details">
+          <summary>Class details</summary>
+          <div>Credits: ${course.credits}</div>
+          <div>Prereqs: ${formatPrereqs(course.prereqs)}</div>
+          <div>Alternatives: ${formatAlternatives(course.alternatives)}</div>
+        </details>
       `;
 
       grid.appendChild(div);
