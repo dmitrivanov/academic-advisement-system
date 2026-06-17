@@ -680,11 +680,13 @@ button:hover {
 </div>
 
   <div class="card">
-    <h3>Select Program</h3>
+    <h3>Select Campus and Program</h3>
     <div class="top-actions">
+      <select id="institutionSelect" onchange="handleInstitutionChange()"></select>
       <select id="programSelect" onchange="loadProgramRequirements()"></select>
       <button class="secondary-button" onclick="openAdvisorDrawer()">Ask AI Advisor</button>
     </div>
+    <div id="programAvailabilityNote" class="hidden-note"></div>
   </div>
 
   <div class="card">
@@ -769,6 +771,7 @@ button:hover {
 
 
 <script>
+let INSTITUTIONS = [];
 let PROGRAMS = [];
 let CURRENT_REQUIREMENTS = null;
 let CURRENT_TAB = "program";
@@ -827,22 +830,81 @@ async function fetchJson(url) {
   return await response.json();
 }
 
-async function loadPrograms() {
-  const select = document.getElementById("programSelect");
+async function loadInstitutions() {
+  const select = document.getElementById("institutionSelect");
   select.innerHTML = "";
+
+  INSTITUTIONS = await fetchJson("/api/db/institutions");
+
+  INSTITUTIONS.forEach(institution => {
+    const option = document.createElement("option");
+    option.value = institution.code || institution.name;
+    option.textContent = `${institution.code || "NO CODE"} — ${institution.name}`;
+    select.appendChild(option);
+  });
+}
+
+async function loadPrograms() {
+  const programSelect = document.getElementById("programSelect");
+  programSelect.innerHTML = "";
 
   PROGRAMS = await fetchJson("/api/db/programs");
 
-  PROGRAMS.forEach(program => {
+  populateProgramSelect();
+}
+
+function handleInstitutionChange() {
+  COMPLETED_COURSES.clear();
+  populateProgramSelect();
+}
+
+async function populateProgramSelect() {
+  const institutionSelect = document.getElementById("institutionSelect");
+  const programSelect = document.getElementById("programSelect");
+  const note = document.getElementById("programAvailabilityNote");
+
+  programSelect.innerHTML = "";
+
+  const selectedInstitutionCode = institutionSelect.value;
+
+  const matchingPrograms = PROGRAMS.filter(program => {
+    return program.institution_code === selectedInstitutionCode;
+  });
+
+  if (matchingPrograms.length === 0) {
+    note.textContent = "No programs are available for this campus yet.";
+    programSelect.disabled = true;
+
+    CURRENT_REQUIREMENTS = {
+      program: {
+        code: "N/A",
+        name: "No program selected",
+        catalog_year: "",
+        institution: selectedInstitutionCode
+      },
+      groups: []
+    };
+
+    renderCompletedCourseGrid();
+    renderGraph();
+    renderSummary();
+    renderRecommendations();
+    updateProgressWidget();
+
+    return;
+  }
+
+  note.textContent = "";
+  programSelect.disabled = false;
+
+  matchingPrograms.forEach(program => {
     const option = document.createElement("option");
     option.value = program.code;
     option.textContent = `${program.code} — ${program.name} (${program.catalog_year || "No catalog year"})`;
-    select.appendChild(option);
+    programSelect.appendChild(option);
   });
 
-  if (PROGRAMS.length > 0) {
-    await loadProgramRequirements();
-  }
+  await loadProgramRequirements();
 }
 
 async function loadProgramRequirements() {
@@ -1316,6 +1378,7 @@ function renderSummary() {
   });
 
   summary.innerHTML = `
+    <strong>Campus:</strong> ${program.institution || "Not specified"}<br>
     <strong>Program:</strong> ${program.code} — ${program.name}<br>
     <strong>Catalog year:</strong> ${program.catalog_year || "Not specified"}<br>
     <strong>Requirement groups:</strong> ${CURRENT_REQUIREMENTS.groups.length}<br>
@@ -1686,7 +1749,12 @@ document.addEventListener("keydown", function(event) {
   }
 });
 
-loadPrograms().catch(err => {
+async function initializePage() {
+  await loadInstitutions();
+  await loadPrograms();
+}
+
+initializePage().catch(err => {
   document.getElementById("summary").innerHTML =
     `<span style="color:#b42318;font-weight:bold;">Error: ${err.message}</span>`;
 });
