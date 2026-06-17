@@ -178,9 +178,17 @@ tr:hover {
   font-weight: bold;
 }
 
-.close-button {
-  background: #e5e7eb;
-  color: #172033;
+.table-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.close-button,
+.small-button,
+.danger-button,
+.secondary-button {
   border: none;
   border-radius: 10px;
   padding: 8px 12px;
@@ -188,8 +196,90 @@ tr:hover {
   font-weight: bold;
 }
 
-.close-button:hover {
+.close-button,
+.secondary-button {
+  background: #e5e7eb;
+  color: #172033;
+}
+
+.close-button:hover,
+.secondary-button:hover {
   background: #d1d5db;
+}
+
+.small-button {
+  background: #2563eb;
+  color: white;
+}
+
+.small-button:hover {
+  background: #1d4ed8;
+}
+
+.danger-button {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.danger-button:hover {
+  background: #fecaca;
+}
+
+.form-card {
+  background: #f8fbff;
+  border: 1px solid #d7deea;
+  border-radius: 14px;
+  padding: 16px;
+  margin-bottom: 16px;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 12px;
+}
+
+.form-field label {
+  display: block;
+  font-size: 12px;
+  font-weight: bold;
+  color: #475467;
+  margin-bottom: 5px;
+}
+
+.form-field input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px;
+  border: 1px solid #d7deea;
+  border-radius: 10px;
+  font-size: 14px;
+}
+
+.form-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 14px;
+  flex-wrap: wrap;
+}
+
+.notice {
+  margin-top: 10px;
+  padding: 10px;
+  border-radius: 10px;
+  background: #eef4ff;
+  color: #1d4ed8;
+  font-size: 13px;
+}
+
+.error {
+  margin-top: 10px;
+  padding: 10px;
+  border-radius: 10px;
+  background: #fee2e2;
+  color: #991b1b;
+  font-size: 13px;
+  font-weight: bold;
 }
 </style>
 </head>
@@ -221,8 +311,8 @@ tr:hover {
     <div class="admin-card" onclick="openTable('institutions')">
       <span class="badge">Database</span>
       <h3>Institutions</h3>
-      <p>View colleges or institutions such as BMCC and connected academic structures.</p>
-      <span class="button">View Table</span>
+      <p>View, add, edit, and safely delete colleges or institutions such as BMCC.</p>
+      <span class="button">Manage Table</span>
     </div>
 
     <div class="admin-card" onclick="openTable('departments')">
@@ -294,7 +384,50 @@ tr:hover {
   <div id="tableCard" class="card" style="display:none; margin-top:20px;">
     <div class="table-header">
       <div id="tableTitle" class="table-title">Table</div>
-      <button class="close-button" onclick="closeTable()">Close</button>
+      <div class="table-actions">
+        <button id="addInstitutionButton" class="small-button" onclick="openInstitutionForm()" style="display:none;">Add Institution</button>
+        <button class="close-button" onclick="closeTable()">Close</button>
+      </div>
+    </div>
+
+    <div id="institutionForm" class="form-card" style="display:none;">
+      <h3 id="institutionFormTitle" style="margin-top:0;">Add Institution</h3>
+
+      <input type="hidden" id="institutionId">
+
+      <div class="form-grid">
+        <div class="form-field">
+          <label for="institutionCode">Code</label>
+          <input id="institutionCode" placeholder="BMCC">
+        </div>
+
+        <div class="form-field">
+          <label for="institutionName">Name</label>
+          <input id="institutionName" placeholder="Borough of Manhattan Community College">
+        </div>
+
+        <div class="form-field">
+          <label for="institutionSystem">System</label>
+          <input id="institutionSystem" placeholder="CUNY" value="CUNY">
+        </div>
+
+        <div class="form-field">
+          <label for="institutionBorough">Borough</label>
+          <input id="institutionBorough" placeholder="Manhattan">
+        </div>
+
+        <div class="form-field">
+          <label for="institutionWebsite">Website</label>
+          <input id="institutionWebsite" placeholder="https://www.bmcc.cuny.edu">
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <button class="small-button" onclick="saveInstitution()">Save</button>
+        <button class="secondary-button" onclick="closeInstitutionForm()">Cancel</button>
+      </div>
+
+      <div id="institutionFormMessage"></div>
     </div>
 
     <div class="table-wrap">
@@ -332,29 +465,50 @@ const API_MAP = {
   }
 };
 
-async function fetchJson(url) {
-  const response = await fetch(url);
+let CURRENT_TABLE = null;
+let CURRENT_TABLE_DATA = [];
 
-  if (!response.ok) {
-    throw new Error(`Request failed: ${url} (${response.status})`);
+async function fetchJson(url, options = {}) {
+  const response = await fetch(url, options);
+
+  let data = null;
+
+  try {
+    data = await response.json();
+  } catch (err) {
+    data = null;
   }
 
-  return await response.json();
+  if (!response.ok) {
+    const message = data && data.detail
+      ? data.detail
+      : `Request failed: ${url} (${response.status})`;
+
+    throw new Error(message);
+  }
+
+  return data;
 }
 
 async function openTable(tableName) {
+  CURRENT_TABLE = tableName;
   const config = API_MAP[tableName];
 
   document.getElementById("tableCard").style.display = "block";
   document.getElementById("tableTitle").textContent = config.title;
   document.getElementById("tableArea").innerHTML = "Loading...";
+  document.getElementById("institutionForm").style.display = "none";
+
+  const addButton = document.getElementById("addInstitutionButton");
+  addButton.style.display = tableName === "institutions" ? "inline-block" : "none";
 
   try {
     const data = await fetchJson(config.url);
-    renderTable(data);
+    CURRENT_TABLE_DATA = Array.isArray(data) ? data : [];
+    renderTable(CURRENT_TABLE_DATA);
   } catch (err) {
     document.getElementById("tableArea").innerHTML =
-      `<span style="color:#b42318;font-weight:bold;">${err.message}</span>`;
+      `<span style="color:#b42318;font-weight:bold;">${escapeHtml(err.message)}</span>`;
   }
 
   document.getElementById("tableCard").scrollIntoView({ behavior: "smooth" });
@@ -362,6 +516,7 @@ async function openTable(tableName) {
 
 function closeTable() {
   document.getElementById("tableCard").style.display = "none";
+  document.getElementById("institutionForm").style.display = "none";
 }
 
 function renderTable(data) {
@@ -380,14 +535,27 @@ function renderTable(data) {
     html += `<th>${formatColumnName(col)}</th>`;
   });
 
+  if (CURRENT_TABLE === "institutions") {
+    html += `<th>Actions</th>`;
+  }
+
   html += "</tr></thead><tbody>";
 
-  data.forEach(row => {
+  data.forEach((row, index) => {
     html += "<tr>";
 
     columns.forEach(col => {
       html += `<td>${formatCell(row[col])}</td>`;
     });
+
+    if (CURRENT_TABLE === "institutions") {
+      html += `
+        <td>
+          <button class="small-button" onclick="editInstitution(${index})">Edit</button>
+          <button class="danger-button" onclick="deleteInstitution(${index})">Delete</button>
+        </td>
+      `;
+    }
 
     html += "</tr>";
   });
@@ -409,18 +577,128 @@ function formatCell(value) {
   }
 
   if (Array.isArray(value)) {
-    return value.join(", ");
+    return escapeHtml(value.join(", "));
   }
 
   if (typeof value === "object") {
-    return JSON.stringify(value);
+    return escapeHtml(JSON.stringify(value));
   }
 
-  if (typeof value === "string" && value.length > 100) {
-    return value.slice(0, 100) + "...";
+  const text = String(value);
+
+  if (text.length > 100) {
+    return escapeHtml(text.slice(0, 100) + "...");
   }
 
-  return String(value);
+  return escapeHtml(text);
+}
+
+function escapeHtml(value) {
+  return String(value)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+function openInstitutionForm(row = null) {
+  document.getElementById("institutionForm").style.display = "block";
+  document.getElementById("institutionFormMessage").innerHTML = "";
+
+  if (row) {
+    document.getElementById("institutionFormTitle").textContent = "Edit Institution";
+    document.getElementById("institutionId").value = row.id || "";
+    document.getElementById("institutionCode").value = row.code || "";
+    document.getElementById("institutionName").value = row.name || "";
+    document.getElementById("institutionSystem").value = row.system || "CUNY";
+    document.getElementById("institutionBorough").value = row.borough || "";
+    document.getElementById("institutionWebsite").value = row.website || "";
+  } else {
+    document.getElementById("institutionFormTitle").textContent = "Add Institution";
+    document.getElementById("institutionId").value = "";
+    document.getElementById("institutionCode").value = "";
+    document.getElementById("institutionName").value = "";
+    document.getElementById("institutionSystem").value = "CUNY";
+    document.getElementById("institutionBorough").value = "";
+    document.getElementById("institutionWebsite").value = "";
+  }
+
+  document.getElementById("institutionForm").scrollIntoView({ behavior: "smooth", block: "center" });
+}
+
+function closeInstitutionForm() {
+  document.getElementById("institutionForm").style.display = "none";
+  document.getElementById("institutionFormMessage").innerHTML = "";
+}
+
+function editInstitution(index) {
+  const row = CURRENT_TABLE_DATA[index];
+  openInstitutionForm(row);
+}
+
+async function saveInstitution() {
+  const id = document.getElementById("institutionId").value;
+
+  const payload = {
+    code: document.getElementById("institutionCode").value.trim().toUpperCase(),
+    name: document.getElementById("institutionName").value.trim(),
+    system: document.getElementById("institutionSystem").value.trim() || "CUNY",
+    borough: document.getElementById("institutionBorough").value.trim() || null,
+    website: document.getElementById("institutionWebsite").value.trim() || null,
+  };
+
+  if (!payload.code || !payload.name) {
+    showInstitutionFormMessage("Code and name are required.", true);
+    return;
+  }
+
+  const url = id
+    ? `/api/db/institutions/${id}`
+    : "/api/db/institutions";
+
+  const method = id ? "PUT" : "POST";
+
+  try {
+    await fetchJson(url, {
+      method,
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+
+    showInstitutionFormMessage("Saved successfully.", false);
+    await loadSummary();
+    await openTable("institutions");
+  } catch (err) {
+    showInstitutionFormMessage(err.message, true);
+  }
+}
+
+async function deleteInstitution(index) {
+  const row = CURRENT_TABLE_DATA[index];
+
+  const ok = confirm(
+    `Delete institution ${row.code || ""} — ${row.name}?\n\n` +
+    `This will be blocked if departments are attached.`
+  );
+
+  if (!ok) return;
+
+  try {
+    await fetchJson(`/api/db/institutions/${row.id}`, {
+      method: "DELETE"
+    });
+
+    await loadSummary();
+    await openTable("institutions");
+  } catch (err) {
+    alert(err.message);
+  }
+}
+
+function showInstitutionFormMessage(message, isError) {
+  const area = document.getElementById("institutionFormMessage");
+  area.innerHTML = `<div class="${isError ? "error" : "notice"}">${escapeHtml(message)}</div>`;
 }
 
 async function loadSummary() {
@@ -453,7 +731,7 @@ async function loadSummary() {
     `;
   } catch (err) {
     document.getElementById("summary").innerHTML =
-      `<span style="color:#b42318;font-weight:bold;">${err.message}</span>`;
+      `<span style="color:#b42318;font-weight:bold;">${escapeHtml(err.message)}</span>`;
   }
 }
 
