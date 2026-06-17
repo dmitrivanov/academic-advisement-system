@@ -1,6 +1,8 @@
 import csv
 from pathlib import Path
 
+from sqlalchemy import inspect, text
+
 from database import Base, engine, SessionLocal
 from models import (
     Institution,
@@ -17,7 +19,9 @@ from models import (
 
 
 DOCS_DIR = Path("docs")
+
 DEFAULT_INSTITUTION = "Borough of Manhattan Community College"
+DEFAULT_INSTITUTION_CODE = "BMCC"
 DEFAULT_DEPARTMENT = "Computer Information Systems"
 DEFAULT_DEPARTMENT_CODE = "CIS"
 DEFAULT_CATALOG_YEAR = "2026"
@@ -28,6 +32,26 @@ PROGRAM_NAME_MAP = {
     "CIS": "Computer Information Systems",
     "CNT": "Computer Network Technology",
 }
+
+
+def ensure_institution_columns(db):
+    inspector = inspect(engine)
+    columns = {col["name"] for col in inspector.get_columns("institutions")}
+
+    new_columns = {
+        "code": "VARCHAR",
+        "system": "VARCHAR",
+        "borough": "VARCHAR",
+        "website": "VARCHAR",
+    }
+
+    for column_name, column_type in new_columns.items():
+        if column_name not in columns:
+            db.execute(
+                text(f"ALTER TABLE institutions ADD COLUMN {column_name} {column_type}")
+            )
+
+    db.commit()
 
 
 def parse_relationships(value):
@@ -68,6 +92,53 @@ def get_or_create(db, model, defaults=None, **kwargs):
     db.flush()
 
     return obj
+
+
+def seed_institutions(db):
+    path = DOCS_DIR / "institutions.csv"
+
+    if not path.exists():
+        print("No institutions.csv found. Using BMCC default only.")
+
+        institution = get_or_create(
+            db,
+            Institution,
+            name=DEFAULT_INSTITUTION,
+        )
+
+        institution.code = DEFAULT_INSTITUTION_CODE
+        institution.system = "CUNY"
+        institution.borough = "Manhattan"
+        institution.website = "https://www.bmcc.cuny.edu"
+
+        db.flush()
+        return
+
+    with path.open(newline="", encoding="utf-8-sig") as f:
+        reader = csv.DictReader(f)
+
+        for row in reader:
+            code = row["code"].strip().upper()
+            name = row["name"].strip()
+
+            institution = db.query(Institution).filter_by(code=code).first()
+
+            if not institution:
+                institution = db.query(Institution).filter_by(name=name).first()
+
+            if not institution:
+                institution = Institution(name=name)
+                db.add(institution)
+                db.flush()
+
+            institution.code = code
+            institution.name = name
+            institution.system = (row.get("system") or "CUNY").strip()
+            institution.borough = (row.get("borough") or "").strip()
+            institution.website = (row.get("website") or "").strip()
+
+    db.flush()
+    print("Seeded institutions.csv")
 
 
 def parse_faq_file(path):
@@ -137,6 +208,7 @@ def is_new_format(fieldnames):
 
 def get_program_info_from_old_format(program_code):
     return {
+        "institution_code": DEFAULT_INSTITUTION_CODE,
         "program_code": program_code,
         "program_name": PROGRAM_NAME_MAP.get(program_code, program_code),
         "catalog_year": DEFAULT_CATALOG_YEAR,
@@ -150,6 +222,7 @@ def get_program_info_from_new_row(row, fallback_program_code):
     program_code = (row.get("program_code") or fallback_program_code).strip().upper()
 
     return {
+        "institution_code": (row.get("institution_code") or DEFAULT_INSTITUTION_CODE).strip().upper(),
         "program_code": program_code,
         "program_name": (row.get("program_name") or PROGRAM_NAME_MAP.get(program_code, program_code)).strip(),
         "catalog_year": (row.get("catalog_year") or DEFAULT_CATALOG_YEAR).strip(),
@@ -389,7 +462,9 @@ def seed():
     db = SessionLocal()
 
     try:
-        institution = get_or_create(db, Institution, name=DEFAULT_INSTITUTION)
+        ensure_institution_columns(db)
+        seed_institutions(db)
+
         major_files = discover_major_files()
 
         if not major_files:
@@ -416,6 +491,20 @@ def seed():
             else:
                 print(f"Skipping unsupported CSV format: {csv_path}")
                 continue
+
+            institution = db.query(Institution).filter_by(
+                code=program_info["institution_code"]
+            ).first()
+
+            if not institution:
+                institution = get_or_create(
+                    db,
+                    Institution,
+                    name=DEFAULT_INSTITUTION,
+                )
+                institution.code = DEFAULT_INSTITUTION_CODE
+                institution.system = "CUNY"
+                institution.borough = "Manhattan"
 
             department = get_or_create(
                 db,
@@ -451,7 +540,10 @@ def seed():
 
             seed_faq(db, program, major["faq"])
 
-            print(f"Seeded program: {program_info['program_code']} from {csv_path}")
+            print(
+                f"Seeded program: {program_info['program_code']} "
+                f"from {csv_path}"
+            )
 
         db.commit()
         print("Database seeding completed.")

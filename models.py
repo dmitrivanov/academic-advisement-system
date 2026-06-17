@@ -7,7 +7,11 @@ class Institution(Base):
     __tablename__ = "institutions"
 
     id = Column(Integer, primary_key=True, index=True)
-    name = Column(String, nullable=False, unique=True)
+    code = Column(String, unique=True, index=True, nullable=True)
+    name = Column(String, unique=True, nullable=False)
+    system = Column(String, default="CUNY")
+    borough = Column(String, nullable=True)
+    website = Column(String, nullable=True)
 
     departments = relationship("Department", back_populates="institution")
 
