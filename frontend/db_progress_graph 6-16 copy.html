@@ -1,0 +1,1329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Database Progress Graph</title>
+
+<style>
+body {
+  font-family: Arial, sans-serif;
+  background: #f5f7fb;
+  margin: 0;
+  color: #172033;
+}
+
+.container {
+  max-width: 1250px;
+  margin: 40px auto;
+  padding: 20px;
+}
+
+.card {
+  background: white;
+  border-radius: 16px;
+  padding: 22px;
+  margin-bottom: 20px;
+  box-shadow: 0 10px 25px rgba(0,0,0,.07);
+  border: 1px solid #e6eaf2;
+}
+
+h1 {
+  margin-bottom: 6px;
+}
+
+.subtitle {
+  color: #667085;
+  margin-top: 0;
+}
+
+select {
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1px solid #d7deea;
+  font-size: 15px;
+}
+
+.audit-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(220px, 1fr));
+  gap: 18px;
+  margin-top: 18px;
+}
+
+.audit-column {
+  border: 2px solid #d7deea;
+  border-radius: 20px;
+  padding: 16px;
+  min-height: 300px;
+  background: #fbfdff;
+}
+
+.audit-column h3 {
+  margin-top: 0;
+  text-align: center;
+}
+
+.course-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.course-card {
+  border: 2px solid #cfd8e7;
+  border-radius: 14px;
+  padding: 12px;
+  background: #f1f5f9;
+  cursor: pointer;
+  transition: 0.15s;
+}
+
+.course-card:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 5px 14px rgba(0,0,0,0.08);
+}
+
+.course-card.completed {
+  background: #dcfce7;
+  border-color: #22c55e;
+}
+
+.course-card.available {
+  background: #dbeafe;
+  border-color: #2563eb;
+}
+
+.course-card.locked {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+  opacity: 0.8;
+}
+.course-card.not_needed {
+  background: #fee2e2;
+  border-color: #dc2626;
+  color: #991b1b;
+}
+.course-code {
+  font-size: 17px;
+  font-weight: bold;
+}
+
+.course-title {
+  font-size: 13px;
+  color: #475467;
+  margin-top: 5px;
+}
+
+.course-detail {
+  font-size: 12px;
+  color: #667085;
+  margin-top: 7px;
+  line-height: 1.35;
+}
+
+.course-check {
+  margin-right: 6px;
+}
+
+.status-legend {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 14px;
+  font-size: 13px;
+  color: #667085;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.legend-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 4px;
+  border: 1px solid #cbd5e1;
+}
+
+.legend-completed {
+  background: #dcfce7;
+  border-color: #22c55e;
+}
+
+.legend-available {
+  background: #dbeafe;
+  border-color: #2563eb;
+}
+
+.legend-locked {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+}
+
+.legend-not-needed {
+  background: #fee2e2;
+  border-color: #ef4444;
+}
+
+.recommendation-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-top: 15px;
+}
+
+.recommendation-card {
+  min-width: 190px;
+  max-width: 240px;
+  padding: 14px;
+  border-radius: 14px;
+  background: #eef4ff;
+  border: 2px solid #2563eb;
+}
+
+.recommendation-title {
+  font-weight: bold;
+  font-size: 17px;
+}
+
+.recommendation-meta {
+  font-size: 13px;
+  color: #475467;
+  margin-top: 6px;
+  line-height: 1.4;
+}
+
+.recommendation-summary {
+  margin-top: 10px;
+  color: #475467;
+  line-height: 1.5;
+}
+
+.tabs {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin: 18px 0;
+}
+
+.tab {
+  padding: 10px 14px;
+  border-radius: 12px;
+  border: 1px solid #2563eb;
+  background: #2563eb;
+  color: white;
+  cursor: pointer;
+  font-weight: bold;
+  opacity: 0.75;
+}
+
+.tab:hover {
+  opacity: 0.9;
+}
+
+.tab.active {
+  opacity: 1;
+}
+
+.group-card {
+  margin-top: 20px;
+  padding: 18px;
+  border-radius: 16px;
+  border: 1px solid #e6eaf2;
+  background: #fff;
+}
+
+.group-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  align-items: flex-start;
+}
+
+.group-title {
+  font-size: 21px;
+  font-weight: bold;
+}
+
+.group-meta {
+  color: #667085;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.progress-pill {
+  background: #eef4ff;
+  color: #1d4ed8;
+  padding: 7px 10px;
+  border-radius: 999px;
+  font-weight: bold;
+  font-size: 13px;
+}
+
+.status-section {
+  margin-top: 18px;
+  padding: 16px;
+  border-radius: 14px;
+  border: 1px solid #e6eaf2;
+  background: #ffffff;
+}
+
+.status-title {
+  font-size: 18px;
+  font-weight: bold;
+  margin-bottom: 8px;
+}
+
+.status-subtitle {
+  font-size: 13px;
+  color: #667085;
+  margin-bottom: 14px;
+}
+
+.status-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.status-course {
+  min-width: 160px;
+  max-width: 230px;
+  padding: 14px;
+  border-radius: 14px;
+  border: 2px solid #cfd8e7;
+  background: #eef2f7;
+  box-shadow: 0 4px 10px rgba(0,0,0,.05);
+}
+
+.status-course.completed {
+  background: #dcfce7;
+  border-color: #22c55e;
+}
+
+.status-course.available {
+  background: #dbeafe;
+  border-color: #2563eb;
+}
+
+.status-course.locked {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+  opacity: .85;
+}
+
+.status-course.not_needed {
+  background: #fee2e2;
+  border-color: #ef4444;
+  opacity: .85;
+}
+
+.empty-message {
+  color: #667085;
+  font-style: italic;
+}
+
+button {
+  margin-top: 12px;
+  padding: 10px 16px;
+  border: none;
+  border-radius: 12px;
+  background: #2563eb;
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+button:hover {
+  background: #1d4ed8;
+}
+
+.meta {
+  line-height: 1.6;
+}
+
+@media (max-width: 1000px) {
+  .audit-grid {
+    grid-template-columns: repeat(2, minmax(220px, 1fr));
+  }
+}
+
+@media (max-width: 620px) {
+  .audit-grid {
+    grid-template-columns: 1fr;
+  }
+}
+.progress-widget {
+  position: fixed;
+  top: 22px;
+  right: 22px;
+  z-index: 1000;
+  background: white;
+  border: 1px solid #e6eaf2;
+  border-radius: 18px;
+  padding: 14px;
+  box-shadow: 0 10px 25px rgba(0,0,0,.12);
+  cursor: pointer;
+  width: 150px;
+}
+
+.progress-circle {
+  width: 110px;
+  height: 110px;
+  border-radius: 50%;
+  margin: 0 auto;
+  background: conic-gradient(#2563eb 0deg, #e5e7eb 0deg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.progress-circle-inner {
+  width: 82px;
+  height: 82px;
+  border-radius: 50%;
+  background: white;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.progress-circle-inner div {
+  font-size: 24px;
+  font-weight: bold;
+}
+
+.progress-circle-inner small {
+  color: #667085;
+  font-size: 11px;
+}
+
+.progress-details {
+  margin-top: 14px;
+  border-top: 1px solid #e6eaf2;
+  padding-top: 12px;
+}
+
+.progress-details h4 {
+  margin: 0 0 10px 0;
+  font-size: 15px;
+}
+
+.progress-row {
+  margin-bottom: 10px;
+}
+
+.progress-row-label {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: #475467;
+  margin-bottom: 4px;
+}
+
+.progress-bar {
+  height: 8px;
+  background: #e5e7eb;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  background: #2563eb;
+  border-radius: 999px;
+}
+
+.hidden {
+  display: none;
+}
+
+
+</style>
+</head>
+
+<body>
+
+<div class="container">
+  <h1>Academic Progress Graph</h1>
+  <p class="subtitle">
+    This page organizes degree progress by requirement areas and recommends next-semester courses.
+  </p>
+<div id="progressWidget" class="progress-widget" onclick="toggleProgressDetails()">
+  <div class="progress-circle" id="overallProgressCircle">
+    <div class="progress-circle-inner">
+      <div id="overallProgressPercent">0%</div>
+      <small>complete</small>
+    </div>
+  </div>
+
+  <div id="progressDetails" class="progress-details hidden">
+    <h4>Degree Progress</h4>
+    <div id="progressDetailsContent"></div>
+  </div>
+</div>
+
+  <div class="card">
+    <h3>Select Program</h3>
+    <select id="programSelect" onchange="loadProgramRequirements()"></select>
+  </div>
+
+  <div class="card">
+    <h2 style="text-align:center;">Completed Courses</h2>
+    <p class="subtitle" style="text-align:center;">
+      Select courses already completed. Green = completed, blue = available now, gray = locked by prerequisites.
+    </p>
+
+    <div class="status-legend">
+      <div class="legend-item"><span class="legend-dot legend-completed"></span> Completed</div>
+      <div class="legend-item"><span class="legend-dot legend-available"></span> Available now</div>
+      <div class="legend-item"><span class="legend-dot legend-locked"></span> Not available yet</div>
+      <div class="legend-item"><span class="legend-dot legend-not-needed"></span> Not needed / alternative satisfied</div>
+    </div>
+
+    <div id="completedCourseGrid" class="audit-grid"></div>
+
+    <button onclick="clearCompleted()">Clear Selection</button>
+  </div>
+
+  <div class="card">
+    <h3 id="recommendationTitle">Next Semester Recommendation</h3>
+    <div id="recommendationSummary" class="recommendation-summary">Loading...</div>
+    <div id="recommendations" class="recommendation-grid"></div>
+  </div>
+
+  <div class="card">
+    <h3>Progress Summary</h3>
+    <div id="summary" class="meta">Loading...</div>
+  </div>
+
+  <div class="card">
+    <h3>Requirement Areas</h3>
+
+    <div class="tabs">
+      <button class="tab active" onclick="setTab('program', event)">Program Requirements</button>
+      <button class="tab" onclick="setTab('common_core', event)">Common Core</button>
+      <button class="tab" onclick="setTab('flexible_core', event)">Flexible Core</button>
+      <button class="tab" onclick="setTab('full', event)">Full Progress Graph</button>
+    </div>
+
+    <div id="graph"></div>
+  </div>
+</div>
+
+<script>
+let PROGRAMS = [];
+let CURRENT_REQUIREMENTS = null;
+let CURRENT_TAB = "program";
+let COMPLETED_COURSES = new Set();
+
+const EMPTY_GROUPS = [
+  {
+    name: "Common Core",
+    group_type: "common_core",
+    required_credits: null,
+    required_course_count: null,
+    display_order: 10,
+    courses: []
+  },
+  {
+    name: "Flexible Core",
+    group_type: "flexible_core",
+    required_credits: null,
+    required_course_count: null,
+    display_order: 20,
+    courses: []
+  },
+  {
+    name: "Program Electives",
+    group_type: "program_elective",
+    required_credits: 6,
+    required_course_count: null,
+    display_order: 40,
+    courses: []
+  }
+];
+
+const DISPLAY_AREAS = [
+  {
+    title: "Program Requirements",
+    types: ["program_required"]
+  },
+  {
+    title: "Program Electives",
+    types: ["program_elective"]
+  },
+  {
+    title: "Common Core",
+    types: ["common_core"]
+  },
+  {
+    title: "Flexible Core",
+    types: ["flexible_core"]
+  }
+];
+
+async function fetchJson(url) {
+  const response = await fetch(url);
+  if (!response.ok) throw new Error(`Request failed: ${url} (${response.status})`);
+  return await response.json();
+}
+
+async function loadPrograms() {
+  const select = document.getElementById("programSelect");
+  select.innerHTML = "";
+
+  PROGRAMS = await fetchJson("/api/db/programs");
+
+  PROGRAMS.forEach(program => {
+    const option = document.createElement("option");
+    option.value = program.code;
+    option.textContent = `${program.code} — ${program.name} (${program.catalog_year || "No catalog year"})`;
+    select.appendChild(option);
+  });
+
+  if (PROGRAMS.length > 0) {
+    await loadProgramRequirements();
+  }
+}
+
+async function loadProgramRequirements() {
+  const code = document.getElementById("programSelect").value;
+  CURRENT_REQUIREMENTS = await fetchJson(`/api/db/programs/${code}/requirements`);
+
+  ensurePlaceholderGroups();
+  renderCompletedCourseGrid();
+  renderGraph();
+  renderSummary();
+  renderRecommendations();
+  updateProgressWidget();
+}
+
+function ensurePlaceholderGroups() {
+  const existingTypes = new Set(CURRENT_REQUIREMENTS.groups.map(g => g.group_type));
+
+  EMPTY_GROUPS.forEach(group => {
+    if (!existingTypes.has(group.group_type)) {
+      CURRENT_REQUIREMENTS.groups.push(group);
+    }
+  });
+
+  CURRENT_REQUIREMENTS.groups.sort((a, b) => (a.display_order || 0) - (b.display_order || 0));
+}
+
+function setTab(tabName, event) {
+  CURRENT_TAB = tabName;
+
+  document.querySelectorAll(".tab").forEach(tab => tab.classList.remove("active"));
+  event.target.classList.add("active");
+
+  renderGraph();
+}
+
+function allCoursesFromGroups() {
+  const map = {};
+
+  CURRENT_REQUIREMENTS.groups.forEach(group => {
+    group.courses.forEach(course => {
+      map[course.code] = {
+        ...course,
+        group_type: group.group_type,
+        group_name: group.name
+      };
+    });
+  });
+
+  return map;
+}
+
+function getGroupsByTypes(types) {
+  return CURRENT_REQUIREMENTS.groups.filter(group => types.includes(group.group_type));
+}
+
+function getCompletedCourses() {
+  return new Set(COMPLETED_COURSES);
+}
+
+function prereqSatisfied(prereq, completed) {
+  if (Array.isArray(prereq)) {
+    return prereq.some(option => completed.has(option));
+  }
+
+  return completed.has(prereq);
+}
+
+function allPrereqsSatisfied(course, completed) {
+  if (!course.prereqs || course.prereqs.length === 0) return true;
+  return course.prereqs.every(prereq => prereqSatisfied(prereq, completed));
+}
+
+function formatPrereqs(prereqs) {
+  if (!prereqs || prereqs.length === 0) return "None";
+  return prereqs.map(p => Array.isArray(p) ? p.join(" or ") : p).join(", ");
+}
+
+function formatAlternatives(alts) {
+  if (!alts || alts.length === 0) return "None";
+  return alts.join(", ");
+}
+
+function getAlternativeSet(code) {
+  const courses = allCoursesFromGroups();
+  const alternatives = new Set();
+
+  if (courses[code] && courses[code].alternatives) {
+    courses[code].alternatives.forEach(alt => alternatives.add(alt));
+  }
+
+  Object.values(courses).forEach(course => {
+    if (course.alternatives && course.alternatives.includes(code)) {
+      alternatives.add(course.code);
+    }
+  });
+
+  return alternatives;
+}
+
+function hasCompletedAlternative(code, completed) {
+  const alternatives = getAlternativeSet(code);
+
+  for (const altCode of alternatives) {
+    if (completed.has(altCode)) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+function groupCreditsCompleted(group, completed) {
+  let credits = 0;
+
+  group.courses.forEach(course => {
+    if (completed.has(course.code)) {
+      credits += Number(course.credits || 0);
+    }
+  });
+
+  return credits;
+}
+
+function groupRequirementSatisfied(group, completed) {
+  if (group.required_credits) {
+    return groupCreditsCompleted(group, completed) >= Number(group.required_credits);
+  }
+
+  if (group.required_course_count) {
+    const completedCount = group.courses.filter(course => completed.has(course.code)).length;
+    return completedCount >= Number(group.required_course_count);
+  }
+
+  return false;
+}
+
+function findCourseGroup(courseCode) {
+  for (const group of CURRENT_REQUIREMENTS.groups) {
+    if (group.courses.some(course => course.code === courseCode)) {
+      return group;
+    }
+  }
+
+  return null;
+}
+
+function isNotNeeded(code, course, completed) {
+  if (completed.has(code)) return false;
+
+  if (hasCompletedAlternative(code, completed)) {
+    return true;
+  }
+
+  const group = findCourseGroup(code);
+
+  if (group && groupRequirementSatisfied(group, completed)) {
+    return true;
+  }
+
+  return false;
+}
+
+function getCourseStatus(code, course, completed) {
+  if (completed.has(code)) return "completed";
+  if (isNotNeeded(code, course, completed)) return "not_needed";
+  if (allPrereqsSatisfied(course, completed)) return "available";
+  return "locked";
+}
+
+function renderCompletedCourseGrid() {
+  const container = document.getElementById("completedCourseGrid");
+  container.innerHTML = "";
+
+  DISPLAY_AREAS.forEach(area => {
+    const column = document.createElement("div");
+    column.className = "audit-column";
+
+    const title = document.createElement("h3");
+    title.textContent = area.title;
+    column.appendChild(title);
+
+    const list = document.createElement("div");
+    list.className = "course-list";
+
+    const groups = getGroupsByTypes(area.types);
+    let courses = [];
+
+    groups.forEach(group => {
+      courses = courses.concat(group.courses.map(course => ({
+        ...course,
+        group_type: group.group_type,
+        group_name: group.name
+      })));
+    });
+
+    if (courses.length === 0) {
+      const empty = document.createElement("div");
+      empty.className = "empty-message";
+      empty.textContent = "No courses in this area yet.";
+      list.appendChild(empty);
+    } else {
+      courses.forEach(course => {
+        list.appendChild(createSelectableCourseCard(course));
+      });
+    }
+
+    column.appendChild(list);
+    container.appendChild(column);
+  });
+}
+
+function createSelectableCourseCard(course) {
+  const completed = getCompletedCourses();
+  const status = getCourseStatus(course.code, course, completed);
+
+  const label = document.createElement("label");
+  label.className = `course-card ${status}`;
+
+  const checked = completed.has(course.code) ? "checked" : "";
+  const disabled = status === "not_needed" ? "disabled" : "";
+  const statusText = status === "not_needed"
+    ? `<div class="course-detail"><strong>Status:</strong> Not needed / alternative satisfied</div>`
+    : "";
+
+  label.innerHTML = `
+    <div class="course-code">
+      <input
+        type="checkbox"
+        class="completed-check course-check"
+        value="${course.code}"
+        ${checked}
+        ${disabled}
+        onchange="handleCourseCheckboxChange(this)">
+      ${course.code}
+    </div>
+    <div class="course-title">${course.title}</div>
+    <div class="course-detail">Credits: ${course.credits}</div>
+    <div class="course-detail">Prereqs: ${formatPrereqs(course.prereqs)}</div>
+    <div class="course-detail">Alternatives: ${formatAlternatives(course.alternatives)}</div>
+    <div class="course-detail">Area: ${course.group_name}</div>
+    ${statusText}
+  `;
+
+  return label;
+}
+
+function handleCourseCheckboxChange(checkbox) {
+  if (checkbox.checked) {
+    COMPLETED_COURSES.add(checkbox.value);
+  } else {
+    COMPLETED_COURSES.delete(checkbox.value);
+  }
+
+  renderCompletedCourseGrid();
+  renderGraph();
+  renderSummary();
+  renderRecommendations();
+  updateProgressWidget();
+}
+
+function clearCompleted() {
+  COMPLETED_COURSES.clear();
+
+  renderCompletedCourseGrid();
+  renderGraph();
+  renderSummary();
+  renderRecommendations();
+  updateProgressWidget();
+}
+
+function groupsForCurrentTab() {
+  const groups = CURRENT_REQUIREMENTS.groups;
+
+  if (CURRENT_TAB === "common_core") {
+    return groups.filter(g => g.group_type === "common_core");
+  }
+
+  if (CURRENT_TAB === "flexible_core") {
+    return groups.filter(g => g.group_type === "flexible_core");
+  }
+
+  if (CURRENT_TAB === "program") {
+    return groups.filter(g =>
+      g.group_type === "program_required" ||
+      g.group_type === "program_elective"
+    );
+  }
+
+  return groups;
+}
+
+function renderGraph() {
+  const graph = document.getElementById("graph");
+  graph.innerHTML = "";
+
+  const groups = groupsForCurrentTab();
+
+  if (!groups.length) {
+    graph.innerHTML = `<div class="empty-message">No requirement groups found for this tab.</div>`;
+    return;
+  }
+
+  groups.forEach(group => renderGroupCard(group));
+}
+
+function renderGroupCard(group) {
+  const graph = document.getElementById("graph");
+  const completed = getCompletedCourses();
+
+  const taken = [];
+  const available = [];
+  const locked = [];
+  const notNeeded = [];
+
+  let completedCredits = 0;
+
+  group.courses.forEach(course => {
+    const status = getCourseStatus(course.code, course, completed);
+
+    if (status === "completed") {
+      taken.push([course.code, course, status]);
+      completedCredits += Number(course.credits || 0);
+    } else if (status === "available") {
+      available.push([course.code, course, status]);
+    } else if (status === "not_needed") {
+      notNeeded.push([course.code, course, status]);
+    } else {
+      locked.push([course.code, course, status]);
+    }
+  });
+
+  const card = document.createElement("div");
+  card.className = "group-card";
+
+  const requiredText = group.required_credits
+    ? `${completedCredits} / ${group.required_credits} credits completed`
+    : `${completedCredits} completed credits`;
+
+  card.innerHTML = `
+    <div class="group-header">
+      <div>
+        <div class="group-title">${group.name}</div>
+        <div class="group-meta">
+          Type: ${group.group_type}<br>
+          Courses in group: ${group.courses.length}
+        </div>
+      </div>
+      <div class="progress-pill">${requiredText}</div>
+    </div>
+  `;
+
+  graph.appendChild(card);
+
+  renderStatusSection(card, "Taken Classes", "Courses selected as already completed.", taken);
+  renderStatusSection(card, "Available Classes", "Courses available now based on prerequisites.", available);
+  renderStatusSection(card, "Not Needed", "Courses skipped because an alternative or elective requirement is already satisfied.", notNeeded);
+  renderStatusSection(card, "Not Available Yet", "Courses still blocked by missing prerequisites.", locked);
+}
+
+function renderStatusSection(parent, title, subtitle, courses) {
+  const section = document.createElement("div");
+  section.className = "status-section";
+
+  const titleDiv = document.createElement("div");
+  titleDiv.className = "status-title";
+  titleDiv.textContent = title;
+
+  const subtitleDiv = document.createElement("div");
+  subtitleDiv.className = "status-subtitle";
+  subtitleDiv.textContent = subtitle;
+
+  const grid = document.createElement("div");
+  grid.className = "status-grid";
+
+  if (!courses.length) {
+    const empty = document.createElement("div");
+    empty.className = "empty-message";
+    empty.textContent = "No courses in this category.";
+    grid.appendChild(empty);
+  } else {
+    courses.forEach(([code, course, status]) => {
+      const div = document.createElement("div");
+      div.className = `status-course ${status}`;
+
+      div.innerHTML = `
+        <div class="course-code">${code}</div>
+        <div class="course-title">${course.title}</div>
+        <div class="course-detail">Credits: ${course.credits}</div>
+        <div class="course-detail">Prereqs: ${formatPrereqs(course.prereqs)}</div>
+        <div class="course-detail">Alternatives: ${formatAlternatives(course.alternatives)}</div>
+      `;
+
+      grid.appendChild(div);
+    });
+  }
+
+  section.appendChild(titleDiv);
+  section.appendChild(subtitleDiv);
+  section.appendChild(grid);
+  parent.appendChild(section);
+}
+
+function renderSummary() {
+  const summary = document.getElementById("summary");
+  const program = CURRENT_REQUIREMENTS.program;
+  const courses = allCoursesFromGroups();
+  const completed = getCompletedCourses();
+
+  let completedCredits = 0;
+
+  Object.entries(courses).forEach(([code, course]) => {
+    if (completed.has(code)) {
+      completedCredits += Number(course.credits || 0);
+    }
+  });
+
+  summary.innerHTML = `
+    <strong>Program:</strong> ${program.code} — ${program.name}<br>
+    <strong>Catalog year:</strong> ${program.catalog_year || "Not specified"}<br>
+    <strong>Requirement groups:</strong> ${CURRENT_REQUIREMENTS.groups.length}<br>
+    <strong>Total visible courses:</strong> ${Object.keys(courses).length}<br>
+    <strong>Selected completed courses:</strong> ${completed.size}<br>
+    <strong>Selected completed credits:</strong> ${completedCredits}
+  `;
+}
+
+function detectNextSemester(date = new Date()) {
+  const month = date.getMonth() + 1;
+  const year = date.getFullYear();
+
+  if (month === 12) {
+    return {
+      name: `Winter ${year + 1}`,
+      minCredits: 3,
+      maxCredits: 4,
+      targetCredits: 4,
+      maxCourses: 1
+    };
+  }
+
+  if (month === 1 || month === 2) {
+    return {
+      name: `Spring ${year}`,
+      minCredits: 13,
+      maxCredits: 17,
+      targetCredits: 15,
+      maxCourses: 5
+    };
+  }
+
+  if (month === 5) {
+    return {
+      name: `Summer ${year}`,
+      minCredits: 6,
+      maxCredits: 8,
+      targetCredits: 7,
+      maxCourses: 2
+    };
+  }
+
+  if (month >= 6 && month <= 8) {
+    return {
+      name: `Fall ${year}`,
+      minCredits: 13,
+      maxCredits: 17,
+      targetCredits: 15,
+      maxCourses: 5
+    };
+  }
+
+  if (month >= 9 && month <= 11) {
+    return {
+      name: `Spring ${year + 1}`,
+      minCredits: 13,
+      maxCredits: 17,
+      targetCredits: 15,
+      maxCourses: 5
+    };
+  }
+
+  return {
+    name: `Fall ${year}`,
+    minCredits: 13,
+    maxCredits: 17,
+    targetCredits: 15,
+    maxCourses: 5
+  };
+}
+
+function groupPriority(groupType) {
+  const priorities = {
+    program_required: 50,
+    common_core: 25,
+    flexible_core: 20,
+    program_elective: 10
+  };
+
+  return priorities[groupType] || 5;
+}
+
+function countUnlocks(course, completed) {
+  const courses = allCoursesFromGroups();
+  const newCompleted = new Set(completed);
+  newCompleted.add(course.code);
+
+  let unlocks = 0;
+
+  Object.entries(courses).forEach(([code, otherCourse]) => {
+    if (completed.has(code)) return;
+
+    const currentlyAvailable = allPrereqsSatisfied(otherCourse, completed);
+    const availableAfter = allPrereqsSatisfied(otherCourse, newCompleted);
+
+    if (!currentlyAvailable && availableAfter && !isNotNeeded(code, otherCourse, newCompleted)) {
+      unlocks++;
+    }
+  });
+
+  return unlocks;
+}
+
+function recommendationScore(course, completed, selectedGroupTypes) {
+  const unlocks = countUnlocks(course, completed);
+  let score = unlocks * 10 + groupPriority(course.group_type);
+
+  if (!selectedGroupTypes.has(course.group_type)) {
+    score += 8;
+  }
+
+  return score;
+}
+
+function getAvailableCoursesForRecommendation() {
+  const completed = getCompletedCourses();
+  const courses = allCoursesFromGroups();
+
+  return Object.values(courses).filter(course => {
+    if (completed.has(course.code)) return false;
+    if (isNotNeeded(course.code, course, completed)) return false;
+    return allPrereqsSatisfied(course, completed);
+  });
+}
+
+function chooseRecommendedCourses() {
+  const semester = detectNextSemester();
+  const completed = getCompletedCourses();
+
+  let available = getAvailableCoursesForRecommendation();
+
+  const selected = [];
+  const selectedCodes = new Set();
+  const selectedGroupTypes = new Set();
+  let credits = 0;
+
+  while (available.length > 0 && selected.length < semester.maxCourses) {
+    available.sort((a, b) => {
+      const scoreA = recommendationScore(a, completed, selectedGroupTypes);
+      const scoreB = recommendationScore(b, completed, selectedGroupTypes);
+      return scoreB - scoreA;
+    });
+
+    let chosen = null;
+
+    for (const course of available) {
+      const courseCredits = Number(course.credits || 0);
+
+      if (credits + courseCredits <= semester.maxCredits) {
+        chosen = course;
+        break;
+      }
+    }
+
+    if (!chosen) break;
+
+    selected.push(chosen);
+    selectedCodes.add(chosen.code);
+    selectedGroupTypes.add(chosen.group_type);
+    credits += Number(chosen.credits || 0);
+
+    available = available.filter(course => !selectedCodes.has(course.code));
+
+    if (credits >= semester.minCredits && credits >= semester.targetCredits - 1) {
+      break;
+    }
+  }
+
+  return {
+    semester,
+    selected,
+    credits
+  };
+}
+
+function renderRecommendations() {
+  const title = document.getElementById("recommendationTitle");
+  const summary = document.getElementById("recommendationSummary");
+  const container = document.getElementById("recommendations");
+
+  container.innerHTML = "";
+
+  const result = chooseRecommendedCourses();
+  const semester = result.semester;
+
+  title.textContent = `Next Semester Recommendation — ${semester.name}`;
+
+  if (!result.selected.length) {
+    summary.innerHTML = `
+      No recommended courses found. This may happen if all available courses are completed or if prerequisites are missing.
+    `;
+    return;
+  }
+
+  summary.innerHTML = `
+    Recommended load: <strong>${result.credits} credits</strong>.
+    Target for ${semester.name}: ${semester.minCredits}-${semester.maxCredits} credits.
+    The recommendation prioritizes courses that unlock future courses, program requirements, and category diversity.
+  `;
+
+  result.selected.forEach(course => {
+    const div = document.createElement("div");
+    div.className = "recommendation-card";
+
+    div.innerHTML = `
+      <div class="recommendation-title">${course.code}</div>
+      <div class="recommendation-meta">
+        ${course.title}<br>
+        Credits: ${course.credits}<br>
+        Area: ${course.group_name}<br>
+        Unlocks: ${countUnlocks(course, getCompletedCourses())}
+      </div>
+    `;
+
+    container.appendChild(div);
+  });
+}
+
+loadPrograms().catch(err => {
+  document.getElementById("summary").innerHTML =
+    `<span style="color:#b42318;font-weight:bold;">Error: ${err.message}</span>`;
+});
+
+function toggleProgressDetails() {
+  document.getElementById("progressDetails").classList.toggle("hidden");
+}
+
+function calculateGroupProgress(group) {
+  const completed = getCompletedCourses();
+
+  let completedCredits = 0;
+  let totalCredits = 0;
+
+  group.courses.forEach(course => {
+    const credits = Number(course.credits || 0);
+
+    totalCredits += credits;
+
+    if (completed.has(course.code)) {
+      completedCredits += credits;
+    }
+  });
+
+  const denominator = group.required_credits || totalCredits || 1;
+  const percent = Math.min(100, Math.round((completedCredits / denominator) * 100));
+
+  return {
+    completedCredits,
+    totalCredits,
+    requiredCredits: group.required_credits,
+    percent
+  };
+}
+
+function updateProgressWidget() {
+  if (!CURRENT_REQUIREMENTS) return;
+
+  const groups = CURRENT_REQUIREMENTS.groups;
+  const completed = getCompletedCourses();
+
+  let completedCredits = 0;
+  let totalCredits = 0;
+
+  groups.forEach(group => {
+    const groupProgress = calculateGroupProgress(group);
+
+    completedCredits += groupProgress.completedCredits;
+
+    if (group.required_credits) {
+      totalCredits += group.required_credits;
+    } else {
+      totalCredits += groupProgress.totalCredits;
+    }
+  });
+
+  const overallPercent = totalCredits
+    ? Math.min(100, Math.round((completedCredits / totalCredits) * 100))
+    : 0;
+
+  const degrees = overallPercent * 3.6;
+
+  document.getElementById("overallProgressCircle").style.background =
+    `conic-gradient(#2563eb ${degrees}deg, #e5e7eb ${degrees}deg)`;
+
+  document.getElementById("overallProgressPercent").textContent =
+    `${overallPercent}%`;
+
+  const details = document.getElementById("progressDetailsContent");
+  details.innerHTML = "";
+
+  groups.forEach(group => {
+    const p = calculateGroupProgress(group);
+
+    const requiredText = group.required_credits
+      ? `${p.completedCredits}/${group.required_credits} cr`
+      : `${p.completedCredits}/${p.totalCredits} cr`;
+
+    const row = document.createElement("div");
+    row.className = "progress-row";
+
+    row.innerHTML = `
+      <div class="progress-row-label">
+        <span>${group.name}</span>
+        <span>${requiredText}</span>
+      </div>
+      <div class="progress-bar">
+        <div class="progress-bar-fill" style="width:${p.percent}%"></div>
+      </div>
+    `;
+
+    details.appendChild(row);
+  });
+}
+
+
+
+</script>
+
+</body>
+</html>

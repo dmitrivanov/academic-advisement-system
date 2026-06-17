@@ -1,0 +1,12 @@
+institution_code,department_code,program_code,program_name,degree_type,catalog_year
+BMCC,CIS,CS,Computer Science,AS,2026
+BMCC,CIS,CIS,Computer Information Systems,AS,2026
+BMCC,CIS,CNT,Computer Network Technology,AAS,2026
+BMCC,SCI,BTE,Biotechnology Science,AS,2026
+BMCC,SCI,ESC,Engineering Science,AS,2026
+BMCC,SCI,SCI,Science,AS,2026
+BMCC,SCI,FSC,Science for Forensics,AS,2026
+BMCC,SCI,SHP,Science for Health,AS,2026
+BMCC,BUS,BBA,Business Administration,AS,2026
+BMCC,ACC,ACC,Accounting,AS,2026
+BMCC,ENG,LAS,Liberal Arts and Sciences,AA,2026

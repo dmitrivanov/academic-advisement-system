@@ -454,7 +454,81 @@ def seed_faq(db, program, faq_path):
                 intent=None,
             )
         )
+def seed_departments(db):
+    path = DOCS_DIR / "departments.csv"
 
+    if not path.exists():
+        return
+
+    with path.open(newline="", encoding="utf-8-sig") as f:
+        reader = csv.DictReader(f)
+
+        for row in reader:
+            institution = db.query(Institution).filter_by(
+                code=row["institution_code"].strip()
+            ).first()
+
+            if not institution:
+                continue
+
+            department = db.query(Department).filter_by(
+                institution_id=institution.id,
+                code=row["department_code"].strip()
+            ).first()
+
+            if not department:
+                department = Department(
+                    institution_id=institution.id,
+                    code=row["department_code"].strip(),
+                    name=row["department_name"].strip()
+                )
+                db.add(department)
+
+    db.flush()
+    print("Seeded departments.csv")
+
+def seed_programs(db):
+    path = DOCS_DIR / "programs.csv"
+
+    if not path.exists():
+        return
+
+    with path.open(newline="", encoding="utf-8-sig") as f:
+        reader = csv.DictReader(f)
+
+        for row in reader:
+            institution = db.query(Institution).filter_by(
+                code=row["institution_code"].strip()
+            ).first()
+
+            if not institution:
+                continue
+
+            department = db.query(Department).filter_by(
+                institution_id=institution.id,
+                code=row["department_code"].strip()
+            ).first()
+
+            if not department:
+                continue
+
+            program = db.query(Program).filter_by(
+                code=row["program_code"].strip(),
+                catalog_year=row["catalog_year"].strip()
+            ).first()
+
+            if not program:
+                program = Program(
+                    department_id=department.id,
+                    code=row["program_code"].strip(),
+                    name=row["program_name"].strip(),
+                    degree_type=row["degree_type"].strip(),
+                    catalog_year=row["catalog_year"].strip()
+                )
+                db.add(program)
+
+    db.flush()
+    print("Seeded programs.csv")
 
 def seed():
     Base.metadata.create_all(bind=engine)
@@ -464,6 +538,8 @@ def seed():
     try:
         ensure_institution_columns(db)
         seed_institutions(db)
+        seed_departments(db)
+        seed_programs(db)
 
         major_files = discover_major_files()
 
@@ -550,7 +626,6 @@ def seed():
 
     finally:
         db.close()
-
 
 if __name__ == "__main__":
     seed()
