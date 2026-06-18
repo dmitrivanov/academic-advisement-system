@@ -1,0 +1,6 @@
+institution_code,group_code,group_name,group_type,required_credits,required_course_count
+BMCC,FC_INDIVIDUAL,Individual and Society Requirement,flexible_core,3,1
+BMCC,FC_CREATIVE,Creative Expression Requirement,flexible_core,3,1
+BMCC,FC_US_EXPERIENCE,U.S. Experience in Its Diversity Requirement,flexible_core,3,1
+BMCC,FC_WORLD_CULTURES,World Cultures and Global Issues Requirement,flexible_core,3,1
+BMCC,FC_SCIENTIFIC_WORLD,Scientific World Requirement,flexible_core,3,1

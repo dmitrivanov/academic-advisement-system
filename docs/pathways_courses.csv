@@ -1,0 +1,18 @@
+institution_code,group_code,course_code,title,credits
+BMCC,FC_INDIVIDUAL,ANT 100,Introduction to Anthropology,3
+BMCC,FC_INDIVIDUAL,ANT 115,Language and Culture,3
+BMCC,FC_INDIVIDUAL,PSY 100,General Psychology,3
+BMCC,FC_INDIVIDUAL,SOC 100,Introduction to Sociology,3
+BMCC,FC_CREATIVE,ART 100,Introduction to Art,3
+BMCC,FC_CREATIVE,ART 102,Survey of Art History I,3
+BMCC,FC_CREATIVE,MUS 100,Introduction to Music,3
+BMCC,FC_CREATIVE,THE 100,Introduction to Theatre,3
+BMCC,FC_US_EXPERIENCE,HIS 120,Early American History,3
+BMCC,FC_US_EXPERIENCE,HIS 125,Modern American History,3
+BMCC,FC_US_EXPERIENCE,POL 100,American Government,3
+BMCC,FC_WORLD_CULTURES,ANT 101,Introduction to Cultural Anthropology,3
+BMCC,FC_WORLD_CULTURES,HIS 101,Western Civilization I,3
+BMCC,FC_WORLD_CULTURES,HIS 102,Western Civilization II,3
+BMCC,FC_SCIENTIFIC_WORLD,AST 110,General Astronomy,3
+BMCC,FC_SCIENTIFIC_WORLD,BIO 105,Human Biology,3
+BMCC,FC_SCIENTIFIC_WORLD,CHE 121,Fundamentals of General Chemistry I,4

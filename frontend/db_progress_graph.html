@@ -655,6 +655,95 @@ button:hover {
   background: #dbeafe;
 }
 
+
+.choice-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.35);
+  z-index: 2100;
+}
+
+.choice-modal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: min(720px, 92vw);
+  max-height: 82vh;
+  overflow-y: auto;
+  background: white;
+  border-radius: 18px;
+  padding: 22px;
+  box-shadow: 0 20px 50px rgba(0,0,0,0.22);
+  z-index: 2200;
+  border: 1px solid #e6eaf2;
+}
+
+.choice-modal-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: flex-start;
+  margin-bottom: 14px;
+}
+
+.choice-modal-header h3 {
+  margin: 0 0 5px 0;
+}
+
+.choice-modal-header p {
+  margin: 0;
+  color: #667085;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.choice-course-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.choice-course-option {
+  border: 2px solid #d7deea;
+  background: #f8fbff;
+  border-radius: 14px;
+  padding: 13px;
+  cursor: pointer;
+  transition: 0.15s;
+}
+
+.choice-course-option:hover {
+  border-color: #2563eb;
+  background: #eef4ff;
+  transform: translateY(-1px);
+}
+
+.choice-course-option.selected {
+  border-color: #22c55e;
+  background: #dcfce7;
+}
+
+.choice-selected-note {
+  margin-top: 8px;
+  padding: 8px;
+  border-radius: 10px;
+  background: #ecfdf3;
+  color: #166534;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+.choice-search {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 11px;
+  border: 1px solid #d7deea;
+  border-radius: 12px;
+  font-size: 14px;
+}
+
 </style>
 </head>
 
@@ -770,6 +859,20 @@ button:hover {
 </div>
 
 
+<div id="choiceModalBackdrop" class="choice-modal-backdrop hidden" onclick="closeChoiceModal()"></div>
+<div id="choiceModal" class="choice-modal hidden">
+  <div class="choice-modal-header">
+    <div>
+      <h3 id="choiceModalTitle">Choose Course</h3>
+      <p id="choiceModalSubtitle">Select the class that satisfies this requirement.</p>
+    </div>
+    <button class="advisor-close" onclick="closeChoiceModal()">Close</button>
+  </div>
+  <input id="choiceCourseSearch" class="choice-search" placeholder="Search course code or title..." oninput="renderChoiceOptions()">
+  <div id="choiceCourseOptions" class="choice-course-list"></div>
+</div>
+
+
 <script>
 let INSTITUTIONS = [];
 let PROGRAMS = [];
@@ -777,6 +880,9 @@ let CURRENT_REQUIREMENTS = null;
 let CURRENT_TAB = "program";
 let COMPLETED_COURSES = new Set();
 let SHOW_NOT_NEEDED = false;
+let CHOICE_SELECTIONS = {};
+let ACTIVE_CHOICE_PLACEHOLDER = null;
+let ACTIVE_CHOICE_OPTIONS = [];
 
 const EMPTY_GROUPS = [
   {
@@ -1020,9 +1126,7 @@ function groupCreditsCompleted(group, completed) {
   let credits = 0;
 
   group.courses.forEach(course => {
-    if (completed.has(course.code)) {
-      credits += Number(course.credits || 0);
-    }
+    credits += courseCompletedCredits(course.code, course, completed);
   });
 
   return credits;
@@ -1052,7 +1156,7 @@ function findCourseGroup(courseCode) {
 }
 
 function isNotNeeded(code, course, completed) {
-  if (completed.has(code)) return false;
+  if (isCourseCompleted(code, course, completed)) return false;
 
   if (hasCompletedAlternative(code, completed)) {
     return true;
@@ -1067,8 +1171,30 @@ function isNotNeeded(code, course, completed) {
   return false;
 }
 
+function isChoicePlaceholder(course) {
+  return Boolean(course.choice_group_code);
+}
+
+function isCourseCompleted(code, course, completed) {
+  if (completed.has(code)) return true;
+  if (isChoicePlaceholder(course) && CHOICE_SELECTIONS[code]) return true;
+  return false;
+}
+
+function courseCompletedCredits(code, course, completed) {
+  if (isChoicePlaceholder(course) && CHOICE_SELECTIONS[code]) {
+    return Number(CHOICE_SELECTIONS[code].credits || course.credits || 0);
+  }
+
+  if (completed.has(code)) {
+    return Number(course.credits || 0);
+  }
+
+  return 0;
+}
+
 function getCourseStatus(code, course, completed) {
-  if (completed.has(code)) return "completed";
+  if (isCourseCompleted(code, course, completed)) return "completed";
   if (isNotNeeded(code, course, completed)) return "not_needed";
   if (allPrereqsSatisfied(course, completed)) return "available";
   return "locked";
@@ -1140,6 +1266,8 @@ function renderCompletedCourseGrid() {
 function createSelectableCourseCard(course) {
   const completed = getCompletedCourses();
   const status = getCourseStatus(course.code, course, completed);
+  const isChoice = isChoicePlaceholder(course);
+  const selectedChoice = CHOICE_SELECTIONS[course.code];
 
   const label = document.createElement("label");
   label.className = `course-card ${status}`;
@@ -1150,6 +1278,33 @@ function createSelectableCourseCard(course) {
   const statusText = status === "not_needed"
     ? `<div class="course-detail"><strong>Status:</strong> Not needed / alternative satisfied</div>`
     : "";
+
+  const selectedChoiceText = selectedChoice
+    ? `<div class="choice-selected-note">Completed with: ${selectedChoice.code} — ${selectedChoice.title} (${selectedChoice.credits} credits)</div>`
+    : "";
+
+  if (isChoice) {
+    label.innerHTML = `
+      <div class="course-code">${course.title || course.code}</div>
+      <div class="course-title">Choose 1 approved course to satisfy this requirement.</div>
+      ${selectedChoiceText}
+
+      <details class="course-details">
+        <summary>Requirement details</summary>
+        <div>Requirement code: ${course.code}</div>
+        <div>Choice group: ${course.choice_group_code}</div>
+        <div>Credits: ${course.credits}</div>
+        <div>Area: ${course.group_name}</div>
+      </details>
+
+      <button type="button" onclick="event.preventDefault(); event.stopPropagation(); openChoiceModal('${course.code}')">
+        ${selectedChoice ? "Change selected course" : "Choose course"}
+      </button>
+      ${selectedChoice ? `<button type="button" class="toggle-button" onclick="event.preventDefault(); event.stopPropagation(); clearChoiceSelection('${course.code}')">Clear choice</button>` : ""}
+      ${statusText}
+    `;
+    return label;
+  }
 
   label.innerHTML = `
     <div class="course-code">
@@ -1176,6 +1331,94 @@ function createSelectableCourseCard(course) {
   `;
 
   return label;
+}
+
+async function openChoiceModal(placeholderCode) {
+  const courses = allCoursesFromGroups();
+  const placeholder = courses[placeholderCode];
+
+  if (!placeholder || !placeholder.choice_group_code) return;
+
+  ACTIVE_CHOICE_PLACEHOLDER = placeholderCode;
+  ACTIVE_CHOICE_OPTIONS = [];
+
+  document.getElementById("choiceModalTitle").textContent = placeholder.title || placeholder.code;
+  document.getElementById("choiceModalSubtitle").textContent = `Select one approved course for ${placeholder.choice_group_code}.`;
+  document.getElementById("choiceCourseSearch").value = "";
+  document.getElementById("choiceCourseOptions").innerHTML = "Loading...";
+  document.getElementById("choiceModalBackdrop").classList.remove("hidden");
+  document.getElementById("choiceModal").classList.remove("hidden");
+
+  try {
+    const institutionCode = CURRENT_REQUIREMENTS?.program?.institution_code || document.getElementById("institutionSelect")?.value || "BMCC";
+    const data = await fetchJson(`/api/db/choice-groups/${placeholder.choice_group_code}/courses?institution_code=${institutionCode}`);
+    ACTIVE_CHOICE_OPTIONS = data.courses || [];
+    renderChoiceOptions();
+  } catch (err) {
+    document.getElementById("choiceCourseOptions").innerHTML = `<span style="color:#b42318;font-weight:bold;">${err.message}</span>`;
+  }
+}
+
+function closeChoiceModal() {
+  document.getElementById("choiceModalBackdrop").classList.add("hidden");
+  document.getElementById("choiceModal").classList.add("hidden");
+  ACTIVE_CHOICE_PLACEHOLDER = null;
+  ACTIVE_CHOICE_OPTIONS = [];
+}
+
+function renderChoiceOptions() {
+  const container = document.getElementById("choiceCourseOptions");
+  const query = document.getElementById("choiceCourseSearch").value.trim().toLowerCase();
+  const selected = CHOICE_SELECTIONS[ACTIVE_CHOICE_PLACEHOLDER];
+
+  const filtered = ACTIVE_CHOICE_OPTIONS.filter(course => {
+    const haystack = `${course.code} ${course.title}`.toLowerCase();
+    return !query || haystack.includes(query);
+  });
+
+  if (!filtered.length) {
+    container.innerHTML = `<div class="empty-message">No matching courses found.</div>`;
+    return;
+  }
+
+  container.innerHTML = "";
+
+  filtered.forEach(course => {
+    const div = document.createElement("div");
+    div.className = `choice-course-option ${selected && selected.code === course.code ? "selected" : ""}`;
+    div.onclick = () => selectChoiceCourse(course);
+
+    div.innerHTML = `
+      <div class="course-code">${course.code}</div>
+      <div class="course-title">${course.title}</div>
+      <div class="course-detail">Credits: ${course.credits}</div>
+    `;
+
+    container.appendChild(div);
+  });
+}
+
+function selectChoiceCourse(course) {
+  if (!ACTIVE_CHOICE_PLACEHOLDER) return;
+
+  CHOICE_SELECTIONS[ACTIVE_CHOICE_PLACEHOLDER] = course;
+  closeChoiceModal();
+
+  renderCompletedCourseGrid();
+  renderGraph();
+  renderSummary();
+  renderRecommendations();
+  updateProgressWidget();
+}
+
+function clearChoiceSelection(placeholderCode) {
+  delete CHOICE_SELECTIONS[placeholderCode];
+
+  renderCompletedCourseGrid();
+  renderGraph();
+  renderSummary();
+  renderRecommendations();
+  updateProgressWidget();
 }
 
 function toggleSatisfiedCourses() {
@@ -1210,6 +1453,7 @@ function handleCourseCheckboxChange(checkbox) {
 
 function clearCompleted() {
   COMPLETED_COURSES.clear();
+  CHOICE_SELECTIONS = {};
 
   renderCompletedCourseGrid();
   renderGraph();
@@ -1269,7 +1513,7 @@ function renderGroupCard(group) {
 
     if (status === "completed") {
       taken.push([course.code, course, status]);
-      completedCredits += Number(course.credits || 0);
+      completedCredits += courseCompletedCredits(course.code, course, completed);
     } else if (status === "available") {
       available.push([course.code, course, status]);
     } else if (status === "not_needed") {
@@ -1341,15 +1585,22 @@ function renderStatusSection(parent, title, subtitle, courses) {
       const div = document.createElement("div");
       div.className = `status-course ${status}`;
 
+      const selectedChoice = CHOICE_SELECTIONS[code];
+      const selectedChoiceText = selectedChoice
+        ? `<div class="choice-selected-note">Completed with: ${selectedChoice.code} — ${selectedChoice.title} (${selectedChoice.credits} credits)</div>`
+        : "";
+
       div.innerHTML = `
         <div class="course-code">${code}</div>
         <div class="course-title">${course.title}</div>
+        ${selectedChoiceText}
 
         <details class="course-details">
           <summary>Class details</summary>
-          <div>Credits: ${course.credits}</div>
+          <div>Credits: ${selectedChoice ? selectedChoice.credits : course.credits}</div>
           <div>Prereqs: ${formatPrereqs(course.prereqs)}</div>
           <div>Alternatives: ${formatAlternatives(course.alternatives)}</div>
+          ${course.choice_group_code ? `<div>Choice group: ${course.choice_group_code}</div>` : ""}
         </details>
       `;
 
@@ -1372,9 +1623,7 @@ function renderSummary() {
   let completedCredits = 0;
 
   Object.entries(courses).forEach(([code, course]) => {
-    if (completed.has(code)) {
-      completedCredits += Number(course.credits || 0);
-    }
+    completedCredits += courseCompletedCredits(code, course, completed);
   });
 
   summary.innerHTML = `
@@ -1384,6 +1633,7 @@ function renderSummary() {
     <strong>Requirement groups:</strong> ${CURRENT_REQUIREMENTS.groups.length}<br>
     <strong>Total visible courses:</strong> ${Object.keys(courses).length}<br>
     <strong>Selected completed courses:</strong> ${completed.size}<br>
+    <strong>Selected choice requirements:</strong> ${Object.keys(CHOICE_SELECTIONS).length}<br>
     <strong>Selected completed credits:</strong> ${completedCredits}
   `;
 }
@@ -1470,7 +1720,7 @@ function countUnlocks(course, completed) {
   let unlocks = 0;
 
   Object.entries(courses).forEach(([code, otherCourse]) => {
-    if (completed.has(code)) return;
+    if (isCourseCompleted(code, otherCourse, completed)) return;
 
     const currentlyAvailable = allPrereqsSatisfied(otherCourse, completed);
     const availableAfter = allPrereqsSatisfied(otherCourse, newCompleted);
@@ -1499,7 +1749,7 @@ function getAvailableCoursesForRecommendation() {
   const courses = allCoursesFromGroups();
 
   return Object.values(courses).filter(course => {
-    if (completed.has(course.code)) return false;
+    if (isCourseCompleted(course.code, course, completed)) return false;
     if (isNotNeeded(course.code, course, completed)) return false;
     return allPrereqsSatisfied(course, completed);
   });
@@ -1667,7 +1917,8 @@ function getCoursesWithStatuses() {
     prerequisites: course.prereqs || [],
     alternatives: course.alternatives || [],
     status: getCourseStatus(course.code, course, completed),
-    unlocks: countUnlocks(course, completed)
+    unlocks: countUnlocks(course, completed),
+    selected_choice: CHOICE_SELECTIONS[course.code] || null
   }));
 }
 
@@ -1678,6 +1929,7 @@ function buildAdvisorPageContext() {
   return {
     program: CURRENT_REQUIREMENTS ? CURRENT_REQUIREMENTS.program : null,
     completed_courses: completed,
+    selected_choice_requirements: CHOICE_SELECTIONS,
     show_not_needed_courses: SHOW_NOT_NEEDED,
     next_semester: recommendation.semester,
     recommended_courses: recommendation.selected.map(course => ({
@@ -1774,9 +2026,7 @@ function calculateGroupProgress(group) {
 
     totalCredits += credits;
 
-    if (completed.has(course.code)) {
-      completedCredits += credits;
-    }
+    completedCredits += courseCompletedCredits(course.code, course, completed);
   });
 
   const denominator = group.required_credits || totalCredits || 1;

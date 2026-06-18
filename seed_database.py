@@ -15,6 +15,8 @@ from models import (
     FAQEntry,
     RequirementGroup,
     RequirementGroupCourse,
+    ChoiceGroup,
+    ChoiceGroupCourse,
 )
 
 
@@ -53,6 +55,15 @@ def ensure_institution_columns(db):
 
     db.commit()
 
+
+
+def ensure_course_columns(db):
+    inspector = inspect(engine)
+    columns = {col["name"] for col in inspector.get_columns("courses")}
+
+    if "choice_group_code" not in columns:
+        db.execute(text("ALTER TABLE courses ADD COLUMN choice_group_code VARCHAR"))
+        db.commit()
 
 def parse_relationships(value):
     if not value or not value.strip():
@@ -300,6 +311,7 @@ def seed_old_format(db, program, csv_path):
 
             course.title = title
             course.credits = credits
+            course.choice_group_code = (row.get("choice_group_code") or "").strip().upper() or None
 
             get_or_create(
                 db,
@@ -369,6 +381,7 @@ def seed_new_format(db, program, csv_path):
 
             course.title = title
             course.credits = credits
+            course.choice_group_code = (row.get("choice_group_code") or "").strip().upper() or None
 
             get_or_create(
                 db,
@@ -443,6 +456,104 @@ def add_relationships(db, program, rows, old_format):
                     alternative_course_id=alt.id,
                 )
 
+
+
+def seed_choice_groups(db):
+    path = DOCS_DIR / "pathways_groups.csv"
+
+    if not path.exists():
+        return
+
+    with path.open(newline="", encoding="utf-8-sig") as f:
+        reader = csv.DictReader(f)
+
+        for row in reader:
+            institution_code = row["institution_code"].strip().upper()
+            group_code = row["group_code"].strip().upper()
+
+            institution = db.query(Institution).filter_by(code=institution_code).first()
+            if not institution:
+                continue
+
+            required_credits_raw = (row.get("required_credits") or "").strip()
+            required_course_count_raw = (row.get("required_course_count") or "").strip()
+
+            required_credits = int(required_credits_raw) if required_credits_raw else None
+            required_course_count = int(required_course_count_raw) if required_course_count_raw else None
+
+            group = db.query(ChoiceGroup).filter_by(
+                institution_id=institution.id,
+                code=group_code,
+            ).first()
+
+            if not group:
+                group = ChoiceGroup(
+                    institution_id=institution.id,
+                    code=group_code,
+                    name=row["group_name"].strip(),
+                    group_type=(row.get("group_type") or "flexible_core").strip(),
+                    required_credits=required_credits,
+                    required_course_count=required_course_count,
+                )
+                db.add(group)
+                db.flush()
+
+            group.name = row["group_name"].strip()
+            group.group_type = (row.get("group_type") or "flexible_core").strip()
+            group.required_credits = required_credits
+            group.required_course_count = required_course_count
+
+    db.flush()
+    print("Seeded pathways_groups.csv")
+
+
+def seed_choice_group_courses(db):
+    path = DOCS_DIR / "pathways_courses.csv"
+
+    if not path.exists():
+        return
+
+    with path.open(newline="", encoding="utf-8-sig") as f:
+        reader = csv.DictReader(f)
+
+        for row in reader:
+            institution_code = row["institution_code"].strip().upper()
+            group_code = row["group_code"].strip().upper()
+            course_code = row["course_code"].strip().upper()
+            title = row["title"].strip()
+            credits = int(row["credits"])
+
+            institution = db.query(Institution).filter_by(code=institution_code).first()
+            if not institution:
+                continue
+
+            group = db.query(ChoiceGroup).filter_by(
+                institution_id=institution.id,
+                code=group_code,
+            ).first()
+            if not group:
+                continue
+
+            course = get_or_create(
+                db,
+                Course,
+                code=course_code,
+                defaults={"title": title, "credits": credits},
+            )
+
+            course.title = title
+            course.credits = credits
+            course.choice_group_code = (row.get("choice_group_code") or "").strip().upper() or None
+
+            get_or_create(
+                db,
+                ChoiceGroupCourse,
+                choice_group_id=group.id,
+                course_id=course.id,
+            )
+
+    db.flush()
+    print("Seeded pathways_courses.csv")
 
 def seed_faq(db, program, faq_path):
     for question, answer in parse_faq_file(faq_path):
@@ -537,9 +648,12 @@ def seed():
 
     try:
         ensure_institution_columns(db)
+        ensure_course_columns(db)
         seed_institutions(db)
         seed_departments(db)
         seed_programs(db)
+        seed_choice_groups(db)
+        seed_choice_group_courses(db)
 
         major_files = discover_major_files()
 
@@ -626,6 +740,7 @@ def seed():
 
     finally:
         db.close()
+
 
 if __name__ == "__main__":
     seed()

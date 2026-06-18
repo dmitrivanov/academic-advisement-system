@@ -15,6 +15,8 @@ from models import (
     CourseAlternative,
     RequirementGroup,
     RequirementGroupCourse,
+    ChoiceGroup,
+    ChoiceGroupCourse,
 )
 
 
@@ -31,15 +33,13 @@ class InstitutionPayload(BaseModel):
 
 @router.get("/health")
 def db_health(db: Session = Depends(get_db)):
-    programs = db.query(Program).count()
-    courses = db.query(Course).count()
-    institutions = db.query(Institution).count()
-
     return {
         "status": "ok",
-        "institutions": institutions,
-        "programs": programs,
-        "courses": courses,
+        "institutions": db.query(Institution).count(),
+        "departments": db.query(Department).count(),
+        "programs": db.query(Program).count(),
+        "courses": db.query(Course).count(),
+        "choice_groups": db.query(ChoiceGroup).count(),
     }
 
 
@@ -65,14 +65,10 @@ def create_institution(payload: InstitutionPayload, db: Session = Depends(get_db
     code = payload.code.strip().upper()
     name = payload.name.strip()
 
-    existing = db.query(Institution).filter_by(code=code).first()
-
-    if existing:
+    if db.query(Institution).filter_by(code=code).first():
         raise HTTPException(status_code=400, detail="Institution code already exists")
 
-    existing_name = db.query(Institution).filter_by(name=name).first()
-
-    if existing_name:
+    if db.query(Institution).filter_by(name=name).first():
         raise HTTPException(status_code=400, detail="Institution name already exists")
 
     institution = Institution(
@@ -87,19 +83,14 @@ def create_institution(payload: InstitutionPayload, db: Session = Depends(get_db
     db.commit()
     db.refresh(institution)
 
-    return {
-        "status": "created",
-        "id": institution.id,
-        "code": institution.code,
-        "name": institution.name,
-    }
+    return {"status": "created", "id": institution.id}
 
 
 @router.put("/institutions/{institution_id}")
 def update_institution(
     institution_id: int,
     payload: InstitutionPayload,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
     institution = db.query(Institution).filter_by(id=institution_id).first()
 
@@ -114,7 +105,6 @@ def update_institution(
         .filter(Institution.code == code, Institution.id != institution_id)
         .first()
     )
-
     if duplicate_code:
         raise HTTPException(status_code=400, detail="Institution code already exists")
 
@@ -123,7 +113,6 @@ def update_institution(
         .filter(Institution.name == name, Institution.id != institution_id)
         .first()
     )
-
     if duplicate_name:
         raise HTTPException(status_code=400, detail="Institution name already exists")
 
@@ -136,12 +125,7 @@ def update_institution(
     db.commit()
     db.refresh(institution)
 
-    return {
-        "status": "updated",
-        "id": institution.id,
-        "code": institution.code,
-        "name": institution.name,
-    }
+    return {"status": "updated", "id": institution.id}
 
 
 @router.delete("/institutions/{institution_id}")
@@ -158,21 +142,18 @@ def delete_institution(institution_id: int, db: Session = Depends(get_db)):
     if department_count > 0:
         raise HTTPException(
             status_code=400,
-            detail="Cannot delete institution with departments attached"
+            detail="Cannot delete institution with departments attached",
         )
 
     db.delete(institution)
     db.commit()
 
-    return {
-        "status": "deleted",
-        "id": institution_id,
-    }
+    return {"status": "deleted", "id": institution_id}
 
 
 @router.get("/departments")
 def get_departments(db: Session = Depends(get_db)):
-    departments = db.query(Department).all()
+    departments = db.query(Department).order_by(Department.name).all()
 
     return [
         {
@@ -180,6 +161,7 @@ def get_departments(db: Session = Depends(get_db)):
             "code": d.code,
             "name": d.name,
             "institution": d.institution.name,
+            "institution_code": d.institution.code,
         }
         for d in departments
     ]
@@ -187,7 +169,7 @@ def get_departments(db: Session = Depends(get_db)):
 
 @router.get("/programs")
 def get_programs(db: Session = Depends(get_db)):
-    programs = db.query(Program).all()
+    programs = db.query(Program).order_by(Program.name).all()
 
     return [
         {
@@ -197,6 +179,7 @@ def get_programs(db: Session = Depends(get_db)):
             "degree_type": p.degree_type,
             "catalog_year": p.catalog_year,
             "department": p.department.name,
+            "department_code": p.department.code,
             "institution": p.department.institution.name,
             "institution_code": p.department.institution.code,
         }
@@ -214,6 +197,7 @@ def get_all_courses(db: Session = Depends(get_db)):
             "code": c.code,
             "title": c.title,
             "credits": c.credits,
+            "choice_group_code": c.choice_group_code,
         }
         for c in courses
     ]
@@ -233,7 +217,9 @@ def get_all_requirement_groups(db: Session = Depends(get_db)):
         result.append({
             "id": g.id,
             "program": program.code if program else None,
+            "program_name": program.name if program else None,
             "institution": program.department.institution.name if program else None,
+            "institution_code": program.department.institution.code if program else None,
             "name": g.name,
             "group_type": g.group_type,
             "required_credits": g.required_credits,
@@ -242,6 +228,118 @@ def get_all_requirement_groups(db: Session = Depends(get_db)):
         })
 
     return result
+
+
+@router.get("/choice-groups")
+def get_choice_groups(db: Session = Depends(get_db)):
+    groups = db.query(ChoiceGroup).order_by(ChoiceGroup.code).all()
+
+    return [
+        {
+            "id": g.id,
+            "code": g.code,
+            "name": g.name,
+            "group_type": g.group_type,
+            "required_credits": g.required_credits,
+            "required_course_count": g.required_course_count,
+            "institution": g.institution.name,
+            "institution_code": g.institution.code,
+        }
+        for g in groups
+    ]
+
+
+@router.get("/choice-groups/{group_code}/courses")
+def get_choice_group_courses(
+    group_code: str,
+    institution_code: str = "BMCC",
+    db: Session = Depends(get_db),
+):
+    institution = db.query(Institution).filter_by(
+        code=institution_code.strip().upper()
+    ).first()
+
+    if not institution:
+        raise HTTPException(status_code=404, detail="Institution not found")
+
+    group = db.query(ChoiceGroup).filter_by(
+        institution_id=institution.id,
+        code=group_code.strip().upper(),
+    ).first()
+
+    if not group:
+        raise HTTPException(status_code=404, detail="Choice group not found")
+
+    links = db.query(ChoiceGroupCourse).filter_by(choice_group_id=group.id).all()
+
+    courses = []
+    for link in links:
+        course = db.query(Course).filter_by(id=link.course_id).first()
+        if not course:
+            continue
+
+        courses.append({
+            "id": course.id,
+            "code": course.code,
+            "title": course.title,
+            "credits": course.credits,
+        })
+
+    courses.sort(key=lambda c: c["code"])
+
+    return {
+        "group": {
+            "id": group.id,
+            "code": group.code,
+            "name": group.name,
+            "group_type": group.group_type,
+            "required_credits": group.required_credits,
+            "required_course_count": group.required_course_count,
+            "institution": institution.name,
+            "institution_code": institution.code,
+        },
+        "courses": courses,
+    }
+
+
+def build_course_payload(db: Session, program_id: int, course: Course):
+    prereq_rows = (
+        db.query(CoursePrerequisite)
+        .filter_by(program_id=program_id, course_id=course.id)
+        .all()
+    )
+
+    alt_rows = (
+        db.query(CourseAlternative)
+        .filter_by(program_id=program_id, course_id=course.id)
+        .all()
+    )
+
+    prereq_groups = {}
+
+    for row in prereq_rows:
+        prereq_course = db.query(Course).filter_by(id=row.prereq_course_id).first()
+        if prereq_course:
+            prereq_groups.setdefault(row.group_id, []).append(prereq_course.code)
+
+    prereqs = []
+    for _, codes in sorted(prereq_groups.items()):
+        prereqs.append(codes[0] if len(codes) == 1 else codes)
+
+    alternatives = []
+    for row in alt_rows:
+        alt_course = db.query(Course).filter_by(id=row.alternative_course_id).first()
+        if alt_course:
+            alternatives.append(alt_course.code)
+
+    return {
+        "code": course.code,
+        "title": course.title,
+        "credits": course.credits,
+        "choice_group_code": course.choice_group_code,
+        "prereqs": prereqs,
+        "alternatives": alternatives,
+    }
 
 
 @router.get("/programs/{program_code}/courses")
@@ -258,6 +356,8 @@ def get_program_courses(program_code: str, db: Session = Depends(get_db)):
             "code": program.code,
             "name": program.name,
             "catalog_year": program.catalog_year,
+            "degree_type": program.degree_type,
+            "department": program.department.name,
             "institution": program.department.institution.name,
             "institution_code": program.department.institution.code,
         },
@@ -266,6 +366,7 @@ def get_program_courses(program_code: str, db: Session = Depends(get_db)):
                 "code": link.course.code,
                 "title": link.course.title,
                 "credits": link.course.credits,
+                "choice_group_code": link.course.choice_group_code,
                 "requirement_type": link.requirement_type,
             }
             for link in links
@@ -283,62 +384,16 @@ def get_program_graph(program_code: str, db: Session = Depends(get_db)):
     links = db.query(ProgramCourse).filter_by(program_id=program.id).all()
 
     courses = {}
-
     for link in links:
-        c = link.course
-
-        prereq_rows = (
-            db.query(CoursePrerequisite)
-            .filter_by(program_id=program.id, course_id=c.id)
-            .all()
-        )
-
-        alt_rows = (
-            db.query(CourseAlternative)
-            .filter_by(program_id=program.id, course_id=c.id)
-            .all()
-        )
-
-        groups = {}
-
-        for row in prereq_rows:
-            prereq_course = db.query(Course).filter_by(
-                id=row.prereq_course_id
-            ).first()
-
-            if prereq_course:
-                groups.setdefault(row.group_id, []).append(prereq_course.code)
-
-        prereqs = []
-
-        for _, codes in sorted(groups.items()):
-            if len(codes) == 1:
-                prereqs.append(codes[0])
-            else:
-                prereqs.append(codes)
-
-        alternatives = []
-
-        for row in alt_rows:
-            alt_course = db.query(Course).filter_by(
-                id=row.alternative_course_id
-            ).first()
-
-            if alt_course:
-                alternatives.append(alt_course.code)
-
-        courses[c.code] = {
-            "title": c.title,
-            "credits": c.credits,
-            "prereqs": prereqs,
-            "alternatives": alternatives,
-        }
+        courses[link.course.code] = build_course_payload(db, program.id, link.course)
 
     return {
         "program": {
             "code": program.code,
             "name": program.name,
             "catalog_year": program.catalog_year,
+            "degree_type": program.degree_type,
+            "department": program.department.name,
             "institution": program.department.institution.name,
             "institution_code": program.department.institution.code,
         },
@@ -370,64 +425,12 @@ def get_program_requirements(program_code: str, db: Session = Depends(get_db)):
         )
 
         courses = []
-
         for group_course in group_courses:
-            course = db.query(Course).filter_by(
-                id=group_course.course_id
-            ).first()
-
+            course = db.query(Course).filter_by(id=group_course.course_id).first()
             if not course:
                 continue
 
-            prereq_rows = (
-                db.query(CoursePrerequisite)
-                .filter_by(program_id=program.id, course_id=course.id)
-                .all()
-            )
-
-            alt_rows = (
-                db.query(CourseAlternative)
-                .filter_by(program_id=program.id, course_id=course.id)
-                .all()
-            )
-
-            prereq_groups = {}
-
-            for row in prereq_rows:
-                prereq_course = db.query(Course).filter_by(
-                    id=row.prereq_course_id
-                ).first()
-
-                if prereq_course:
-                    prereq_groups.setdefault(row.group_id, []).append(
-                        prereq_course.code
-                    )
-
-            prereqs = []
-
-            for _, codes in sorted(prereq_groups.items()):
-                if len(codes) == 1:
-                    prereqs.append(codes[0])
-                else:
-                    prereqs.append(codes)
-
-            alternatives = []
-
-            for row in alt_rows:
-                alt_course = db.query(Course).filter_by(
-                    id=row.alternative_course_id
-                ).first()
-
-                if alt_course:
-                    alternatives.append(alt_course.code)
-
-            courses.append({
-                "code": course.code,
-                "title": course.title,
-                "credits": course.credits,
-                "prereqs": prereqs,
-                "alternatives": alternatives,
-            })
+            courses.append(build_course_payload(db, program.id, course))
 
         result_groups.append({
             "id": group.id,

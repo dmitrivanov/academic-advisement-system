@@ -14,6 +14,7 @@ class Institution(Base):
     website = Column(String, nullable=True)
 
     departments = relationship("Department", back_populates="institution")
+    choice_groups = relationship("ChoiceGroup", back_populates="institution")
 
 
 class Department(Base):
@@ -57,6 +58,7 @@ class Course(Base):
     code = Column(String, nullable=False, unique=True)
     title = Column(String, nullable=False)
     credits = Column(Integer, nullable=False)
+    choice_group_code = Column(String, nullable=True)
 
     program_links = relationship("ProgramCourse", back_populates="course")
 
@@ -154,4 +156,38 @@ class RequirementGroupCourse(Base):
 
     __table_args__ = (
         UniqueConstraint("requirement_group_id", "course_id", name="uq_group_course"),
+    )
+
+
+class ChoiceGroup(Base):
+    __tablename__ = "choice_groups"
+
+    id = Column(Integer, primary_key=True, index=True)
+    institution_id = Column(Integer, ForeignKey("institutions.id"), nullable=False)
+    code = Column(String, nullable=False)
+    name = Column(String, nullable=False)
+    group_type = Column(String, nullable=False)
+    required_credits = Column(Integer, nullable=True)
+    required_course_count = Column(Integer, nullable=True)
+
+    institution = relationship("Institution", back_populates="choice_groups")
+    course_links = relationship("ChoiceGroupCourse", back_populates="choice_group")
+
+    __table_args__ = (
+        UniqueConstraint("institution_id", "code", name="uq_choice_group_institution_code"),
+    )
+
+
+class ChoiceGroupCourse(Base):
+    __tablename__ = "choice_group_courses"
+
+    id = Column(Integer, primary_key=True, index=True)
+    choice_group_id = Column(Integer, ForeignKey("choice_groups.id"), nullable=False)
+    course_id = Column(Integer, ForeignKey("courses.id"), nullable=False)
+
+    choice_group = relationship("ChoiceGroup", back_populates="course_links")
+    course = relationship("Course")
+
+    __table_args__ = (
+        UniqueConstraint("choice_group_id", "course_id", name="uq_choice_group_course"),
     )
