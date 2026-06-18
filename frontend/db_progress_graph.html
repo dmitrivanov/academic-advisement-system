@@ -576,6 +576,17 @@ button:hover {
   border: 1px solid #2563eb;
   margin-left: 28px;
 }
+.advisor-message.assistant strong {
+  color: #172033;
+}
+
+.advisor-message.assistant {
+  line-height: 1.6;
+}
+
+.advisor-message.assistant br {
+  margin-bottom: 4px;
+}
 
 .advisor-message.assistant {
   background: white;
@@ -1198,6 +1209,14 @@ function getCourseStatus(code, course, completed) {
   if (isNotNeeded(code, course, completed)) return "not_needed";
   if (allPrereqsSatisfied(course, completed)) return "available";
   return "locked";
+}
+
+function formatAdvisorMarkdown(text) {
+  return text
+    .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
+    .replace(/\n\d+\.\s/g, match => `<br><strong>${match.trim()}</strong> `)
+    .replace(/\n-\s/g, "<br>• ")
+    .replace(/\n/g, "<br>");
 }
 
 function renderCompletedCourseGrid() {
@@ -1885,7 +1904,7 @@ function addAdvisorMessage(role, text, usage = null) {
   div.className = `advisor-message ${role}`;
 
   const textDiv = document.createElement("div");
-  textDiv.textContent = text;
+  textDiv.innerHTML = formatAdvisorMarkdown(text);
   div.appendChild(textDiv);
 
   if (usage) {
