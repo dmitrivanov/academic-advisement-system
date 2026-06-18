@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Reusable AI Advisor Example</title>
+<link rel="stylesheet" href="ai_advisor_widget.css">
+</head>
+<body>
+<h1>Example Page</h1>
+<p>This page demonstrates reusable AI Advisor attachment.</p>
+<button id="askAdvisorButton" class="ai-advisor-trigger">Ask AI Advisor</button>
+<script src="ai_advisor_widget.js"></script>
+<script>
+function buildPageContext(){return{page_title:document.title,visible_text:document.body.innerText.slice(0,5000)}}
+initAIAdvisorWidget({
+  mountButtonSelector:"#askAdvisorButton",
+  endpoint:"/progress-advisor-ask",
+  pageName:"Example Page",
+  contextProvider:buildPageContext,
+  title:"AI Page Advisor",
+  subtitle:"This advisor reads context provided by this page.",
+  suggestions:["Summarize this page.","What should I do next?","What information is missing?"]
+});
+</script>
+</body>
+</html>

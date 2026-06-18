@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>AI Settings | Academic Advisement System</title>
+<style>
+body { font-family: Arial, sans-serif; background:#f5f7fb; margin:0; color:#172033; }
+.container { max-width:1100px; margin:40px auto; padding:20px; }
+.topbar { display:flex; justify-content:space-between; align-items:center; gap:16px; margin-bottom:24px; }
+.nav a { margin-left:12px; color:#2563eb; text-decoration:none; font-weight:bold; }
+.card { background:white; border-radius:16px; padding:22px; margin-bottom:20px; box-shadow:0 10px 25px rgba(0,0,0,.07); border:1px solid #e6eaf2; }
+.subtitle { color:#667085; margin-top:0; line-height:1.5; }
+.form-grid { display:grid; grid-template-columns: repeat(2, minmax(220px, 1fr)); gap:16px; }
+.form-row { margin-bottom:14px; }
+label { display:block; font-weight:bold; margin-bottom:6px; }
+input, textarea, select { width:100%; box-sizing:border-box; border:1px solid #d7deea; border-radius:12px; padding:11px; font-family:Arial, sans-serif; font-size:14px; }
+textarea { min-height:220px; resize:vertical; line-height:1.45; }
+button { margin-top:12px; padding:10px 16px; border:none; border-radius:12px; background:#2563eb; color:white; font-weight:bold; cursor:pointer; }
+button:hover { background:#1d4ed8; }
+.secondary { background:#475467; }
+.secondary:hover { background:#344054; }
+.success { background:#ecfdf3; border:1px solid #bbf7d0; color:#166534; padding:12px; border-radius:12px; margin-bottom:14px; display:none; }
+.error { background:#fef2f2; border:1px solid #fecaca; color:#991b1b; padding:12px; border-radius:12px; margin-bottom:14px; display:none; }
+.badge { display:inline-block; padding:5px 9px; border-radius:999px; background:#eef4ff; color:#1d4ed8; font-size:12px; font-weight:bold; }
+pre { background:#0f172a; color:#e5e7eb; border-radius:14px; padding:16px; overflow:auto; white-space:pre-wrap; font-size:13px; line-height:1.45; }
+.small { color:#667085; font-size:12px; line-height:1.4; margin-top:6px; }
+.checkbox-row { display:flex; align-items:center; gap:8px; margin-top:8px; }
+.checkbox-row input { width:auto; }
+@media (max-width:760px){ .form-grid{grid-template-columns:1fr;} .topbar{align-items:flex-start; flex-direction:column;} }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="topbar">
+    <div>
+      <h1>AI Settings</h1>
+      <p class="subtitle">Configure the reusable AI advisor agent, prompt, logging, metrics, and embed snippet.</p>
+    </div>
+    <div class="nav">
+      <a href="/admin">Admin</a>
+      <a href="/db-progress">DB Graph</a>
+      <a href="/logout">Logout</a>
+    </div>
+  </div>
+
+  <div id="successBox" class="success"></div>
+  <div id="errorBox" class="error"></div>
+
+  <div class="card">
+    <h3>Agent Configuration <span id="apiStatus" class="badge">Loading...</span></h3>
+    <div class="form-grid">
+      <div class="form-row">
+        <label for="agent_id">Agent ID</label>
+        <input id="agent_id" placeholder="advisor_progress">
+      </div>
+      <div class="form-row">
+        <label for="agent_name">Agent Name</label>
+        <input id="agent_name" placeholder="AI Academic Advisor">
+      </div>
+      <div class="form-row">
+        <label for="page_name">Default Page Name</label>
+        <input id="page_name" placeholder="Degree Progress">
+      </div>
+      <div class="form-row">
+        <label for="page_url">Default Page URL</label>
+        <input id="page_url" placeholder="/db-progress">
+      </div>
+      <div class="form-row">
+        <label for="model">Model</label>
+        <input id="model" placeholder="gemini-2.5-flash">
+      </div>
+      <div class="form-row">
+        <label for="api_key">Gemini API Key</label>
+        <input id="api_key" type="password" placeholder="Leave blank to keep existing key">
+        <div class="small">Stored server-side in <code>config/ai_settings.json</code> for this prototype. For production, use encrypted storage or environment variables.</div>
+      </div>
+    </div>
+
+    <div class="form-row">
+      <label for="system_prompt">System Prompt</label>
+      <textarea id="system_prompt"></textarea>
+    </div>
+
+    <div class="checkbox-row">
+      <input id="show_metrics" type="checkbox">
+      <label for="show_metrics" style="margin:0;">Show response time / token metrics in chat</label>
+    </div>
+
+    <div class="checkbox-row">
+      <input id="log_enabled" type="checkbox">
+      <label for="log_enabled" style="margin:0;">Enable advisor logs</label>
+    </div>
+
+    <button onclick="saveSettings()">Save AI Settings</button>
+    <button class="secondary" onclick="loadSettings()">Reload</button>
+  </div>
+
+  <div class="card">
+    <h3>Reusable Embed Snippet</h3>
+    <p class="subtitle">Paste this into any page that has a page-specific <code>contextProvider</code>. Replace the example context with the data that page should expose to the AI advisor.</p>
+    <button onclick="loadSnippet()">Generate Snippet</button>
+    <button class="secondary" onclick="copySnippet()">Copy</button>
+    <pre id="snippetBox">Click “Generate Snippet”.</pre>
+  </div>
+</div>
+
+<script>
+function showMessage(type, text) {
+  const success = document.getElementById("successBox");
+  const error = document.getElementById("errorBox");
+  success.style.display = "none";
+  error.style.display = "none";
+  if (type === "success") { success.textContent = text; success.style.display = "block"; }
+  if (type === "error") { error.textContent = text; error.style.display = "block"; }
+}
+
+async function fetchJson(url, options = {}) {
+  const response = await fetch(url, options);
+  if (!response.ok) {
+    let message = `Request failed (${response.status})`;
+    try { const data = await response.json(); message = data.detail || message; } catch(e) {}
+    throw new Error(message);
+  }
+  return await response.json();
+}
+
+async function loadSettings() {
+  try {
+    const s = await fetchJson("/api/admin/ai-settings");
+    document.getElementById("agent_id").value = s.agent_id || "";
+    document.getElementById("agent_name").value = s.agent_name || "";
+    document.getElementById("page_name").value = s.page_name || "";
+    document.getElementById("page_url").value = s.page_url || "";
+    document.getElementById("model").value = s.model || "";
+    document.getElementById("system_prompt").value = s.system_prompt || "";
+    document.getElementById("show_metrics").checked = Boolean(s.show_metrics);
+    document.getElementById("log_enabled").checked = Boolean(s.log_enabled);
+    document.getElementById("api_key").value = "";
+    document.getElementById("apiStatus").textContent = s.api_key_configured ? "API key configured" : "API key missing";
+  } catch (err) {
+    showMessage("error", err.message);
+  }
+}
+
+async function saveSettings() {
+  try {
+    const payload = {
+      agent_id: document.getElementById("agent_id").value.trim(),
+      agent_name: document.getElementById("agent_name").value.trim(),
+      page_name: document.getElementById("page_name").value.trim(),
+      page_url: document.getElementById("page_url").value.trim(),
+      model: document.getElementById("model").value.trim(),
+      system_prompt: document.getElementById("system_prompt").value,
+      show_metrics: document.getElementById("show_metrics").checked,
+      log_enabled: document.getElementById("log_enabled").checked,
+      api_key: document.getElementById("api_key").value.trim()
+    };
+
+    const saved = await fetchJson("/api/admin/ai-settings", {
+      method: "PUT",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify(payload)
+    });
+
+    document.getElementById("api_key").value = "";
+    document.getElementById("apiStatus").textContent = saved.api_key_configured ? "API key configured" : "API key missing";
+    showMessage("success", "AI settings saved.");
+  } catch (err) {
+    showMessage("error", err.message);
+  }
+}
+
+async function loadSnippet() {
+  try {
+    const data = await fetchJson("/api/admin/ai-embed-snippet");
+    document.getElementById("snippetBox").textContent = data.snippet;
+  } catch (err) {
+    showMessage("error", err.message);
+  }
+}
+
+async function copySnippet() {
+  const text = document.getElementById("snippetBox").textContent;
+  await navigator.clipboard.writeText(text);
+  showMessage("success", "Snippet copied.");
+}
+
+loadSettings();
+</script>
+</body>
+</html>
