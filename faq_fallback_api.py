@@ -194,7 +194,7 @@ def login_submit(request: Request, username: str = Form(...), password: str = Fo
     if username == app_username and password == app_password:
         request.session["logged_in"] = True
         request.session["username"] = username
-        return RedirectResponse("/", status_code=303)
+        return RedirectResponse("/program-selector", status_code=303)
 
     return RedirectResponse("/login?error=1", status_code=303)
 
@@ -209,15 +209,23 @@ def logout(request: Request):
 def serve_home(request: Request):
     if not is_logged_in(request):
         return RedirectResponse("/login", status_code=303)
-    return FileResponse("frontend/faq_chat_hybrid.html")
+    return RedirectResponse("/program-selector", status_code=303)
 
 
 @app.get("/progress")
 def serve_progress(request: Request):
     if not is_logged_in(request):
         return RedirectResponse("/login", status_code=303)
-    return RedirectResponse("/db-progress", status_code=303)
+    return RedirectResponse("/program-selector", status_code=303)
 
+
+
+
+@app.get("/program-selector")
+def serve_program_selector(request: Request):
+    if not is_logged_in(request):
+        return RedirectResponse("/login", status_code=303)
+    return FileResponse("frontend/program_selector.html")
 
 @app.get("/db-progress")
 def serve_db_progress(request: Request):

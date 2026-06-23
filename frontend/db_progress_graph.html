@@ -780,13 +780,20 @@ button:hover {
 </div>
 
   <div class="card">
-    <h3>Select Campus and Program</h3>
+    <h3>Selected Campus and Program</h3>
+    <div id="selectedProgramInfo" class="meta">Loading selected program...</div>
+
     <div class="top-actions">
-      <select id="institutionSelect" onchange="handleInstitutionChange()"></select>
-      <select id="programSelect" onchange="loadProgramRequirements()"></select>
+      <button class="secondary-button" onclick="changeProgram()">Change Campus / Program</button>
       <button class="secondary-button" onclick="openAdvisorDrawer()">Ask AI Advisor</button>
       <button class="secondary-button" onclick="startTransferAnalysis()">Transfer Analysis</button>
     </div>
+
+    <div style="display:none;">
+      <select id="institutionSelect"></select>
+      <select id="programSelect"></select>
+    </div>
+
     <div id="programAvailabilityNote" class="hidden-note"></div>
   </div>
 
@@ -950,6 +957,32 @@ async function fetchJson(url) {
   return await response.json();
 }
 
+
+function getSavedProgramSelection() {
+  try {
+    return JSON.parse(sessionStorage.getItem("selectedProgramContext") || "null");
+  } catch (err) {
+    return null;
+  }
+}
+
+function changeProgram() {
+  window.location.href = "/program-selector";
+}
+
+function updateSelectedProgramHeader() {
+  const info = document.getElementById("selectedProgramInfo");
+  if (!info || !CURRENT_REQUIREMENTS || !CURRENT_REQUIREMENTS.program) return;
+
+  const program = CURRENT_REQUIREMENTS.program;
+
+  info.innerHTML = `
+    <strong>Campus:</strong> ${program.institution || program.institution_code || "Not specified"}<br>
+    <strong>Program:</strong> ${program.code} — ${program.name}<br>
+    <strong>Catalog year:</strong> ${program.catalog_year || "Not specified"}
+  `;
+}
+
 async function loadInstitutions() {
   INSTITUTIONS = await fetchJson("/api/db/institutions");
   DEPARTMENTS = await fetchJson("/api/db/departments");
@@ -1009,7 +1042,9 @@ function populateInstitutionSelect() {
   const select = document.getElementById("institutionSelect");
   select.innerHTML = "";
 
+  const savedSelection = getSavedProgramSelection();
   let firstAvailableValue = null;
+  let savedValueIsAvailable = false;
 
   INSTITUTIONS.forEach(institution => {
     const option = document.createElement("option");
@@ -1026,11 +1061,24 @@ function populateInstitutionSelect() {
       firstAvailableValue = value;
     }
 
+    if (
+      available &&
+      savedSelection &&
+      savedSelection.institutionCode === value
+    ) {
+      savedValueIsAvailable = true;
+    }
+
     select.appendChild(option);
   });
 
-  if (firstAvailableValue) {
+  if (savedValueIsAvailable) {
+    select.value = savedSelection.institutionCode;
+  } else if (firstAvailableValue) {
     select.value = firstAvailableValue;
+  } else {
+    sessionStorage.removeItem("selectedProgramContext");
+    window.location.href = "/program-selector";
   }
 }
 
@@ -1044,6 +1092,7 @@ async function populateProgramSelect() {
   const institutionSelect = document.getElementById("institutionSelect");
   const programSelect = document.getElementById("programSelect");
   const note = document.getElementById("programAvailabilityNote");
+  const savedSelection = getSavedProgramSelection();
 
   programSelect.innerHTML = "";
 
@@ -1054,13 +1103,13 @@ async function populateProgramSelect() {
   });
 
   if (matchingPrograms.length === 0) {
-    note.textContent = "No departments or programs have been added for this campus yet. Coming soon.";
-    programSelect.disabled = true;
-    setEmptyProgramState(selectedInstitutionCode);
+    sessionStorage.removeItem("selectedProgramContext");
+    window.location.href = "/program-selector";
     return;
   }
 
   let firstAvailableProgramCode = null;
+  let savedProgramIsAvailable = false;
 
   matchingPrograms.forEach(program => {
     const availability = PROGRAM_AVAILABILITY[program.code] || {};
@@ -1077,19 +1126,32 @@ async function populateProgramSelect() {
       firstAvailableProgramCode = program.code;
     }
 
+    if (
+      hasCurriculum &&
+      savedSelection &&
+      savedSelection.institutionCode === selectedInstitutionCode &&
+      savedSelection.programCode === program.code
+    ) {
+      savedProgramIsAvailable = true;
+    }
+
     programSelect.appendChild(option);
   });
 
   if (!firstAvailableProgramCode) {
-    note.textContent = "Programs are listed for this campus, but curriculum/classes have not been added yet. Coming soon.";
-    programSelect.disabled = true;
-    setEmptyProgramState(selectedInstitutionCode);
+    sessionStorage.removeItem("selectedProgramContext");
+    window.location.href = "/program-selector";
     return;
+  }
+
+  if (savedProgramIsAvailable) {
+    programSelect.value = savedSelection.programCode;
+  } else {
+    programSelect.value = firstAvailableProgramCode;
   }
 
   note.textContent = "";
   programSelect.disabled = false;
-  programSelect.value = firstAvailableProgramCode;
 
   await loadProgramRequirements();
 }
@@ -1130,6 +1192,7 @@ async function loadProgramRequirements() {
 
   CURRENT_REQUIREMENTS = await fetchJson(`/api/db/programs/${code}/requirements`);
 
+  updateSelectedProgramHeader();
   ensurePlaceholderGroups();
   renderCompletedCourseGrid();
   renderGraph();
@@ -2189,6 +2252,13 @@ document.addEventListener("keydown", function(event) {
 });
 
 async function initializePage() {
+  const savedSelection = getSavedProgramSelection();
+
+  if (!savedSelection || !savedSelection.institutionCode || !savedSelection.programCode) {
+    window.location.href = "/program-selector";
+    return;
+  }
+
   await loadInstitutions();
   await loadPrograms();
 }
