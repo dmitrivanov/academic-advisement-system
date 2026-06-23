@@ -886,7 +886,9 @@ button:hover {
 
 <script>
 let INSTITUTIONS = [];
+let DEPARTMENTS = [];
 let PROGRAMS = [];
+let PROGRAM_AVAILABILITY = {};
 let CURRENT_REQUIREMENTS = null;
 let CURRENT_TAB = "program";
 let COMPLETED_COURSES = new Set();
@@ -948,17 +950,8 @@ async function fetchJson(url) {
 }
 
 async function loadInstitutions() {
-  const select = document.getElementById("institutionSelect");
-  select.innerHTML = "";
-
   INSTITUTIONS = await fetchJson("/api/db/institutions");
-
-  INSTITUTIONS.forEach(institution => {
-    const option = document.createElement("option");
-    option.value = institution.code || institution.name;
-    option.textContent = `${institution.code || "NO CODE"} — ${institution.name}`;
-    select.appendChild(option);
-  });
+  DEPARTMENTS = await fetchJson("/api/db/departments");
 }
 
 async function loadPrograms() {
@@ -966,13 +959,84 @@ async function loadPrograms() {
   programSelect.innerHTML = "";
 
   PROGRAMS = await fetchJson("/api/db/programs");
+  await loadProgramAvailability();
 
-  populateProgramSelect();
+  populateInstitutionSelect();
+  await populateProgramSelect();
 }
 
-function handleInstitutionChange() {
+async function loadProgramAvailability() {
+  const checks = PROGRAMS.map(async program => {
+    try {
+      const requirements = await fetchJson(`/api/db/programs/${program.code}/requirements`);
+      const courseCount = (requirements.groups || []).reduce((total, group) => {
+        return total + ((group.courses || []).length);
+      }, 0);
+
+      PROGRAM_AVAILABILITY[program.code] = {
+        hasCurriculum: courseCount > 0,
+        courseCount: courseCount
+      };
+    } catch (err) {
+      PROGRAM_AVAILABILITY[program.code] = {
+        hasCurriculum: false,
+        courseCount: 0
+      };
+    }
+  });
+
+  await Promise.all(checks);
+}
+
+function institutionHasDepartments(institution) {
+  return DEPARTMENTS.some(department => department.institution === institution.name);
+}
+
+function institutionHasAvailablePrograms(institution) {
+  return PROGRAMS.some(program => {
+    return program.institution_code === institution.code &&
+      PROGRAM_AVAILABILITY[program.code] &&
+      PROGRAM_AVAILABILITY[program.code].hasCurriculum;
+  });
+}
+
+function institutionIsAvailable(institution) {
+  return institutionHasDepartments(institution) && institutionHasAvailablePrograms(institution);
+}
+
+function populateInstitutionSelect() {
+  const select = document.getElementById("institutionSelect");
+  select.innerHTML = "";
+
+  let firstAvailableValue = null;
+
+  INSTITUTIONS.forEach(institution => {
+    const option = document.createElement("option");
+    const value = institution.code || institution.name;
+    const available = institutionIsAvailable(institution);
+
+    option.value = value;
+    option.disabled = !available;
+    option.textContent = available
+      ? `${institution.code || "NO CODE"} — ${institution.name}`
+      : `${institution.code || "NO CODE"} — ${institution.name} (Coming soon)`;
+
+    if (available && !firstAvailableValue) {
+      firstAvailableValue = value;
+    }
+
+    select.appendChild(option);
+  });
+
+  if (firstAvailableValue) {
+    select.value = firstAvailableValue;
+  }
+}
+
+async function handleInstitutionChange() {
   COMPLETED_COURSES.clear();
-  populateProgramSelect();
+  CHOICE_SELECTIONS = {};
+  await populateProgramSelect();
 }
 
 async function populateProgramSelect() {
@@ -989,43 +1053,80 @@ async function populateProgramSelect() {
   });
 
   if (matchingPrograms.length === 0) {
-    note.textContent = "No programs are available for this campus yet.";
+    note.textContent = "No departments or programs have been added for this campus yet. Coming soon.";
     programSelect.disabled = true;
+    setEmptyProgramState(selectedInstitutionCode);
+    return;
+  }
 
-    CURRENT_REQUIREMENTS = {
-      program: {
-        code: "N/A",
-        name: "No program selected",
-        catalog_year: "",
-        institution: selectedInstitutionCode
-      },
-      groups: []
-    };
+  let firstAvailableProgramCode = null;
 
-    renderCompletedCourseGrid();
-    renderGraph();
-    renderSummary();
-    renderRecommendations();
-    updateProgressWidget();
+  matchingPrograms.forEach(program => {
+    const availability = PROGRAM_AVAILABILITY[program.code] || {};
+    const hasCurriculum = Boolean(availability.hasCurriculum);
 
+    const option = document.createElement("option");
+    option.value = program.code;
+    option.disabled = !hasCurriculum;
+    option.textContent = hasCurriculum
+      ? `${program.code} — ${program.name} (${program.catalog_year || "No catalog year"})`
+      : `${program.code} — ${program.name} (${program.catalog_year || "No catalog year"}) — Coming soon`;
+
+    if (hasCurriculum && !firstAvailableProgramCode) {
+      firstAvailableProgramCode = program.code;
+    }
+
+    programSelect.appendChild(option);
+  });
+
+  if (!firstAvailableProgramCode) {
+    note.textContent = "Programs are listed for this campus, but curriculum/classes have not been added yet. Coming soon.";
+    programSelect.disabled = true;
+    setEmptyProgramState(selectedInstitutionCode);
     return;
   }
 
   note.textContent = "";
   programSelect.disabled = false;
-
-  matchingPrograms.forEach(program => {
-    const option = document.createElement("option");
-    option.value = program.code;
-    option.textContent = `${program.code} — ${program.name} (${program.catalog_year || "No catalog year"})`;
-    programSelect.appendChild(option);
-  });
+  programSelect.value = firstAvailableProgramCode;
 
   await loadProgramRequirements();
 }
 
+function setEmptyProgramState(selectedInstitutionCode) {
+  CURRENT_REQUIREMENTS = {
+    program: {
+      code: "N/A",
+      name: "No available program selected",
+      catalog_year: "",
+      institution: selectedInstitutionCode
+    },
+    groups: []
+  };
+
+  renderCompletedCourseGrid();
+  renderGraph();
+  renderSummary();
+  renderRecommendations();
+  updateProgressWidget();
+}
+
 async function loadProgramRequirements() {
-  const code = document.getElementById("programSelect").value;
+  const programSelect = document.getElementById("programSelect");
+
+  if (!programSelect.value || programSelect.disabled) {
+    return;
+  }
+
+  const code = programSelect.value;
+  const availability = PROGRAM_AVAILABILITY[code];
+
+  if (!availability || !availability.hasCurriculum) {
+    const selectedInstitutionCode = document.getElementById("institutionSelect").value;
+    setEmptyProgramState(selectedInstitutionCode);
+    return;
+  }
+
   CURRENT_REQUIREMENTS = await fetchJson(`/api/db/programs/${code}/requirements`);
 
   ensurePlaceholderGroups();
