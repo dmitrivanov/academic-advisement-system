@@ -226,6 +226,15 @@ def serve_db_progress(request: Request):
     return FileResponse("frontend/db_progress_graph.html")
 
 
+
+
+@app.get("/transfer-analysis")
+def serve_transfer_analysis(request: Request):
+    if not is_logged_in(request):
+        return RedirectResponse("/login", status_code=303)
+    return FileResponse("frontend/transfer_analysis.html")
+
+
 @app.get("/admin")
 def serve_admin(request: Request):
     if not is_logged_in(request):

@@ -1,0 +1,807 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Transfer Analysis</title>
+
+<style>
+body {
+  font-family: Arial, sans-serif;
+  background: #f5f7fb;
+  margin: 0;
+  color: #172033;
+}
+
+.container {
+  max-width: 1250px;
+  margin: 40px auto;
+  padding: 20px;
+}
+
+.card {
+  background: white;
+  border-radius: 16px;
+  padding: 22px;
+  margin-bottom: 20px;
+  box-shadow: 0 10px 25px rgba(0,0,0,.07);
+  border: 1px solid #e6eaf2;
+}
+
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+
+.nav a {
+  margin-left: 12px;
+  color: #2563eb;
+  text-decoration: none;
+  font-weight: bold;
+}
+
+h1 { margin-bottom: 6px; }
+
+.subtitle {
+  color: #667085;
+  margin-top: 0;
+  line-height: 1.5;
+}
+
+select {
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1px solid #d7deea;
+  font-size: 15px;
+}
+
+button, .button-link {
+  margin-top: 12px;
+  padding: 10px 16px;
+  border: none;
+  border-radius: 12px;
+  background: #2563eb;
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-block;
+}
+
+button:hover, .button-link:hover { background: #1d4ed8; }
+
+.secondary-button { background: #0f766e; }
+.secondary-button:hover { background: #115e59; }
+
+.gray-button { background: #475467; }
+.gray-button:hover { background: #344054; }
+
+.top-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 14px;
+  margin-top: 15px;
+}
+
+.summary-card {
+  background: #f8fbff;
+  border: 1px solid #e6eaf2;
+  border-radius: 14px;
+  padding: 16px;
+}
+
+.summary-number {
+  font-size: 28px;
+  font-weight: bold;
+  color: #2563eb;
+}
+
+.summary-label {
+  color: #667085;
+  font-size: 13px;
+  margin-top: 4px;
+}
+
+.analysis-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(280px, 1fr));
+  gap: 18px;
+}
+
+@media (max-width: 850px) {
+  .analysis-grid { grid-template-columns: 1fr; }
+}
+
+.requirement-card {
+  border: 2px solid #d7deea;
+  border-radius: 14px;
+  padding: 14px;
+  margin-bottom: 12px;
+  background: #f8fbff;
+}
+
+.requirement-card.satisfied {
+  background: #dcfce7;
+  border-color: #22c55e;
+}
+
+.requirement-card.remaining {
+  background: #fff7ed;
+  border-color: #fb923c;
+}
+
+.requirement-code {
+  font-size: 16px;
+  font-weight: bold;
+}
+
+.requirement-title {
+  font-size: 13px;
+  color: #475467;
+  margin-top: 5px;
+  line-height: 1.35;
+}
+
+.requirement-meta {
+  font-size: 12px;
+  color: #667085;
+  margin-top: 7px;
+  line-height: 1.45;
+}
+
+.group-section {
+  margin-top: 18px;
+  padding-top: 12px;
+  border-top: 1px solid #e6eaf2;
+}
+
+.group-title {
+  font-size: 18px;
+  font-weight: bold;
+  margin-bottom: 8px;
+}
+
+.group-meta {
+  font-size: 13px;
+  color: #667085;
+  margin-bottom: 10px;
+}
+
+.empty-message {
+  color: #667085;
+  font-style: italic;
+}
+
+.warning {
+  background: #fff7ed;
+  border: 1px solid #fed7aa;
+  color: #7c2d12;
+  border-radius: 14px;
+  padding: 14px;
+  line-height: 1.5;
+}
+
+.ai-box {
+  background: #f8fbff;
+  border: 1px solid #e6eaf2;
+  border-radius: 14px;
+  padding: 16px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+
+.ai-box strong { color: #172033; }
+
+.small-note {
+  color: #667085;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.pill {
+  display: inline-block;
+  padding: 5px 9px;
+  border-radius: 999px;
+  background: #eef4ff;
+  color: #1d4ed8;
+  font-size: 12px;
+  font-weight: bold;
+  margin-top: 6px;
+}
+</style>
+</head>
+
+<body>
+<div class="container">
+  <div class="topbar">
+    <div>
+      <h1>Transfer Analysis</h1>
+      <p class="subtitle">
+        Compare the courses selected on the progress page against another available program.
+        This first version matches courses by course code and Pathways choice selections.
+      </p>
+    </div>
+    <div class="nav">
+      <a href="/db-progress">Back to Progress</a>
+      <a href="/admin">Admin</a>
+      <a href="/logout">Logout</a>
+    </div>
+  </div>
+
+  <div id="missingSnapshotCard" class="card" style="display:none;">
+    <div class="warning">
+      No transfer snapshot was found. Go back to the progress graph, select completed courses, and click <strong>Transfer Analysis</strong>.
+    </div>
+    <a class="button-link" href="/db-progress">Go to Progress Graph</a>
+  </div>
+
+  <div id="mainContent" style="display:none;">
+    <div class="card">
+      <h3>Source Student Record</h3>
+      <div id="sourceSummary" class="subtitle">Loading...</div>
+      <div id="sourceCourses"></div>
+    </div>
+
+    <div class="card">
+      <h3>Select Target Program</h3>
+      <div class="top-actions">
+        <select id="targetInstitutionSelect" onchange="handleTargetInstitutionChange()"></select>
+        <select id="targetProgramSelect" onchange="loadTargetProgramRequirements()"></select>
+        <button class="secondary-button" onclick="runTransferAnalysis()">Run Transfer Analysis</button>
+      </div>
+      <div id="targetNote" class="small-note"></div>
+    </div>
+
+    <div class="card">
+      <h3>AI Transfer Summary</h3>
+      <p class="subtitle">Generate a plain-language explanation from the comparison results.</p>
+      <button id="aiTransferButton" onclick="generateAITransferSummary()">Generate AI Summary</button>
+      <div id="aiTransferSummary" class="ai-box" style="margin-top:14px; display:none;"></div>
+    </div>
+
+    <div class="card">
+      <h3>Transfer Summary</h3>
+      <div id="transferSummary" class="summary-grid"></div>
+      <p class="small-note" style="margin-top:14px;">
+        V1 assumes direct course-code matching. Real cross-college transfer equivalencies should later use a dedicated equivalency table.
+      </p>
+    </div>
+
+    <div class="analysis-grid">
+      <div class="card">
+        <h3>Satisfied Requirements</h3>
+        <div id="satisfiedRequirements"></div>
+      </div>
+
+      <div class="card">
+        <h3>Remaining Requirements</h3>
+        <div id="remainingRequirements"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+let TRANSFER_SNAPSHOT = null;
+let INSTITUTIONS = [];
+let DEPARTMENTS = [];
+let PROGRAMS = [];
+let PROGRAM_AVAILABILITY = {};
+let TARGET_REQUIREMENTS = null;
+let LAST_ANALYSIS = null;
+
+async function fetchJson(url) {
+  const response = await fetch(url);
+  if (!response.ok) throw new Error(`Request failed: ${url} (${response.status})`);
+  return await response.json();
+}
+
+function getSnapshotCompletedDetails() {
+  if (!TRANSFER_SNAPSHOT) return [];
+
+  const details = TRANSFER_SNAPSHOT.completed_course_details || [];
+
+  if (details.length > 0) return details;
+
+  return (TRANSFER_SNAPSHOT.completed_courses || []).map(code => ({
+    code,
+    title: code,
+    credits: 0,
+    type: "direct"
+  }));
+}
+
+function getCompletedCodeSet() {
+  const set = new Set();
+
+  getSnapshotCompletedDetails().forEach(course => {
+    if (course.code) set.add(course.code);
+  });
+
+  (TRANSFER_SNAPSHOT.completed_courses || []).forEach(code => set.add(code));
+
+  return set;
+}
+
+function formatMarkdown(text) {
+  return (text || "")
+    .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
+    .replace(/\n\d+\.\s/g, match => `<br><strong>${match.trim()}</strong> `)
+    .replace(/\n-\s/g, "<br>• ")
+    .replace(/\n/g, "<br>");
+}
+
+function loadSnapshot() {
+  const raw = sessionStorage.getItem("transferSnapshot");
+
+  if (!raw) {
+    document.getElementById("missingSnapshotCard").style.display = "block";
+    return false;
+  }
+
+  try {
+    TRANSFER_SNAPSHOT = JSON.parse(raw);
+  } catch (err) {
+    document.getElementById("missingSnapshotCard").style.display = "block";
+    return false;
+  }
+
+  document.getElementById("mainContent").style.display = "block";
+  renderSourceSummary();
+  return true;
+}
+
+function renderSourceSummary() {
+  const source = TRANSFER_SNAPSHOT.source_program || {};
+  const details = getSnapshotCompletedDetails();
+  const credits = details.reduce((total, course) => total + Number(course.credits || 0), 0);
+
+  document.getElementById("sourceSummary").innerHTML = `
+    <strong>Source program:</strong> ${source.institution || "Not specified"} — ${source.code || "N/A"} ${source.name || ""}<br>
+    <strong>Completed / selected courses:</strong> ${details.length}<br>
+    <strong>Approximate selected credits:</strong> ${credits}<br>
+    <strong>Snapshot created:</strong> ${TRANSFER_SNAPSHOT.timestamp || "Unknown"}
+  `;
+
+  const container = document.getElementById("sourceCourses");
+
+  if (!details.length) {
+    container.innerHTML = `<div class="empty-message">No completed courses were selected.</div>`;
+    return;
+  }
+
+  container.innerHTML = details.map(course => `
+    <span class="pill">${course.code} · ${course.credits || 0} cr</span>
+  `).join(" ");
+}
+
+async function loadInitialData() {
+  INSTITUTIONS = await fetchJson("/api/db/institutions");
+  DEPARTMENTS = await fetchJson("/api/db/departments");
+  PROGRAMS = await fetchJson("/api/db/programs");
+  await loadProgramAvailability();
+  populateInstitutionSelect();
+  await populateProgramSelect();
+}
+
+async function loadProgramAvailability() {
+  const checks = PROGRAMS.map(async program => {
+    try {
+      const requirements = await fetchJson(`/api/db/programs/${program.code}/requirements`);
+      const courseCount = (requirements.groups || []).reduce((total, group) => {
+        return total + ((group.courses || []).length);
+      }, 0);
+
+      PROGRAM_AVAILABILITY[program.code] = {
+        hasCurriculum: courseCount > 0,
+        courseCount
+      };
+    } catch (err) {
+      PROGRAM_AVAILABILITY[program.code] = {
+        hasCurriculum: false,
+        courseCount: 0
+      };
+    }
+  });
+
+  await Promise.all(checks);
+}
+
+function institutionHasDepartments(institution) {
+  return DEPARTMENTS.some(department => department.institution === institution.name);
+}
+
+function institutionHasAvailablePrograms(institution) {
+  return PROGRAMS.some(program => {
+    return program.institution_code === institution.code &&
+      PROGRAM_AVAILABILITY[program.code] &&
+      PROGRAM_AVAILABILITY[program.code].hasCurriculum;
+  });
+}
+
+function institutionIsAvailable(institution) {
+  return institutionHasDepartments(institution) && institutionHasAvailablePrograms(institution);
+}
+
+function populateInstitutionSelect() {
+  const select = document.getElementById("targetInstitutionSelect");
+  select.innerHTML = "";
+
+  let firstAvailableValue = null;
+
+  INSTITUTIONS.forEach(institution => {
+    const option = document.createElement("option");
+    const value = institution.code || institution.name;
+    const available = institutionIsAvailable(institution);
+
+    option.value = value;
+    option.disabled = !available;
+    option.textContent = available
+      ? `${institution.code || "NO CODE"} — ${institution.name}`
+      : `${institution.code || "NO CODE"} — ${institution.name} (Coming soon)`;
+
+    if (available && !firstAvailableValue) {
+      firstAvailableValue = value;
+    }
+
+    select.appendChild(option);
+  });
+
+  if (firstAvailableValue) {
+    select.value = firstAvailableValue;
+  }
+}
+
+async function handleTargetInstitutionChange() {
+  await populateProgramSelect();
+}
+
+async function populateProgramSelect() {
+  const institutionSelect = document.getElementById("targetInstitutionSelect");
+  const programSelect = document.getElementById("targetProgramSelect");
+  const note = document.getElementById("targetNote");
+
+  programSelect.innerHTML = "";
+  const selectedInstitutionCode = institutionSelect.value;
+
+  const matchingPrograms = PROGRAMS.filter(program => program.institution_code === selectedInstitutionCode);
+
+  if (!matchingPrograms.length) {
+    note.textContent = "No programs are available for this campus yet.";
+    programSelect.disabled = true;
+    TARGET_REQUIREMENTS = null;
+    renderEmptyAnalysis();
+    return;
+  }
+
+  let firstAvailableProgramCode = null;
+
+  matchingPrograms.forEach(program => {
+    const availability = PROGRAM_AVAILABILITY[program.code] || {};
+    const hasCurriculum = Boolean(availability.hasCurriculum);
+
+    const option = document.createElement("option");
+    option.value = program.code;
+    option.disabled = !hasCurriculum;
+    option.textContent = hasCurriculum
+      ? `${program.code} — ${program.name} (${program.catalog_year || "No catalog year"})`
+      : `${program.code} — ${program.name} (${program.catalog_year || "No catalog year"}) — Coming soon`;
+
+    if (hasCurriculum && !firstAvailableProgramCode) {
+      firstAvailableProgramCode = program.code;
+    }
+
+    programSelect.appendChild(option);
+  });
+
+  if (!firstAvailableProgramCode) {
+    note.textContent = "Programs are listed for this campus, but curriculum/classes have not been added yet. Coming soon.";
+    programSelect.disabled = true;
+    TARGET_REQUIREMENTS = null;
+    renderEmptyAnalysis();
+    return;
+  }
+
+  note.textContent = "";
+  programSelect.disabled = false;
+  programSelect.value = firstAvailableProgramCode;
+  await loadTargetProgramRequirements();
+}
+
+async function loadTargetProgramRequirements() {
+  const programCode = document.getElementById("targetProgramSelect").value;
+
+  if (!programCode) return;
+
+  TARGET_REQUIREMENTS = await fetchJson(`/api/db/programs/${programCode}/requirements`);
+  await runTransferAnalysis();
+}
+
+async function getChoiceGroupCourseCodes(choiceGroupCode, institutionCode) {
+  try {
+    const data = await fetchJson(`/api/db/choice-groups/${choiceGroupCode}/courses?institution_code=${institutionCode}`);
+    return new Set((data.courses || []).map(course => course.code));
+  } catch (err) {
+    return new Set();
+  }
+}
+
+async function analyzeTargetCourse(course, completedCodes, completedDetails, institutionCode) {
+  if (completedCodes.has(course.code)) {
+    const match = completedDetails.find(c => c.code === course.code) || course;
+    return {
+      satisfied: true,
+      method: "Direct course-code match",
+      matched_course: match,
+      credits: Number(match.credits || course.credits || 0)
+    };
+  }
+
+  if (course.alternatives && course.alternatives.length) {
+    const altCode = course.alternatives.find(code => completedCodes.has(code));
+    if (altCode) {
+      const match = completedDetails.find(c => c.code === altCode) || { code: altCode, title: altCode, credits: course.credits };
+      return {
+        satisfied: true,
+        method: "Alternative course match",
+        matched_course: match,
+        credits: Number(match.credits || course.credits || 0)
+      };
+    }
+  }
+
+  if (course.choice_group_code) {
+    const allowedCodes = await getChoiceGroupCourseCodes(course.choice_group_code, institutionCode);
+    const match = completedDetails.find(c => allowedCodes.has(c.code));
+
+    if (match) {
+      return {
+        satisfied: true,
+        method: `Pathways choice-group match (${course.choice_group_code})`,
+        matched_course: match,
+        credits: Number(match.credits || course.credits || 0)
+      };
+    }
+  }
+
+  return {
+    satisfied: false,
+    method: "No match found",
+    matched_course: null,
+    credits: 0
+  };
+}
+
+async function runTransferAnalysis() {
+  if (!TARGET_REQUIREMENTS) {
+    renderEmptyAnalysis();
+    return;
+  }
+
+  const completedDetails = getSnapshotCompletedDetails();
+  const completedCodes = getCompletedCodeSet();
+  const institutionCode = TARGET_REQUIREMENTS.program?.institution_code || document.getElementById("targetInstitutionSelect").value;
+
+  const satisfied = [];
+  const remaining = [];
+  let satisfiedCredits = 0;
+  let totalTargetCredits = 0;
+
+  for (const group of TARGET_REQUIREMENTS.groups || []) {
+    for (const course of group.courses || []) {
+      const analysis = await analyzeTargetCourse(course, completedCodes, completedDetails, institutionCode);
+      const targetCredits = Number(course.credits || 0);
+
+      totalTargetCredits += targetCredits;
+
+      const record = {
+        ...course,
+        group_name: group.name,
+        group_type: group.group_type,
+        required_credits: group.required_credits,
+        analysis
+      };
+
+      if (analysis.satisfied) {
+        satisfied.push(record);
+        satisfiedCredits += Math.min(Number(analysis.credits || targetCredits || 0), targetCredits || Number(analysis.credits || 0));
+      } else {
+        remaining.push(record);
+      }
+    }
+  }
+
+  const denominatorCredits = estimateTargetCredits(TARGET_REQUIREMENTS);
+  const remainingCredits = Math.max(0, denominatorCredits - satisfiedCredits);
+  const estimatedSemesters = remainingCredits > 0 ? Math.ceil(remainingCredits / 15) : 0;
+
+  LAST_ANALYSIS = {
+    source_program: TRANSFER_SNAPSHOT.source_program,
+    target_program: TARGET_REQUIREMENTS.program,
+    completed_courses: completedDetails,
+    satisfied_requirements: satisfied,
+    remaining_requirements: remaining,
+    likely_transferable_credits: satisfiedCredits,
+    estimated_total_target_credits: denominatorCredits,
+    remaining_credits: remainingCredits,
+    estimated_semesters: estimatedSemesters
+  };
+
+  renderAnalysis();
+}
+
+function estimateTargetCredits(requirements) {
+  let total = 0;
+
+  (requirements.groups || []).forEach(group => {
+    if (group.required_credits) {
+      total += Number(group.required_credits || 0);
+    } else {
+      total += (group.courses || []).reduce((sum, course) => sum + Number(course.credits || 0), 0);
+    }
+  });
+
+  return total;
+}
+
+function renderEmptyAnalysis() {
+  document.getElementById("transferSummary").innerHTML = `<div class="empty-message">Select an available target program.</div>`;
+  document.getElementById("satisfiedRequirements").innerHTML = `<div class="empty-message">No analysis yet.</div>`;
+  document.getElementById("remainingRequirements").innerHTML = `<div class="empty-message">No analysis yet.</div>`;
+}
+
+function renderAnalysis() {
+  if (!LAST_ANALYSIS) {
+    renderEmptyAnalysis();
+    return;
+  }
+
+  document.getElementById("transferSummary").innerHTML = `
+    <div class="summary-card">
+      <div class="summary-number">${LAST_ANALYSIS.likely_transferable_credits}</div>
+      <div class="summary-label">Likely transferable credits</div>
+    </div>
+    <div class="summary-card">
+      <div class="summary-number">${LAST_ANALYSIS.satisfied_requirements.length}</div>
+      <div class="summary-label">Requirements satisfied</div>
+    </div>
+    <div class="summary-card">
+      <div class="summary-number">${LAST_ANALYSIS.remaining_credits}</div>
+      <div class="summary-label">Estimated remaining credits</div>
+    </div>
+    <div class="summary-card">
+      <div class="summary-number">${LAST_ANALYSIS.estimated_semesters}</div>
+      <div class="summary-label">Estimated full-time semesters</div>
+    </div>
+  `;
+
+  renderRequirementList("satisfiedRequirements", LAST_ANALYSIS.satisfied_requirements, true);
+  renderRequirementList("remainingRequirements", LAST_ANALYSIS.remaining_requirements, false);
+}
+
+function renderRequirementList(containerId, records, satisfied) {
+  const container = document.getElementById(containerId);
+
+  if (!records.length) {
+    container.innerHTML = `<div class="empty-message">No ${satisfied ? "satisfied" : "remaining"} requirements.</div>`;
+    return;
+  }
+
+  const byGroup = {};
+  records.forEach(record => {
+    const groupName = record.group_name || "Other Requirements";
+    if (!byGroup[groupName]) byGroup[groupName] = [];
+    byGroup[groupName].push(record);
+  });
+
+  container.innerHTML = Object.entries(byGroup).map(([groupName, items]) => `
+    <div class="group-section">
+      <div class="group-title">${groupName}</div>
+      <div class="group-meta">${items.length} requirement(s)</div>
+      ${items.map(record => renderRequirementCard(record, satisfied)).join("")}
+    </div>
+  `).join("");
+}
+
+function renderRequirementCard(record, satisfied) {
+  const match = record.analysis?.matched_course;
+  const matchText = match
+    ? `<div class="requirement-meta"><strong>Matched by:</strong> ${match.code} — ${match.title || match.code}<br><strong>Method:</strong> ${record.analysis.method}</div>`
+    : `<div class="requirement-meta"><strong>Needed:</strong> ${record.code}${record.choice_group_code ? ` or approved course from ${record.choice_group_code}` : ""}</div>`;
+
+  return `
+    <div class="requirement-card ${satisfied ? "satisfied" : "remaining"}">
+      <div class="requirement-code">${satisfied ? "✓" : "○"} ${record.code}</div>
+      <div class="requirement-title">${record.title}</div>
+      <div class="requirement-meta">Credits: ${record.credits || 0} · Area: ${record.group_type || "N/A"}</div>
+      ${matchText}
+    </div>
+  `;
+}
+
+function buildTransferAdvisorContext() {
+  return {
+    source_program: LAST_ANALYSIS?.source_program || TRANSFER_SNAPSHOT.source_program,
+    target_program: LAST_ANALYSIS?.target_program || TARGET_REQUIREMENTS?.program,
+    completed_courses: getSnapshotCompletedDetails(),
+    satisfied_requirements: (LAST_ANALYSIS?.satisfied_requirements || []).map(r => ({
+      code: r.code,
+      title: r.title,
+      credits: r.credits,
+      group: r.group_name,
+      matched_course: r.analysis?.matched_course,
+      method: r.analysis?.method
+    })),
+    remaining_requirements: (LAST_ANALYSIS?.remaining_requirements || []).map(r => ({
+      code: r.code,
+      title: r.title,
+      credits: r.credits,
+      group: r.group_name,
+      choice_group_code: r.choice_group_code || null
+    })),
+    likely_transferable_credits: LAST_ANALYSIS?.likely_transferable_credits,
+    remaining_credits: LAST_ANALYSIS?.remaining_credits,
+    estimated_semesters: LAST_ANALYSIS?.estimated_semesters,
+    important_note: "This is a prototype transfer analysis using direct course-code matching and Pathways choice-group matching only. It is not an official transfer-credit evaluation."
+  };
+}
+
+async function generateAITransferSummary() {
+  if (!LAST_ANALYSIS) {
+    await runTransferAnalysis();
+  }
+
+  const box = document.getElementById("aiTransferSummary");
+  const button = document.getElementById("aiTransferButton");
+
+  box.style.display = "block";
+  box.textContent = "Generating transfer summary...";
+  button.disabled = true;
+  button.textContent = "Thinking...";
+
+  try {
+    const response = await fetch("/ai-agent-ask", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        agent_id: "transfer_analysis",
+        page_name: "Transfer Analysis",
+        page_url: "/transfer-analysis",
+        user_question: "Explain this transfer analysis to the student. Summarize what likely transfers, what remains, estimated time to finish, and clearly state that this is not an official transfer evaluation.",
+        page_context: buildTransferAdvisorContext()
+      })
+    });
+
+    if (!response.ok) throw new Error(`AI request failed (${response.status})`);
+
+    const data = await response.json();
+    box.innerHTML = formatMarkdown(data.answer || "No AI summary generated.");
+  } catch (err) {
+    box.textContent = `Error: ${err.message}`;
+  } finally {
+    button.disabled = false;
+    button.textContent = "Generate AI Summary";
+  }
+}
+
+async function initializePage() {
+  if (!loadSnapshot()) return;
+  await loadInitialData();
+}
+
+initializePage().catch(err => {
+  document.getElementById("missingSnapshotCard").style.display = "block";
+  document.getElementById("missingSnapshotCard").innerHTML = `<div class="warning">Error loading transfer analysis: ${err.message}</div>`;
+});
+</script>
+</body>
+</html>

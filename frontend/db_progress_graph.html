@@ -785,6 +785,7 @@ button:hover {
       <select id="institutionSelect" onchange="handleInstitutionChange()"></select>
       <select id="programSelect" onchange="loadProgramRequirements()"></select>
       <button class="secondary-button" onclick="openAdvisorDrawer()">Ask AI Advisor</button>
+      <button class="secondary-button" onclick="startTransferAnalysis()">Transfer Analysis</button>
     </div>
     <div id="programAvailabilityNote" class="hidden-note"></div>
   </div>
@@ -1968,6 +1969,72 @@ function renderRecommendations() {
   });
 }
 
+
+
+function buildTransferSnapshot() {
+  const completed = [...getCompletedCourses()];
+  const courses = allCoursesFromGroups();
+  const recommendation = chooseRecommendedCourses();
+
+  const completedCourseDetails = [];
+
+  Object.values(courses).forEach(course => {
+    if (completed.includes(course.code)) {
+      completedCourseDetails.push({
+        code: course.code,
+        title: course.title,
+        credits: course.credits,
+        area: course.group_name,
+        group_type: course.group_type,
+        type: "direct"
+      });
+    }
+  });
+
+  Object.entries(CHOICE_SELECTIONS).forEach(([placeholderCode, selectedCourse]) => {
+    const placeholder = courses[placeholderCode];
+    completedCourseDetails.push({
+      code: selectedCourse.code,
+      title: selectedCourse.title,
+      credits: selectedCourse.credits,
+      area: placeholder ? placeholder.group_name : "Choice requirement",
+      group_type: placeholder ? placeholder.group_type : "choice_requirement",
+      type: "choice_selection",
+      satisfies_placeholder: placeholderCode,
+      choice_group_code: placeholder ? placeholder.choice_group_code : null
+    });
+  });
+
+  return {
+    source_program: CURRENT_REQUIREMENTS ? CURRENT_REQUIREMENTS.program : null,
+    completed_courses: completed,
+    completed_course_details: completedCourseDetails,
+    choice_selections: CHOICE_SELECTIONS,
+    recommendation: {
+      semester: recommendation.semester,
+      courses: recommendation.selected.map(course => ({
+        code: course.code,
+        title: course.title,
+        credits: course.credits,
+        area: course.group_name,
+        group_type: course.group_type
+      })),
+      total_credits: recommendation.credits
+    },
+    timestamp: new Date().toISOString()
+  };
+}
+
+function startTransferAnalysis() {
+  if (!CURRENT_REQUIREMENTS || !CURRENT_REQUIREMENTS.program || CURRENT_REQUIREMENTS.program.code === "N/A") {
+    alert("Please select an available program before starting transfer analysis.");
+    return;
+  }
+
+  const snapshot = buildTransferSnapshot();
+  sessionStorage.setItem("transferSnapshot", JSON.stringify(snapshot));
+  window.location.href = "/transfer-analysis";
+}
 
 function openAdvisorDrawer() {
   document.getElementById("advisorBackdrop").classList.remove("hidden");
