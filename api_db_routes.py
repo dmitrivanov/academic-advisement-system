@@ -2,6 +2,7 @@ from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from database import get_db
@@ -171,20 +172,55 @@ def get_departments(db: Session = Depends(get_db)):
 def get_programs(db: Session = Depends(get_db)):
     programs = db.query(Program).order_by(Program.name).all()
 
-    return [
-        {
-            "id": p.id,
-            "code": p.code,
-            "name": p.name,
-            "degree_type": p.degree_type,
-            "catalog_year": p.catalog_year,
-            "department": p.department.name,
-            "department_code": p.department.code,
-            "institution": p.department.institution.name,
-            "institution_code": p.department.institution.code,
-        }
-        for p in programs
-    ]
+    # Calculate curriculum availability in two aggregate queries instead of
+    # making one requirements request for every program in the frontend.
+    requirement_course_counts = dict(
+        db.query(
+            RequirementGroup.program_id,
+            func.count(RequirementGroupCourse.id),
+        )
+        .outerjoin(
+            RequirementGroupCourse,
+            RequirementGroupCourse.requirement_group_id == RequirementGroup.id,
+        )
+        .group_by(RequirementGroup.program_id)
+        .all()
+    )
+
+    legacy_program_course_counts = dict(
+        db.query(
+            ProgramCourse.program_id,
+            func.count(ProgramCourse.id),
+        )
+        .group_by(ProgramCourse.program_id)
+        .all()
+    )
+
+    result = []
+
+    for program in programs:
+        requirement_count = int(requirement_course_counts.get(program.id, 0) or 0)
+        legacy_count = int(legacy_program_course_counts.get(program.id, 0) or 0)
+
+        # New-format curricula use requirement groups. The legacy count is a
+        # fallback for older curriculum CSVs that still populate ProgramCourse.
+        course_count = requirement_count if requirement_count > 0 else legacy_count
+
+        result.append({
+            "id": program.id,
+            "code": program.code,
+            "name": program.name,
+            "degree_type": program.degree_type,
+            "catalog_year": program.catalog_year,
+            "department": program.department.name,
+            "department_code": program.department.code,
+            "institution": program.department.institution.name,
+            "institution_code": program.department.institution.code,
+            "course_count": course_count,
+            "has_curriculum": course_count > 0,
+        })
+
+    return result
 
 
 @router.get("/courses")

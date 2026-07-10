@@ -208,30 +208,16 @@ async function loadInstitutions() {
 
 async function loadPrograms() {
   PROGRAMS = await fetchJson("/api/db/programs");
-  await loadProgramAvailability();
-}
 
-async function loadProgramAvailability() {
-  const checks = PROGRAMS.map(async program => {
-    try {
-      const requirements = await fetchJson(`/api/db/programs/${program.code}/requirements`);
-      const courseCount = (requirements.groups || []).reduce((total, group) => {
-        return total + ((group.courses || []).length);
-      }, 0);
-
-      PROGRAM_AVAILABILITY[program.code] = {
-        hasCurriculum: courseCount > 0,
-        courseCount: courseCount
-      };
-    } catch (err) {
-      PROGRAM_AVAILABILITY[program.code] = {
-        hasCurriculum: false,
-        courseCount: 0
-      };
-    }
-  });
-
-  await Promise.all(checks);
+  PROGRAM_AVAILABILITY = Object.fromEntries(
+    PROGRAMS.map(program => [
+      program.code,
+      {
+        hasCurriculum: Boolean(program.has_curriculum),
+        courseCount: Number(program.course_count || 0)
+      }
+    ])
+  );
 }
 
 function institutionHasDepartments(institution) {
