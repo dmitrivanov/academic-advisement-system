@@ -143,6 +143,37 @@ button:disabled {
   color: #b45309;
   font-weight: bold;
 }
+
+.onboarding-card {
+  margin-top: 22px;
+  padding: 20px;
+  border: 2px solid #bfdbfe;
+  border-radius: 16px;
+  background: #eff6ff;
+}
+
+.onboarding-card h2 { margin: 0 0 8px; }
+
+.onboarding-options {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.onboarding-option {
+  text-align: left;
+  background: white;
+  color: #1d4ed8;
+  border: 1px solid #93c5fd;
+  min-height: 88px;
+}
+
+.onboarding-option:hover { background: #dbeafe; }
+
+@media (max-width: 620px) {
+  .onboarding-options { grid-template-columns: 1fr; }
+}
 </style>
 </head>
 
@@ -177,7 +208,7 @@ button:disabled {
 
     <div class="actions">
       <button id="continueButton" onclick="continueToProgress()" disabled>
-        Continue to Progress Graph
+        Continue
       </button>
       <a class="button-link secondary" href="/admin">Admin Dashboard</a>
       <a class="button-link secondary" href="/logout">Log Out</a>
@@ -185,6 +216,20 @@ button:disabled {
 
     <div class="footer">
       This selector saves the selected campus and program for the progress graph and transfer analysis workflow.
+    </div>
+
+    <div id="onboardingCard" class="onboarding-card" style="display:none;">
+      <h2>Before you continue</h2>
+      <p id="onboardingQuestion" class="subtitle" style="margin-bottom:0;"></p>
+      <div class="onboarding-options">
+        <button class="onboarding-option" onclick="finishOnboarding('returning')">
+          Yes, I have taken college-level classes
+        </button>
+        <button class="onboarding-option" onclick="finishOnboarding('first_semester')">
+          No, this is my first semester
+        </button>
+      </div>
+      <button class="secondary" onclick="cancelOnboarding()">Back</button>
     </div>
   </div>
 </div>
@@ -428,8 +473,24 @@ function continueToProgress() {
   }));
 
   sessionStorage.removeItem("transferSnapshot");
+  document.getElementById("onboardingQuestion").textContent =
+    `Have you taken college-level classes already, or is this your first semester at ${institution.name}?`;
+  document.getElementById("onboardingCard").style.display = "block";
+  document.getElementById("onboardingCard").scrollIntoView({ behavior: "smooth", block: "center" });
+}
 
+function finishOnboarding(studentStatus) {
+  const saved = getSavedSelection();
+  if (!saved) return;
+
+  saved.studentStatus = studentStatus;
+  saved.onboardingCompletedAt = new Date().toISOString();
+  sessionStorage.setItem("selectedProgramContext", JSON.stringify(saved));
   window.location.href = "/db-progress";
+}
+
+function cancelOnboarding() {
+  document.getElementById("onboardingCard").style.display = "none";
 }
 
 async function initializePage() {

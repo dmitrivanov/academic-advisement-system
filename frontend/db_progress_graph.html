@@ -761,9 +761,9 @@ button:hover {
 <body>
 
 <div class="container">
-  <h1>Academic Progress Graph</h1>
+  <h1>Academic Progress</h1>
   <p class="subtitle">
-    This page organizes degree progress by requirement areas and recommends next-semester courses.
+    Track completed courses, review degree requirements, and request a personalized next-semester recommendation.
   </p>
 <div id="progressWidget" class="progress-widget" onclick="toggleProgressDetails()">
   <div class="progress-circle" id="overallProgressCircle">
@@ -786,7 +786,8 @@ button:hover {
     <div class="top-actions">
       <button class="secondary-button" onclick="changeProgram()">Change Campus / Program</button>
       <button class="secondary-button" onclick="openAdvisorDrawer()">Ask AI Advisor</button>
-      <button class="secondary-button" onclick="startTransferAnalysis()">Transfer Analysis</button>
+      <button class="secondary-button" onclick="startComparison('major-change')">Explore Major Change</button>
+      <button class="secondary-button" onclick="startComparison('transfer')">Transfer Analysis</button>
     </div>
 
     <div style="display:none;">
@@ -797,7 +798,18 @@ button:hover {
     <div id="programAvailabilityNote" class="hidden-note"></div>
   </div>
 
+  <div id="studentWelcomeCard" class="card" style="display:none;">
+    <h3 id="studentWelcomeTitle"></h3>
+    <div id="studentWelcomeMessage" class="meta"></div>
+  </div>
+
   <div class="card">
+    <h3>Plan Your Next Semester</h3>
+    <p class="subtitle">Recommendations use the courses you mark as completed and the prerequisites in the selected curriculum.</p>
+    <button id="recommendationToggleButton" onclick="toggleRecommendations()">Show Next Semester Recommendation</button>
+  </div>
+
+  <div id="recommendationCard" class="card hidden">
     <h3 id="recommendationTitle">Next Semester Recommendation</h3>
     <div id="recommendationSummary" class="recommendation-summary">Loading...</div>
     <div id="recommendations" class="recommendation-grid"></div>
@@ -963,6 +975,39 @@ function getSavedProgramSelection() {
     return JSON.parse(sessionStorage.getItem("selectedProgramContext") || "null");
   } catch (err) {
     return null;
+  }
+}
+
+let RECOMMENDATIONS_VISIBLE = false;
+
+function applyOnboardingState() {
+  const saved = getSavedProgramSelection();
+  if (!saved || !saved.studentStatus) return;
+
+  const card = document.getElementById("studentWelcomeCard");
+  const title = document.getElementById("studentWelcomeTitle");
+  const message = document.getElementById("studentWelcomeMessage");
+  card.style.display = "block";
+
+  if (saved.studentStatus === "first_semester") {
+    title.textContent = "Welcome to your first semester";
+    message.textContent = "You do not need to select any completed courses. Click “Show Next Semester Recommendation” when you are ready to see a suggested first-semester schedule.";
+  } else {
+    title.textContent = "Add your completed college courses";
+    message.textContent = "Select every course you have already completed. Then request a next-semester recommendation based on your updated progress.";
+  }
+}
+
+function toggleRecommendations() {
+  RECOMMENDATIONS_VISIBLE = !RECOMMENDATIONS_VISIBLE;
+  document.getElementById("recommendationCard").classList.toggle("hidden", !RECOMMENDATIONS_VISIBLE);
+  document.getElementById("recommendationToggleButton").textContent = RECOMMENDATIONS_VISIBLE
+    ? "Hide Next Semester Recommendation"
+    : "Show Next Semester Recommendation";
+
+  if (RECOMMENDATIONS_VISIBLE) {
+    renderRecommendations();
+    document.getElementById("recommendationCard").scrollIntoView({ behavior: "smooth", block: "start" });
   }
 }
 
@@ -2074,15 +2119,16 @@ function buildTransferSnapshot() {
   };
 }
 
-function startTransferAnalysis() {
+function startComparison(mode) {
   if (!CURRENT_REQUIREMENTS || !CURRENT_REQUIREMENTS.program || CURRENT_REQUIREMENTS.program.code === "N/A") {
-    alert("Please select an available program before starting transfer analysis.");
+    alert("Please select an available program before starting this analysis.");
     return;
   }
 
   const snapshot = buildTransferSnapshot();
+  snapshot.analysis_mode = mode;
   sessionStorage.setItem("transferSnapshot", JSON.stringify(snapshot));
-  window.location.href = "/transfer-analysis";
+  window.location.href = `/transfer-analysis?mode=${encodeURIComponent(mode)}`;
 }
 
 function openAdvisorDrawer() {
@@ -2245,6 +2291,7 @@ async function initializePage() {
     return;
   }
 
+  applyOnboardingState();
   await loadInstitutions();
   await loadPrograms();
 }

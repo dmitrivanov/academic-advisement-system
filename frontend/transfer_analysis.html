@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Transfer Analysis</title>
+<title>Program Comparison</title>
 
 <style>
 body {
@@ -224,11 +224,8 @@ button:hover, .button-link:hover { background: #1d4ed8; }
 <div class="container">
   <div class="topbar">
     <div>
-      <h1>Transfer Analysis</h1>
-      <p class="subtitle">
-        Compare the courses selected on the progress page against another available program.
-        This first version matches courses by course code and Pathways choice selections.
-      </p>
+      <h1 id="pageTitle">Program Comparison</h1>
+      <p id="pageSubtitle" class="subtitle"></p>
     </div>
     <div class="nav">
       <a href="/db-progress">Back to Progress</a>
@@ -239,7 +236,7 @@ button:hover, .button-link:hover { background: #1d4ed8; }
 
   <div id="missingSnapshotCard" class="card" style="display:none;">
     <div class="warning">
-      No transfer snapshot was found. Go back to the progress graph, select completed courses, and click <strong>Transfer Analysis</strong>.
+      No progress snapshot was found. Go back to Academic Progress, select completed courses, and choose Major Change or Transfer Analysis.
     </div>
     <a class="button-link" href="/db-progress">Go to Progress Graph</a>
   </div>
@@ -252,24 +249,24 @@ button:hover, .button-link:hover { background: #1d4ed8; }
     </div>
 
     <div class="card">
-      <h3>Select Target Program</h3>
+      <h3 id="targetHeading">Select Target Program</h3>
       <div class="top-actions">
         <select id="targetInstitutionSelect" onchange="handleTargetInstitutionChange()"></select>
         <select id="targetProgramSelect" onchange="loadTargetProgramRequirements()"></select>
-        <button class="secondary-button" onclick="runTransferAnalysis()">Run Transfer Analysis</button>
+        <button id="runAnalysisButton" class="secondary-button" onclick="runTransferAnalysis()">Run Analysis</button>
       </div>
       <div id="targetNote" class="small-note"></div>
     </div>
 
     <div class="card">
-      <h3>AI Transfer Summary</h3>
+      <h3 id="aiSummaryHeading">AI Comparison Summary</h3>
       <p class="subtitle">Generate a plain-language explanation from the comparison results.</p>
       <button id="aiTransferButton" onclick="generateAITransferSummary()">Generate AI Summary</button>
       <div id="aiTransferSummary" class="ai-box" style="margin-top:14px; display:none;"></div>
     </div>
 
     <div class="card">
-      <h3>Transfer Summary</h3>
+      <h3 id="analysisSummaryHeading">Comparison Summary</h3>
       <div id="transferSummary" class="summary-grid"></div>
       <p class="small-note" style="margin-top:14px;">
         V1 assumes direct course-code matching. Real cross-college transfer equivalencies should later use a dedicated equivalency table.
@@ -298,6 +295,29 @@ let PROGRAMS = [];
 let PROGRAM_AVAILABILITY = {};
 let TARGET_REQUIREMENTS = null;
 let LAST_ANALYSIS = null;
+const ANALYSIS_MODE = new URLSearchParams(window.location.search).get("mode") || "transfer";
+
+function configureAnalysisMode() {
+  const isMajorChange = ANALYSIS_MODE === "major-change";
+  const modeName = isMajorChange ? "Major Change Analysis" : "Transfer Analysis";
+  document.title = `${modeName} | Academic Advisement System`;
+  document.getElementById("pageTitle").textContent = modeName;
+  document.getElementById("pageSubtitle").textContent = isMajorChange
+    ? "Compare your completed courses with another program at the same campus."
+    : "Compare your completed courses with a program at another college or education level.";
+  document.getElementById("targetHeading").textContent = isMajorChange
+    ? "New Major at Your Current Campus"
+    : "Destination College and Program";
+  document.getElementById("runAnalysisButton").textContent = isMajorChange
+    ? "Run Major Change Analysis"
+    : "Run Transfer Analysis";
+  document.getElementById("aiSummaryHeading").textContent = isMajorChange
+    ? "AI Major Change Summary"
+    : "AI Transfer Summary";
+  document.getElementById("analysisSummaryHeading").textContent = isMajorChange
+    ? "Major Change Summary"
+    : "Transfer Summary";
+}
 
 async function fetchJson(url) {
   const response = await fetch(url);
@@ -388,32 +408,17 @@ async function loadInitialData() {
   INSTITUTIONS = await fetchJson("/api/db/institutions");
   DEPARTMENTS = await fetchJson("/api/db/departments");
   PROGRAMS = await fetchJson("/api/db/programs");
-  await loadProgramAvailability();
+  PROGRAM_AVAILABILITY = Object.fromEntries(
+    PROGRAMS.map(program => [
+      program.code,
+      {
+        hasCurriculum: Boolean(program.has_curriculum),
+        courseCount: Number(program.course_count || 0)
+      }
+    ])
+  );
   populateInstitutionSelect();
   await populateProgramSelect();
-}
-
-async function loadProgramAvailability() {
-  const checks = PROGRAMS.map(async program => {
-    try {
-      const requirements = await fetchJson(`/api/db/programs/${program.code}/requirements`);
-      const courseCount = (requirements.groups || []).reduce((total, group) => {
-        return total + ((group.courses || []).length);
-      }, 0);
-
-      PROGRAM_AVAILABILITY[program.code] = {
-        hasCurriculum: courseCount > 0,
-        courseCount
-      };
-    } catch (err) {
-      PROGRAM_AVAILABILITY[program.code] = {
-        hasCurriculum: false,
-        courseCount: 0
-      };
-    }
-  });
-
-  await Promise.all(checks);
 }
 
 function institutionHasDepartments(institution) {
@@ -435,10 +440,15 @@ function institutionIsAvailable(institution) {
 function populateInstitutionSelect() {
   const select = document.getElementById("targetInstitutionSelect");
   select.innerHTML = "";
+  const sourceInstitutionCode = TRANSFER_SNAPSHOT?.source_program?.institution_code;
 
   let firstAvailableValue = null;
 
   INSTITUTIONS.forEach(institution => {
+    const isSourceCampus = institution.code === sourceInstitutionCode;
+    if (ANALYSIS_MODE === "major-change" && !isSourceCampus) return;
+    if (ANALYSIS_MODE === "transfer" && isSourceCampus) return;
+
     const option = document.createElement("option");
     const value = institution.code || institution.name;
     const available = institutionIsAvailable(institution);
@@ -458,6 +468,10 @@ function populateInstitutionSelect() {
 
   if (firstAvailableValue) {
     select.value = firstAvailableValue;
+  } else {
+    document.getElementById("targetNote").textContent = ANALYSIS_MODE === "major-change"
+      ? "No other programs with curriculum data are available at this campus yet."
+      : "No programs with curriculum data are available at another campus yet.";
   }
 }
 
@@ -473,7 +487,22 @@ async function populateProgramSelect() {
   programSelect.innerHTML = "";
   const selectedInstitutionCode = institutionSelect.value;
 
-  const matchingPrograms = PROGRAMS.filter(program => program.institution_code === selectedInstitutionCode);
+  if (!selectedInstitutionCode) {
+    note.textContent = ANALYSIS_MODE === "major-change"
+      ? "No other programs with curriculum data are available at this campus yet."
+      : "No programs with curriculum data are available at another campus yet.";
+    programSelect.disabled = true;
+    TARGET_REQUIREMENTS = null;
+    renderEmptyAnalysis();
+    return;
+  }
+
+  const sourceProgramCode = TRANSFER_SNAPSHOT?.source_program?.code;
+  const matchingPrograms = PROGRAMS.filter(program => {
+    if (program.institution_code !== selectedInstitutionCode) return false;
+    if (ANALYSIS_MODE === "major-change" && program.code === sourceProgramCode) return false;
+    return true;
+  });
 
   if (!matchingPrograms.length) {
     note.textContent = "No programs are available for this campus yet.";
@@ -794,6 +823,7 @@ async function generateAITransferSummary() {
 }
 
 async function initializePage() {
+  configureAnalysisMode();
   if (!loadSnapshot()) return;
   await loadInitialData();
 }
