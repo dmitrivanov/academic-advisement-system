@@ -269,7 +269,7 @@ button:hover, .button-link:hover { background: #1d4ed8; }
       <h3 id="analysisSummaryHeading">Comparison Summary</h3>
       <div id="transferSummary" class="summary-grid"></div>
       <p class="small-note" style="margin-top:14px;">
-        V1 assumes direct course-code matching. Real cross-college transfer equivalencies should later use a dedicated equivalency table.
+        Uses approved directional equivalency rules, direct course-code matches, and Pathways choice groups. This remains an unofficial planning estimate.
       </p>
     </div>
 
@@ -295,6 +295,7 @@ let PROGRAMS = [];
 let PROGRAM_AVAILABILITY = {};
 let TARGET_REQUIREMENTS = null;
 let LAST_ANALYSIS = null;
+let APPROVED_EQUIVALENCIES = [];
 const ANALYSIS_MODE = new URLSearchParams(window.location.search).get("mode") || "transfer";
 
 function configureAnalysisMode() {
@@ -564,13 +565,52 @@ async function getChoiceGroupCourseCodes(choiceGroupCode, institutionCode) {
   }
 }
 
-async function analyzeTargetCourse(course, completedCodes, completedDetails, institutionCode) {
+async function loadApprovedEquivalencies(sourceInstitutionCode, targetInstitutionCode) {
+  if (!sourceInstitutionCode || !targetInstitutionCode || sourceInstitutionCode === targetInstitutionCode) {
+    return [];
+  }
+  const query = new URLSearchParams({
+    source_institution_code: sourceInstitutionCode,
+    target_institution_code: targetInstitutionCode
+  });
+  try {
+    return await fetchJson(`/api/db/equivalencies/matches?${query.toString()}`);
+  } catch (err) {
+    console.warn("Equivalency rules could not be loaded:", err);
+    return [];
+  }
+}
+
+async function analyzeTargetCourse(course, completedCodes, completedDetails, institutionCode, usedSourceCourses) {
+  const approvedRule = APPROVED_EQUIVALENCIES.find(rule =>
+    rule.target_course_code === course.code &&
+    completedCodes.has(rule.source_course_code) &&
+    !usedSourceCourses.has(rule.source_course_code)
+  );
+
+  if (approvedRule) {
+    const match = completedDetails.find(c => c.code === approvedRule.source_course_code) || {
+      code: approvedRule.source_course_code,
+      title: approvedRule.source_course_title || approvedRule.source_course_code,
+      credits: approvedRule.source_credits || 0
+    };
+    return {
+      satisfied: true,
+      method: `Approved equivalency (${approvedRule.source_institution_code} → ${approvedRule.target_institution_code})`,
+      matched_course: match,
+      source_course_code: approvedRule.source_course_code,
+      equivalency_id: approvedRule.id,
+      credits: Number(approvedRule.target_credits || course.credits || match.credits || 0)
+    };
+  }
+
   if (completedCodes.has(course.code)) {
     const match = completedDetails.find(c => c.code === course.code) || course;
     return {
       satisfied: true,
       method: "Direct course-code match",
       matched_course: match,
+      source_course_code: course.code,
       credits: Number(match.credits || course.credits || 0)
     };
   }
@@ -583,6 +623,7 @@ async function analyzeTargetCourse(course, completedCodes, completedDetails, ins
         satisfied: true,
         method: "Alternative course match",
         matched_course: match,
+        source_course_code: altCode,
         credits: Number(match.credits || course.credits || 0)
       };
     }
@@ -597,6 +638,7 @@ async function analyzeTargetCourse(course, completedCodes, completedDetails, ins
         satisfied: true,
         method: `Pathways choice-group match (${course.choice_group_code})`,
         matched_course: match,
+        source_course_code: match.code,
         credits: Number(match.credits || course.credits || 0)
       };
     }
@@ -619,6 +661,9 @@ async function runTransferAnalysis() {
   const completedDetails = getSnapshotCompletedDetails();
   const completedCodes = getCompletedCodeSet();
   const institutionCode = TARGET_REQUIREMENTS.program?.institution_code || document.getElementById("targetInstitutionSelect").value;
+  const sourceInstitutionCode = TRANSFER_SNAPSHOT.source_program?.institution_code;
+  APPROVED_EQUIVALENCIES = await loadApprovedEquivalencies(sourceInstitutionCode, institutionCode);
+  const usedSourceCourses = new Set();
 
   const satisfied = [];
   const remaining = [];
@@ -627,7 +672,13 @@ async function runTransferAnalysis() {
 
   for (const group of TARGET_REQUIREMENTS.groups || []) {
     for (const course of group.courses || []) {
-      const analysis = await analyzeTargetCourse(course, completedCodes, completedDetails, institutionCode);
+      const analysis = await analyzeTargetCourse(
+        course,
+        completedCodes,
+        completedDetails,
+        institutionCode,
+        usedSourceCourses
+      );
       const targetCredits = Number(course.credits || 0);
 
       totalTargetCredits += targetCredits;
@@ -642,6 +693,7 @@ async function runTransferAnalysis() {
 
       if (analysis.satisfied) {
         satisfied.push(record);
+        if (analysis.source_course_code) usedSourceCourses.add(analysis.source_course_code);
         satisfiedCredits += Math.min(Number(analysis.credits || targetCredits || 0), targetCredits || Number(analysis.credits || 0));
       } else {
         remaining.push(record);
@@ -780,7 +832,7 @@ function buildTransferAdvisorContext() {
     likely_transferable_credits: LAST_ANALYSIS?.likely_transferable_credits,
     remaining_credits: LAST_ANALYSIS?.remaining_credits,
     estimated_semesters: LAST_ANALYSIS?.estimated_semesters,
-    important_note: "This is a prototype transfer analysis using direct course-code matching and Pathways choice-group matching only. It is not an official transfer-credit evaluation."
+    important_note: "This planning estimate uses approved directional equivalency rules, direct course-code matching, and Pathways choice-group matching. It is not an official transfer-credit evaluation."
   };
 }
 

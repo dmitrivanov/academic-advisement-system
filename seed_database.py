@@ -17,6 +17,7 @@ from models import (
     RequirementGroupCourse,
     ChoiceGroup,
     ChoiceGroupCourse,
+    CourseEquivalency,
 )
 
 
@@ -641,6 +642,60 @@ def seed_programs(db):
     db.flush()
     print("Seeded programs.csv")
 
+
+def seed_course_equivalencies(db):
+    path = DOCS_DIR / "course_equivalencies.csv"
+    if not path.exists():
+        return
+
+    with path.open(newline="", encoding="utf-8-sig") as f:
+        rows = csv.DictReader(f)
+        for row in rows:
+            source = db.query(Institution).filter_by(
+                code=row["source_institution_code"].strip().upper()
+            ).first()
+            target = db.query(Institution).filter_by(
+                code=row["target_institution_code"].strip().upper()
+            ).first()
+            if not source or not target:
+                print(f"Skipping equivalency with unknown institution: {row}")
+                continue
+
+            source_code = " ".join(row["source_course_code"].strip().upper().split())
+            target_code = " ".join(row["target_course_code"].strip().upper().split())
+            rule = db.query(CourseEquivalency).filter_by(
+                source_institution_id=source.id,
+                source_course_code=source_code,
+                target_institution_id=target.id,
+                target_course_code=target_code,
+            ).first()
+
+            if not rule:
+                rule = CourseEquivalency(
+                    source_institution_id=source.id,
+                    target_institution_id=target.id,
+                    source_course_code=source_code,
+                    target_course_code=target_code,
+                )
+                db.add(rule)
+
+            # The seed file is authoritative only for its own records. It does
+            # not delete or overwrite unrelated rules created in the admin UI.
+            rule.source_course_title = row["source_course_title"].strip() or None
+            rule.source_credits = int(row["source_credits"]) if row["source_credits"] else None
+            rule.target_course_title = row["target_course_title"].strip() or None
+            rule.target_credits = int(row["target_credits"]) if row["target_credits"] else None
+            rule.equivalency_type = row["equivalency_type"].strip() or "direct"
+            rule.minimum_grade = row["minimum_grade"].strip() or None
+            rule.catalog_year_start = row["catalog_year_start"].strip() or None
+            rule.catalog_year_end = row["catalog_year_end"].strip() or None
+            rule.status = row["status"].strip() or "draft"
+            rule.source_reference = row["source_reference"].strip() or None
+            rule.notes = row["notes"].strip() or None
+
+    db.flush()
+    print("Seeded course_equivalencies.csv")
+
 def seed():
     Base.metadata.create_all(bind=engine)
 
@@ -652,6 +707,7 @@ def seed():
         seed_institutions(db)
         seed_departments(db)
         seed_programs(db)
+        seed_course_equivalencies(db)
         seed_choice_groups(db)
         seed_choice_group_courses(db)
 

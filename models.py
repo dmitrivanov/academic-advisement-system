@@ -15,6 +15,69 @@ class Institution(Base):
 
     departments = relationship("Department", back_populates="institution")
     choice_groups = relationship("ChoiceGroup", back_populates="institution")
+    outgoing_equivalencies = relationship(
+        "CourseEquivalency",
+        foreign_keys="CourseEquivalency.source_institution_id",
+        back_populates="source_institution",
+    )
+    incoming_equivalencies = relationship(
+        "CourseEquivalency",
+        foreign_keys="CourseEquivalency.target_institution_id",
+        back_populates="target_institution",
+    )
+
+
+class CourseEquivalency(Base):
+    """A directional, institution-scoped transfer rule.
+
+    Course codes are stored on the rule for now because the legacy Course table
+    is globally keyed by code. This lets equivalencies be institution-aware
+    without a risky course-table migration.
+    """
+
+    __tablename__ = "course_equivalencies"
+
+    id = Column(Integer, primary_key=True, index=True)
+    source_institution_id = Column(
+        Integer, ForeignKey("institutions.id"), nullable=False, index=True
+    )
+    target_institution_id = Column(
+        Integer, ForeignKey("institutions.id"), nullable=False, index=True
+    )
+    source_course_code = Column(String, nullable=False, index=True)
+    source_course_title = Column(String, nullable=True)
+    source_credits = Column(Integer, nullable=True)
+    target_course_code = Column(String, nullable=False, index=True)
+    target_course_title = Column(String, nullable=True)
+    target_credits = Column(Integer, nullable=True)
+    equivalency_type = Column(String, nullable=False, default="direct")
+    minimum_grade = Column(String, nullable=True)
+    catalog_year_start = Column(String, nullable=True)
+    catalog_year_end = Column(String, nullable=True)
+    status = Column(String, nullable=False, default="draft", index=True)
+    source_reference = Column(String, nullable=True)
+    notes = Column(String, nullable=True)
+
+    source_institution = relationship(
+        "Institution",
+        foreign_keys=[source_institution_id],
+        back_populates="outgoing_equivalencies",
+    )
+    target_institution = relationship(
+        "Institution",
+        foreign_keys=[target_institution_id],
+        back_populates="incoming_equivalencies",
+    )
+
+    __table_args__ = (
+        UniqueConstraint(
+            "source_institution_id",
+            "source_course_code",
+            "target_institution_id",
+            "target_course_code",
+            name="uq_directional_course_equivalency",
+        ),
+    )
 
 
 class Department(Base):

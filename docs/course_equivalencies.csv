@@ -1,0 +1,4 @@
+source_institution_code,source_course_code,source_course_title,source_credits,target_institution_code,target_course_code,target_course_title,target_credits,equivalency_type,minimum_grade,catalog_year_start,catalog_year_end,status,source_reference,notes
+BMCC,MAT 301,Analytic Geometry and Calculus I,4,CCNY,MATH 20100,Calculus I,4,direct,D,2022-2023,,approved,https://explorer.cuny.edu/course-transfer/053760/1,Verified in CUNY Transfer Explorer
+BMCC,MAT 302,Analytic Geometry and Calculus II,4,CCNY,MATH 21200,Calculus II with Introduction to Multivariable Functions,4,direct,D,2022-2023,,approved,https://explorer.cuny.edu/course-transfer/088858/1,Verified in CUNY Transfer Explorer
+BMCC,PHY 215,University Physics I,4,CCNY,PHYS 20700,University Physics I,4,direct,D,2022-2023,,approved,https://explorer.cuny.edu/course-transfer/055559/1,Verified in CUNY Transfer Explorer

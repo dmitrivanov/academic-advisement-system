@@ -247,13 +247,26 @@ tr:hover {
   margin-bottom: 5px;
 }
 
-.form-field input {
+.form-field input,
+.form-field select,
+.form-field textarea {
   width: 100%;
   box-sizing: border-box;
   padding: 10px;
   border: 1px solid #d7deea;
   border-radius: 10px;
   font-size: 14px;
+  background: white;
+  font-family: inherit;
+}
+
+.form-field textarea {
+  min-height: 82px;
+  resize: vertical;
+}
+
+.form-field-wide {
+  grid-column: 1 / -1;
 }
 
 .form-actions {
@@ -343,6 +356,13 @@ tr:hover {
       <span class="button">View Table</span>
     </div>
 
+    <div class="admin-card" onclick="openTable('equivalencies')">
+      <span class="badge">Transfer Rules</span>
+      <h3>Course Equivalencies</h3>
+      <p>Approve, edit, and deactivate directional course-transfer mappings between institutions.</p>
+      <span class="button">Manage Rules</span>
+    </div>
+
     <div class="admin-card">
       <span class="badge">Logic</span>
       <h3>Prerequisites</h3>
@@ -386,6 +406,7 @@ tr:hover {
       <div id="tableTitle" class="table-title">Table</div>
       <div class="table-actions">
         <button id="addInstitutionButton" class="small-button" onclick="openInstitutionForm()" style="display:none;">Add Institution</button>
+        <button id="addEquivalencyButton" class="small-button" onclick="openEquivalencyForm()" style="display:none;">Add Equivalency</button>
         <button class="close-button" onclick="closeTable()">Close</button>
       </div>
     </div>
@@ -430,6 +451,82 @@ tr:hover {
       <div id="institutionFormMessage"></div>
     </div>
 
+    <div id="equivalencyForm" class="form-card" style="display:none;">
+      <h3 id="equivalencyFormTitle" style="margin-top:0;">Add Course Equivalency</h3>
+      <p class="subtitle">Directional rule: the source course transfers as the target course. Only approved rules affect student analysis.</p>
+
+      <input type="hidden" id="equivalencyId">
+
+      <div class="form-grid">
+        <div class="form-field">
+          <label for="equivalencySourceInstitution">Source institution</label>
+          <select id="equivalencySourceInstitution"></select>
+        </div>
+        <div class="form-field">
+          <label for="equivalencySourceCode">Source course code</label>
+          <input id="equivalencySourceCode" placeholder="MAT 301">
+        </div>
+        <div class="form-field">
+          <label for="equivalencySourceTitle">Source course title</label>
+          <input id="equivalencySourceTitle" placeholder="Analytic Geometry and Calculus I">
+        </div>
+        <div class="form-field">
+          <label for="equivalencySourceCredits">Source credits</label>
+          <input id="equivalencySourceCredits" type="number" min="0" max="20" placeholder="4">
+        </div>
+        <div class="form-field">
+          <label for="equivalencyTargetInstitution">Target institution</label>
+          <select id="equivalencyTargetInstitution"></select>
+        </div>
+        <div class="form-field">
+          <label for="equivalencyTargetCode">Target course code</label>
+          <input id="equivalencyTargetCode" placeholder="MATH 20100">
+        </div>
+        <div class="form-field">
+          <label for="equivalencyTargetTitle">Target course title</label>
+          <input id="equivalencyTargetTitle" placeholder="Calculus I">
+        </div>
+        <div class="form-field">
+          <label for="equivalencyTargetCredits">Target credits</label>
+          <input id="equivalencyTargetCredits" type="number" min="0" max="20" placeholder="4">
+        </div>
+        <div class="form-field">
+          <label for="equivalencyStatus">Status</label>
+          <select id="equivalencyStatus">
+            <option value="draft">Draft</option>
+            <option value="approved">Approved</option>
+            <option value="inactive">Inactive</option>
+          </select>
+        </div>
+        <div class="form-field">
+          <label for="equivalencyMinimumGrade">Minimum grade</label>
+          <input id="equivalencyMinimumGrade" placeholder="D">
+        </div>
+        <div class="form-field">
+          <label for="equivalencyCatalogStart">Catalog year start</label>
+          <input id="equivalencyCatalogStart" placeholder="2022-2023">
+        </div>
+        <div class="form-field">
+          <label for="equivalencyCatalogEnd">Catalog year end</label>
+          <input id="equivalencyCatalogEnd" placeholder="Optional">
+        </div>
+        <div class="form-field form-field-wide">
+          <label for="equivalencySourceReference">Official source reference</label>
+          <input id="equivalencySourceReference" placeholder="https://explorer.cuny.edu/course-transfer/...">
+        </div>
+        <div class="form-field form-field-wide">
+          <label for="equivalencyNotes">Admin notes</label>
+          <textarea id="equivalencyNotes" placeholder="Verification details or exceptions"></textarea>
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <button class="small-button" onclick="saveEquivalency()">Save Rule</button>
+        <button class="secondary-button" onclick="closeEquivalencyForm()">Cancel</button>
+      </div>
+      <div id="equivalencyFormMessage"></div>
+    </div>
+
     <div class="table-wrap">
       <div id="tableArea">Loading...</div>
     </div>
@@ -458,6 +555,10 @@ const API_MAP = {
   "requirement-groups": {
     title: "Requirement Groups",
     url: "/api/db/requirement-groups"
+  },
+  "equivalencies": {
+    title: "Course Equivalencies",
+    url: "/api/db/equivalencies"
   },
   "advisor-logs": {
     title: "Advisor Chat Logs",
@@ -498,9 +599,12 @@ async function openTable(tableName) {
   document.getElementById("tableTitle").textContent = config.title;
   document.getElementById("tableArea").innerHTML = "Loading...";
   document.getElementById("institutionForm").style.display = "none";
+  document.getElementById("equivalencyForm").style.display = "none";
 
   const addButton = document.getElementById("addInstitutionButton");
   addButton.style.display = tableName === "institutions" ? "inline-block" : "none";
+  document.getElementById("addEquivalencyButton").style.display =
+    tableName === "equivalencies" ? "inline-block" : "none";
 
   try {
     const data = await fetchJson(config.url);
@@ -517,6 +621,7 @@ async function openTable(tableName) {
 function closeTable() {
   document.getElementById("tableCard").style.display = "none";
   document.getElementById("institutionForm").style.display = "none";
+  document.getElementById("equivalencyForm").style.display = "none";
 }
 
 function renderTable(data) {
@@ -535,7 +640,7 @@ function renderTable(data) {
     html += `<th>${formatColumnName(col)}</th>`;
   });
 
-  if (CURRENT_TABLE === "institutions") {
+  if (CURRENT_TABLE === "institutions" || CURRENT_TABLE === "equivalencies") {
     html += `<th>Actions</th>`;
   }
 
@@ -553,6 +658,14 @@ function renderTable(data) {
         <td>
           <button class="small-button" onclick="editInstitution(${index})">Edit</button>
           <button class="danger-button" onclick="deleteInstitution(${index})">Delete</button>
+        </td>
+      `;
+    }
+    if (CURRENT_TABLE === "equivalencies") {
+      html += `
+        <td>
+          <button class="small-button" onclick="editEquivalency(${index})">Edit</button>
+          <button class="danger-button" onclick="deactivateEquivalency(${index})">Deactivate</button>
         </td>
       `;
     }
@@ -701,12 +814,118 @@ function showInstitutionFormMessage(message, isError) {
   area.innerHTML = `<div class="${isError ? "error" : "notice"}">${escapeHtml(message)}</div>`;
 }
 
+async function populateInstitutionSelects() {
+  const institutions = await fetchJson("/api/db/institutions");
+  const options = institutions.map(item =>
+    `<option value="${item.id}">${escapeHtml(item.code)} — ${escapeHtml(item.name)}</option>`
+  ).join("");
+  document.getElementById("equivalencySourceInstitution").innerHTML = options;
+  document.getElementById("equivalencyTargetInstitution").innerHTML = options;
+}
+
+async function openEquivalencyForm(row = null) {
+  document.getElementById("equivalencyForm").style.display = "block";
+  document.getElementById("equivalencyFormMessage").innerHTML = "";
+  await populateInstitutionSelects();
+
+  document.getElementById("equivalencyFormTitle").textContent =
+    row ? "Edit Course Equivalency" : "Add Course Equivalency";
+  document.getElementById("equivalencyId").value = row?.id || "";
+  document.getElementById("equivalencySourceInstitution").value = row?.source_institution_id || "";
+  document.getElementById("equivalencySourceCode").value = row?.source_course_code || "";
+  document.getElementById("equivalencySourceTitle").value = row?.source_course_title || "";
+  document.getElementById("equivalencySourceCredits").value = row?.source_credits ?? "";
+  document.getElementById("equivalencyTargetInstitution").value = row?.target_institution_id || "";
+  document.getElementById("equivalencyTargetCode").value = row?.target_course_code || "";
+  document.getElementById("equivalencyTargetTitle").value = row?.target_course_title || "";
+  document.getElementById("equivalencyTargetCredits").value = row?.target_credits ?? "";
+  document.getElementById("equivalencyStatus").value = row?.status || "draft";
+  document.getElementById("equivalencyMinimumGrade").value = row?.minimum_grade || "";
+  document.getElementById("equivalencyCatalogStart").value = row?.catalog_year_start || "";
+  document.getElementById("equivalencyCatalogEnd").value = row?.catalog_year_end || "";
+  document.getElementById("equivalencySourceReference").value = row?.source_reference || "";
+  document.getElementById("equivalencyNotes").value = row?.notes || "";
+  document.getElementById("equivalencyForm").scrollIntoView({ behavior: "smooth", block: "center" });
+}
+
+function closeEquivalencyForm() {
+  document.getElementById("equivalencyForm").style.display = "none";
+  document.getElementById("equivalencyFormMessage").innerHTML = "";
+}
+
+function editEquivalency(index) {
+  openEquivalencyForm(CURRENT_TABLE_DATA[index]);
+}
+
+function nullableNumber(id) {
+  const value = document.getElementById(id).value;
+  return value === "" ? null : Number(value);
+}
+
+async function saveEquivalency() {
+  const id = document.getElementById("equivalencyId").value;
+  const payload = {
+    source_institution_id: Number(document.getElementById("equivalencySourceInstitution").value),
+    source_course_code: document.getElementById("equivalencySourceCode").value,
+    source_course_title: document.getElementById("equivalencySourceTitle").value || null,
+    source_credits: nullableNumber("equivalencySourceCredits"),
+    target_institution_id: Number(document.getElementById("equivalencyTargetInstitution").value),
+    target_course_code: document.getElementById("equivalencyTargetCode").value,
+    target_course_title: document.getElementById("equivalencyTargetTitle").value || null,
+    target_credits: nullableNumber("equivalencyTargetCredits"),
+    equivalency_type: "direct",
+    status: document.getElementById("equivalencyStatus").value,
+    minimum_grade: document.getElementById("equivalencyMinimumGrade").value || null,
+    catalog_year_start: document.getElementById("equivalencyCatalogStart").value || null,
+    catalog_year_end: document.getElementById("equivalencyCatalogEnd").value || null,
+    source_reference: document.getElementById("equivalencySourceReference").value || null,
+    notes: document.getElementById("equivalencyNotes").value || null
+  };
+
+  if (!payload.source_institution_id || !payload.target_institution_id ||
+      !payload.source_course_code.trim() || !payload.target_course_code.trim()) {
+    showEquivalencyMessage("Both institutions and both course codes are required.", true);
+    return;
+  }
+
+  try {
+    await fetchJson(id ? `/api/db/equivalencies/${id}` : "/api/db/equivalencies", {
+      method: id ? "PUT" : "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+    closeEquivalencyForm();
+    await loadSummary();
+    await openTable("equivalencies");
+  } catch (err) {
+    showEquivalencyMessage(err.message, true);
+  }
+}
+
+async function deactivateEquivalency(index) {
+  const row = CURRENT_TABLE_DATA[index];
+  if (!confirm(`Deactivate ${row.source_institution_code} ${row.source_course_code} → ${row.target_institution_code} ${row.target_course_code}?`)) return;
+  try {
+    await fetchJson(`/api/db/equivalencies/${row.id}`, { method: "DELETE" });
+    await loadSummary();
+    await openTable("equivalencies");
+  } catch (err) {
+    alert(err.message);
+  }
+}
+
+function showEquivalencyMessage(message, isError) {
+  document.getElementById("equivalencyFormMessage").innerHTML =
+    `<div class="${isError ? "error" : "notice"}">${escapeHtml(message)}</div>`;
+}
+
 async function loadSummary() {
   try {
     const institutions = await fetchJson("/api/db/institutions");
     const departments = await fetchJson("/api/db/departments");
     const programs = await fetchJson("/api/db/programs");
     const courses = await fetchJson("/api/db/courses");
+    const health = await fetchJson("/api/db/health");
 
     document.getElementById("summary").innerHTML = `
       <div class="summary-card">
@@ -727,6 +946,11 @@ async function loadSummary() {
       <div class="summary-card">
         <div class="summary-number">${courses.length}</div>
         <div class="summary-label">Courses</div>
+      </div>
+
+      <div class="summary-card">
+        <div class="summary-number">${health.course_equivalencies || 0}</div>
+        <div class="summary-label">Equivalency Rules</div>
       </div>
     `;
   } catch (err) {

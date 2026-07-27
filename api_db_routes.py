@@ -1,6 +1,6 @@
 from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel
 from sqlalchemy import func
 from sqlalchemy.orm import Session
@@ -18,6 +18,7 @@ from models import (
     RequirementGroupCourse,
     ChoiceGroup,
     ChoiceGroupCourse,
+    CourseEquivalency,
 )
 
 
@@ -32,6 +33,120 @@ class InstitutionPayload(BaseModel):
     website: Optional[str] = None
 
 
+class CourseEquivalencyPayload(BaseModel):
+    source_institution_id: int
+    target_institution_id: int
+    source_course_code: str
+    source_course_title: Optional[str] = None
+    source_credits: Optional[int] = None
+    target_course_code: str
+    target_course_title: Optional[str] = None
+    target_credits: Optional[int] = None
+    equivalency_type: str = "direct"
+    minimum_grade: Optional[str] = None
+    catalog_year_start: Optional[str] = None
+    catalog_year_end: Optional[str] = None
+    status: str = "draft"
+    source_reference: Optional[str] = None
+    notes: Optional[str] = None
+
+
+def require_admin(request: Request):
+    if request.session.get("logged_in") is not True:
+        raise HTTPException(status_code=401, detail="Admin login required")
+
+
+def optional_text(value):
+    return value.strip() if value and value.strip() else None
+
+
+def normalize_course_code(value: str):
+    return " ".join(value.strip().upper().split())
+
+
+def serialize_equivalency(rule: CourseEquivalency):
+    return {
+        "id": rule.id,
+        "source_institution_id": rule.source_institution_id,
+        "source_institution": rule.source_institution.name,
+        "source_institution_code": rule.source_institution.code,
+        "source_course_code": rule.source_course_code,
+        "source_course_title": rule.source_course_title,
+        "source_credits": rule.source_credits,
+        "target_institution_id": rule.target_institution_id,
+        "target_institution": rule.target_institution.name,
+        "target_institution_code": rule.target_institution.code,
+        "target_course_code": rule.target_course_code,
+        "target_course_title": rule.target_course_title,
+        "target_credits": rule.target_credits,
+        "equivalency_type": rule.equivalency_type,
+        "minimum_grade": rule.minimum_grade,
+        "catalog_year_start": rule.catalog_year_start,
+        "catalog_year_end": rule.catalog_year_end,
+        "status": rule.status,
+        "source_reference": rule.source_reference,
+        "notes": rule.notes,
+    }
+
+
+def apply_equivalency_payload(
+    rule: CourseEquivalency,
+    payload: CourseEquivalencyPayload,
+    db: Session,
+    rule_id: Optional[int] = None,
+):
+    source = db.query(Institution).filter_by(id=payload.source_institution_id).first()
+    target = db.query(Institution).filter_by(id=payload.target_institution_id).first()
+
+    if not source or not target:
+        raise HTTPException(status_code=400, detail="Source and target institutions are required")
+    if source.id == target.id:
+        raise HTTPException(status_code=400, detail="Source and target institutions must be different")
+
+    source_code = normalize_course_code(payload.source_course_code)
+    target_code = normalize_course_code(payload.target_course_code)
+    if not source_code or not target_code:
+        raise HTTPException(status_code=400, detail="Source and target course codes are required")
+
+    status = payload.status.strip().lower()
+    if status not in {"draft", "approved", "inactive"}:
+        raise HTTPException(status_code=400, detail="Status must be draft, approved, or inactive")
+
+    equivalency_type = payload.equivalency_type.strip().lower()
+    if equivalency_type != "direct":
+        raise HTTPException(
+            status_code=400,
+            detail="This version supports direct one-to-one equivalencies only",
+        )
+
+    duplicate_query = db.query(CourseEquivalency).filter_by(
+        source_institution_id=source.id,
+        source_course_code=source_code,
+        target_institution_id=target.id,
+        target_course_code=target_code,
+    )
+    if rule_id is not None:
+        duplicate_query = duplicate_query.filter(CourseEquivalency.id != rule_id)
+    if duplicate_query.first():
+        raise HTTPException(status_code=400, detail="This directional equivalency already exists")
+
+    rule.source_institution_id = source.id
+    rule.target_institution_id = target.id
+    rule.source_course_code = source_code
+    rule.source_course_title = optional_text(payload.source_course_title)
+    rule.source_credits = payload.source_credits
+    rule.target_course_code = target_code
+    rule.target_course_title = optional_text(payload.target_course_title)
+    rule.target_credits = payload.target_credits
+    rule.equivalency_type = equivalency_type
+    rule.minimum_grade = optional_text(payload.minimum_grade)
+    rule.catalog_year_start = optional_text(payload.catalog_year_start)
+    rule.catalog_year_end = optional_text(payload.catalog_year_end)
+    rule.status = status
+    rule.source_reference = optional_text(payload.source_reference)
+    rule.notes = optional_text(payload.notes)
+
+
 @router.get("/health")
 def db_health(db: Session = Depends(get_db)):
     return {
@@ -41,7 +156,97 @@ def db_health(db: Session = Depends(get_db)):
         "programs": db.query(Program).count(),
         "courses": db.query(Course).count(),
         "choice_groups": db.query(ChoiceGroup).count(),
+        "course_equivalencies": db.query(CourseEquivalency).count(),
     }
+
+
+@router.get("/equivalencies")
+def get_equivalencies(
+    _admin=Depends(require_admin),
+    db: Session = Depends(get_db),
+):
+    rules = db.query(CourseEquivalency).order_by(
+        CourseEquivalency.source_institution_id,
+        CourseEquivalency.source_course_code,
+        CourseEquivalency.target_institution_id,
+        CourseEquivalency.target_course_code,
+    ).all()
+    return [serialize_equivalency(rule) for rule in rules]
+
+
+@router.get("/equivalencies/matches")
+def get_approved_equivalency_matches(
+    source_institution_code: str,
+    target_institution_code: str,
+    db: Session = Depends(get_db),
+):
+    source_code = source_institution_code.strip().upper()
+    target_code = target_institution_code.strip().upper()
+
+    rules = (
+        db.query(CourseEquivalency)
+        .join(
+            Institution,
+            CourseEquivalency.source_institution_id == Institution.id,
+        )
+        .filter(
+            Institution.code == source_code,
+            CourseEquivalency.status == "approved",
+        )
+        .all()
+    )
+
+    return [
+        serialize_equivalency(rule)
+        for rule in rules
+        if rule.target_institution.code == target_code
+    ]
+
+
+@router.post("/equivalencies")
+def create_equivalency(
+    payload: CourseEquivalencyPayload,
+    _admin=Depends(require_admin),
+    db: Session = Depends(get_db),
+):
+    rule = CourseEquivalency()
+    apply_equivalency_payload(rule, payload, db)
+    db.add(rule)
+    db.commit()
+    db.refresh(rule)
+    return serialize_equivalency(rule)
+
+
+@router.put("/equivalencies/{equivalency_id}")
+def update_equivalency(
+    equivalency_id: int,
+    payload: CourseEquivalencyPayload,
+    _admin=Depends(require_admin),
+    db: Session = Depends(get_db),
+):
+    rule = db.query(CourseEquivalency).filter_by(id=equivalency_id).first()
+    if not rule:
+        raise HTTPException(status_code=404, detail="Course equivalency not found")
+
+    apply_equivalency_payload(rule, payload, db, rule_id=equivalency_id)
+    db.commit()
+    db.refresh(rule)
+    return serialize_equivalency(rule)
+
+
+@router.delete("/equivalencies/{equivalency_id}")
+def deactivate_equivalency(
+    equivalency_id: int,
+    _admin=Depends(require_admin),
+    db: Session = Depends(get_db),
+):
+    rule = db.query(CourseEquivalency).filter_by(id=equivalency_id).first()
+    if not rule:
+        raise HTTPException(status_code=404, detail="Course equivalency not found")
+
+    rule.status = "inactive"
+    db.commit()
+    return {"status": "inactive", "id": equivalency_id}
 
 
 @router.get("/institutions")
