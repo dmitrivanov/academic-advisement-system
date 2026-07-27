@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Database Progress Graph</title>
+<title>Academic Progress | Academic Advisement System</title>
 
 <style>
 body {
@@ -755,16 +755,157 @@ button:hover {
   font-size: 14px;
 }
 
+.page-header {
+  margin-bottom: 12px;
+}
+
+.container {
+  margin-top: 18px;
+}
+
+.page-header h1 {
+  margin: 0;
+  font-size: 27px;
+  letter-spacing: -0.02em;
+}
+
+.page-header .subtitle {
+  margin: 4px 0 0;
+  font-size: 14px;
+}
+
+.program-card {
+  padding: 16px 18px;
+  margin-bottom: 14px;
+}
+
+.program-card h3 {
+  margin: 0 0 10px;
+  font-size: 14px;
+  color: #667085;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+}
+
+.program-context {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.program-context-item {
+  padding: 7px 10px;
+  border-radius: 10px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  font-size: 13px;
+}
+
+.program-context-item strong {
+  color: #475467;
+  margin-right: 4px;
+}
+
+.program-card .top-actions {
+  margin-top: 4px;
+}
+
+.program-card .top-actions button,
+.completed-actions button {
+  margin-top: 8px;
+}
+
+.welcome-strip {
+  padding: 12px 16px;
+  margin-bottom: 14px;
+  border-left: 4px solid #2563eb;
+  background: #eff6ff;
+}
+
+.welcome-strip h3 {
+  margin: 0 0 4px;
+  font-size: 15px;
+}
+
+.welcome-strip .meta {
+  font-size: 13px;
+}
+
+.completed-card {
+  padding-top: 18px;
+}
+
+.completed-card h2 {
+  margin: 0;
+  font-size: 22px;
+}
+
+.completed-card > .subtitle {
+  margin: 5px 0 0;
+}
+
+.recommendation-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 2300;
+  background: rgba(15, 23, 42, .46);
+  backdrop-filter: blur(3px);
+}
+
+.recommendation-modal {
+  position: fixed;
+  z-index: 2400;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: min(920px, 92vw);
+  max-height: 82vh;
+  overflow-y: auto;
+  background: white;
+  border-radius: 20px;
+  padding: 22px;
+  box-shadow: 0 24px 70px rgba(15, 23, 42, .28);
+}
+
+.recommendation-modal-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+.recommendation-modal-header h3 {
+  margin: 0;
+}
+
+@media (max-width: 620px) {
+  .container {
+    margin: 12px auto;
+    padding: 12px;
+  }
+
+  .progress-widget {
+    position: static;
+    width: auto;
+    margin-bottom: 12px;
+  }
+
+  .progress-circle {
+    width: 86px;
+    height: 86px;
+  }
+}
+
 </style>
 </head>
 
 <body>
 
 <div class="container">
-  <h1>Academic Progress</h1>
-  <p class="subtitle">
-    Track completed courses, review degree requirements, and request a personalized next-semester recommendation.
-  </p>
+  <div class="page-header">
+    <h1>Academic Progress</h1>
+    <p class="subtitle">Select completed courses to update your progress and plan what comes next.</p>
+  </div>
 <div id="progressWidget" class="progress-widget" onclick="toggleProgressDetails()">
   <div class="progress-circle" id="overallProgressCircle">
     <div class="progress-circle-inner">
@@ -779,12 +920,13 @@ button:hover {
   </div>
 </div>
 
-  <div class="card">
+  <div class="card program-card">
     <h3>Selected Campus and Program</h3>
-    <div id="selectedProgramInfo" class="meta">Loading selected program...</div>
+    <div id="selectedProgramInfo" class="program-context">Loading selected program...</div>
 
     <div class="top-actions">
       <button class="secondary-button" onclick="changeProgram()">Change Campus / Program</button>
+      <button onclick="openRecommendationModal()">Next Semester Recommendation</button>
       <button class="secondary-button" onclick="openAdvisorDrawer()">Ask AI Advisor</button>
       <button class="secondary-button" onclick="startComparison('major-change')">Explore Major Change</button>
       <button class="secondary-button" onclick="startComparison('transfer')">Transfer Analysis</button>
@@ -798,37 +940,25 @@ button:hover {
     <div id="programAvailabilityNote" class="hidden-note"></div>
   </div>
 
-  <div id="studentWelcomeCard" class="card" style="display:none;">
+  <div id="studentWelcomeCard" class="card welcome-strip" style="display:none;">
     <h3 id="studentWelcomeTitle"></h3>
     <div id="studentWelcomeMessage" class="meta"></div>
   </div>
 
-  <div class="card">
-    <h3>Plan Your Next Semester</h3>
-    <p class="subtitle">Recommendations use the courses you mark as completed and the prerequisites in the selected curriculum.</p>
-    <button id="recommendationToggleButton" onclick="toggleRecommendations()">Show Next Semester Recommendation</button>
-  </div>
-
-  <div id="recommendationCard" class="card hidden">
-    <h3 id="recommendationTitle">Next Semester Recommendation</h3>
-    <div id="recommendationSummary" class="recommendation-summary">Loading...</div>
-    <div id="recommendations" class="recommendation-grid"></div>
-  </div>
-
-  <div class="card">
+  <div class="card completed-card">
     <h2 style="text-align:center;">Completed Courses</h2>
     <p class="subtitle" style="text-align:center;">
-      Select courses already completed. Green = completed, blue = available now, gray = locked by prerequisites.
+      Select the college-level courses you have already completed.
     </p>
 
     <div class="status-legend">
       <div class="legend-item"><span class="legend-dot legend-completed"></span> Completed</div>
       <div class="legend-item"><span class="legend-dot legend-available"></span> Available now</div>
-      <div class="legend-item"><span class="legend-dot legend-locked"></span> Not available yet</div>
+      <div class="legend-item"><span class="legend-dot legend-locked"></span> Prerequisites not satisfied</div>
       <div class="legend-item"><span class="legend-dot legend-not-needed"></span> Not needed / alternative satisfied</div>
     </div>
 
-    <div class="top-actions">
+    <div class="top-actions completed-actions">
       <button onclick="clearCompleted()">Clear Selection</button>
       <button id="toggleSatisfiedButton" class="toggle-button" onclick="toggleSatisfiedCourses()">
         Show satisfied / not-needed courses
@@ -838,23 +968,20 @@ button:hover {
     <div id="completedCourseGrid" class="audit-grid"></div>
   </div>
 
-  <div class="card">
-    <h3>Progress Summary</h3>
-    <div id="summary" class="meta">Loading...</div>
-  </div>
+  <div id="summary" class="hidden"></div>
+  <div id="graph" class="hidden"></div>
+</div>
 
-  <div class="card">
-    <h3>Requirement Areas</h3>
-
-    <div class="tabs">
-      <button class="tab active" onclick="setTab('program', event)">Program Requirements</button>
-      <button class="tab" onclick="setTab('common_core', event)">Common Core</button>
-      <button class="tab" onclick="setTab('flexible_core', event)">Flexible Core</button>
-      <button class="tab" onclick="setTab('full', event)">Full Progress Graph</button>
+<div id="recommendationModalBackdrop" class="recommendation-modal-backdrop hidden" onclick="closeRecommendationModal()"></div>
+<div id="recommendationModal" class="recommendation-modal hidden" role="dialog" aria-modal="true" aria-labelledby="recommendationTitle">
+  <div class="recommendation-modal-header">
+    <div>
+      <h3 id="recommendationTitle">Next Semester Recommendation</h3>
+      <div id="recommendationSummary" class="recommendation-summary">Loading...</div>
     </div>
-
-    <div id="graph"></div>
+    <button class="advisor-close" onclick="closeRecommendationModal()">Close</button>
   </div>
+  <div id="recommendations" class="recommendation-grid"></div>
 </div>
 
 <div id="advisorBackdrop" class="advisor-backdrop hidden" onclick="closeAdvisorDrawer()"></div>
@@ -978,8 +1105,6 @@ function getSavedProgramSelection() {
   }
 }
 
-let RECOMMENDATIONS_VISIBLE = false;
-
 function applyOnboardingState() {
   const saved = getSavedProgramSelection();
   if (!saved || !saved.studentStatus) return;
@@ -991,24 +1116,22 @@ function applyOnboardingState() {
 
   if (saved.studentStatus === "first_semester") {
     title.textContent = "Welcome to your first semester";
-    message.textContent = "You do not need to select any completed courses. Click “Show Next Semester Recommendation” when you are ready to see a suggested first-semester schedule.";
+    message.textContent = "You do not need to select completed courses. Use “Next Semester Recommendation” to see a suggested first-semester schedule.";
   } else {
     title.textContent = "Add your completed college courses";
     message.textContent = "Select every course you have already completed. Then request a next-semester recommendation based on your updated progress.";
   }
 }
 
-function toggleRecommendations() {
-  RECOMMENDATIONS_VISIBLE = !RECOMMENDATIONS_VISIBLE;
-  document.getElementById("recommendationCard").classList.toggle("hidden", !RECOMMENDATIONS_VISIBLE);
-  document.getElementById("recommendationToggleButton").textContent = RECOMMENDATIONS_VISIBLE
-    ? "Hide Next Semester Recommendation"
-    : "Show Next Semester Recommendation";
+function openRecommendationModal() {
+  renderRecommendations();
+  document.getElementById("recommendationModalBackdrop").classList.remove("hidden");
+  document.getElementById("recommendationModal").classList.remove("hidden");
+}
 
-  if (RECOMMENDATIONS_VISIBLE) {
-    renderRecommendations();
-    document.getElementById("recommendationCard").scrollIntoView({ behavior: "smooth", block: "start" });
-  }
+function closeRecommendationModal() {
+  document.getElementById("recommendationModalBackdrop").classList.add("hidden");
+  document.getElementById("recommendationModal").classList.add("hidden");
 }
 
 function changeProgram() {
@@ -1022,9 +1145,9 @@ function updateSelectedProgramHeader() {
   const program = CURRENT_REQUIREMENTS.program;
 
   info.innerHTML = `
-    <strong>Campus:</strong> ${program.institution || program.institution_code || "Not specified"}<br>
-    <strong>Program:</strong> ${program.code} — ${program.name}<br>
-    <strong>Catalog year:</strong> ${program.catalog_year || "Not specified"}
+    <span class="program-context-item"><strong>Campus</strong> ${program.institution || program.institution_code || "Not specified"}</span>
+    <span class="program-context-item"><strong>Program</strong> ${program.code} — ${program.name}</span>
+    <span class="program-context-item"><strong>Catalog</strong> ${program.catalog_year || "Not specified"}</span>
   `;
 }
 
@@ -2275,6 +2398,7 @@ async function sendAdvisorQuestion() {
 document.addEventListener("keydown", function(event) {
   if (event.key === "Escape") {
     closeAdvisorDrawer();
+    closeRecommendationModal();
   }
 
   if ((event.metaKey || event.ctrlKey) && event.key === "Enter") {
