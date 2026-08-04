@@ -1343,7 +1343,7 @@ body { background: #f5f5f7; color: #1d1d1f; }
 .workspace-nav .progress-details { position: absolute; z-index: 20; top: calc(100% + 8px); right: 0; width: 285px; padding: 15px; background: #fff; border: 1px solid rgba(0,0,0,.08); border-radius: 14px; box-shadow: 0 16px 42px rgba(0,0,0,.14); }
 
 .program-card { padding: 0; overflow: visible; border-color: rgba(0,0,0,.08); border-radius: 20px; box-shadow: 0 8px 30px rgba(0,0,0,.05); }
-.program-overview { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 17px 20px 14px; }
+.program-overview { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 14px 16px; }
 .program-overview-label { margin-bottom: 8px; color: #86868b; font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
 .program-context { gap: 7px; }
 .program-context-item { padding: 7px 10px; background: #f5f5f7; border-color: transparent; border-radius: 9px; }
@@ -1351,7 +1351,14 @@ body { background: #f5f5f7; color: #1d1d1f; }
 .icon-button, .action-item, .action-menu > summary, .planner-primary, .planner-secondary { min-height: 40px; margin: 0; padding: 9px 13px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; border: 0; border-radius: 10px; font-size: 13px; font-weight: 650; line-height: 1; text-decoration: none; cursor: pointer; transition: background .18s ease, transform .18s ease, box-shadow .18s ease; }
 .icon-button { flex: 0 0 auto; color: #0066cc; background: #eef6ff; }
 .icon-button:hover, .planner-secondary:hover { background: #e3f0ff; }
-.action-dock { display: flex; align-items: center; gap: 5px; padding: 7px; border-top: 1px solid rgba(0,0,0,.06); border-radius: 0 0 20px 20px; background: rgba(248,248,250,.9); }
+.action-dock { display: flex; align-items: center; gap: 7px; padding: 9px; border-top: 1px solid rgba(0,0,0,.06); border-radius: 0 0 20px 20px; background: rgba(248,248,250,.9); }
+.action-dock .action-item, .action-dock .action-menu > summary { min-height: 48px; padding: 12px 17px; border-radius: 12px; font-size: 14px; }
+.action-spacer { flex: 1 1 auto; }
+.action-dock .progress-widget { position: relative; top: auto; right: auto; z-index: 10; width: auto; min-width: 145px; height: 48px; margin: 0; padding: 5px 11px; display: flex; align-items: center; gap: 9px; border: 1px solid rgba(0,0,0,.07); border-radius: 12px; background: #fff; box-shadow: none; }
+.action-dock .progress-circle { width: 36px; height: 36px; flex: 0 0 36px; margin: 0; }
+.action-dock .progress-circle-inner { width: 27px; height: 27px; }
+.action-dock .progress-circle-inner div { font-size: 11px; }
+.action-dock .progress-details { position: absolute; z-index: 20; top: calc(100% + 8px); right: 0; width: 285px; margin: 0; padding: 15px; border: 1px solid rgba(0,0,0,.08); border-radius: 14px; background: #fff; box-shadow: 0 16px 42px rgba(0,0,0,.14); }
 .action-item, .action-menu > summary { color: #3a3a3c; background: transparent; }
 .action-item:hover, .action-menu > summary:hover { background: #e9e9eb; transform: none; }
 .action-item.primary { color: #fff; background: #0071e3; box-shadow: 0 3px 9px rgba(0,113,227,.2); }
@@ -1378,10 +1385,11 @@ body { background: #f5f5f7; color: #1d1d1f; }
 .planner-secondary { color: #0066cc; background: #eef6ff; }
 
 @media (max-width: 780px) {
-  .workspace-nav, .program-overview, .planning-card-header { align-items: stretch; flex-direction: column; }
-  .workspace-nav .progress-widget { width: 100%; }
-  .workspace-nav .progress-details { left: 0; right: auto; width: min(285px, calc(100vw - 48px)); }
-  .action-dock { overflow-x: auto; }
+  .workspace-nav, .planning-card-header { align-items: stretch; flex-direction: column; }
+  .action-dock { flex-wrap: wrap; overflow: visible; }
+  .action-spacer { display: none; }
+  .action-dock .progress-widget { flex: 1 1 145px; }
+  .action-dock .progress-details { left: 0; right: auto; width: min(285px, calc(100vw - 48px)); }
   .action-item, .action-menu > summary { white-space: nowrap; }
   .planning-mode-card .mode-buttons { width: 100%; grid-template-columns: 1fr 1fr; }
   .planner-actions { align-items: stretch; flex-direction: column; }
@@ -1394,39 +1402,9 @@ body { background: #f5f5f7; color: #1d1d1f; }
 <body>
 
 <div class="container">
-  <header class="workspace-nav">
-    <div class="workspace-title">
-      <h1>Academic Progress</h1>
-      <p>Review completed coursework and build a clear path to graduation.</p>
-    </div>
-    <div id="progressWidget" class="progress-widget" onclick="toggleProgressDetails()" onkeydown="if(event.key === 'Enter' || event.key === ' '){ event.preventDefault(); toggleProgressDetails(); }" role="button" tabindex="0" aria-label="Show detailed degree progress">
-      <div class="progress-circle" id="overallProgressCircle">
-        <div class="progress-circle-inner">
-          <div id="overallProgressPercent">0%</div>
-          <small>complete</small>
-        </div>
-      </div>
-      <div class="progress-compact-copy">
-        <strong>Degree progress</strong>
-        <span>Click for details</span>
-      </div>
-      <div id="progressDetails" class="progress-details hidden">
-        <h4>Degree Progress</h4>
-        <div id="progressDetailsContent"></div>
-      </div>
-    </div>
-  </header>
-
   <div class="card program-card">
     <div class="program-overview">
-      <div>
-        <div class="program-overview-label">Current academic workspace</div>
-        <div id="selectedProgramInfo" class="program-context">Loading selected program...</div>
-      </div>
-      <button class="icon-button" onclick="changeProgram()" title="Choose another campus or program">
-        <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h11M4 17h16M17 4l3 3-3 3M7 14l-3 3 3 3"/></svg>
-        Change program
-      </button>
+      <div id="selectedProgramInfo" class="program-context">Loading selected program...</div>
     </div>
 
     <nav class="action-dock" aria-label="Academic advising actions">
@@ -1448,6 +1426,26 @@ body { background: #f5f5f7; color: #1d1d1f; }
           <button class="action-item" onclick="startComparison('transfer')">Transfer analysis</button>
         </div>
       </details>
+      <button class="action-item" onclick="changeProgram()" title="Choose another campus or program">
+        <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h11M4 17h16M17 4l3 3-3 3M7 14l-3 3 3 3"/></svg>
+        Change program
+      </button>
+      <div class="action-spacer"></div>
+      <div id="progressWidget" class="progress-widget" onclick="toggleProgressDetails()" onkeydown="if(event.key === 'Enter' || event.key === ' '){ event.preventDefault(); toggleProgressDetails(); }" role="button" tabindex="0" aria-label="Show detailed degree progress">
+        <div class="progress-circle" id="overallProgressCircle">
+          <div class="progress-circle-inner">
+            <div id="overallProgressPercent">0%</div>
+          </div>
+        </div>
+        <div class="progress-compact-copy">
+          <strong>Progress</strong>
+          <span>View details</span>
+        </div>
+        <div id="progressDetails" class="progress-details hidden">
+          <h4>Degree Progress</h4>
+          <div id="progressDetailsContent"></div>
+        </div>
+      </div>
     </nav>
 
     <div style="display:none;">
