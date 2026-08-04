@@ -625,6 +625,7 @@ def seed_programs(db):
                 continue
 
             program = db.query(Program).filter_by(
+                department_id=department.id,
                 code=row["program_code"].strip(),
                 catalog_year=row["catalog_year"].strip()
             ).first()
@@ -638,6 +639,42 @@ def seed_programs(db):
                     catalog_year=row["catalog_year"].strip()
                 )
                 db.add(program)
+
+            db.flush()
+
+            # A curriculum can move departments or adopt its official catalog
+            # year after a placeholder program has already been deployed. Keep
+            # historical programs that contain curriculum data, but remove empty
+            # stale placeholders with the same institution/program code. Without
+            # this cleanup, code-only API lookups can select the empty record.
+            stale_programs = (
+                db.query(Program)
+                .join(Department, Program.department_id == Department.id)
+                .filter(
+                    Department.institution_id == institution.id,
+                    Program.code == row["program_code"].strip(),
+                    Program.id != program.id,
+                )
+                .all()
+            )
+
+            for stale_program in stale_programs:
+                has_program_courses = db.query(ProgramCourse).filter_by(
+                    program_id=stale_program.id
+                ).first() is not None
+                has_requirement_groups = db.query(RequirementGroup).filter_by(
+                    program_id=stale_program.id
+                ).first() is not None
+
+                if has_program_courses or has_requirement_groups:
+                    continue
+
+                clear_program_data(db, stale_program)
+                db.delete(stale_program)
+                print(
+                    "Removed stale empty program placeholder: "
+                    f"{stale_program.code} ({stale_program.catalog_year})"
+                )
 
     db.flush()
     print("Seeded programs.csv")
