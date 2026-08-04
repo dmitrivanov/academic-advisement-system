@@ -1352,9 +1352,16 @@ body { background: #f5f5f7; color: #1d1d1f; }
 .icon-button { flex: 0 0 auto; color: #0066cc; background: #eef6ff; }
 .icon-button:hover, .planner-secondary:hover { background: #e3f0ff; }
 .action-dock { display: flex; align-items: center; gap: 7px; padding: 9px; border-top: 1px solid rgba(0,0,0,.06); border-radius: 0 0 20px 20px; background: rgba(248,248,250,.9); }
-.action-dock .action-item, .action-dock .action-menu > summary { min-height: 48px; padding: 12px 17px; border-radius: 12px; font-size: 14px; }
+.action-dock .action-item, .action-dock .action-menu > summary { min-height: 64px; padding: 10px 14px; border-radius: 12px; font-size: 14px; text-align: left; }
+.action-dock .ui-icon { width: 20px; height: 20px; flex-basis: 20px; }
+.action-copy { display: grid; gap: 4px; white-space: nowrap; }
+.action-copy strong { color: inherit; font-size: 14px; line-height: 1.05; }
+.action-copy small { color: #6e6e73; font-size: 10px; font-weight: 500; line-height: 1.05; }
+.action-item.primary .action-copy small { color: rgba(255,255,255,.78); }
+.action-item.plan-action { color: #0066cc; background: #eaf3ff; }
+.action-item.plan-action:hover { background: #dcecff; }
 .action-spacer { flex: 1 1 auto; }
-.action-dock .progress-widget { position: relative; top: auto; right: auto; z-index: 10; width: auto; min-width: 145px; height: 48px; margin: 0; padding: 5px 11px; display: flex; align-items: center; gap: 9px; border: 1px solid rgba(0,0,0,.07); border-radius: 12px; background: #fff; box-shadow: none; }
+.action-dock .progress-widget { position: relative; top: auto; right: auto; z-index: 10; width: auto; min-width: 135px; height: 64px; margin: 0; padding: 7px 10px; display: flex; align-items: center; gap: 9px; border: 1px solid rgba(0,0,0,.07); border-radius: 12px; background: #fff; box-shadow: none; }
 .action-dock .progress-circle { width: 36px; height: 36px; flex: 0 0 36px; margin: 0; }
 .action-dock .progress-circle-inner { width: 27px; height: 27px; }
 .action-dock .progress-circle-inner div { font-size: 11px; }
@@ -1408,27 +1415,25 @@ body { background: #f5f5f7; color: #1d1d1f; }
     </div>
 
     <nav class="action-dock" aria-label="Academic advising actions">
-      <button class="action-item primary" onclick="openRecommendationModal()">
-        <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
-        Next semester
-      </button>
-      <button class="action-item" onclick="openAdvisorDrawer()">
+      <button class="action-item primary featured" onclick="openAdvisorDrawer()">
         <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5h14v11H9l-4 4z"/><path d="M9 9h6M9 12h4"/></svg>
-        Advisor chat
+        <span class="action-copy"><strong>Ask AI Advisor</strong><small>Questions about your degree</small></span>
       </button>
-      <details class="action-menu">
-        <summary>
-          <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M7 12h10M10 17h4"/></svg>
-          Compare options
-        </summary>
-        <div class="action-menu-panel">
-          <button class="action-item" onclick="startComparison('major-change')">Explore major change</button>
-          <button class="action-item" onclick="startComparison('transfer')">Transfer analysis</button>
-        </div>
-      </details>
+      <button class="action-item plan-action" onclick="openDegreePlanning()">
+        <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h9l3 3v15H6zM14 3v4h4M9 12h6M9 16h6"/></svg>
+        <span class="action-copy"><strong>Build Degree Plan</strong><small>Create an AI semester plan</small></span>
+      </button>
+      <button class="action-item" onclick="startComparison('major-change')">
+        <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7h11M15 4l3 3-3 3M17 17H6M9 14l-3 3 3 3"/></svg>
+        <span class="action-copy"><strong>Major Change</strong><small>Compare programs here</small></span>
+      </button>
+      <button class="action-item" onclick="startComparison('transfer')">
+        <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h8v6H5zM11 14h8v6h-8zM13 7h3a2 2 0 0 1 2 2v5M15 12l3 3 3-3"/></svg>
+        <span class="action-copy"><strong>Transfer Analysis</strong><small>Compare across colleges</small></span>
+      </button>
       <button class="action-item" onclick="changeProgram()" title="Choose another campus or program">
         <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h11M4 17h16M17 4l3 3-3 3M7 14l-3 3 3 3"/></svg>
-        Change program
+        <span class="action-copy"><strong>Change Program</strong><small>Campus or curriculum</small></span>
       </button>
       <div class="action-spacer"></div>
       <div id="progressWidget" class="progress-widget" onclick="toggleProgressDetails()" onkeydown="if(event.key === 'Enter' || event.key === ' '){ event.preventDefault(); toggleProgressDetails(); }" role="button" tabindex="0" aria-label="Show detailed degree progress">
@@ -1464,12 +1469,12 @@ body { background: #f5f5f7; color: #1d1d1f; }
   <div id="planningModeCard" class="card planning-mode-card">
     <div class="planning-card-header">
       <div>
-        <h3>Semester Planning</h3>
+        <h3>Degree Planning</h3>
         <p id="planningModeDescription" class="subtitle">Choose how you want to review your curriculum and plan future semesters.</p>
       </div>
       <div class="mode-buttons" role="group" aria-label="Planning mode">
-        <button id="manualModeButton" class="mode-button active" onclick="setPlanningMode('manual')">Course entry</button>
-        <button id="aiModeButton" class="mode-button" onclick="setPlanningMode('ai')">AI plan</button>
+        <button id="manualModeButton" class="mode-button active" onclick="setPlanningMode('manual')">Enter Completed Courses</button>
+        <button id="aiModeButton" class="mode-button" onclick="setPlanningMode('ai')">AI Degree Plan</button>
       </div>
     </div>
     <div id="degreePlanArea" style="display:none;">
@@ -1496,11 +1501,11 @@ body { background: #f5f5f7; color: #1d1d1f; }
       <div class="planner-actions">
         <button id="generatePlanButton" class="planner-primary" onclick="generateAIStudyPlan()">
           <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l1.4 4.2L18 9l-4.6 1.8L12 15l-1.4-4.2L6 9l4.6-1.8zM18 15l.8 2.2L21 18l-2.2.8L18 21l-.8-2.2L15 18l2.2-.8z"/></svg>
-          Generate AI plan
+          Generate AI Degree Plan
         </button>
         <button class="planner-secondary" onclick="openPlanProspectus('degree')">
           <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h9l3 3v15H6zM14 3v4h4M9 12h6M9 16h6"/></svg>
-          View prospectus
+          View Degree Plan
         </button>
       </div>
       <div id="aiPlanExplanation" class="ai-plan-box" style="display:none;"></div>
@@ -1540,7 +1545,7 @@ body { background: #f5f5f7; color: #1d1d1f; }
 <div id="planProspectusBackdrop" class="prospectus-backdrop hidden" onclick="closePlanProspectus()"></div>
 <div id="planProspectusModal" class="prospectus-modal hidden" role="dialog" aria-modal="true" aria-labelledby="planProspectusTitle">
   <div class="prospectus-toolbar">
-    <div class="prospectus-toolbar-title">Interactive Advising Document</div>
+    <div class="prospectus-toolbar-title">Degree Plan</div>
     <div class="prospectus-toolbar-actions">
       <button onclick="printPlanProspectus()">Download / Save PDF</button>
       <button class="prospectus-close" onclick="closePlanProspectus()">Close</button>
@@ -1765,6 +1770,11 @@ function setPlanningMode(mode) {
     configurePlannerSemesterOptions({ preserveSelection: true });
     renderDegreePlan();
   }
+}
+
+function openDegreePlanning() {
+  setPlanningMode("ai");
+  document.getElementById("planningModeCard").scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
 function openRecommendationModal() {
@@ -3397,7 +3407,7 @@ async function generateAIStudyPlan() {
     button.disabled = false;
     button.innerHTML = `
       <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l1.4 4.2L18 9l-4.6 1.8L12 15l-1.4-4.2L6 9l4.6-1.8zM18 15l.8 2.2L21 18l-2.2.8L18 21l-.8-2.2L15 18l2.2-.8z"/></svg>
-      Generate AI plan
+      Generate AI Degree Plan
     `;
     openPlanProspectus("degree");
   }
