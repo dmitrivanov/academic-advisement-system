@@ -844,6 +844,39 @@ button:hover {
   margin: 5px 0 0;
 }
 
+.completed-card.readonly {
+  opacity: .52;
+  filter: grayscale(.35);
+  pointer-events: none;
+  position: relative;
+}
+
+.completed-card.readonly::after {
+  content: "Completed-course selection is unavailable for a first-semester student.";
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: start center;
+  padding-top: 78px;
+  border-radius: 16px;
+  color: #344054;
+  font-weight: bold;
+  background: rgba(248, 250, 252, .28);
+}
+
+.planning-mode-card { border-left: 4px solid #2563eb; }
+.mode-buttons { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 12px; }
+.mode-button.active { background: #172033; color: white; }
+.degree-plan { display: grid; gap: 12px; margin-top: 16px; }
+.semester-panel { border: 1px solid #d7deea; border-radius: 14px; background: #fff; overflow: hidden; }
+.semester-panel summary { cursor: pointer; padding: 14px 16px; font-weight: bold; background: #f8fbff; }
+.semester-panel[open] summary { border-bottom: 1px solid #e6eaf2; }
+.semester-courses { padding: 12px 16px; display: grid; gap: 8px; }
+.semester-course { display: flex; justify-content: space-between; gap: 12px; padding-bottom: 8px; border-bottom: 1px solid #eef2f7; }
+.semester-course:last-child { border-bottom: 0; }
+.plan-note { color: #667085; line-height: 1.5; font-size: 13px; }
+.ai-plan-box { margin-top: 14px; padding: 14px; border-radius: 12px; background: #f0f7ff; line-height: 1.55; }
+
 .recommendation-modal-backdrop {
   position: fixed;
   inset: 0;
@@ -945,7 +978,25 @@ button:hover {
     <div id="studentWelcomeMessage" class="meta"></div>
   </div>
 
-  <div class="card completed-card">
+  <div id="planningModeCard" class="card planning-mode-card">
+    <h3 style="margin-top:0;">Semester Planning</h3>
+    <p id="planningModeDescription" class="subtitle">Choose how you want to review your curriculum and plan future semesters.</p>
+    <div class="mode-buttons">
+      <button id="manualModeButton" class="secondary-button mode-button active" onclick="setPlanningMode('manual')">Advanced / Manual</button>
+      <button id="aiModeButton" class="secondary-button mode-button" onclick="setPlanningMode('ai')">AI Advisor Plan</button>
+    </div>
+    <div id="degreePlanArea" style="display:none;">
+      <div class="top-actions">
+        <button id="generatePlanButton" onclick="generateAIStudyPlan()">Generate AI Study Plan</button>
+        <button class="secondary-button" onclick="renderDegreePlan()">Refresh Semester Plan</button>
+      </div>
+      <div id="aiPlanExplanation" class="ai-plan-box" style="display:none;"></div>
+      <div id="degreePlanSummary" class="plan-note"></div>
+      <div id="degreePlan" class="degree-plan"></div>
+    </div>
+  </div>
+
+  <div id="completedCoursesCard" class="card completed-card">
     <h2 style="text-align:center;">Completed Courses</h2>
     <p class="subtitle" style="text-align:center;">
       Select the college-level courses you have already completed.
@@ -1043,6 +1094,9 @@ let SHOW_NOT_NEEDED = false;
 let CHOICE_SELECTIONS = {};
 let ACTIVE_CHOICE_PLACEHOLDER = null;
 let ACTIVE_CHOICE_OPTIONS = [];
+let STUDENT_STATUS = "returning";
+let CURRENT_PLANNING_MODE = "manual";
+let LAST_DEGREE_PLAN = [];
 
 const EMPTY_GROUPS = [
   {
@@ -1109,6 +1163,8 @@ function applyOnboardingState() {
   const saved = getSavedProgramSelection();
   if (!saved || !saved.studentStatus) return;
 
+  STUDENT_STATUS = saved.studentStatus;
+
   const card = document.getElementById("studentWelcomeCard");
   const title = document.getElementById("studentWelcomeTitle");
   const message = document.getElementById("studentWelcomeMessage");
@@ -1116,11 +1172,29 @@ function applyOnboardingState() {
 
   if (saved.studentStatus === "first_semester") {
     title.textContent = "Welcome to your first semester";
-    message.textContent = "You do not need to select completed courses. Use “Next Semester Recommendation” to see a suggested first-semester schedule.";
+    message.textContent = "Your first-semester schedule and a foldable full-program plan are ready below. Course selection is locked because you indicated that you have not completed college-level classes.";
+    document.getElementById("completedCoursesCard").classList.add("readonly");
+    setPlanningMode("ai");
   } else {
     title.textContent = "Add your completed college courses";
-    message.textContent = "Select every course you have already completed. Then request a next-semester recommendation based on your updated progress.";
+    message.textContent = "Use Advanced / Manual mode to record completed classes, or AI Advisor Plan to build future semesters from those selections.";
   }
+}
+
+function setPlanningMode(mode) {
+  CURRENT_PLANNING_MODE = mode;
+  const isAI = mode === "ai";
+  document.getElementById("manualModeButton").classList.toggle("active", !isAI);
+  document.getElementById("aiModeButton").classList.toggle("active", isAI);
+  document.getElementById("degreePlanArea").style.display = isAI ? "block" : "none";
+  document.getElementById("planningModeDescription").textContent = isAI
+    ? "The planner uses your completed courses, prerequisites, and curriculum requirements to organize the next and following semesters."
+    : "Select completed courses yourself. Your selections become the starting point for recommendations and transfer analysis.";
+
+  if (STUDENT_STATUS !== "first_semester") {
+    document.getElementById("completedCoursesCard").style.display = isAI ? "none" : "block";
+  }
+  if (isAI && CURRENT_REQUIREMENTS) renderDegreePlan();
 }
 
 function openRecommendationModal() {
@@ -1326,6 +1400,7 @@ function setEmptyProgramState(selectedInstitutionCode) {
   renderSummary();
   renderRecommendations();
   updateProgressWidget();
+  if (CURRENT_PLANNING_MODE === "ai") renderDegreePlan();
 }
 
 async function loadProgramRequirements() {
@@ -1353,6 +1428,7 @@ async function loadProgramRequirements() {
   renderSummary();
   renderRecommendations();
   updateProgressWidget();
+  if (CURRENT_PLANNING_MODE === "ai") renderDegreePlan();
 }
 
 function ensurePlaceholderGroups() {
@@ -2184,6 +2260,151 @@ function renderRecommendations() {
 
     container.appendChild(div);
   });
+}
+
+function nextRegularSemesterName(currentName) {
+  const parts = String(currentName || "").split(" ");
+  const season = parts[0];
+  const year = Number(parts[1]) || new Date().getFullYear();
+  if (season === "Fall") return `Spring ${year + 1}`;
+  if (season === "Spring") return `Fall ${year}`;
+  if (season === "Summer") return `Fall ${year}`;
+  if (season === "Winter") return `Spring ${year}`;
+  return `Fall ${year}`;
+}
+
+function buildDegreePlan(maxSemesters = 12) {
+  if (!CURRENT_REQUIREMENTS) return [];
+
+  const courses = allCoursesFromGroups();
+  const simulatedCompleted = getCompletedCourses();
+  const plan = [];
+  let semesterName = detectNextSemester().name;
+
+  for (let index = 0; index < maxSemesters; index++) {
+    const semesterStartCompleted = new Set(simulatedCompleted);
+    const selected = [];
+    const selectedTypes = new Set();
+    let credits = 0;
+
+    let available = Object.values(courses).filter(course => {
+      if (isCourseCompleted(course.code, course, simulatedCompleted)) return false;
+      if (isNotNeeded(course.code, course, simulatedCompleted)) return false;
+      return allPrereqsSatisfied(course, semesterStartCompleted);
+    });
+
+    while (available.length && selected.length < 5) {
+      available.sort((a, b) =>
+        recommendationScore(b, semesterStartCompleted, selectedTypes) -
+        recommendationScore(a, semesterStartCompleted, selectedTypes)
+      );
+
+      const chosen = available.find(course => {
+        const projected = new Set(simulatedCompleted);
+        selected.forEach(item => projected.add(item.code));
+        if (isNotNeeded(course.code, course, projected)) return false;
+        return credits + Number(course.credits || 0) <= 17;
+      });
+      if (!chosen) break;
+
+      selected.push(chosen);
+      selectedTypes.add(chosen.group_type);
+      credits += Number(chosen.credits || 0);
+      available = available.filter(course => course.code !== chosen.code);
+      if (credits >= 14) break;
+    }
+
+    if (!selected.length) break;
+
+    selected.forEach(course => simulatedCompleted.add(course.code));
+    plan.push({ name: semesterName, courses: selected, credits });
+    semesterName = nextRegularSemesterName(semesterName);
+
+    const unfinished = Object.values(courses).some(course =>
+      !isCourseCompleted(course.code, course, simulatedCompleted) &&
+      !isNotNeeded(course.code, course, simulatedCompleted)
+    );
+    if (!unfinished) break;
+  }
+
+  return plan;
+}
+
+function renderDegreePlan() {
+  const container = document.getElementById("degreePlan");
+  const summary = document.getElementById("degreePlanSummary");
+  if (!container || !CURRENT_REQUIREMENTS) return;
+
+  LAST_DEGREE_PLAN = buildDegreePlan();
+  container.innerHTML = "";
+
+  if (!LAST_DEGREE_PLAN.length) {
+    summary.textContent = "No future schedule could be generated. The program may be complete, or remaining classes may require prerequisites not included in the curriculum data.";
+    return;
+  }
+
+  const totalCredits = LAST_DEGREE_PLAN.reduce((sum, semester) => sum + semester.credits, 0);
+  summary.innerHTML = `Suggested sequence: <strong>${LAST_DEGREE_PLAN.length} semester(s)</strong> and <strong>${totalCredits} planned credits</strong>. This is a planning aid, not an official registration schedule. Course availability and advising approval still apply.`;
+
+  LAST_DEGREE_PLAN.forEach((semester, index) => {
+    const details = document.createElement("details");
+    details.className = "semester-panel";
+    if (index === 0) details.open = true;
+    details.innerHTML = `
+      <summary>${semester.name} — ${semester.credits} credits · ${semester.courses.length} courses</summary>
+      <div class="semester-courses">
+        ${semester.courses.map(course => `
+          <div class="semester-course">
+            <span><strong>${course.code}</strong> — ${course.title}</span>
+            <span>${course.credits} cr</span>
+          </div>
+        `).join("")}
+      </div>
+    `;
+    container.appendChild(details);
+  });
+}
+
+async function generateAIStudyPlan() {
+  renderDegreePlan();
+  const box = document.getElementById("aiPlanExplanation");
+  const button = document.getElementById("generatePlanButton");
+  box.style.display = "block";
+  box.textContent = "The AI advisor is reviewing the semester sequence...";
+  button.disabled = true;
+  button.textContent = "Reviewing...";
+
+  try {
+    const response = await fetch("/progress-advisor-ask", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        user_question: "Explain this proposed multi-semester study plan. Highlight the next semester, prerequisite sequencing, and any limitations. Do not add or replace courses that are not in the supplied plan.",
+        page_context: {
+          ...buildAdvisorPageContext(),
+          planning_mode: "ai_semester_plan",
+          degree_plan: LAST_DEGREE_PLAN.map(semester => ({
+            name: semester.name,
+            credits: semester.credits,
+            courses: semester.courses.map(course => ({
+              code: course.code,
+              title: course.title,
+              credits: course.credits,
+              area: course.group_name
+            }))
+          }))
+        }
+      })
+    });
+    if (!response.ok) throw new Error(`AI request failed (${response.status})`);
+    const data = await response.json();
+    box.innerHTML = formatAdvisorMarkdown(data.answer || "No explanation was generated.");
+  } catch (err) {
+    box.textContent = `The structured semester plan is still available. AI explanation could not be generated: ${err.message}`;
+  } finally {
+    button.disabled = false;
+    button.textContent = "Generate AI Study Plan";
+  }
 }
 
 
