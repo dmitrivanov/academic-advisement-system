@@ -67,6 +67,12 @@ button:hover {
   background: #1d4ed8;
 }
 
+input:focus-visible,
+button:focus-visible {
+  outline: 3px solid #2563eb;
+  outline-offset: 2px;
+}
+
 .error {
   color: #b42318;
   font-weight: bold;
@@ -89,16 +95,16 @@ button:hover {
     <p class="subtitle">Please log in to access the advising prototype.</p>
 
     <form method="POST" action="/login">
-      <label>Username</label>
-      <input type="text" name="username" required>
+      <label for="username">Username</label>
+      <input type="text" id="username" name="username" autocomplete="username" required>
 
-      <label>Password</label>
-      <input type="password" name="password" required>
+      <label for="password">Password</label>
+      <input type="password" id="password" name="password" autocomplete="current-password" required>
 
       <button type="submit">Log In</button>
     </form>
 
-    <div id="error" class="error"></div>
+    <div id="error" class="error" role="alert" aria-live="assertive"></div>
 
     <div class="footer">
       Access restricted for project demonstration and development.
