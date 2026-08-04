@@ -208,6 +208,9 @@ Contributors must work from a fork and submit pull requests. Do not push directl
 the upstream `main` branch. See [CONTRIBUTING.md](CONTRIBUTING.md) for the complete
 workflow and review checklist.
 
+For component boundaries, frontend state contracts, and the incremental revision
+plan, see [ARCHITECTURE.md](ARCHITECTURE.md).
+
 ## Deployment
 
 Render deploys the production application from the upstream `main` branch. Merging

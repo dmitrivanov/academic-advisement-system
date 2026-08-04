@@ -115,6 +115,14 @@ button.secondary:hover, a.secondary:hover {
   background: #344054;
 }
 
+button.smart-onboarding-button {
+  background: #7c3aed;
+}
+
+button.smart-onboarding-button:hover {
+  background: #6d28d9;
+}
+
 button:disabled {
   background: #cbd5e1;
   cursor: not-allowed;
@@ -174,6 +182,173 @@ button:disabled {
 @media (max-width: 620px) {
   .onboarding-options { grid-template-columns: 1fr; }
 }
+
+.smart-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.58);
+  z-index: 50;
+}
+
+.smart-modal {
+  position: fixed;
+  z-index: 51;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: min(720px, calc(100% - 32px));
+  max-height: calc(100vh - 40px);
+  overflow-y: auto;
+  background: white;
+  border-radius: 20px;
+  box-shadow: 0 24px 70px rgba(15, 23, 42, 0.28);
+}
+
+.smart-modal.hidden,
+.smart-modal-backdrop.hidden {
+  display: none;
+}
+
+.smart-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 22px 24px 16px;
+  border-bottom: 1px solid #e6eaf2;
+}
+
+.smart-modal-header h2 {
+  margin: 0 0 5px;
+}
+
+.smart-modal-header p {
+  margin: 0;
+  color: #667085;
+  font-size: 14px;
+}
+
+.smart-close {
+  background: #eef2f7;
+  color: #344054;
+  padding: 9px 12px;
+}
+
+.smart-close:hover { background: #e2e8f0; }
+
+.smart-progress {
+  height: 6px;
+  background: #ede9fe;
+}
+
+.smart-progress-bar {
+  height: 100%;
+  width: 20%;
+  background: #7c3aed;
+  transition: width 180ms ease;
+}
+
+.smart-modal-body {
+  padding: 24px;
+}
+
+.smart-step-label {
+  color: #7c3aed;
+  font-weight: bold;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.smart-question {
+  font-size: 23px;
+  margin: 8px 0;
+}
+
+.smart-help {
+  color: #667085;
+  line-height: 1.55;
+  margin: 0 0 18px;
+}
+
+.smart-options {
+  display: grid;
+  gap: 12px;
+}
+
+.smart-option {
+  width: 100%;
+  text-align: left;
+  background: white;
+  color: #172033;
+  border: 1px solid #d7deea;
+  padding: 15px 16px;
+}
+
+.smart-option:hover,
+.smart-option.selected {
+  background: #f5f3ff;
+  border-color: #8b5cf6;
+}
+
+.smart-option strong,
+.smart-option span { display: block; }
+
+.smart-option span {
+  margin-top: 5px;
+  color: #667085;
+  font-weight: normal;
+  line-height: 1.4;
+}
+
+.smart-option:disabled {
+  background: #f8fafc;
+  border-color: #e2e8f0;
+  color: #94a3b8;
+}
+
+.smart-option:disabled span { color: #94a3b8; }
+
+.smart-fields {
+  display: grid;
+  gap: 16px;
+}
+
+.smart-fields label { margin-bottom: 7px; }
+
+.smart-summary {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 16px;
+  line-height: 1.65;
+}
+
+.smart-summary div + div {
+  border-top: 1px solid #e2e8f0;
+  margin-top: 8px;
+  padding-top: 8px;
+}
+
+.smart-modal-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 24px 22px;
+  border-top: 1px solid #e6eaf2;
+}
+
+.smart-modal-footer .right-actions {
+  display: flex;
+  gap: 10px;
+}
+
+@media (max-width: 620px) {
+  .smart-modal-footer { align-items: stretch; flex-direction: column; }
+  .smart-modal-footer .right-actions { width: 100%; }
+  .smart-modal-footer button { flex: 1; }
+}
 </style>
 </head>
 
@@ -210,6 +385,9 @@ button:disabled {
       <button id="continueButton" onclick="continueToProgress()" disabled>
         Continue
       </button>
+      <button class="smart-onboarding-button" onclick="openSmartOnboarding()">
+        Try Smart Onboarding
+      </button>
       <a class="button-link secondary" href="/admin">Admin Dashboard</a>
       <a class="button-link secondary" href="/logout">Log Out</a>
     </div>
@@ -234,11 +412,46 @@ button:disabled {
   </div>
 </div>
 
+<div id="smartOnboardingBackdrop" class="smart-modal-backdrop hidden" onclick="closeSmartOnboarding()"></div>
+<div id="smartOnboardingModal" class="smart-modal hidden" role="dialog" aria-modal="true" aria-labelledby="smartOnboardingTitle">
+  <div class="smart-modal-header">
+    <div>
+      <h2 id="smartOnboardingTitle">Smart Onboarding</h2>
+      <p>Answer a few structured questions so we can open the right advising workspace.</p>
+    </div>
+    <button class="smart-close" onclick="closeSmartOnboarding()" aria-label="Close smart onboarding">Close</button>
+  </div>
+  <div class="smart-progress"><div id="smartProgressBar" class="smart-progress-bar"></div></div>
+  <div id="smartOnboardingBody" class="smart-modal-body"></div>
+  <div class="smart-modal-footer">
+    <button id="smartBackButton" class="secondary" onclick="smartBack()">Back</button>
+    <div class="right-actions">
+      <button id="smartRestartButton" class="secondary" onclick="restartSmartOnboarding()">Start over</button>
+      <button id="smartNextButton" onclick="smartNext()">Continue</button>
+    </div>
+  </div>
+</div>
+
 <script>
 let INSTITUTIONS = [];
 let DEPARTMENTS = [];
 let PROGRAMS = [];
 let PROGRAM_AVAILABILITY = {};
+const SMART_TOTAL_STEPS = 5;
+let SMART_STATE = createSmartState();
+
+function createSmartState() {
+  return {
+    step: 1,
+    academicHistory: "",
+    advisingIntent: "",
+    institutionCode: "",
+    programCode: "",
+    inputMethod: "",
+    targetSemesters: "",
+    workloadPattern: "balanced"
+  };
+}
 
 async function fetchJson(url) {
   const response = await fetch(url);
@@ -472,6 +685,7 @@ function continueToProgress() {
     selectedAt: new Date().toISOString()
   }));
 
+  sessionStorage.removeItem("smartOnboardingContext");
   sessionStorage.removeItem("transferSnapshot");
   document.getElementById("onboardingQuestion").textContent =
     `Have you taken college-level classes already, or is this your first semester at ${institution.name}?`;
@@ -492,6 +706,356 @@ function finishOnboarding(studentStatus) {
 function cancelOnboarding() {
   document.getElementById("onboardingCard").style.display = "none";
 }
+
+function escapeHtml(value) {
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+function availableInstitutions() {
+  return INSTITUTIONS.filter(institutionIsAvailable);
+}
+
+function availableProgramsForInstitution(institutionCode) {
+  return PROGRAMS.filter(program =>
+    program.institution_code === institutionCode &&
+    Boolean(PROGRAM_AVAILABILITY[program.code]?.hasCurriculum)
+  );
+}
+
+function smartSelectedProgram() {
+  return PROGRAMS.find(program =>
+    program.institution_code === SMART_STATE.institutionCode &&
+    program.code === SMART_STATE.programCode
+  );
+}
+
+function smartSelect(key, value) {
+  SMART_STATE[key] = value;
+  if (key === "academicHistory") {
+    SMART_STATE.advisingIntent = "";
+    SMART_STATE.inputMethod = value === "none" ? "no_completed_courses" : "";
+  }
+  renderSmartStep();
+}
+
+function initializeSmartProgramSelection() {
+  const mainInstitution = selectedInstitution();
+  const preferredCode = mainInstitution?.code || mainInstitution?.name;
+  const institutions = availableInstitutions();
+
+  if (!institutions.some(item => (item.code || item.name) === SMART_STATE.institutionCode)) {
+    SMART_STATE.institutionCode = institutions.some(item => (item.code || item.name) === preferredCode)
+      ? preferredCode
+      : (institutions[0]?.code || institutions[0]?.name || "");
+  }
+
+  const programs = availableProgramsForInstitution(SMART_STATE.institutionCode);
+  const mainProgram = selectedProgram();
+  if (!programs.some(program => program.code === SMART_STATE.programCode)) {
+    SMART_STATE.programCode = programs.some(program => program.code === mainProgram?.code)
+      ? mainProgram.code
+      : (programs[0]?.code || "");
+  }
+}
+
+function openSmartOnboarding() {
+  if (!INSTITUTIONS.length || !PROGRAMS.length) {
+    alert("Available programs are still loading. Please try again in a moment.");
+    return;
+  }
+  initializeSmartProgramSelection();
+  document.getElementById("smartOnboardingBackdrop").classList.remove("hidden");
+  document.getElementById("smartOnboardingModal").classList.remove("hidden");
+  document.body.style.overflow = "hidden";
+  renderSmartStep();
+}
+
+function closeSmartOnboarding() {
+  document.getElementById("smartOnboardingBackdrop").classList.add("hidden");
+  document.getElementById("smartOnboardingModal").classList.add("hidden");
+  document.body.style.overflow = "";
+}
+
+function restartSmartOnboarding() {
+  SMART_STATE = createSmartState();
+  initializeSmartProgramSelection();
+  renderSmartStep();
+}
+
+function smartHistoryLabel() {
+  return {
+    none: "No college-level classes yet",
+    cuny: "College-level classes taken at CUNY",
+    other_college: "College-level classes taken outside CUNY"
+  }[SMART_STATE.academicHistory] || "Not answered";
+}
+
+function smartIntentOptions() {
+  if (SMART_STATE.academicHistory === "none") {
+    return [
+      ["start_degree", "Plan my first degree semesters", "Build a suggested sequence beginning with the first semester."],
+      ["explore_program", "Explore a desired major", "Start with the selected program and review its requirements."]
+    ];
+  }
+  if (SMART_STATE.academicHistory === "cuny") {
+    return [
+      ["continue_current", "Continue my current major", "Review progress and plan the next semesters."],
+      ["change_major", "Change my major", "Record completed courses, then compare another major at the same campus."],
+      ["transfer_college", "Transfer to another college", "Record completed courses, then analyze a program at another college."]
+    ];
+  }
+  return [
+    ["transfer_to_cuny", "Transfer into a CUNY program", "Choose the desired CUNY program and record prior coursework for analysis."],
+    ["plan_after_transfer", "Plan semesters after transfer", "Use completed coursework as the starting point for a future plan."]
+  ];
+}
+
+function smartIntentLabel() {
+  const option = smartIntentOptions().find(item => item[0] === SMART_STATE.advisingIntent);
+  return option?.[1] || "Not answered";
+}
+
+function smartInputLabel() {
+  return {
+    no_completed_courses: "No completed-course entry needed",
+    manual: "Select completed courses manually",
+    ai_assisted: "Manual selection followed by AI-assisted planning",
+    transcript: "Transcript upload (planned; not available yet)"
+  }[SMART_STATE.inputMethod] || "Not answered";
+}
+
+function renderSmartStep() {
+  const body = document.getElementById("smartOnboardingBody");
+  const back = document.getElementById("smartBackButton");
+  const next = document.getElementById("smartNextButton");
+  const progress = document.getElementById("smartProgressBar");
+
+  progress.style.width = `${(SMART_STATE.step / SMART_TOTAL_STEPS) * 100}%`;
+  back.disabled = SMART_STATE.step === 1;
+  next.textContent = SMART_STATE.step === SMART_TOTAL_STEPS ? "Open advising workspace" : "Continue";
+
+  if (SMART_STATE.step === 1) renderSmartHistory(body);
+  if (SMART_STATE.step === 2) renderSmartIntent(body);
+  if (SMART_STATE.step === 3) renderSmartProgram(body);
+  if (SMART_STATE.step === 4) renderSmartPreferences(body);
+  if (SMART_STATE.step === 5) renderSmartSummary(body);
+}
+
+function renderSmartHistory(body) {
+  const options = [
+    ["none", "No, I have not taken college-level classes", "Start with a first-semester plan for the desired program."],
+    ["cuny", "Yes, at a CUNY college", "Use completed CUNY coursework for progress, major change, or transfer planning."],
+    ["other_college", "Yes, at a college outside CUNY", "Prepare prior coursework for transfer-oriented advising."]
+  ];
+  body.innerHTML = `
+    <div class="smart-step-label">Step 1 of ${SMART_TOTAL_STEPS}</div>
+    <h3 class="smart-question">Have you taken any college-level classes?</h3>
+    <p class="smart-help">This determines whether we begin with a first-semester plan or collect completed coursework.</p>
+    <div class="smart-options">
+      ${options.map(([value, title, help]) => `
+        <button class="smart-option ${SMART_STATE.academicHistory === value ? "selected" : ""}" onclick="smartSelect('academicHistory', '${value}')">
+          <strong>${title}</strong><span>${help}</span>
+        </button>`).join("")}
+    </div>`;
+}
+
+function renderSmartIntent(body) {
+  const options = smartIntentOptions();
+  body.innerHTML = `
+    <div class="smart-step-label">Step 2 of ${SMART_TOTAL_STEPS}</div>
+    <h3 class="smart-question">What would you like help with?</h3>
+    <p class="smart-help">We will use this answer to prepare the correct workflow after your courses are recorded.</p>
+    <div class="smart-options">
+      ${options.map(([value, title, help]) => `
+        <button class="smart-option ${SMART_STATE.advisingIntent === value ? "selected" : ""}" onclick="smartSelect('advisingIntent', '${value}')">
+          <strong>${title}</strong><span>${help}</span>
+        </button>`).join("")}
+    </div>`;
+}
+
+function renderSmartProgram(body) {
+  initializeSmartProgramSelection();
+  const institutions = availableInstitutions();
+  const programs = availableProgramsForInstitution(SMART_STATE.institutionCode);
+  const programPrompt = SMART_STATE.academicHistory === "cuny"
+    ? "Select your current campus and major"
+    : "Select the campus and program you want to pursue";
+
+  body.innerHTML = `
+    <div class="smart-step-label">Step 3 of ${SMART_TOTAL_STEPS}</div>
+    <h3 class="smart-question">${programPrompt}</h3>
+    <p class="smart-help">Only programs with curriculum data currently loaded into the advising system are available.</p>
+    <div class="smart-fields">
+      <div>
+        <label for="smartInstitutionSelect">Campus</label>
+        <select id="smartInstitutionSelect" onchange="handleSmartInstitutionChange(this.value)">
+          ${institutions.map(item => {
+            const code = item.code || item.name;
+            return `<option value="${escapeHtml(code)}" ${code === SMART_STATE.institutionCode ? "selected" : ""}>${escapeHtml(item.code || "NO CODE")} — ${escapeHtml(item.name)}</option>`;
+          }).join("")}
+        </select>
+      </div>
+      <div>
+        <label for="smartProgramSelect">Program / Major</label>
+        <select id="smartProgramSelect" onchange="SMART_STATE.programCode = this.value">
+          ${programs.map(program => `<option value="${escapeHtml(program.code)}" ${program.code === SMART_STATE.programCode ? "selected" : ""}>${escapeHtml(program.code)} — ${escapeHtml(program.name)} (${escapeHtml(program.degree_type || "Degree")})</option>`).join("")}
+        </select>
+      </div>
+    </div>`;
+}
+
+function handleSmartInstitutionChange(value) {
+  SMART_STATE.institutionCode = value;
+  SMART_STATE.programCode = "";
+  initializeSmartProgramSelection();
+  renderSmartStep();
+}
+
+function defaultSmartSemesterCount() {
+  const degreeType = String(smartSelectedProgram()?.degree_type || "").toUpperCase();
+  return degreeType.includes("B") ? "8" : "4";
+}
+
+function renderSmartPreferences(body) {
+  if (!SMART_STATE.targetSemesters) SMART_STATE.targetSemesters = defaultSmartSemesterCount();
+  const needsCourseEntry = SMART_STATE.academicHistory !== "none";
+  if (!needsCourseEntry) SMART_STATE.inputMethod = "no_completed_courses";
+
+  body.innerHTML = `
+    <div class="smart-step-label">Step 4 of ${SMART_TOTAL_STEPS}</div>
+    <h3 class="smart-question">How should we prepare your workspace?</h3>
+    <p class="smart-help">The interview itself is deterministic and does not call an AI model. AI can be used later for plan explanations.</p>
+    ${needsCourseEntry ? `
+      <label>How do you want to provide completed courses?</label>
+      <div class="smart-options" style="margin-bottom:18px;">
+        <button class="smart-option ${SMART_STATE.inputMethod === "manual" ? "selected" : ""}" onclick="smartSelect('inputMethod', 'manual')">
+          <strong>Select courses manually</strong><span>Use the existing completed-course selector.</span>
+        </button>
+        <button class="smart-option ${SMART_STATE.inputMethod === "ai_assisted" ? "selected" : ""}" onclick="smartSelect('inputMethod', 'ai_assisted')">
+          <strong>Manual selection + AI-assisted plan</strong><span>Select completed courses first, then switch to AI planning with your preferences already applied.</span>
+        </button>
+        <button class="smart-option" disabled>
+          <strong>Upload a transcript — planned</strong><span>Requires a secure upload, parser, course matching, and student confirmation workflow.</span>
+        </button>
+      </div>` : `
+      <div class="smart-summary" style="margin-bottom:18px;">Because you selected no prior college coursework, the system will start with an empty progress record and generate the full semester sequence.</div>`}
+    <div class="smart-fields">
+      <div>
+        <label for="smartSemesterCount">Desired planning timeline</label>
+        <select id="smartSemesterCount" onchange="SMART_STATE.targetSemesters = this.value">
+          ${[4, 5, 6, 7, 8].map(count => `<option value="${count}" ${String(count) === SMART_STATE.targetSemesters ? "selected" : ""}>${count} semesters</option>`).join("")}
+        </select>
+      </div>
+      <div>
+        <label for="smartWorkloadPattern">Preferred workload</label>
+        <select id="smartWorkloadPattern" onchange="SMART_STATE.workloadPattern = this.value">
+          <option value="balanced" ${SMART_STATE.workloadPattern === "balanced" ? "selected" : ""}>Approximately equal each semester</option>
+          <option value="light_first" ${SMART_STATE.workloadPattern === "light_first" ? "selected" : ""}>Lighter first, increasing later</option>
+          <option value="heavy_first" ${SMART_STATE.workloadPattern === "heavy_first" ? "selected" : ""}>Heavier first, decreasing later</option>
+        </select>
+      </div>
+    </div>`;
+}
+
+function renderSmartSummary(body) {
+  const institution = INSTITUTIONS.find(item => (item.code || item.name) === SMART_STATE.institutionCode);
+  const program = smartSelectedProgram();
+  const workload = {
+    balanced: "Approximately equal each semester",
+    light_first: "Lighter first, increasing later",
+    heavy_first: "Heavier first, decreasing later"
+  }[SMART_STATE.workloadPattern];
+
+  body.innerHTML = `
+    <div class="smart-step-label">Step 5 of ${SMART_TOTAL_STEPS}</div>
+    <h3 class="smart-question">Review your advising context</h3>
+    <p class="smart-help">Nothing has been sent to an AI model. You can go back to change any answer.</p>
+    <div class="smart-summary">
+      <div><strong>Academic background:</strong><br>${escapeHtml(smartHistoryLabel())}</div>
+      <div><strong>Advising goal:</strong><br>${escapeHtml(smartIntentLabel())}</div>
+      <div><strong>Campus and program:</strong><br>${escapeHtml(institution?.name || SMART_STATE.institutionCode)} — ${escapeHtml(program?.code || "")} ${escapeHtml(program?.name || "")}</div>
+      <div><strong>Course input:</strong><br>${escapeHtml(smartInputLabel())}</div>
+      <div><strong>Planning preference:</strong><br>${escapeHtml(SMART_STATE.targetSemesters)} semesters; ${escapeHtml(workload)}</div>
+      <div><strong>Next workspace:</strong><br>Academic Progress${["change_major", "transfer_college", "transfer_to_cuny"].includes(SMART_STATE.advisingIntent) ? ", followed by the requested comparison after coursework is recorded" : " and semester planning"}</div>
+    </div>`;
+}
+
+function smartStepIsValid() {
+  if (SMART_STATE.step === 1) return Boolean(SMART_STATE.academicHistory);
+  if (SMART_STATE.step === 2) return Boolean(SMART_STATE.advisingIntent);
+  if (SMART_STATE.step === 3) return Boolean(SMART_STATE.institutionCode && SMART_STATE.programCode);
+  if (SMART_STATE.step === 4) return Boolean(SMART_STATE.inputMethod && SMART_STATE.targetSemesters && SMART_STATE.workloadPattern);
+  return true;
+}
+
+function smartNext() {
+  if (!smartStepIsValid()) {
+    alert("Please choose an option before continuing.");
+    return;
+  }
+  if (SMART_STATE.step < SMART_TOTAL_STEPS) {
+    SMART_STATE.step += 1;
+    renderSmartStep();
+    return;
+  }
+  finishSmartOnboarding();
+}
+
+function smartBack() {
+  if (SMART_STATE.step > 1) {
+    SMART_STATE.step -= 1;
+    renderSmartStep();
+  }
+}
+
+function finishSmartOnboarding() {
+  const institution = INSTITUTIONS.find(item => (item.code || item.name) === SMART_STATE.institutionCode);
+  const program = smartSelectedProgram();
+  if (!institution || !program) return;
+
+  const completedAt = new Date().toISOString();
+  const studentStatus = SMART_STATE.academicHistory === "none" ? "first_semester" : "returning";
+  const planningMode = studentStatus === "first_semester" ? "ai" : "manual";
+
+  const smartContext = {
+    version: 1,
+    source: "smart_onboarding",
+    academicHistory: SMART_STATE.academicHistory,
+    advisingIntent: SMART_STATE.advisingIntent,
+    inputMethod: SMART_STATE.inputMethod,
+    planningMode,
+    requestedPlanningMode: SMART_STATE.inputMethod === "ai_assisted" ? "ai" : planningMode,
+    targetSemesters: Number(SMART_STATE.targetSemesters),
+    workloadPattern: SMART_STATE.workloadPattern,
+    completedAt
+  };
+
+  sessionStorage.setItem("smartOnboardingContext", JSON.stringify(smartContext));
+  sessionStorage.setItem("selectedProgramContext", JSON.stringify({
+    institutionCode: institution.code || institution.name,
+    institutionName: institution.name,
+    programCode: program.code,
+    programName: program.name,
+    catalogYear: program.catalog_year || "",
+    studentStatus,
+    onboardingSource: "smart",
+    onboardingCompletedAt: completedAt,
+    selectedAt: completedAt
+  }));
+  sessionStorage.removeItem("transferSnapshot");
+  window.location.href = "/db-progress";
+}
+
+document.addEventListener("keydown", event => {
+  if (event.key === "Escape" && !document.getElementById("smartOnboardingModal").classList.contains("hidden")) {
+    closeSmartOnboarding();
+  }
+});
 
 async function initializePage() {
   try {

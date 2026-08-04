@@ -1207,9 +1207,18 @@ function getSavedProgramSelection() {
   }
 }
 
+function getSmartOnboardingContext() {
+  try {
+    return JSON.parse(sessionStorage.getItem("smartOnboardingContext") || "null");
+  } catch (err) {
+    return null;
+  }
+}
+
 function applyOnboardingState() {
   const saved = getSavedProgramSelection();
   if (!saved || !saved.studentStatus) return;
+  const smart = saved.onboardingSource === "smart" ? getSmartOnboardingContext() : null;
 
   STUDENT_STATUS = saved.studentStatus;
 
@@ -1219,13 +1228,40 @@ function applyOnboardingState() {
   card.style.display = "block";
 
   if (saved.studentStatus === "first_semester") {
-    title.textContent = "Welcome to your first semester";
-    message.textContent = "Your first-semester schedule and a foldable full-program plan are ready below. Course selection is locked because you indicated that you have not completed college-level classes.";
+    title.textContent = smart ? "Your smart onboarding plan is ready" : "Welcome to your first semester";
+    message.textContent = smart
+      ? "You indicated that you have no completed college courses. The completed-course selector is locked, and your requested semester timeline and workload preference are applied below."
+      : "Your first-semester schedule and a foldable full-program plan are ready below. Course selection is locked because you indicated that you have not completed college-level classes.";
     document.getElementById("completedCoursesCard").classList.add("readonly");
     setPlanningMode("ai");
   } else {
-    title.textContent = "Add your completed college courses";
-    message.textContent = "Use Advanced / Manual mode to record completed classes, or AI Advisor Plan to build future semesters from those selections.";
+    title.textContent = smart ? "Continue your smart onboarding workflow" : "Add your completed college courses";
+    if (smart?.advisingIntent === "change_major") {
+      message.textContent = "Select your completed courses first, then choose Explore Major Change to compare another program at this campus.";
+    } else if (["transfer_college", "transfer_to_cuny"].includes(smart?.advisingIntent)) {
+      message.textContent = "Select your completed courses first, then choose Transfer Analysis to compare them with a program at another college.";
+    } else if (smart?.inputMethod === "ai_assisted") {
+      message.textContent = "Select completed courses in Manual mode first. Then open AI Advisor Plan to build the requested future-semester sequence.";
+    } else {
+      message.textContent = "Use Advanced / Manual mode to record completed classes, or AI Advisor Plan to build future semesters from those selections.";
+    }
+    setPlanningMode("manual");
+  }
+}
+
+function applySmartPlannerPreferences() {
+  const smart = getSmartOnboardingContext();
+  if (!smart || smart.source !== "smart_onboarding") return;
+
+  const semesterSelect = document.getElementById("targetSemesterCount");
+  const workloadSelect = document.getElementById("workloadPattern");
+  const requestedSemesters = String(smart.targetSemesters || "");
+
+  if ([...semesterSelect.options].some(option => option.value === requestedSemesters)) {
+    semesterSelect.value = requestedSemesters;
+  }
+  if ([...workloadSelect.options].some(option => option.value === smart.workloadPattern)) {
+    workloadSelect.value = smart.workloadPattern;
   }
 }
 
@@ -1473,6 +1509,7 @@ async function loadProgramRequirements() {
   ensurePlaceholderGroups();
   await loadOfficialDegreeMap();
   configurePlannerDefaults();
+  applySmartPlannerPreferences();
   renderCompletedCourseGrid();
   renderGraph();
   renderSummary();
@@ -2724,6 +2761,7 @@ function buildAdvisorPageContext() {
 
   return {
     program: CURRENT_REQUIREMENTS ? CURRENT_REQUIREMENTS.program : null,
+    onboarding_context: getSmartOnboardingContext(),
     completed_courses: completed,
     selected_choice_requirements: CHOICE_SELECTIONS,
     show_not_needed_courses: SHOW_NOT_NEEDED,
