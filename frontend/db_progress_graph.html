@@ -1326,41 +1326,129 @@ button:hover {
   }
 }
 
+/* Compact advising workspace */
+body { background: #f5f5f7; color: #1d1d1f; }
+.container { max-width: 1180px; margin: 24px auto; }
+.workspace-nav { display: flex; align-items: center; justify-content: space-between; gap: 24px; margin-bottom: 14px; padding: 6px 4px; }
+.workspace-title h1 { margin: 0; color: #1d1d1f; font-size: 30px; letter-spacing: -.035em; }
+.workspace-title p { margin: 4px 0 0; color: #6e6e73; font-size: 15px; }
+.workspace-nav .progress-widget { position: relative; width: auto; min-width: 190px; margin: 0; padding: 9px 13px; display: flex; align-items: center; gap: 11px; border: 1px solid rgba(0,0,0,.08); border-radius: 16px; background: rgba(255,255,255,.86); box-shadow: 0 5px 20px rgba(0,0,0,.06); cursor: pointer; }
+.workspace-nav .progress-circle { width: 54px; height: 54px; flex: 0 0 54px; }
+.workspace-nav .progress-circle-inner { width: 40px; height: 40px; }
+.workspace-nav #overallProgressPercent { font-size: 15px; }
+.workspace-nav .progress-circle-inner small { display: none; }
+.progress-compact-copy { display: grid; gap: 2px; text-align: left; }
+.progress-compact-copy strong { font-size: 13px; color: #1d1d1f; }
+.progress-compact-copy span { font-size: 11px; color: #86868b; }
+.workspace-nav .progress-details { position: absolute; z-index: 20; top: calc(100% + 8px); right: 0; width: 285px; padding: 15px; background: #fff; border: 1px solid rgba(0,0,0,.08); border-radius: 14px; box-shadow: 0 16px 42px rgba(0,0,0,.14); }
+
+.program-card { padding: 0; overflow: visible; border-color: rgba(0,0,0,.08); border-radius: 20px; box-shadow: 0 8px 30px rgba(0,0,0,.05); }
+.program-overview { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 17px 20px 14px; }
+.program-overview-label { margin-bottom: 8px; color: #86868b; font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+.program-context { gap: 7px; }
+.program-context-item { padding: 7px 10px; background: #f5f5f7; border-color: transparent; border-radius: 9px; }
+.ui-icon { width: 17px; height: 17px; flex: 0 0 17px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.icon-button, .action-item, .action-menu > summary, .planner-primary, .planner-secondary { min-height: 40px; margin: 0; padding: 9px 13px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; border: 0; border-radius: 10px; font-size: 13px; font-weight: 650; line-height: 1; text-decoration: none; cursor: pointer; transition: background .18s ease, transform .18s ease, box-shadow .18s ease; }
+.icon-button { flex: 0 0 auto; color: #0066cc; background: #eef6ff; }
+.icon-button:hover, .planner-secondary:hover { background: #e3f0ff; }
+.action-dock { display: flex; align-items: center; gap: 5px; padding: 7px; border-top: 1px solid rgba(0,0,0,.06); border-radius: 0 0 20px 20px; background: rgba(248,248,250,.9); }
+.action-item, .action-menu > summary { color: #3a3a3c; background: transparent; }
+.action-item:hover, .action-menu > summary:hover { background: #e9e9eb; transform: none; }
+.action-item.primary { color: #fff; background: #0071e3; box-shadow: 0 3px 9px rgba(0,113,227,.2); }
+.action-item.primary:hover, .planner-primary:hover { background: #0077ed; }
+.action-menu { position: relative; }
+.action-menu > summary { list-style: none; }
+.action-menu > summary::-webkit-details-marker { display: none; }
+.action-menu-panel { position: absolute; z-index: 15; top: calc(100% + 7px); left: 0; width: 230px; padding: 6px; display: grid; gap: 3px; border: 1px solid rgba(0,0,0,.08); border-radius: 13px; background: #fff; box-shadow: 0 16px 38px rgba(0,0,0,.14); }
+.action-menu-panel .action-item { width: 100%; justify-content: flex-start; }
+
+.planning-mode-card { padding: 22px; border: 1px solid rgba(0,0,0,.08); border-radius: 20px; box-shadow: 0 8px 30px rgba(0,0,0,.05); }
+.planning-card-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; }
+.planning-card-header h3 { margin: 0 0 5px; color: #1d1d1f; font-size: 21px; letter-spacing: -.02em; }
+.planning-card-header p { margin: 0; color: #6e6e73; font-size: 14px; }
+.planning-mode-card .mode-buttons { flex: 0 0 auto; grid-template-columns: repeat(2, auto); gap: 3px; margin: 0; padding: 3px; border: 0; border-radius: 10px; background: #e9e9eb; }
+.planning-mode-card .mode-button { min-height: 34px; margin: 0; padding: 7px 12px; color: #6e6e73; background: transparent; border-radius: 8px; font-size: 12px; box-shadow: none; }
+.planning-mode-card .mode-button.active { color: #1d1d1f; background: #fff; box-shadow: 0 1px 4px rgba(0,0,0,.12); }
+.planner-setup { margin-top: 18px; padding: 16px; border: 1px solid rgba(0,0,0,.06); border-radius: 14px; background: #f8f8fa; }
+.planner-setup label { color: #3a3a3c; font-size: 12px; }
+.planner-setup select { border-color: #d2d2d7; border-radius: 10px; background: #fff; }
+.planner-helper { margin-top: 12px; padding-top: 12px; border-top: 1px solid #e5e5ea; color: #6e6e73; font-size: 12px; }
+.planner-actions { display: flex; align-items: center; gap: 8px; margin-top: 14px; }
+.planner-primary { color: #fff; background: #0071e3; box-shadow: 0 3px 9px rgba(0,113,227,.2); }
+.planner-secondary { color: #0066cc; background: #eef6ff; }
+
+@media (max-width: 780px) {
+  .workspace-nav, .program-overview, .planning-card-header { align-items: stretch; flex-direction: column; }
+  .workspace-nav .progress-widget { width: 100%; }
+  .workspace-nav .progress-details { left: 0; right: auto; width: min(285px, calc(100vw - 48px)); }
+  .action-dock { overflow-x: auto; }
+  .action-item, .action-menu > summary { white-space: nowrap; }
+  .planning-mode-card .mode-buttons { width: 100%; grid-template-columns: 1fr 1fr; }
+  .planner-actions { align-items: stretch; flex-direction: column; }
+  .planner-actions button { width: 100%; }
+}
+
 </style>
 </head>
 
 <body>
 
 <div class="container">
-  <div class="page-header">
-    <h1>Academic Progress</h1>
-    <p class="subtitle">Select completed courses to update your progress and plan what comes next.</p>
-  </div>
-<div id="progressWidget" class="progress-widget" onclick="toggleProgressDetails()">
-  <div class="progress-circle" id="overallProgressCircle">
-    <div class="progress-circle-inner">
-      <div id="overallProgressPercent">0%</div>
-      <small>complete</small>
+  <header class="workspace-nav">
+    <div class="workspace-title">
+      <h1>Academic Progress</h1>
+      <p>Review completed coursework and build a clear path to graduation.</p>
     </div>
-  </div>
-
-  <div id="progressDetails" class="progress-details hidden">
-    <h4>Degree Progress</h4>
-    <div id="progressDetailsContent"></div>
-  </div>
-</div>
+    <div id="progressWidget" class="progress-widget" onclick="toggleProgressDetails()" onkeydown="if(event.key === 'Enter' || event.key === ' '){ event.preventDefault(); toggleProgressDetails(); }" role="button" tabindex="0" aria-label="Show detailed degree progress">
+      <div class="progress-circle" id="overallProgressCircle">
+        <div class="progress-circle-inner">
+          <div id="overallProgressPercent">0%</div>
+          <small>complete</small>
+        </div>
+      </div>
+      <div class="progress-compact-copy">
+        <strong>Degree progress</strong>
+        <span>Click for details</span>
+      </div>
+      <div id="progressDetails" class="progress-details hidden">
+        <h4>Degree Progress</h4>
+        <div id="progressDetailsContent"></div>
+      </div>
+    </div>
+  </header>
 
   <div class="card program-card">
-    <h3>Selected Campus and Program</h3>
-    <div id="selectedProgramInfo" class="program-context">Loading selected program...</div>
-
-    <div class="top-actions">
-      <button class="secondary-button" onclick="changeProgram()">Change Campus / Program</button>
-      <button onclick="openRecommendationModal()">Next Semester Recommendation</button>
-      <button class="secondary-button" onclick="openAdvisorDrawer()">Ask AI Advisor</button>
-      <button class="secondary-button" onclick="startComparison('major-change')">Explore Major Change</button>
-      <button class="secondary-button" onclick="startComparison('transfer')">Transfer Analysis</button>
+    <div class="program-overview">
+      <div>
+        <div class="program-overview-label">Current academic workspace</div>
+        <div id="selectedProgramInfo" class="program-context">Loading selected program...</div>
+      </div>
+      <button class="icon-button" onclick="changeProgram()" title="Choose another campus or program">
+        <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h11M4 17h16M17 4l3 3-3 3M7 14l-3 3 3 3"/></svg>
+        Change program
+      </button>
     </div>
+
+    <nav class="action-dock" aria-label="Academic advising actions">
+      <button class="action-item primary" onclick="openRecommendationModal()">
+        <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+        Next semester
+      </button>
+      <button class="action-item" onclick="openAdvisorDrawer()">
+        <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5h14v11H9l-4 4z"/><path d="M9 9h6M9 12h4"/></svg>
+        Advisor chat
+      </button>
+      <details class="action-menu">
+        <summary>
+          <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M7 12h10M10 17h4"/></svg>
+          Compare options
+        </summary>
+        <div class="action-menu-panel">
+          <button class="action-item" onclick="startComparison('major-change')">Explore major change</button>
+          <button class="action-item" onclick="startComparison('transfer')">Transfer analysis</button>
+        </div>
+      </details>
+    </nav>
 
     <div style="display:none;">
       <select id="institutionSelect"></select>
@@ -1376,11 +1464,15 @@ button:hover {
   </div>
 
   <div id="planningModeCard" class="card planning-mode-card">
-    <h3 style="margin-top:0;">Semester Planning</h3>
-    <p id="planningModeDescription" class="subtitle">Choose how you want to review your curriculum and plan future semesters.</p>
-    <div class="mode-buttons">
-      <button id="manualModeButton" class="secondary-button mode-button active" onclick="setPlanningMode('manual')">Advanced / Manual</button>
-      <button id="aiModeButton" class="secondary-button mode-button" onclick="setPlanningMode('ai')">AI Advisor Plan</button>
+    <div class="planning-card-header">
+      <div>
+        <h3>Semester Planning</h3>
+        <p id="planningModeDescription" class="subtitle">Choose how you want to review your curriculum and plan future semesters.</p>
+      </div>
+      <div class="mode-buttons" role="group" aria-label="Planning mode">
+        <button id="manualModeButton" class="mode-button active" onclick="setPlanningMode('manual')">Course entry</button>
+        <button id="aiModeButton" class="mode-button" onclick="setPlanningMode('ai')">AI plan</button>
+      </div>
     </div>
     <div id="degreePlanArea" style="display:none;">
       <div class="planner-setup">
@@ -1401,12 +1493,17 @@ button:hover {
             </select>
           </div>
         </div>
-        <p class="plan-note">The suggested timeline is recalculated from your remaining required credits. You can choose another offered timeline; prerequisites, course availability, and advisor approval still apply.</p>
+        <p class="plan-note planner-helper">The timeline updates automatically when preferences change. Prerequisites, course availability, and advisor approval still apply.</p>
       </div>
-      <div class="top-actions">
-        <button id="generatePlanButton" onclick="generateAIStudyPlan()">Generate AI Study Plan</button>
-        <button class="secondary-button" onclick="openPlanProspectus('degree')">Open Plan Prospectus</button>
-        <button class="secondary-button" onclick="renderDegreePlan()">Refresh Semester Plan</button>
+      <div class="planner-actions">
+        <button id="generatePlanButton" class="planner-primary" onclick="generateAIStudyPlan()">
+          <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l1.4 4.2L18 9l-4.6 1.8L12 15l-1.4-4.2L6 9l4.6-1.8zM18 15l.8 2.2L21 18l-2.2.8L18 21l-.8-2.2L15 18l2.2-.8z"/></svg>
+          Generate AI plan
+        </button>
+        <button class="planner-secondary" onclick="openPlanProspectus('degree')">
+          <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h9l3 3v15H6zM14 3v4h4M9 12h6M9 16h6"/></svg>
+          View prospectus
+        </button>
       </div>
       <div id="aiPlanExplanation" class="ai-plan-box" style="display:none;"></div>
       <div id="degreePlanSummary" class="plan-note"></div>
@@ -3300,7 +3397,10 @@ async function generateAIStudyPlan() {
     box.textContent = `The structured semester plan is still available. AI explanation could not be generated: ${err.message}`;
   } finally {
     button.disabled = false;
-    button.textContent = "Generate AI Study Plan";
+    button.innerHTML = `
+      <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l1.4 4.2L18 9l-4.6 1.8L12 15l-1.4-4.2L6 9l4.6-1.8zM18 15l.8 2.2L21 18l-2.2.8L18 21l-.8-2.2L15 18l2.2-.8z"/></svg>
+      Generate AI plan
+    `;
     openPlanProspectus("degree");
   }
 }
