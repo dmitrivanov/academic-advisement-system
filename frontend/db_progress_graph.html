@@ -1019,7 +1019,7 @@ button:hover {
             </select>
           </div>
         </div>
-        <p class="plan-note">The planner respects prerequisites first. Your selected timeline is a target, so locked sequences may require an additional semester.</p>
+        <p class="plan-note">The planner always displays the selected number of semesters and respects prerequisites. A shorter timeline may require a heavier course load and still needs advisor approval.</p>
       </div>
       <div class="top-actions">
         <button id="generatePlanButton" onclick="generateAIStudyPlan()">Generate AI Study Plan</button>
@@ -1133,6 +1133,7 @@ let ACTIVE_CHOICE_OPTIONS = [];
 let STUDENT_STATUS = "returning";
 let CURRENT_PLANNING_MODE = "manual";
 let LAST_DEGREE_PLAN = [];
+let OFFICIAL_DEGREE_MAP = null;
 
 const EMPTY_GROUPS = [
   {
@@ -1184,6 +1185,17 @@ async function fetchJson(url) {
   const response = await fetch(url);
   if (!response.ok) throw new Error(`Request failed: ${url} (${response.status})`);
   return await response.json();
+}
+
+async function loadOfficialDegreeMap() {
+  const program = CURRENT_REQUIREMENTS?.program;
+  OFFICIAL_DEGREE_MAP = null;
+  if (program?.institution_code !== "BMCC" || program?.code !== "CS") return;
+  try {
+    OFFICIAL_DEGREE_MAP = await fetchJson("/docs/bmcc_cs_degree_map_2026_2027.json");
+  } catch (err) {
+    console.warn("Official BMCC CS degree-map guidance could not be loaded:", err);
+  }
 }
 
 
@@ -1459,6 +1471,7 @@ async function loadProgramRequirements() {
 
   updateSelectedProgramHeader();
   ensurePlaceholderGroups();
+  await loadOfficialDegreeMap();
   configurePlannerDefaults();
   renderCompletedCourseGrid();
   renderGraph();
@@ -1483,7 +1496,7 @@ function ensurePlaceholderGroups() {
 function configurePlannerDefaults() {
   const select = document.getElementById("targetSemesterCount");
   const degreeType = String(CURRENT_REQUIREMENTS?.program?.degree_type || "").toUpperCase();
-  select.value = degreeType.includes("B") ? "8" : "4";
+  select.value = String(OFFICIAL_DEGREE_MAP?.default_semesters || (degreeType.includes("B") ? 8 : 4));
 }
 
 function setTab(tabName, event) {
@@ -2331,6 +2344,9 @@ function remainingRequiredCredits(completed) {
 }
 
 function workloadTargets(totalCredits, semesterCount, pattern) {
+  if (OFFICIAL_DEGREE_MAP && semesterCount === 4 && pattern === "balanced") {
+    return OFFICIAL_DEGREE_MAP.semesters.map(semester => Number(semester.target_credits || 15));
+  }
   const weights = Array.from({ length: semesterCount }, (_, index) => {
     if (semesterCount === 1 || pattern === "balanced") return 1;
     const progress = index / (semesterCount - 1);
@@ -2342,6 +2358,29 @@ function workloadTargets(totalCredits, semesterCount, pattern) {
   return weights.map(weight => Math.max(6, Math.min(18, Math.round(totalCredits * weight / weightTotal))));
 }
 
+function officialSemesterForCourse(course, desiredSemesters) {
+  if (!OFFICIAL_DEGREE_MAP) return null;
+  let sourceSemester = null;
+  for (const semester of OFFICIAL_DEGREE_MAP.semesters || []) {
+    if ((semester.course_codes || []).includes(course.code)) {
+      sourceSemester = Number(semester.number);
+      break;
+    }
+  }
+  if (!sourceSemester && course.group_type === "program_elective") sourceSemester = 3;
+  if (!sourceSemester) return null;
+  if (desiredSemesters === 4) return sourceSemester;
+  return Math.round(((sourceSemester - 1) * (desiredSemesters - 1)) / 3) + 1;
+}
+
+function courseIncludedInOfficialMap(course) {
+  if (!OFFICIAL_DEGREE_MAP) return true;
+  if (course.group_type === "program_elective") return true;
+  return (OFFICIAL_DEGREE_MAP.semesters || []).some(semester =>
+    (semester.course_codes || []).includes(course.code)
+  );
+}
+
 function buildDegreePlan() {
   if (!CURRENT_REQUIREMENTS) return [];
 
@@ -2351,7 +2390,7 @@ function buildDegreePlan() {
   const desiredSemesters = Number(document.getElementById("targetSemesterCount").value || 4);
   const workloadPattern = document.getElementById("workloadPattern").value || "balanced";
   const targets = workloadTargets(remainingRequiredCredits(simulatedCompleted), desiredSemesters, workloadPattern);
-  const maxSemesters = desiredSemesters + 2;
+  const maxSemesters = desiredSemesters;
   let semesterName = detectNextSemester().name;
 
   for (let index = 0; index < maxSemesters; index++) {
@@ -2361,6 +2400,7 @@ function buildDegreePlan() {
     let credits = 0;
 
     let available = Object.values(courses).filter(course => {
+      if (!courseIncludedInOfficialMap(course)) return false;
       if (isCourseCompleted(course.code, course, simulatedCompleted)) return false;
       if (isNotNeeded(course.code, course, simulatedCompleted)) return false;
       return allPrereqsSatisfied(course, semesterStartCompleted);
@@ -2368,10 +2408,14 @@ function buildDegreePlan() {
 
     const targetCredits = targets[index] || 15;
     while (available.length && selected.length < 6) {
-      available.sort((a, b) =>
-        recommendationScore(b, semesterStartCompleted, selectedTypes) -
-        recommendationScore(a, semesterStartCompleted, selectedTypes)
-      );
+      available.sort((a, b) => {
+        const aOfficial = officialSemesterForCourse(a, desiredSemesters);
+        const bOfficial = officialSemesterForCourse(b, desiredSemesters);
+        const aMapScore = aOfficial === index + 1 ? 500 : (aOfficial ? -Math.abs(aOfficial - index - 1) * 40 : 0);
+        const bMapScore = bOfficial === index + 1 ? 500 : (bOfficial ? -Math.abs(bOfficial - index - 1) * 40 : 0);
+        return (bMapScore + recommendationScore(b, semesterStartCompleted, selectedTypes)) -
+          (aMapScore + recommendationScore(a, semesterStartCompleted, selectedTypes));
+      });
 
       const chosen = available.find(course => {
         const projected = new Set(simulatedCompleted);
@@ -2388,17 +2432,9 @@ function buildDegreePlan() {
       if (credits >= targetCredits - 1) break;
     }
 
-    if (!selected.length) break;
-
     selected.forEach(course => simulatedCompleted.add(course.code));
     plan.push({ name: semesterName, courses: selected, credits, targetCredits });
     semesterName = nextRegularSemesterName(semesterName);
-
-    const unfinished = Object.values(courses).some(course =>
-      !isCourseCompleted(course.code, course, simulatedCompleted) &&
-      !isNotNeeded(course.code, course, simulatedCompleted)
-    );
-    if (!unfinished) break;
   }
 
   return plan;
@@ -2465,10 +2501,10 @@ function renderDegreePlan() {
 
   const totalCredits = LAST_DEGREE_PLAN.reduce((sum, semester) => sum + semester.credits, 0);
   const desiredSemesters = Number(document.getElementById("targetSemesterCount").value || 4);
-  const timelineNote = LAST_DEGREE_PLAN.length > desiredSemesters
-    ? ` Prerequisite sequencing extended the plan beyond the requested ${desiredSemesters} semesters.`
+  const sourceNote = OFFICIAL_DEGREE_MAP
+    ? ` Guidance is based on the <a href="${OFFICIAL_DEGREE_MAP.source_pdf}" target="_blank" rel="noopener">BMCC Computer Science 2026-2027 Degree Map</a> with the faculty Speech-in-semester-1 adjustment.`
     : "";
-  summary.innerHTML = `Suggested sequence: <strong>${LAST_DEGREE_PLAN.length} semester(s)</strong> and <strong>${totalCredits} planned credits</strong>.${timelineNote} This is a planning aid, not an official registration schedule. Course availability and advising approval still apply.`;
+  summary.innerHTML = `Suggested sequence: <strong>exactly ${desiredSemesters} semester(s)</strong> and <strong>${totalCredits} planned credits</strong>.${sourceNote} This is a planning aid, not an official registration schedule. Course availability and advising approval still apply.`;
 
   LAST_DEGREE_PLAN.forEach((semester, index) => {
     const details = document.createElement("details");
@@ -2510,6 +2546,13 @@ async function generateAIStudyPlan() {
           planning_mode: "ai_semester_plan",
           requested_semesters: Number(document.getElementById("targetSemesterCount").value || 4),
           workload_pattern: document.getElementById("workloadPattern").value,
+          official_degree_map_guidance: OFFICIAL_DEGREE_MAP ? {
+            catalog_year: OFFICIAL_DEGREE_MAP.catalog_year,
+            total_credits: OFFICIAL_DEGREE_MAP.total_credits,
+            source_pdf: OFFICIAL_DEGREE_MAP.source_pdf,
+            faculty_override_note: OFFICIAL_DEGREE_MAP.faculty_override_note,
+            sequence_notes: OFFICIAL_DEGREE_MAP.sequence_notes
+          } : null,
           degree_plan: LAST_DEGREE_PLAN.map(semester => ({
             name: semester.name,
             credits: semester.credits,

@@ -1,0 +1,46 @@
+{
+  "institution_code": "BMCC",
+  "program_code": "CS",
+  "program_name": "Computer Science",
+  "degree_type": "AS",
+  "catalog_year": "2026-2027",
+  "default_semesters": 4,
+  "total_credits": 63,
+  "source_pdf": "/docs/bmcc_cs_degree_map_2026_2027.pdf",
+  "faculty_override_note": "Speech is planned in semester 1 alongside ENG 101; Individual and Society moves to semester 2.",
+  "semesters": [
+    {
+      "number": 1,
+      "target_credits": 13,
+      "course_codes": ["CSC 101", "ENG 101", "MAT 206", "SPE 102", "SPE 100"]
+    },
+    {
+      "number": 2,
+      "target_credits": 17,
+      "course_codes": ["CSC 111", "ENG 201", "MAT 301", "FC-INDIVIDUAL", "FC-US-EXP"]
+    },
+    {
+      "number": 3,
+      "target_credits": 18,
+      "course_codes": ["CSC 211", "CSC 231", "MAT 302", "PHY 215"],
+      "program_elective_slots": 1
+    },
+    {
+      "number": 4,
+      "target_credits": 15,
+      "course_codes": ["CSC 215", "CSC 331", "CSC 350", "FC-WORLD-CULTURES"],
+      "program_elective_slots": 1
+    }
+  ],
+  "sequence_notes": [
+    "CSC 101 and MAT 206 precede CSC 111.",
+    "MAT 206 precedes MAT 301, which precedes MAT 302.",
+    "CSC 111 and MAT 301 precede CSC 231.",
+    "CSC 111 precedes CSC 211 and CSC 215.",
+    "MAT 302 is a co-requisite for PHY 215.",
+    "CSC 211 and CSC 231 precede CSC 331.",
+    "CSC 211 precedes CSC 350.",
+    "SPE 100 and SPE 102 are alternatives; only one is required.",
+    "Two program electives totaling 6 credits are required."
+  ]
+}
