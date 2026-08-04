@@ -921,8 +921,17 @@ function defaultSmartSemesterCount() {
   return degreeType.includes("B") ? "8" : "4";
 }
 
+function smartSemesterOptions() {
+  const degreeType = String(smartSelectedProgram()?.degree_type || "").toUpperCase();
+  const defaultCount = degreeType.includes("B") ? 8 : 4;
+  return [defaultCount, defaultCount + 1, defaultCount + 2];
+}
+
 function renderSmartPreferences(body) {
-  if (!SMART_STATE.targetSemesters) SMART_STATE.targetSemesters = defaultSmartSemesterCount();
+  const semesterOptions = smartSemesterOptions();
+  if (!semesterOptions.includes(Number(SMART_STATE.targetSemesters))) {
+    SMART_STATE.targetSemesters = defaultSmartSemesterCount();
+  }
   const needsCourseEntry = SMART_STATE.academicHistory !== "none";
   if (!needsCourseEntry) SMART_STATE.inputMethod = "no_completed_courses";
 
@@ -946,10 +955,11 @@ function renderSmartPreferences(body) {
       <div class="smart-summary" style="margin-bottom:18px;">Because you selected no prior college coursework, the system will start with an empty progress record and generate the full semester sequence.</div>`}
     <div class="smart-fields">
       <div>
-        <label for="smartSemesterCount">Desired planning timeline</label>
+        <label for="smartSemesterCount">Initial planning timeline</label>
         <select id="smartSemesterCount" onchange="SMART_STATE.targetSemesters = this.value">
-          ${[4, 5, 6, 7, 8].map(count => `<option value="${count}" ${String(count) === SMART_STATE.targetSemesters ? "selected" : ""}>${count} semesters</option>`).join("")}
+          ${semesterOptions.map(count => `<option value="${count}" ${String(count) === SMART_STATE.targetSemesters ? "selected" : ""}>${count} semesters</option>`).join("")}
         </select>
+        ${needsCourseEntry ? `<div class="smart-help">This is an initial estimate. After you select completed courses, the Academic Progress planner will recalculate the available timelines from your remaining required credits.</div>` : ""}
       </div>
       <div>
         <label for="smartWorkloadPattern">Preferred workload</label>

@@ -1004,11 +1004,8 @@ button:hover {
             <label for="targetSemesterCount">Desired completion timeline</label>
             <select id="targetSemesterCount" onchange="renderDegreePlan()">
               <option value="4">4 semesters</option>
-              <option value="5">5 semesters</option>
-              <option value="6">6 semesters</option>
-              <option value="7">7 semesters</option>
-              <option value="8">8 semesters</option>
             </select>
+            <div id="semesterEstimateNote" class="plan-note"></div>
           </div>
           <div class="planner-field">
             <label for="workloadPattern">Preferred workload pattern</label>
@@ -1019,7 +1016,7 @@ button:hover {
             </select>
           </div>
         </div>
-        <p class="plan-note">The planner always displays the selected number of semesters and respects prerequisites. A shorter timeline may require a heavier course load and still needs advisor approval.</p>
+        <p class="plan-note">The suggested timeline is recalculated from your remaining required credits. You can choose another offered timeline; prerequisites, course availability, and advisor approval still apply.</p>
       </div>
       <div class="top-actions">
         <button id="generatePlanButton" onclick="generateAIStudyPlan()">Generate AI Study Plan</button>
@@ -1257,7 +1254,10 @@ function applySmartPlannerPreferences() {
   const workloadSelect = document.getElementById("workloadPattern");
   const requestedSemesters = String(smart.targetSemesters || "");
 
-  if ([...semesterSelect.options].some(option => option.value === requestedSemesters)) {
+  if (
+    getCompletedCourses().size === 0 &&
+    [...semesterSelect.options].some(option => option.value === requestedSemesters)
+  ) {
     semesterSelect.value = requestedSemesters;
   }
   if ([...workloadSelect.options].some(option => option.value === smart.workloadPattern)) {
@@ -1278,7 +1278,10 @@ function setPlanningMode(mode) {
   if (STUDENT_STATUS !== "first_semester") {
     document.getElementById("completedCoursesCard").style.display = isAI ? "none" : "block";
   }
-  if (isAI && CURRENT_REQUIREMENTS) renderDegreePlan();
+  if (isAI && CURRENT_REQUIREMENTS) {
+    configurePlannerSemesterOptions({ preserveSelection: true });
+    renderDegreePlan();
+  }
 }
 
 function openRecommendationModal() {
@@ -1531,9 +1534,64 @@ function ensurePlaceholderGroups() {
 }
 
 function configurePlannerDefaults() {
+  configurePlannerSemesterOptions({ preserveSelection: false });
+}
+
+function semesterPlanningProfile(remainingCredits) {
+  const remaining = Math.max(0, Number(remainingCredits || 0));
+  if (!remaining) {
+    return { remaining, recommended: 0, options: [] };
+  }
+
+  const fastest = Math.max(1, Math.ceil(remaining / 18));
+  const recommended = Math.max(fastest, Math.ceil(remaining / 15));
+  const lighterByCredits = Math.ceil(remaining / 9);
+  const lastOption = Math.min(12, Math.max(recommended + 1, Math.min(lighterByCredits, recommended + 2)));
+  const options = [];
+
+  for (let count = fastest; count <= lastOption; count++) {
+    options.push(count);
+  }
+
+  return { remaining, fastest, recommended, options };
+}
+
+function configurePlannerSemesterOptions({ preserveSelection = false } = {}) {
   const select = document.getElementById("targetSemesterCount");
-  const degreeType = String(CURRENT_REQUIREMENTS?.program?.degree_type || "").toUpperCase();
-  select.value = String(OFFICIAL_DEGREE_MAP?.default_semesters || (degreeType.includes("B") ? 8 : 4));
+  const note = document.getElementById("semesterEstimateNote");
+  if (!select || !CURRENT_REQUIREMENTS) return;
+
+  const previousValue = Number(select.value || 0);
+  const profile = semesterPlanningProfile(remainingRequiredCredits(getCompletedCourses()));
+  select.innerHTML = "";
+
+  if (!profile.options.length) {
+    const option = document.createElement("option");
+    option.value = "0";
+    option.textContent = "No semesters remaining";
+    select.appendChild(option);
+    select.disabled = true;
+    note.textContent = "All currently modeled degree requirements appear satisfied.";
+    return;
+  }
+
+  profile.options.forEach(count => {
+    const option = document.createElement("option");
+    option.value = String(count);
+    option.textContent = `${count} semester${count === 1 ? "" : "s"}${count === profile.recommended ? " — recommended" : ""}`;
+    select.appendChild(option);
+  });
+
+  select.disabled = false;
+  const canPreserve = preserveSelection && profile.options.includes(previousValue);
+  select.value = String(canPreserve ? previousValue : profile.recommended);
+  note.textContent = `${profile.remaining} required credits remain. Suggested: ${profile.recommended} semester${profile.recommended === 1 ? "" : "s"} at approximately 15 credits per semester.`;
+}
+
+function refreshPlannerTimelineFromProgress() {
+  if (!CURRENT_REQUIREMENTS) return;
+  configurePlannerSemesterOptions({ preserveSelection: false });
+  if (CURRENT_PLANNING_MODE === "ai") renderDegreePlan();
 }
 
 function setTab(tabName, event) {
@@ -1916,6 +1974,7 @@ function selectChoiceCourse(course) {
   renderSummary();
   renderRecommendations();
   updateProgressWidget();
+  refreshPlannerTimelineFromProgress();
 }
 
 function clearChoiceSelection(placeholderCode) {
@@ -1926,6 +1985,7 @@ function clearChoiceSelection(placeholderCode) {
   renderSummary();
   renderRecommendations();
   updateProgressWidget();
+  refreshPlannerTimelineFromProgress();
 }
 
 function toggleSatisfiedCourses() {
@@ -1956,6 +2016,7 @@ function handleCourseCheckboxChange(checkbox) {
   renderSummary();
   renderRecommendations();
   updateProgressWidget();
+  refreshPlannerTimelineFromProgress();
 }
 
 function clearCompleted() {
@@ -1967,6 +2028,7 @@ function clearCompleted() {
   renderSummary();
   renderRecommendations();
   updateProgressWidget();
+  refreshPlannerTimelineFromProgress();
 }
 
 function groupsForCurrentTab() {
@@ -2381,8 +2443,16 @@ function remainingRequiredCredits(completed) {
 }
 
 function workloadTargets(totalCredits, semesterCount, pattern) {
-  if (OFFICIAL_DEGREE_MAP && semesterCount === 4 && pattern === "balanced") {
-    return OFFICIAL_DEGREE_MAP.semesters.map(semester => Number(semester.target_credits || 15));
+  const officialTargets = (OFFICIAL_DEGREE_MAP?.semesters || []).map(
+    semester => Number(semester.target_credits || 15)
+  );
+  const officialTotal = officialTargets.reduce((sum, credits) => sum + credits, 0);
+  if (
+    officialTargets.length === semesterCount &&
+    pattern === "balanced" &&
+    totalCredits >= officialTotal - 2
+  ) {
+    return officialTargets;
   }
   const weights = Array.from({ length: semesterCount }, (_, index) => {
     if (semesterCount === 1 || pattern === "balanced") return 1;
@@ -2424,7 +2494,8 @@ function buildDegreePlan() {
   const courses = allCoursesFromGroups();
   const simulatedCompleted = getCompletedCourses();
   const plan = [];
-  const desiredSemesters = Number(document.getElementById("targetSemesterCount").value || 4);
+  const desiredSemesters = Number(document.getElementById("targetSemesterCount").value || 0);
+  if (!desiredSemesters) return [];
   const workloadPattern = document.getElementById("workloadPattern").value || "balanced";
   const targets = workloadTargets(remainingRequiredCredits(simulatedCompleted), desiredSemesters, workloadPattern);
   const maxSemesters = desiredSemesters;
@@ -2537,11 +2608,16 @@ function renderDegreePlan() {
   }
 
   const totalCredits = LAST_DEGREE_PLAN.reduce((sum, semester) => sum + semester.credits, 0);
-  const desiredSemesters = Number(document.getElementById("targetSemesterCount").value || 4);
+  const desiredSemesters = Number(document.getElementById("targetSemesterCount").value || 0);
+  const remainingCredits = remainingRequiredCredits(getCompletedCourses());
   const sourceNote = OFFICIAL_DEGREE_MAP
     ? ` Guidance is based on the <a href="${OFFICIAL_DEGREE_MAP.source_pdf}" target="_blank" rel="noopener">BMCC Computer Science 2026-2027 Degree Map</a> with the faculty Speech-in-semester-1 adjustment.`
     : "";
-  summary.innerHTML = `Suggested sequence: <strong>exactly ${desiredSemesters} semester(s)</strong> and <strong>${totalCredits} planned credits</strong>.${sourceNote} This is a planning aid, not an official registration schedule. Course availability and advising approval still apply.`;
+  const unscheduledCredits = Math.max(0, remainingCredits - totalCredits);
+  const schedulingNote = unscheduledCredits
+    ? ` <strong>${unscheduledCredits} remaining required credit(s) could not be placed in this timeline</strong>; try a longer option or review missing prerequisites.`
+    : "";
+  summary.innerHTML = `Suggested sequence: <strong>${desiredSemesters} remaining semester(s)</strong> and <strong>${totalCredits} planned credits</strong>.${schedulingNote}${sourceNote} This is a planning aid, not an official registration schedule. Course availability and advising approval still apply.`;
 
   LAST_DEGREE_PLAN.forEach((semester, index) => {
     const details = document.createElement("details");
@@ -2581,7 +2657,7 @@ async function generateAIStudyPlan() {
         page_context: {
           ...buildAdvisorPageContext(),
           planning_mode: "ai_semester_plan",
-          requested_semesters: Number(document.getElementById("targetSemesterCount").value || 4),
+          requested_semesters: Number(document.getElementById("targetSemesterCount").value || 0),
           workload_pattern: document.getElementById("workloadPattern").value,
           official_degree_map_guidance: OFFICIAL_DEGREE_MAP ? {
             catalog_year: OFFICIAL_DEGREE_MAP.catalog_year,
