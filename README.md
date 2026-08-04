@@ -202,6 +202,16 @@ files under `docs/`. Treat curriculum changes as data changes: cite the official
 source, keep the change limited to the requested program, reseed locally, and verify
 the affected screens before opening a pull request.
 
+New curriculum contributors should use the blank
+[`curriculum_courses_template.csv`](docs/templates/curriculum_courses_template.csv),
+record provenance with the source-notes template, and follow
+[CURRICULUM_DATA_GUIDE.md](CURRICULUM_DATA_GUIDE.md). Validate a new major before
+seeding:
+
+```bash
+python3 scripts/validate_curriculum_csv.py docs/example_courses.csv
+```
+
 ## Contributing
 
 Contributors must work from a fork and submit pull requests. Do not push directly to

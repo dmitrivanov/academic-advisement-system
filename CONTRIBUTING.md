@@ -14,6 +14,10 @@ reviewed before they become part of the deployed application.
   explicit approval in the issue.
 - Keep each pull request limited to one assigned issue.
 
+Curriculum-data contributors must also follow
+[CURRICULUM_DATA_GUIDE.md](CURRICULUM_DATA_GUIDE.md), start from the canonical CSV
+template, cite official sources, and run the curriculum validator before seeding.
+
 ## One-time setup
 
 1. Fork `dmitrivanov/academic-advisement-system` on GitHub.
@@ -70,9 +74,12 @@ git diff
 Follow the issue's test steps. At minimum:
 
 ```bash
+python3 scripts/validate_curriculum_csv.py path/to/new_major_courses.csv
 python3 seed_database.py
 python3 -m uvicorn faq_fallback_api:app --reload --port 8000
 ```
+
+The validator command applies to curriculum-data changes. Other tasks may omit it.
 
 Open the affected page, verify the requested behavior, and ensure the terminal does
 not show a new error. Do not reseed or test against the production database.
