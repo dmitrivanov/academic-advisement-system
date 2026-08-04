@@ -30,6 +30,8 @@ class ProgressProspectusTests(unittest.TestCase):
             'onclick="printPlanProspectus()"',
             '@media print',
             'body.printing-prospectus',
+            '.prospectus-modal.hidden',
+            '.prospectus-backdrop.hidden',
         }
         for marker in expected:
             self.assertIn(marker, self.html)
