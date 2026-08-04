@@ -876,6 +876,18 @@ button:hover {
 .semester-course:last-child { border-bottom: 0; }
 .plan-note { color: #667085; line-height: 1.5; font-size: 13px; }
 .ai-plan-box { margin-top: 14px; padding: 14px; border-radius: 12px; background: #f0f7ff; line-height: 1.55; }
+.planner-setup { margin-top: 16px; padding: 16px; border: 1px solid #d7deea; border-radius: 14px; background: #f8fbff; }
+.planner-fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 12px; }
+.planner-field label { display: block; margin-bottom: 5px; color: #475467; font-size: 12px; font-weight: bold; }
+.planner-field select { width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 10px; background: white; }
+.sequence-section { margin-top: 18px; }
+.sequence-lanes { display: grid; gap: 10px; margin-top: 10px; }
+.sequence-lane { display: grid; grid-template-columns: 150px 1fr; gap: 12px; align-items: start; padding: 12px; border-radius: 12px; background: #fff; border: 1px solid #e6eaf2; }
+.sequence-label { font-weight: bold; color: #172033; }
+.sequence-track { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.sequence-node { padding: 7px 9px; border-radius: 9px; background: #eaf2ff; color: #1d4ed8; font-size: 12px; font-weight: bold; }
+.sequence-arrow { color: #98a2b3; font-weight: bold; }
+@media (max-width: 620px) { .sequence-lane { grid-template-columns: 1fr; } }
 
 .recommendation-modal-backdrop {
   position: fixed;
@@ -986,6 +998,29 @@ button:hover {
       <button id="aiModeButton" class="secondary-button mode-button" onclick="setPlanningMode('ai')">AI Advisor Plan</button>
     </div>
     <div id="degreePlanArea" style="display:none;">
+      <div class="planner-setup">
+        <div class="planner-fields">
+          <div class="planner-field">
+            <label for="targetSemesterCount">Desired completion timeline</label>
+            <select id="targetSemesterCount" onchange="renderDegreePlan()">
+              <option value="4">4 semesters</option>
+              <option value="5">5 semesters</option>
+              <option value="6">6 semesters</option>
+              <option value="7">7 semesters</option>
+              <option value="8">8 semesters</option>
+            </select>
+          </div>
+          <div class="planner-field">
+            <label for="workloadPattern">Preferred workload pattern</label>
+            <select id="workloadPattern" onchange="renderDegreePlan()">
+              <option value="balanced">Approximately equal each semester</option>
+              <option value="light_first">Lighter first, increasing later</option>
+              <option value="heavy_first">Heavier first, decreasing later</option>
+            </select>
+          </div>
+        </div>
+        <p class="plan-note">The planner respects prerequisites first. Your selected timeline is a target, so locked sequences may require an additional semester.</p>
+      </div>
       <div class="top-actions">
         <button id="generatePlanButton" onclick="generateAIStudyPlan()">Generate AI Study Plan</button>
         <button class="secondary-button" onclick="renderDegreePlan()">Refresh Semester Plan</button>
@@ -993,6 +1028,7 @@ button:hover {
       <div id="aiPlanExplanation" class="ai-plan-box" style="display:none;"></div>
       <div id="degreePlanSummary" class="plan-note"></div>
       <div id="degreePlan" class="degree-plan"></div>
+      <div id="sequenceSection" class="sequence-section"></div>
     </div>
   </div>
 
@@ -1423,6 +1459,7 @@ async function loadProgramRequirements() {
 
   updateSelectedProgramHeader();
   ensurePlaceholderGroups();
+  configurePlannerDefaults();
   renderCompletedCourseGrid();
   renderGraph();
   renderSummary();
@@ -1441,6 +1478,12 @@ function ensurePlaceholderGroups() {
   });
 
   CURRENT_REQUIREMENTS.groups.sort((a, b) => (a.display_order || 0) - (b.display_order || 0));
+}
+
+function configurePlannerDefaults() {
+  const select = document.getElementById("targetSemesterCount");
+  const degreeType = String(CURRENT_REQUIREMENTS?.program?.degree_type || "").toUpperCase();
+  select.value = degreeType.includes("B") ? "8" : "4";
 }
 
 function setTab(tabName, event) {
@@ -2273,12 +2316,42 @@ function nextRegularSemesterName(currentName) {
   return `Fall ${year}`;
 }
 
-function buildDegreePlan(maxSemesters = 12) {
+function remainingRequiredCredits(completed) {
+  return CURRENT_REQUIREMENTS.groups.reduce((total, group) => {
+    const completedCredits = groupCreditsCompleted(group, completed);
+    if (group.required_credits) {
+      return total + Math.max(0, Number(group.required_credits) - completedCredits);
+    }
+    const unfinishedCredits = group.courses.reduce((sum, course) => {
+      if (isCourseCompleted(course.code, course, completed) || isNotNeeded(course.code, course, completed)) return sum;
+      return sum + Number(course.credits || 0);
+    }, 0);
+    return total + unfinishedCredits;
+  }, 0);
+}
+
+function workloadTargets(totalCredits, semesterCount, pattern) {
+  const weights = Array.from({ length: semesterCount }, (_, index) => {
+    if (semesterCount === 1 || pattern === "balanced") return 1;
+    const progress = index / (semesterCount - 1);
+    if (pattern === "light_first") return .72 + progress * .56;
+    if (pattern === "heavy_first") return 1.28 - progress * .56;
+    return 1;
+  });
+  const weightTotal = weights.reduce((sum, value) => sum + value, 0);
+  return weights.map(weight => Math.max(6, Math.min(18, Math.round(totalCredits * weight / weightTotal))));
+}
+
+function buildDegreePlan() {
   if (!CURRENT_REQUIREMENTS) return [];
 
   const courses = allCoursesFromGroups();
   const simulatedCompleted = getCompletedCourses();
   const plan = [];
+  const desiredSemesters = Number(document.getElementById("targetSemesterCount").value || 4);
+  const workloadPattern = document.getElementById("workloadPattern").value || "balanced";
+  const targets = workloadTargets(remainingRequiredCredits(simulatedCompleted), desiredSemesters, workloadPattern);
+  const maxSemesters = desiredSemesters + 2;
   let semesterName = detectNextSemester().name;
 
   for (let index = 0; index < maxSemesters; index++) {
@@ -2293,7 +2366,8 @@ function buildDegreePlan(maxSemesters = 12) {
       return allPrereqsSatisfied(course, semesterStartCompleted);
     });
 
-    while (available.length && selected.length < 5) {
+    const targetCredits = targets[index] || 15;
+    while (available.length && selected.length < 6) {
       available.sort((a, b) =>
         recommendationScore(b, semesterStartCompleted, selectedTypes) -
         recommendationScore(a, semesterStartCompleted, selectedTypes)
@@ -2303,7 +2377,7 @@ function buildDegreePlan(maxSemesters = 12) {
         const projected = new Set(simulatedCompleted);
         selected.forEach(item => projected.add(item.code));
         if (isNotNeeded(course.code, course, projected)) return false;
-        return credits + Number(course.credits || 0) <= 17;
+        return credits + Number(course.credits || 0) <= 18;
       });
       if (!chosen) break;
 
@@ -2311,13 +2385,13 @@ function buildDegreePlan(maxSemesters = 12) {
       selectedTypes.add(chosen.group_type);
       credits += Number(chosen.credits || 0);
       available = available.filter(course => course.code !== chosen.code);
-      if (credits >= 14) break;
+      if (credits >= targetCredits - 1) break;
     }
 
     if (!selected.length) break;
 
     selected.forEach(course => simulatedCompleted.add(course.code));
-    plan.push({ name: semesterName, courses: selected, credits });
+    plan.push({ name: semesterName, courses: selected, credits, targetCredits });
     semesterName = nextRegularSemesterName(semesterName);
 
     const unfinished = Object.values(courses).some(course =>
@@ -2328,6 +2402,52 @@ function buildDegreePlan(maxSemesters = 12) {
   }
 
   return plan;
+}
+
+function getSequenceCategory(code) {
+  const prefix = String(code || "").split(/\s|-/)[0];
+  if (prefix === "MAT" || prefix === "MATH") return "Mathematics sequence";
+  if (["CSC", "CIS", "CNT"].includes(prefix)) return "Computer Science sequence";
+  if (["PHY", "PHYS", "BIO", "CHE", "CHEM", "SCI"].includes(prefix)) return "Science sequence";
+  if (["ENG", "ENGL", "SPE", "SPEECH"].includes(prefix)) return "Communication sequence";
+  return null;
+}
+
+function renderSequenceLanes() {
+  const section = document.getElementById("sequenceSection");
+  const lanes = {};
+  LAST_DEGREE_PLAN.forEach(semester => {
+    semester.courses.forEach(course => {
+      const category = getSequenceCategory(course.code);
+      if (!category) return;
+      if (!lanes[category]) lanes[category] = [];
+      lanes[category].push({ ...course, semester: semester.name });
+    });
+  });
+
+  const entries = Object.entries(lanes).filter(([, courses]) => courses.length > 1);
+  if (!entries.length) {
+    section.innerHTML = "";
+    return;
+  }
+
+  section.innerHTML = `
+    <h3>Course Sequence View</h3>
+    <p class="plan-note">These lanes highlight the order of major subject areas. Arrows show the planned progression across semesters; official prerequisites remain the controlling rule.</p>
+    <div class="sequence-lanes">
+      ${entries.map(([label, courses]) => `
+        <div class="sequence-lane">
+          <div class="sequence-label">${label}</div>
+          <div class="sequence-track">
+            ${courses.map((course, index) => `
+              ${index ? '<span class="sequence-arrow">→</span>' : ''}
+              <span class="sequence-node" title="${course.semester}">${course.code}<br><small>${course.semester}</small></span>
+            `).join("")}
+          </div>
+        </div>
+      `).join("")}
+    </div>
+  `;
 }
 
 function renderDegreePlan() {
@@ -2344,7 +2464,11 @@ function renderDegreePlan() {
   }
 
   const totalCredits = LAST_DEGREE_PLAN.reduce((sum, semester) => sum + semester.credits, 0);
-  summary.innerHTML = `Suggested sequence: <strong>${LAST_DEGREE_PLAN.length} semester(s)</strong> and <strong>${totalCredits} planned credits</strong>. This is a planning aid, not an official registration schedule. Course availability and advising approval still apply.`;
+  const desiredSemesters = Number(document.getElementById("targetSemesterCount").value || 4);
+  const timelineNote = LAST_DEGREE_PLAN.length > desiredSemesters
+    ? ` Prerequisite sequencing extended the plan beyond the requested ${desiredSemesters} semesters.`
+    : "";
+  summary.innerHTML = `Suggested sequence: <strong>${LAST_DEGREE_PLAN.length} semester(s)</strong> and <strong>${totalCredits} planned credits</strong>.${timelineNote} This is a planning aid, not an official registration schedule. Course availability and advising approval still apply.`;
 
   LAST_DEGREE_PLAN.forEach((semester, index) => {
     const details = document.createElement("details");
@@ -2363,6 +2487,7 @@ function renderDegreePlan() {
     `;
     container.appendChild(details);
   });
+  renderSequenceLanes();
 }
 
 async function generateAIStudyPlan() {
@@ -2379,10 +2504,12 @@ async function generateAIStudyPlan() {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        user_question: "Explain this proposed multi-semester study plan. Highlight the next semester, prerequisite sequencing, and any limitations. Do not add or replace courses that are not in the supplied plan.",
+        user_question: "Explain this proposed multi-semester study plan. Highlight the next semester, the mathematics and computer-science course sequences, the requested workload pattern, and any limitations. Do not add or replace courses that are not in the supplied plan.",
         page_context: {
           ...buildAdvisorPageContext(),
           planning_mode: "ai_semester_plan",
+          requested_semesters: Number(document.getElementById("targetSemesterCount").value || 4),
+          workload_pattern: document.getElementById("workloadPattern").value,
           degree_plan: LAST_DEGREE_PLAN.map(semester => ({
             name: semester.name,
             credits: semester.credits,
