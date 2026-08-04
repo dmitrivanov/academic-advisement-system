@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Academic Progress | Academic Advisement System</title>
 
 <style>
@@ -1299,12 +1300,7 @@ button:hover {
   body.printing-prospectus .prospectus-stat { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
 }
 
-@media (max-width: 620px) {
-  .container {
-    margin: 12px auto;
-    padding: 12px;
-  }
-
+@media (max-width: 820px) {
   .progress-widget {
     position: static;
     width: auto;
@@ -1314,6 +1310,19 @@ button:hover {
   .progress-circle {
     width: 86px;
     height: 86px;
+  }
+
+  button,
+  .secondary-button {
+    min-height: 44px;
+    padding: 12px 16px;
+  }
+}
+
+@media (max-width: 620px) {
+  .container {
+    margin: 12px auto;
+    padding: 12px;
   }
 }
 
