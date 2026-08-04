@@ -44,6 +44,12 @@ class ProgressProspectusTests(unittest.TestCase):
             re.compile(r"async function generateAIStudyPlan\(\).*?openPlanProspectus\(\"degree\"\)", re.DOTALL),
         )
 
+    def test_ai_commentary_preserves_sanitized_markdown_html(self):
+        self.assertIn('class="prospectus-commentary"', self.html)
+        self.assertIn('class="advisor-markdown"', self.html)
+        self.assertIn('?.innerHTML?.trim()', self.html)
+        self.assertNotIn('?.textContent?.trim() || "";', self.html)
+
     def test_page_has_no_duplicate_html_ids(self):
         parser = IdCollector()
         parser.feed(self.html)

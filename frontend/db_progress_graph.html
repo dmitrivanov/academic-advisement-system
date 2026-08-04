@@ -1121,6 +1121,67 @@ button:hover {
   line-height: 1.55;
 }
 
+.advisor-markdown {
+  color: #334155;
+  font-size: 15px;
+  line-height: 1.65;
+}
+
+.advisor-markdown > :first-child {
+  margin-top: 0;
+}
+
+.advisor-markdown > :last-child {
+  margin-bottom: 0;
+}
+
+.advisor-markdown h2,
+.advisor-markdown h3,
+.advisor-markdown h4 {
+  margin: 22px 0 8px;
+  color: #0f172a;
+  line-height: 1.3;
+}
+
+.advisor-markdown h2 { font-size: 20px; }
+.advisor-markdown h3 { font-size: 17px; }
+.advisor-markdown h4 { font-size: 15px; }
+
+.advisor-markdown p {
+  margin: 0 0 13px;
+}
+
+.advisor-markdown ul,
+.advisor-markdown ol {
+  margin: 7px 0 16px;
+  padding-left: 25px;
+}
+
+.advisor-markdown li {
+  margin: 6px 0;
+  padding-left: 3px;
+}
+
+.advisor-markdown strong {
+  color: #172033;
+}
+
+.advisor-markdown code {
+  padding: 2px 5px;
+  border-radius: 5px;
+  background: #e2e8f0;
+  color: #1e3a8a;
+  font-size: .92em;
+}
+
+.prospectus-commentary {
+  padding: 18px 20px;
+  border: 1px solid #dbeafe;
+  border-left: 4px solid #2563eb;
+  border-radius: 0 12px 12px 0;
+  background: #f8fbff;
+}
+
 .prospectus-semesters {
   display: grid;
   gap: 12px;
@@ -1672,7 +1733,7 @@ function renderPlanProspectus(mode = "degree") {
   const recommendation = chooseRecommendedCourses();
   const generatedAt = new Date();
   const campusCode = String(program.institution_code || "CAMPUS").slice(0, 8);
-  const explanation = document.getElementById("aiPlanExplanation")?.textContent?.trim() || "";
+  const explanationHtml = document.getElementById("aiPlanExplanation")?.innerHTML?.trim() || "";
   let title = "Academic Advising Plan";
   let subtitle = "A structured, interactive planning prospectus based on the selected curriculum and completed coursework.";
   let scheduleHtml = "";
@@ -1738,10 +1799,10 @@ function renderPlanProspectus(mode = "degree") {
       <div class="prospectus-semesters">${scheduleHtml}</div>
     </section>
 
-    ${explanation && mode === "degree" ? `
+    ${explanationHtml && mode === "degree" ? `
       <section class="prospectus-section">
         <h2 class="prospectus-section-title">AI Advisor Commentary</h2>
-        <div class="prospectus-callout">${prospectusEscape(explanation)}</div>
+        <div class="prospectus-commentary">${explanationHtml}</div>
       </section>` : ""}
 
     <footer class="prospectus-footer">
@@ -2242,11 +2303,67 @@ function getCourseStatus(code, course, completed) {
 }
 
 function formatAdvisorMarkdown(text) {
-  return text
-    .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
-    .replace(/\n\d+\.\s/g, match => `<br><strong>${match.trim()}</strong> `)
-    .replace(/\n-\s/g, "<br>• ")
-    .replace(/\n/g, "<br>");
+  const inline = value => prospectusEscape(value)
+    .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
+    .replace(/`(.+?)`/g, "<code>$1</code>")
+    .replace(/\*(.+?)\*/g, "<em>$1</em>");
+  const lines = String(text || "").replace(/\r/g, "").split("\n");
+  const html = [];
+  let listType = null;
+
+  const closeList = () => {
+    if (listType) html.push(`</${listType}>`);
+    listType = null;
+  };
+
+  lines.forEach(rawLine => {
+    const line = rawLine.trim();
+    if (!line) {
+      closeList();
+      return;
+    }
+
+    const heading = line.match(/^(#{1,3})\s+(.+)$/);
+    if (heading) {
+      closeList();
+      const level = Math.min(4, heading[1].length + 1);
+      html.push(`<h${level}>${inline(heading[2])}</h${level}>`);
+      return;
+    }
+
+    const boldHeading = line.match(/^\*\*(.+?):?\*\*:?$/);
+    if (boldHeading) {
+      closeList();
+      html.push(`<h3>${inline(boldHeading[1].replace(/:$/, ""))}</h3>`);
+      return;
+    }
+
+    const ordered = line.match(/^\d+\.\s+(.+)$/);
+    const unordered = line.match(/^[-*]\s+(.+)$/);
+    if (ordered || unordered) {
+      const desiredList = ordered ? "ol" : "ul";
+      if (listType !== desiredList) {
+        closeList();
+        listType = desiredList;
+        html.push(`<${listType}>`);
+      }
+      html.push(`<li>${inline((ordered || unordered)[1])}</li>`);
+      return;
+    }
+
+    closeList();
+    const sectionLabel = line.match(/^([A-Z][A-Za-z ]{2,40}):\s*(.*)$/);
+    if (sectionLabel) {
+      html.push(`<h3>${inline(sectionLabel[1])}</h3>`);
+      if (sectionLabel[2]) html.push(`<p>${inline(sectionLabel[2])}</p>`);
+      return;
+    }
+
+    html.push(`<p>${inline(line)}</p>`);
+  });
+
+  closeList();
+  return `<div class="advisor-markdown">${html.join("")}</div>`;
 }
 
 function renderCompletedCourseGrid() {
