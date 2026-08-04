@@ -815,6 +815,38 @@ button:hover {
   margin-top: 8px;
 }
 
+.program-card,
+.planning-mode-card {
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 14px 38px rgba(15, 23, 42, .07);
+}
+
+.program-card .top-actions,
+.planning-mode-card .top-actions,
+.mode-buttons {
+  padding: 6px;
+  border-radius: 14px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+}
+
+.program-card .top-actions button,
+.planning-mode-card .top-actions button,
+.planning-mode-card .mode-button {
+  margin: 0;
+  min-height: 40px;
+  border-radius: 10px;
+  box-shadow: none;
+  transition: transform .15s ease, box-shadow .15s ease, background .15s ease;
+}
+
+.program-card .top-actions button:hover,
+.planning-mode-card .top-actions button:hover,
+.planning-mode-card .mode-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(15, 23, 42, .12);
+}
+
 .welcome-strip {
   padding: 12px 16px;
   margin-bottom: 14px;
@@ -923,6 +955,284 @@ button:hover {
   margin: 0;
 }
 
+.prospectus-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 2600;
+  background: rgba(15, 23, 42, .58);
+  backdrop-filter: blur(5px);
+}
+
+.prospectus-modal {
+  position: fixed;
+  z-index: 2700;
+  inset: 3vh 4vw;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-radius: 22px;
+  background: #e9eef5;
+  box-shadow: 0 30px 90px rgba(15, 23, 42, .35);
+}
+
+.prospectus-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 18px;
+  background: #0f172a;
+  color: white;
+}
+
+.prospectus-toolbar-title {
+  font-weight: bold;
+  letter-spacing: .01em;
+}
+
+.prospectus-toolbar-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.prospectus-toolbar button {
+  margin: 0;
+  padding: 9px 13px;
+  border-radius: 9px;
+  background: #2563eb;
+}
+
+.prospectus-toolbar button.prospectus-close {
+  background: #334155;
+}
+
+.prospectus-scroll {
+  overflow-y: auto;
+  padding: 26px;
+}
+
+.prospectus-paper {
+  width: min(900px, 100%);
+  min-height: 1050px;
+  margin: 0 auto;
+  padding: 46px 52px;
+  box-sizing: border-box;
+  background: white;
+  color: #172033;
+  box-shadow: 0 12px 40px rgba(15, 23, 42, .12);
+}
+
+.prospectus-header {
+  display: grid;
+  grid-template-columns: 92px 1fr;
+  gap: 20px;
+  padding-bottom: 24px;
+  border-bottom: 3px solid #1d4ed8;
+}
+
+.prospectus-logo {
+  width: 88px;
+  height: 88px;
+  display: grid;
+  place-items: center;
+  border-radius: 18px;
+  background: linear-gradient(145deg, #172554, #2563eb);
+  color: white;
+  font-size: 19px;
+  font-weight: bold;
+  letter-spacing: .06em;
+  text-align: center;
+}
+
+.prospectus-eyebrow {
+  color: #2563eb;
+  font-size: 11px;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: .12em;
+}
+
+.prospectus-heading h1 {
+  margin: 7px 0 5px;
+  font-size: 30px;
+  line-height: 1.15;
+}
+
+.prospectus-heading p {
+  margin: 0;
+  color: #64748b;
+  line-height: 1.5;
+}
+
+.prospectus-meta-grid,
+.prospectus-stat-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 22px;
+}
+
+.prospectus-meta,
+.prospectus-stat {
+  padding: 13px 14px;
+  border-radius: 12px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+}
+
+.prospectus-meta span,
+.prospectus-stat span {
+  display: block;
+  margin-bottom: 4px;
+  color: #64748b;
+  font-size: 10px;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: .07em;
+}
+
+.prospectus-stat strong {
+  font-size: 22px;
+  color: #1d4ed8;
+}
+
+.prospectus-section {
+  margin-top: 28px;
+}
+
+.prospectus-section-title {
+  margin: 0 0 12px;
+  font-size: 18px;
+  color: #0f172a;
+}
+
+.prospectus-callout {
+  padding: 14px 16px;
+  border-left: 4px solid #2563eb;
+  border-radius: 0 10px 10px 0;
+  background: #eff6ff;
+  color: #334155;
+  line-height: 1.55;
+}
+
+.prospectus-semesters {
+  display: grid;
+  gap: 12px;
+}
+
+.prospectus-semester {
+  border: 1px solid #dbe3ef;
+  border-radius: 13px;
+  overflow: hidden;
+  break-inside: avoid;
+}
+
+.prospectus-semester summary {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px;
+  cursor: pointer;
+  list-style: none;
+  background: #f8fafc;
+  font-weight: bold;
+}
+
+.prospectus-semester summary::-webkit-details-marker {
+  display: none;
+}
+
+.prospectus-semester[open] summary {
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.prospectus-course-list {
+  padding: 4px 16px 10px;
+}
+
+.prospectus-course {
+  display: grid;
+  grid-template-columns: 95px 1fr auto;
+  gap: 12px;
+  align-items: start;
+  padding: 11px 0;
+  border-bottom: 1px solid #eef2f7;
+}
+
+.prospectus-course:last-child {
+  border-bottom: 0;
+}
+
+.prospectus-course-code {
+  color: #1d4ed8;
+  font-weight: bold;
+}
+
+.prospectus-course-title small {
+  display: block;
+  margin-top: 3px;
+  color: #64748b;
+}
+
+.prospectus-empty {
+  padding: 18px;
+  color: #64748b;
+  border: 1px dashed #cbd5e1;
+  border-radius: 12px;
+}
+
+.prospectus-footer {
+  margin-top: 32px;
+  padding-top: 16px;
+  border-top: 1px solid #cbd5e1;
+  color: #64748b;
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+@media (max-width: 720px) {
+  .prospectus-modal { inset: 0; border-radius: 0; }
+  .prospectus-toolbar { align-items: flex-start; }
+  .prospectus-scroll { padding: 10px; }
+  .prospectus-paper { min-height: 100%; padding: 24px 18px; }
+  .prospectus-header { grid-template-columns: 64px 1fr; gap: 13px; }
+  .prospectus-logo { width: 62px; height: 62px; font-size: 14px; border-radius: 13px; }
+  .prospectus-heading h1 { font-size: 23px; }
+  .prospectus-meta-grid,
+  .prospectus-stat-grid { grid-template-columns: 1fr; }
+  .prospectus-course { grid-template-columns: 78px 1fr; }
+  .prospectus-course > :last-child { grid-column: 2; }
+}
+
+@media print {
+  @page { size: letter; margin: .45in; }
+  body.printing-prospectus { background: white; }
+  body.printing-prospectus > *:not(#planProspectusModal) { display: none !important; }
+  body.printing-prospectus #planProspectusModal {
+    display: block !important;
+    position: static;
+    inset: auto;
+    overflow: visible;
+    border-radius: 0;
+    background: white;
+    box-shadow: none;
+  }
+  body.printing-prospectus .prospectus-toolbar { display: none !important; }
+  body.printing-prospectus .prospectus-scroll { overflow: visible; padding: 0; }
+  body.printing-prospectus .prospectus-paper {
+    width: 100%;
+    min-height: 0;
+    padding: 0;
+    box-shadow: none;
+  }
+  body.printing-prospectus .prospectus-semester { break-inside: avoid; }
+  body.printing-prospectus .prospectus-semester summary { background: #f3f6fa !important; print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+  body.printing-prospectus .prospectus-logo,
+  body.printing-prospectus .prospectus-callout,
+  body.printing-prospectus .prospectus-stat { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+}
+
 @media (max-width: 620px) {
   .container {
     margin: 12px auto;
@@ -1020,6 +1330,7 @@ button:hover {
       </div>
       <div class="top-actions">
         <button id="generatePlanButton" onclick="generateAIStudyPlan()">Generate AI Study Plan</button>
+        <button class="secondary-button" onclick="openPlanProspectus('degree')">Open Plan Prospectus</button>
         <button class="secondary-button" onclick="renderDegreePlan()">Refresh Semester Plan</button>
       </div>
       <div id="aiPlanExplanation" class="ai-plan-box" style="display:none;"></div>
@@ -1056,16 +1367,18 @@ button:hover {
   <div id="graph" class="hidden"></div>
 </div>
 
-<div id="recommendationModalBackdrop" class="recommendation-modal-backdrop hidden" onclick="closeRecommendationModal()"></div>
-<div id="recommendationModal" class="recommendation-modal hidden" role="dialog" aria-modal="true" aria-labelledby="recommendationTitle">
-  <div class="recommendation-modal-header">
-    <div>
-      <h3 id="recommendationTitle">Next Semester Recommendation</h3>
-      <div id="recommendationSummary" class="recommendation-summary">Loading...</div>
+<div id="planProspectusBackdrop" class="prospectus-backdrop hidden" onclick="closePlanProspectus()"></div>
+<div id="planProspectusModal" class="prospectus-modal hidden" role="dialog" aria-modal="true" aria-labelledby="planProspectusTitle">
+  <div class="prospectus-toolbar">
+    <div class="prospectus-toolbar-title">Interactive Advising Document</div>
+    <div class="prospectus-toolbar-actions">
+      <button onclick="printPlanProspectus()">Download / Save PDF</button>
+      <button class="prospectus-close" onclick="closePlanProspectus()">Close</button>
     </div>
-    <button class="advisor-close" onclick="closeRecommendationModal()">Close</button>
   </div>
-  <div id="recommendations" class="recommendation-grid"></div>
+  <div class="prospectus-scroll">
+    <article id="planProspectusDocument" class="prospectus-paper"></article>
+  </div>
 </div>
 
 <div id="advisorBackdrop" class="advisor-backdrop hidden" onclick="closeAdvisorDrawer()"></div>
@@ -1285,14 +1598,180 @@ function setPlanningMode(mode) {
 }
 
 function openRecommendationModal() {
-  renderRecommendations();
-  document.getElementById("recommendationModalBackdrop").classList.remove("hidden");
-  document.getElementById("recommendationModal").classList.remove("hidden");
+  openPlanProspectus("recommendation");
 }
 
 function closeRecommendationModal() {
-  document.getElementById("recommendationModalBackdrop").classList.add("hidden");
-  document.getElementById("recommendationModal").classList.add("hidden");
+  closePlanProspectus();
+}
+
+function prospectusEscape(value) {
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+function prospectusMetrics() {
+  const completed = getCompletedCourses();
+  const remaining = remainingRequiredCredits(completed);
+  const totalRequired = CURRENT_REQUIREMENTS.groups.reduce((sum, group) => {
+    if (group.required_credits) return sum + Number(group.required_credits);
+    return sum + group.courses.reduce((courseSum, course) => courseSum + Number(course.credits || 0), 0);
+  }, 0);
+  const completedRequired = Math.max(0, totalRequired - remaining);
+  const percent = totalRequired ? Math.min(100, Math.round((completedRequired / totalRequired) * 100)) : 0;
+  return { completed, remaining, totalRequired, completedRequired, percent };
+}
+
+function prospectusCourseRows(courses, completed) {
+  if (!courses.length) {
+    return `<div class="prospectus-empty">No courses could be placed here. Review prerequisites or select a longer timeline.</div>`;
+  }
+
+  return `<div class="prospectus-course-list">${courses.map(course => {
+    const prerequisites = formatPrereqs(course.prereqs);
+    const area = course.group_name || "Curriculum requirement";
+    const unlocks = countUnlocks(course, completed);
+    return `
+      <div class="prospectus-course">
+        <div class="prospectus-course-code">${prospectusEscape(course.code)}</div>
+        <div class="prospectus-course-title">
+          ${prospectusEscape(course.title)}
+          <small>${prospectusEscape(area)} · Prerequisites: ${prospectusEscape(prerequisites)}${unlocks ? ` · Unlocks ${unlocks} future course${unlocks === 1 ? "" : "s"}` : ""}</small>
+        </div>
+        <strong>${Number(course.credits || 0)} cr</strong>
+      </div>`;
+  }).join("")}</div>`;
+}
+
+function prospectusSemesterSection(name, courses, credits, completed, open = false) {
+  return `
+    <details class="prospectus-semester" ${open ? "open" : ""}>
+      <summary>
+        <span>${prospectusEscape(name)}</span>
+        <span>${Number(credits || 0)} credits · ${courses.length} courses</span>
+      </summary>
+      ${prospectusCourseRows(courses, completed)}
+    </details>`;
+}
+
+function renderPlanProspectus(mode = "degree") {
+  if (!CURRENT_REQUIREMENTS) return;
+
+  const documentArea = document.getElementById("planProspectusDocument");
+  const program = CURRENT_REQUIREMENTS.program;
+  const metrics = prospectusMetrics();
+  const recommendation = chooseRecommendedCourses();
+  const generatedAt = new Date();
+  const campusCode = String(program.institution_code || "CAMPUS").slice(0, 8);
+  const explanation = document.getElementById("aiPlanExplanation")?.textContent?.trim() || "";
+  let title = "Academic Advising Plan";
+  let subtitle = "A structured, interactive planning prospectus based on the selected curriculum and completed coursework.";
+  let scheduleHtml = "";
+  let planningSummary = "";
+
+  if (mode === "recommendation") {
+    title = "Next Semester Recommendation";
+    subtitle = `Recommended coursework for ${recommendation.semester.name}, based on current progress and satisfied prerequisites.`;
+    planningSummary = `Recommended load: ${recommendation.credits} credits. The selection prioritizes required courses, prerequisite sequences, and courses that unlock future requirements.`;
+    scheduleHtml = prospectusSemesterSection(
+      recommendation.semester.name,
+      recommendation.selected,
+      recommendation.credits,
+      metrics.completed,
+      true
+    );
+  } else {
+    configurePlannerSemesterOptions({ preserveSelection: true });
+    renderDegreePlan();
+    const desiredSemesters = Number(document.getElementById("targetSemesterCount").value || 0);
+    const plannedCredits = LAST_DEGREE_PLAN.reduce((sum, semester) => sum + semester.credits, 0);
+    planningSummary = `${metrics.remaining} required credits remain. The selected timeline contains ${desiredSemesters} remaining semester${desiredSemesters === 1 ? "" : "s"} and currently places ${plannedCredits} credits.`;
+    scheduleHtml = LAST_DEGREE_PLAN.length
+      ? LAST_DEGREE_PLAN.map((semester, index) => prospectusSemesterSection(
+          semester.name,
+          semester.courses,
+          semester.credits,
+          metrics.completed,
+          index === 0
+        )).join("")
+      : `<div class="prospectus-empty">No remaining semester plan is available. The modeled requirements may already be complete.</div>`;
+  }
+
+  documentArea.innerHTML = `
+    <header class="prospectus-header">
+      <div class="prospectus-logo" aria-label="Campus logo placeholder">${prospectusEscape(campusCode)}<br><small>LOGO</small></div>
+      <div class="prospectus-heading">
+        <div class="prospectus-eyebrow">Academic Advisement System</div>
+        <h1 id="planProspectusTitle">${prospectusEscape(title)}</h1>
+        <p>${prospectusEscape(subtitle)}</p>
+      </div>
+    </header>
+
+    <div class="prospectus-meta-grid">
+      <div class="prospectus-meta"><span>Campus</span><strong>${prospectusEscape(program.institution || program.institution_code || "Not specified")}</strong></div>
+      <div class="prospectus-meta"><span>Program</span><strong>${prospectusEscape(`${program.code} - ${program.name}`)}</strong></div>
+      <div class="prospectus-meta"><span>Catalog</span><strong>${prospectusEscape(program.catalog_year || "Not specified")}</strong></div>
+    </div>
+
+    <div class="prospectus-stat-grid">
+      <div class="prospectus-stat"><span>Modeled progress</span><strong>${metrics.percent}%</strong></div>
+      <div class="prospectus-stat"><span>Completed credits</span><strong>${metrics.completedRequired}</strong></div>
+      <div class="prospectus-stat"><span>Remaining credits</span><strong>${metrics.remaining}</strong></div>
+    </div>
+
+    <section class="prospectus-section">
+      <h2 class="prospectus-section-title">Planning Summary</h2>
+      <div class="prospectus-callout">${prospectusEscape(planningSummary)}</div>
+    </section>
+
+    <section class="prospectus-section">
+      <h2 class="prospectus-section-title">${mode === "recommendation" ? "Recommended Semester" : "Suggested Semester Sequence"}</h2>
+      <div class="prospectus-semesters">${scheduleHtml}</div>
+    </section>
+
+    ${explanation && mode === "degree" ? `
+      <section class="prospectus-section">
+        <h2 class="prospectus-section-title">AI Advisor Commentary</h2>
+        <div class="prospectus-callout">${prospectusEscape(explanation)}</div>
+      </section>` : ""}
+
+    <footer class="prospectus-footer">
+      Generated ${prospectusEscape(generatedAt.toLocaleString())}. This document is a planning aid, not an official degree audit or registration guarantee. Course availability, transfer evaluation, prerequisite enforcement, and final degree certification require confirmation by the appropriate college advisor or registrar.
+    </footer>`;
+}
+
+function openPlanProspectus(mode = "degree") {
+  renderPlanProspectus(mode);
+  document.getElementById("planProspectusBackdrop").classList.remove("hidden");
+  document.getElementById("planProspectusModal").classList.remove("hidden");
+  document.body.style.overflow = "hidden";
+}
+
+function closePlanProspectus() {
+  document.getElementById("planProspectusBackdrop")?.classList.add("hidden");
+  document.getElementById("planProspectusModal")?.classList.add("hidden");
+  document.body.classList.remove("printing-prospectus");
+  document.body.style.overflow = "";
+}
+
+function printPlanProspectus() {
+  const details = [...document.querySelectorAll("#planProspectusDocument details")];
+  const previouslyOpen = details.map(item => item.open);
+  details.forEach(item => { item.open = true; });
+  document.body.classList.add("printing-prospectus");
+
+  const restore = () => {
+    document.body.classList.remove("printing-prospectus");
+    details.forEach((item, index) => { item.open = previouslyOpen[index]; });
+    window.removeEventListener("afterprint", restore);
+  };
+
+  window.addEventListener("afterprint", restore);
+  window.print();
 }
 
 function changeProgram() {
@@ -2379,6 +2858,10 @@ function renderRecommendations() {
   const summary = document.getElementById("recommendationSummary");
   const container = document.getElementById("recommendations");
 
+  // Recommendations are now presented in the unified prospectus. Keep this
+  // function as a compatibility hook for existing progress refresh calls.
+  if (!title || !summary || !container) return;
+
   container.innerHTML = "";
 
   const result = chooseRecommendedCourses();
@@ -2687,6 +3170,7 @@ async function generateAIStudyPlan() {
   } finally {
     button.disabled = false;
     button.textContent = "Generate AI Study Plan";
+    openPlanProspectus("degree");
   }
 }
 
