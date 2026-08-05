@@ -660,6 +660,8 @@ button:hover {
   background: #eff6ff;
   color: #1d4ed8;
   font-size: 12px;
+  font-family: inherit;
+  font-weight: normal;
   cursor: pointer;
 }
 
@@ -1558,10 +1560,10 @@ body { background: #f5f5f7; color: #1d1d1f; }
 
 <div id="advisorBackdrop" class="advisor-backdrop hidden" onclick="closeAdvisorDrawer()"></div>
 
-<div id="advisorDrawer" class="advisor-drawer">
+<div id="advisorDrawer" class="advisor-drawer" role="dialog" aria-modal="true" aria-labelledby="advisorDrawerTitle">
   <div class="advisor-header">
     <div>
-      <h3>AI Academic Advisor</h3>
+      <h3 id="advisorDrawerTitle">AI Academic Advisor</h3>
       <p>Ask questions using the current progress page context: selected completed courses, available/locked courses, not-needed alternatives, and next-semester recommendation.</p>
       <div id="advisorLastMetrics" class="advisor-metrics-pill">No AI call yet</div>
     </div>
@@ -1572,9 +1574,9 @@ body { background: #f5f5f7; color: #1d1d1f; }
     <div class="advisor-message system">
       I can answer based on the curriculum and selections currently shown on this page. Try asking: "Why is this course locked?" or "What should I take next?"
       <div style="margin-top:8px;">
-        <span class="suggested-question" onclick="useSuggestedQuestion('What should I take next semester and why?')">What should I take next?</span>
-        <span class="suggested-question" onclick="useSuggestedQuestion('Which selected courses are unlocking the most future courses?')">What unlocks the most?</span>
-        <span class="suggested-question" onclick="useSuggestedQuestion('Are there any electives or alternatives I no longer need?')">What is not needed?</span>
+        <button type="button" class="suggested-question" onclick="useSuggestedQuestion('What should I take next semester and why?')">What should I take next?</button>
+        <button type="button" class="suggested-question" onclick="useSuggestedQuestion('Which selected courses are unlocking the most future courses?')">What unlocks the most?</button>
+        <button type="button" class="suggested-question" onclick="useSuggestedQuestion('Are there any electives or alternatives I no longer need?')">What is not needed?</button>
       </div>
     </div>
   </div>
@@ -3491,15 +3493,25 @@ function startComparison(mode) {
   window.location.href = `/transfer-analysis?mode=${encodeURIComponent(mode)}`;
 }
 
+let advisorDrawerTrigger = null;
+
 function openAdvisorDrawer() {
+  advisorDrawerTrigger = document.activeElement;
   document.getElementById("advisorBackdrop").classList.remove("hidden");
   document.getElementById("advisorDrawer").classList.add("open");
   setTimeout(() => document.getElementById("advisorQuestion").focus(), 150);
 }
 
 function closeAdvisorDrawer() {
-  document.getElementById("advisorDrawer").classList.remove("open");
+  const drawer = document.getElementById("advisorDrawer");
+  const wasOpen = drawer.classList.contains("open");
+  drawer.classList.remove("open");
   document.getElementById("advisorBackdrop").classList.add("hidden");
+
+  if (wasOpen && advisorDrawerTrigger) {
+    advisorDrawerTrigger.focus();
+    advisorDrawerTrigger = null;
+  }
 }
 
 function useSuggestedQuestion(text) {
@@ -3642,6 +3654,28 @@ document.addEventListener("keydown", function(event) {
   if ((event.metaKey || event.ctrlKey) && event.key === "Enter") {
     const drawerOpen = document.getElementById("advisorDrawer").classList.contains("open");
     if (drawerOpen) sendAdvisorQuestion();
+  }
+
+  if (event.key === "Tab") {
+    const drawer = document.getElementById("advisorDrawer");
+    if (drawer.classList.contains("open")) {
+      const focusable = Array.from(
+        drawer.querySelectorAll('button, [href], input, textarea, select, [tabindex]:not([tabindex="-1"])')
+      ).filter(el => el.offsetParent !== null && !el.disabled);
+
+      if (focusable.length === 0) return;
+
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    }
   }
 });
 
