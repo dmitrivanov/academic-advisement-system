@@ -75,7 +75,11 @@ class MathematicsCurriculumTests(unittest.TestCase):
         self.assertTrue(all(row["source"].startswith("https://www.bmcc.cuny.edu/") for row in self.pathways))
 
     def test_mathematics_derived_choice_groups(self):
-        by_code = {row["derived_group_code"]: row for row in self.adjustments}
+        by_code = {
+            row["derived_group_code"]: row
+            for row in self.adjustments
+            if row["program_code"] == "MAT_AS"
+        }
         self.assertEqual(
             {"MAT_AS_CREATIVE", "MAT_AS_LIFE_PHYSICAL", "MAT_AS_SCIENTIFIC_WORLD"},
             set(by_code),

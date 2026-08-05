@@ -56,6 +56,10 @@ class ProgressProspectusTests(unittest.TestCase):
         duplicates = sorted({value for value in parser.ids if parser.ids.count(value) > 1})
         self.assertEqual([], duplicates)
 
+    def test_selected_choice_courses_satisfy_prerequisites(self):
+        self.assertIn("function hasSelectedChoiceCourse(courseCode)", self.html)
+        self.assertIn("completed.has(prereq) || hasSelectedChoiceCourse(prereq)", self.html)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -2292,12 +2292,16 @@ function getCompletedCourses() {
   return new Set(COMPLETED_COURSES);
 }
 
+function hasSelectedChoiceCourse(courseCode) {
+  return Object.values(CHOICE_SELECTIONS).some(choice => choice?.code === courseCode);
+}
+
 function prereqSatisfied(prereq, completed) {
   if (Array.isArray(prereq)) {
-    return prereq.some(option => completed.has(option));
+    return prereq.some(option => completed.has(option) || hasSelectedChoiceCourse(option));
   }
 
-  return completed.has(prereq);
+  return completed.has(prereq) || hasSelectedChoiceCourse(prereq);
 }
 
 function allPrereqsSatisfied(course, completed) {

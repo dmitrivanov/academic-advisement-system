@@ -12,8 +12,11 @@ Accessed 2026-08-06. All five programs are Associate in Science programs in BMCC
 
 ## Modeling notes
 
-- The Engineering program page publishes a 65-credit curriculum total. Four-credit STEM variants make the career-infused map's scheduled credit count higher, but the requirement groups retain the official 12/18/26/9 structure. The Forensics career-infused map publishes 68 credits and its curriculum preserves that total.
-- Science requires two introductory science sequences plus 12 additional major-elective credits. The current data model represents the combined 20-credit selection pool; an advisor must still ensure that selections include two complete introductory sequences.
+- All five curricula use explicit Required Common Core and Flexible Core groups. Shared Pathways pools are used for unrestricted categories; `program_choice_group_adjustments.csv` materializes the restricted math, laboratory-science, Scientific World, and Creative Expression pools specified by program footnotes.
+- Mandatory footnote courses remain explicit curriculum rows rather than one-of choice placeholders: BTE 201 and CHE 240 for Biotechnology, CHE 202 for Engineering, CHE 205 and CHE 240 for Forensics, and BIO 425 and BIO 426 for Science for Health.
+- The Engineering program page publishes a 65-credit requirement total. Four-credit STEM variants make the career-infused map's scheduled credit count higher, while its requirement groups retain the official 12/18/26/9 structure.
+- The Forensics degree map publishes 68 credits because MAT 301 and MAT 302 remain required beyond its restricted Common Core math selection.
+- Science requires two introductory science sequences plus 16 major-elective credits. Separate choice placeholders represent the Common Core sequence and the additional program sequence; the current model cannot enforce that both selections come from matching disciplines, so advisor review remains appropriate.
 - Science also requires two semesters of the same modern language. The planner represents the six-credit sequence as one requirement placeholder because language-specific sequence selection is not modeled.
 - Science for Health requires 11 curriculum-elective credits and disallows using both HED 235 and SCI 150 toward that requirement. The credit pool is modeled, but that exclusion must be checked by an advisor.
-- Co-requisites and placement/departmental-permission rules that the prerequisite model cannot express are intentionally not converted into hard prerequisite locks.
+- Selecting a course through a Common Core/Flexible Core choice placeholder satisfies downstream prerequisite checks. Co-requisites, placement rules, and departmental-permission exceptions that the prerequisite model cannot express remain documented rather than being translated into inaccurate locks.

@@ -60,10 +60,49 @@ class ScienceCurriculaTests(unittest.TestCase):
         flexible_codes = {
             row["course_code"] for row in rows if row["group_type"] == "flexible_core"
         }
-        self.assertEqual({"ENG 101", "ENG 201", "MAT 206", "CHE 201"}, common_codes)
+        self.assertEqual({"ENG 101", "ENG 201", "ESC-AS-MATH", "ESC-AS-LPS"}, common_codes)
         self.assertTrue(
-            {"SPE 100", "CHE 202", "SCI 120", "FC-INDIVIDUAL", "FC-US-EXP", "FC-WORLD-CULTURES"}
+            {"SPE 100", "CHE 202", "ESC-AS-SCI-METHODS", "FC-INDIVIDUAL", "FC-US-EXP", "FC-WORLD-CULTURES"}
             .issubset(flexible_codes)
+        )
+
+    def test_all_science_programs_use_common_and_flexible_core_groups(self):
+        for filename in PROGRAMS:
+            with self.subTest(filename=filename):
+                with (DOCS / filename).open(newline="", encoding="utf-8-sig") as handle:
+                    rows = list(csv.DictReader(handle))
+                group_types = {row["group_type"] for row in rows}
+                self.assertIn("common_core", group_types)
+                self.assertIn("flexible_core", group_types)
+
+    def test_science_footnote_adjustments_are_defined(self):
+        with (DOCS / "program_choice_group_adjustments.csv").open(
+            newline="", encoding="utf-8-sig"
+        ) as handle:
+            rows = list(csv.DictReader(handle))
+        by_code = {row["derived_group_code"]: row for row in rows}
+
+        expected = {
+            "BTE_AS_MATH_QUANT": "MAT 206",
+            "BTE_AS_LIFE_PHYSICAL": "CHE 230",
+            "ESC_AS_MATH_QUANT": "MAT 206",
+            "ESC_AS_LIFE_PHYSICAL": "CHE 201",
+            "ESC_AS_SCI_METHODS": "SCI 120|SCI 121",
+            "FSC_AS_MATH_QUANT": "MAT 206|MAT 301",
+            "FSC_AS_LIFE_PHYSICAL": "CHE 230",
+            "SCI_AS_MATH_QUANT": "MAT 206",
+            "SCI_AS_LIFE_PHYSICAL": "BIO 210|CHE 201|PHY 210|PHY 215",
+            "SCI_AS_SCIENTIFIC_WORLD": "BIO 220|CHE 202|PHY 220|PHY 225",
+            "SHP_AS_MATH_QUANT": "MAT 104|MAT 150|MAT 150.5",
+            "SHP_AS_LIFE_PHYSICAL": "CHE 121",
+        }
+        for code, included in expected.items():
+            self.assertIn(code, by_code)
+            self.assertEqual(included, by_code[code]["include_course_codes"])
+
+        self.assertEqual(
+            "SPE 100|SPE 102",
+            by_code["SCI_AS_CREATIVE"]["exclude_course_codes"],
         )
 
 
