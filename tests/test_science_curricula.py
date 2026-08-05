@@ -11,7 +11,7 @@ DOCS = ROOT / "docs"
 
 PROGRAMS = {
     "bte_as_courses.csv": ("BTE_AS", "Biotechnology Science", "2026-2027", 60),
-    "esc_as_courses.csv": ("ESC_AS", "Engineering Science", "2026-2027", 69),
+    "esc_as_courses.csv": ("ESC_AS", "Engineering Science", "2026-2027", 65),
     "fsc_as_courses.csv": ("FSC_AS", "Science for Forensics", "2026-2027", 68),
     "sci_as_courses.csv": ("SCI_AS", "Science", "2025-2026", 60),
     "shp_as_courses.csv": ("SHP_AS", "Science for Health", "2025-2026", 60),
@@ -45,6 +45,26 @@ class ScienceCurriculaTests(unittest.TestCase):
                 by_code = {row["course_code"]: row for row in csv.DictReader(handle)}
             for code, prerequisite in relationships.items():
                 self.assertEqual(prerequisite, by_code[code]["prerequisites"])
+
+    def test_engineering_science_exposes_common_and_flexible_core(self):
+        with (DOCS / "esc_as_courses.csv").open(newline="", encoding="utf-8-sig") as handle:
+            rows = list(csv.DictReader(handle))
+
+        groups = {(row["group_name"], row["group_type"]) for row in rows}
+        self.assertIn(("Required Common Core", "common_core"), groups)
+        self.assertIn(("Flexible Core", "flexible_core"), groups)
+
+        common_codes = {
+            row["course_code"] for row in rows if row["group_type"] == "common_core"
+        }
+        flexible_codes = {
+            row["course_code"] for row in rows if row["group_type"] == "flexible_core"
+        }
+        self.assertEqual({"ENG 101", "ENG 201", "MAT 206", "CHE 201"}, common_codes)
+        self.assertTrue(
+            {"SPE 100", "CHE 202", "SCI 120", "FC-INDIVIDUAL", "FC-US-EXP", "FC-WORLD-CULTURES"}
+            .issubset(flexible_codes)
+        )
 
 
 if __name__ == "__main__":
