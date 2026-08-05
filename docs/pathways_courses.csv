@@ -1,18 +1,320 @@
-institution_code,group_code,course_code,title,credits
-BMCC,FC_INDIVIDUAL,ANT 100,Introduction to Anthropology,3
-BMCC,FC_INDIVIDUAL,ANT 115,Language and Culture,3
-BMCC,FC_INDIVIDUAL,PSY 100,General Psychology,3
-BMCC,FC_INDIVIDUAL,SOC 100,Introduction to Sociology,3
-BMCC,FC_CREATIVE,ART 100,Introduction to Art,3
-BMCC,FC_CREATIVE,ART 102,Survey of Art History I,3
-BMCC,FC_CREATIVE,MUS 100,Introduction to Music,3
-BMCC,FC_CREATIVE,THE 100,Introduction to Theatre,3
-BMCC,FC_US_EXPERIENCE,HIS 120,Early American History,3
-BMCC,FC_US_EXPERIENCE,HIS 125,Modern American History,3
-BMCC,FC_US_EXPERIENCE,POL 100,American Government,3
-BMCC,FC_WORLD_CULTURES,ANT 101,Introduction to Cultural Anthropology,3
-BMCC,FC_WORLD_CULTURES,HIS 101,Western Civilization I,3
-BMCC,FC_WORLD_CULTURES,HIS 102,Western Civilization II,3
-BMCC,FC_SCIENTIFIC_WORLD,AST 110,General Astronomy,3
-BMCC,FC_SCIENTIFIC_WORLD,BIO 105,Human Biology,3
-BMCC,FC_SCIENTIFIC_WORLD,CHE 121,Fundamentals of General Chemistry I,4
+institution_code,group_code,course_code,title,credits,source
+BMCC,RC_ENGLISH_COMPOSITION,ENG 100.5,"Intensive English Composition (Same as ENG 101)",3,https://www.bmcc.cuny.edu/academics/pathways/english-composition/
+BMCC,RC_ENGLISH_COMPOSITION,ENG 100.7,"Intensive Composition for ESL Students (Same as ENG 101)",3,https://www.bmcc.cuny.edu/academics/pathways/english-composition/
+BMCC,RC_ENGLISH_COMPOSITION,ENG 101,"English Composition",3,https://www.bmcc.cuny.edu/academics/pathways/english-composition/
+BMCC,RC_ENGLISH_COMPOSITION,ENG 121,"English Composition & Introduction to Literature in Tandem",6,https://www.bmcc.cuny.edu/academics/pathways/english-composition/
+BMCC,RC_ENGLISH_COMPOSITION,ENG 201,"Introduction to Literature",3,https://www.bmcc.cuny.edu/academics/pathways/english-composition/
+BMCC,RC_MATH_QUANT,CSC 103,"Introduction to Data Analytics",3,https://www.bmcc.cuny.edu/academics/pathways/mathematical-and-quantitative-reasoning/
+BMCC,RC_MATH_QUANT,MAT 100,"Fundamentals of Mathematics I",4,https://www.bmcc.cuny.edu/academics/pathways/mathematical-and-quantitative-reasoning/
+BMCC,RC_MATH_QUANT,MAT 104,"Mathematics for Health Sciences",3,https://www.bmcc.cuny.edu/academics/pathways/mathematical-and-quantitative-reasoning/
+BMCC,RC_MATH_QUANT,MAT 104.5,"Mathematics for Health Sciences with Elementary Algebra",3,https://www.bmcc.cuny.edu/academics/pathways/mathematical-and-quantitative-reasoning/
+BMCC,RC_MATH_QUANT,MAT 109,"Mathematics for Respiratory Therapy",3,https://www.bmcc.cuny.edu/academics/pathways/mathematical-and-quantitative-reasoning/
+BMCC,RC_MATH_QUANT,MAT 110,"Fundamentals of Mathematics I",3,https://www.bmcc.cuny.edu/academics/pathways/mathematical-and-quantitative-reasoning/
+BMCC,RC_MATH_QUANT,MAT 110.5,"Fundamentals of Mathematics I with Algebra",3,https://www.bmcc.cuny.edu/academics/pathways/mathematical-and-quantitative-reasoning/
+BMCC,RC_MATH_QUANT,MAT 150,"Introduction to Statistics (same as MAT 150.5)",4,https://www.bmcc.cuny.edu/academics/pathways/mathematical-and-quantitative-reasoning/
+BMCC,RC_MATH_QUANT,MAT 150.5,"Introduction to Statistics with Algebra (same as MAT 150)",4,https://www.bmcc.cuny.edu/academics/pathways/mathematical-and-quantitative-reasoning/
+BMCC,RC_MATH_QUANT,MAT 156,"College Algebra",3,https://www.bmcc.cuny.edu/academics/pathways/mathematical-and-quantitative-reasoning/
+BMCC,RC_MATH_QUANT,MAT 156.5,"Elementary and College Algebra",3,https://www.bmcc.cuny.edu/academics/pathways/mathematical-and-quantitative-reasoning/
+BMCC,RC_MATH_QUANT,MAT 160,"Quantitative Reasoning",4,https://www.bmcc.cuny.edu/academics/pathways/mathematical-and-quantitative-reasoning/
+BMCC,RC_MATH_QUANT,MAT 161,"Topics in Quantitative Reasoning",3,https://www.bmcc.cuny.edu/academics/pathways/mathematical-and-quantitative-reasoning/
+BMCC,RC_MATH_QUANT,MAT 161.5,"Mathematics Literacy and Quantitative Reasoning",3,https://www.bmcc.cuny.edu/academics/pathways/mathematical-and-quantitative-reasoning/
+BMCC,RC_MATH_QUANT,MAT 200,"Introduction to Discrete Mathematics",4,https://www.bmcc.cuny.edu/academics/pathways/mathematical-and-quantitative-reasoning/
+BMCC,RC_MATH_QUANT,MAT 206,"Precalculus",4,https://www.bmcc.cuny.edu/academics/pathways/mathematical-and-quantitative-reasoning/
+BMCC,RC_MATH_QUANT,MAT 206.5,"Intermediate Algebra and Precalculus (Same as MAT 206)",4,https://www.bmcc.cuny.edu/academics/pathways/mathematical-and-quantitative-reasoning/
+BMCC,RC_MATH_QUANT,MAT 209,"Statistics",4,https://www.bmcc.cuny.edu/academics/pathways/mathematical-and-quantitative-reasoning/
+BMCC,RC_MATH_QUANT,MAT 214,"Mathematics for Elementary Education I",4,https://www.bmcc.cuny.edu/academics/pathways/mathematical-and-quantitative-reasoning/
+BMCC,RC_MATH_QUANT,MAT 214.5,"Mathematics for Elementary Education with Algebra",4,https://www.bmcc.cuny.edu/academics/pathways/mathematical-and-quantitative-reasoning/
+BMCC,RC_MATH_QUANT,MAT 301,"Analytic Geometry and Calculus I",4,https://www.bmcc.cuny.edu/academics/pathways/mathematical-and-quantitative-reasoning/
+BMCC,RC_MATH_QUANT,MAT 302,"Analytic Geometry and Calculus II",4,https://www.bmcc.cuny.edu/academics/pathways/mathematical-and-quantitative-reasoning/
+BMCC,RC_MATH_QUANT,MAT 303,"Analytic Geometry and Calculus III",4,https://www.bmcc.cuny.edu/academics/pathways/mathematical-and-quantitative-reasoning/
+BMCC,RC_MATH_QUANT,MAT 315,"Linear Algebra",3,https://www.bmcc.cuny.edu/academics/pathways/mathematical-and-quantitative-reasoning/
+BMCC,RC_MATH_QUANT,MAT 320,"Abstract Algebra",3,https://www.bmcc.cuny.edu/academics/pathways/mathematical-and-quantitative-reasoning/
+BMCC,RC_MATH_QUANT,MAT 501,"Ordinary Differential Equations",3,https://www.bmcc.cuny.edu/academics/pathways/mathematical-and-quantitative-reasoning/
+BMCC,RC_MATH_QUANT,MAT 505,"History of Mathematics",3,https://www.bmcc.cuny.edu/academics/pathways/mathematical-and-quantitative-reasoning/
+BMCC,RC_MATH_QUANT,MAT 601,"Advanced Calculus I",4,https://www.bmcc.cuny.edu/academics/pathways/mathematical-and-quantitative-reasoning/
+BMCC,RC_LIFE_PHYSICAL,AST 109,"Astronomy: General Observations",3,https://www.bmcc.cuny.edu/academics/pathways/life-and-physical-sciences/
+BMCC,RC_LIFE_PHYSICAL,AST 110,"General Astronomy",4,https://www.bmcc.cuny.edu/academics/pathways/life-and-physical-sciences/
+BMCC,RC_LIFE_PHYSICAL,BIO 109,"General Biology",3,https://www.bmcc.cuny.edu/academics/pathways/life-and-physical-sciences/
+BMCC,RC_LIFE_PHYSICAL,BIO 111,"Human Biology",4,https://www.bmcc.cuny.edu/academics/pathways/life-and-physical-sciences/
+BMCC,RC_LIFE_PHYSICAL,BIO 210,"Biology I",4,https://www.bmcc.cuny.edu/academics/pathways/life-and-physical-sciences/
+BMCC,RC_LIFE_PHYSICAL,BIO 220,"Biology II",4,https://www.bmcc.cuny.edu/academics/pathways/life-and-physical-sciences/
+BMCC,RC_LIFE_PHYSICAL,BIO 230,"Fundamentals of Microbiology",4,https://www.bmcc.cuny.edu/academics/pathways/life-and-physical-sciences/
+BMCC,RC_LIFE_PHYSICAL,BIO 240,"Genetics",4,https://www.bmcc.cuny.edu/academics/pathways/life-and-physical-sciences/
+BMCC,RC_LIFE_PHYSICAL,BIO 260,"Cell Biology",4,https://www.bmcc.cuny.edu/academics/pathways/life-and-physical-sciences/
+BMCC,RC_LIFE_PHYSICAL,BIO 420,"Microbiology",4,https://www.bmcc.cuny.edu/academics/pathways/life-and-physical-sciences/
+BMCC,RC_LIFE_PHYSICAL,BIO 425,"Anatomy and Physiology I",4,https://www.bmcc.cuny.edu/academics/pathways/life-and-physical-sciences/
+BMCC,RC_LIFE_PHYSICAL,BIO 426,"Anatomy and Physiology II",4,https://www.bmcc.cuny.edu/academics/pathways/life-and-physical-sciences/
+BMCC,RC_LIFE_PHYSICAL,BTE 201,"Introduction to Biotechnology",5,https://www.bmcc.cuny.edu/academics/pathways/life-and-physical-sciences/
+BMCC,RC_LIFE_PHYSICAL,CHE 109,"Concepts in Chemistry Laboratory",3,https://www.bmcc.cuny.edu/academics/pathways/life-and-physical-sciences/
+BMCC,RC_LIFE_PHYSICAL,CHE 121,"Fundamentals of General, Organic & Biological Chemistry I",4,https://www.bmcc.cuny.edu/academics/pathways/life-and-physical-sciences/
+BMCC,RC_LIFE_PHYSICAL,CHE 201,"College Chemistry I",4,https://www.bmcc.cuny.edu/academics/pathways/life-and-physical-sciences/
+BMCC,RC_LIFE_PHYSICAL,CHE 202,"College Chemistry II",4,https://www.bmcc.cuny.edu/academics/pathways/life-and-physical-sciences/
+BMCC,RC_LIFE_PHYSICAL,CHE 205,"Quantitative Analysis",4,https://www.bmcc.cuny.edu/academics/pathways/life-and-physical-sciences/
+BMCC,RC_LIFE_PHYSICAL,CHE 230,"Organic Chemistry I",5,https://www.bmcc.cuny.edu/academics/pathways/life-and-physical-sciences/
+BMCC,RC_LIFE_PHYSICAL,CHE 240,"Organic Chemistry II",5,https://www.bmcc.cuny.edu/academics/pathways/life-and-physical-sciences/
+BMCC,RC_LIFE_PHYSICAL,GLY 210,"Geology I",4,https://www.bmcc.cuny.edu/academics/pathways/life-and-physical-sciences/
+BMCC,RC_LIFE_PHYSICAL,PHY 109,"General Physics Experiments",3,https://www.bmcc.cuny.edu/academics/pathways/life-and-physical-sciences/
+BMCC,RC_LIFE_PHYSICAL,PHY 110,"General Physics",4,https://www.bmcc.cuny.edu/academics/pathways/life-and-physical-sciences/
+BMCC,RC_LIFE_PHYSICAL,PHY 210,"Physics I",4,https://www.bmcc.cuny.edu/academics/pathways/life-and-physical-sciences/
+BMCC,RC_LIFE_PHYSICAL,PHY 215,"University Physics I",4,https://www.bmcc.cuny.edu/academics/pathways/life-and-physical-sciences/
+BMCC,RC_LIFE_PHYSICAL,PHY 220,"Physics II",4,https://www.bmcc.cuny.edu/academics/pathways/life-and-physical-sciences/
+BMCC,RC_LIFE_PHYSICAL,PHY 225,"University Physics II",4,https://www.bmcc.cuny.edu/academics/pathways/life-and-physical-sciences/
+BMCC,RC_LIFE_PHYSICAL,PHY 240,"Modern Physics",3,https://www.bmcc.cuny.edu/academics/pathways/life-and-physical-sciences/
+BMCC,RC_LIFE_PHYSICAL,PHY 400,"The Physics of Music",4,https://www.bmcc.cuny.edu/academics/pathways/life-and-physical-sciences/
+BMCC,RC_LIFE_PHYSICAL,SCI 120,"Computer Methods in Science",4,https://www.bmcc.cuny.edu/academics/pathways/life-and-physical-sciences/
+BMCC,RC_LIFE_PHYSICAL,SCI 121,"Computer Methods in Science (Pascal)",4,https://www.bmcc.cuny.edu/academics/pathways/life-and-physical-sciences/
+BMCC,RC_LIFE_PHYSICAL,SCI 140,"Introduction to Microprocessors",4,https://www.bmcc.cuny.edu/academics/pathways/life-and-physical-sciences/
+BMCC,RC_LIFE_PHYSICAL,SCI 430,"Scientific Instrumentation",4,https://www.bmcc.cuny.edu/academics/pathways/life-and-physical-sciences/
+BMCC,FC_CREATIVE,ART 102,"Survey of Art History I",3,https://www.bmcc.cuny.edu/academics/pathways/creative-expression/
+BMCC,FC_CREATIVE,ART 104,"Survey of Art History II",3,https://www.bmcc.cuny.edu/academics/pathways/creative-expression/
+BMCC,FC_CREATIVE,ART 106,"Modern and Contemporary Art",3,https://www.bmcc.cuny.edu/academics/pathways/creative-expression/
+BMCC,FC_CREATIVE,ART 113,"History of Graphic Design",3,https://www.bmcc.cuny.edu/academics/pathways/creative-expression/
+BMCC,FC_CREATIVE,ART 122,"History of Photography",3,https://www.bmcc.cuny.edu/academics/pathways/creative-expression/
+BMCC,FC_CREATIVE,ART 125,"Introduction to Latin American Art",3,https://www.bmcc.cuny.edu/academics/pathways/creative-expression/
+BMCC,FC_CREATIVE,ART 126,"Introduction to African Art",3,https://www.bmcc.cuny.edu/academics/pathways/creative-expression/
+BMCC,FC_CREATIVE,ART 251,"Asian Art History",3,https://www.bmcc.cuny.edu/academics/pathways/creative-expression/
+BMCC,FC_CREATIVE,ENG 116,"Creative Writing Foundations",3,https://www.bmcc.cuny.edu/academics/pathways/creative-expression/
+BMCC,FC_CREATIVE,MES 153,"Script Writing",3,https://www.bmcc.cuny.edu/academics/pathways/creative-expression/
+BMCC,FC_CREATIVE,MUS 102,"Music Survey",3,https://www.bmcc.cuny.edu/academics/pathways/creative-expression/
+BMCC,FC_CREATIVE,MUS 103,"Music and Western Society",3,https://www.bmcc.cuny.edu/academics/pathways/creative-expression/
+BMCC,FC_CREATIVE,MUS 104,"The World of Jazz",3,https://www.bmcc.cuny.edu/academics/pathways/creative-expression/
+BMCC,FC_CREATIVE,MUS 107,"Introduction to World Music",3,https://www.bmcc.cuny.edu/academics/pathways/creative-expression/
+BMCC,FC_CREATIVE,MUS 109,"Bebop to Hip-Hop",3,https://www.bmcc.cuny.edu/academics/pathways/creative-expression/
+BMCC,FC_CREATIVE,MUS 122,"The World of Hip-Hop",3,https://www.bmcc.cuny.edu/academics/pathways/creative-expression/
+BMCC,FC_CREATIVE,MUS 128,"The Music of Latin America",3,https://www.bmcc.cuny.edu/academics/pathways/creative-expression/
+BMCC,FC_CREATIVE,MUS 129,"Women in Music",3,https://www.bmcc.cuny.edu/academics/pathways/creative-expression/
+BMCC,FC_CREATIVE,MUS 132,"The Music of Brazil",3,https://www.bmcc.cuny.edu/academics/pathways/creative-expression/
+BMCC,FC_CREATIVE,SPE 100,"Fundamentals of Public Speaking",3,https://www.bmcc.cuny.edu/academics/pathways/creative-expression/
+BMCC,FC_CREATIVE,SPE 102,"Fundamentals of Public Speaking for Non-Native Speakers",3,https://www.bmcc.cuny.edu/academics/pathways/creative-expression/
+BMCC,FC_CREATIVE,THE 100,"Introduction to Theatre",3,https://www.bmcc.cuny.edu/academics/pathways/creative-expression/
+BMCC,FC_INDIVIDUAL,ACL 200,"Literacy Practices: Birth through Adolescence",3,https://www.bmcc.cuny.edu/academics/pathways/individual-and-society/
+BMCC,FC_INDIVIDUAL,ANT 115,"Language and Culture (Same as LIN 100)",3,https://www.bmcc.cuny.edu/academics/pathways/individual-and-society/
+BMCC,FC_INDIVIDUAL,COM 100,"Introduction to Communication Studies",3,https://www.bmcc.cuny.edu/academics/pathways/individual-and-society/
+BMCC,FC_INDIVIDUAL,COM 150,"Introduction to Digital Communication and Culture",3,https://www.bmcc.cuny.edu/academics/pathways/individual-and-society/
+BMCC,FC_INDIVIDUAL,COM 240,"Interpersonal Communication",3,https://www.bmcc.cuny.edu/academics/pathways/individual-and-society/
+BMCC,FC_INDIVIDUAL,CRT 100,"Critical Thinking (Same as PHI 115)",3,https://www.bmcc.cuny.edu/academics/pathways/individual-and-society/
+BMCC,FC_INDIVIDUAL,CRT 100.6,"Critical Thinking for ESL Reading & Writing Proficiency (Same as CRT 100)",3,https://www.bmcc.cuny.edu/academics/pathways/individual-and-society/
+BMCC,FC_INDIVIDUAL,CRT 120,"Critical Thinking and Social Justice",3,https://www.bmcc.cuny.edu/academics/pathways/individual-and-society/
+BMCC,FC_INDIVIDUAL,CRT 196,"Queer Theories",3,https://www.bmcc.cuny.edu/academics/pathways/individual-and-society/
+BMCC,FC_INDIVIDUAL,CRT 245,"Critical Thinking and Media Literacy",3,https://www.bmcc.cuny.edu/academics/pathways/individual-and-society/
+BMCC,FC_INDIVIDUAL,CYS 100,"Introduction to Children & Youth Studies",3,https://www.bmcc.cuny.edu/academics/pathways/individual-and-society/
+BMCC,FC_INDIVIDUAL,ECO 100,"Introduction to Economics",3,https://www.bmcc.cuny.edu/academics/pathways/individual-and-society/
+BMCC,FC_INDIVIDUAL,ECO 202,"Microeconomics",3,https://www.bmcc.cuny.edu/academics/pathways/individual-and-society/
+BMCC,FC_INDIVIDUAL,GWS 100,"Introduction to Gender and Women's Studies",3,https://www.bmcc.cuny.edu/academics/pathways/individual-and-society/
+BMCC,FC_INDIVIDUAL,HIS 101,"Western Civilization: From Ancient  to Early Modern Times",3,https://www.bmcc.cuny.edu/academics/pathways/individual-and-society/
+BMCC,FC_INDIVIDUAL,HIS 102,"Western Civilization: The Emergence of the Modern World",3,https://www.bmcc.cuny.edu/academics/pathways/individual-and-society/
+BMCC,FC_INDIVIDUAL,HSD 108,"Health, Illness & Society",3,https://www.bmcc.cuny.edu/academics/pathways/individual-and-society/
+BMCC,FC_INDIVIDUAL,LIN 100,"Language and Culture (Same as ANT 115)",3,https://www.bmcc.cuny.edu/academics/pathways/individual-and-society/
+BMCC,FC_INDIVIDUAL,LIN 100.6,"Language and Culture for ESL Reading & Writing Proficiency",3,https://www.bmcc.cuny.edu/academics/pathways/individual-and-society/
+BMCC,FC_INDIVIDUAL,MES 152,"Introduction to Contemporary Media",3,https://www.bmcc.cuny.edu/academics/pathways/individual-and-society/
+BMCC,FC_INDIVIDUAL,PHI 100,"Philosophy",3,https://www.bmcc.cuny.edu/academics/pathways/individual-and-society/
+BMCC,FC_INDIVIDUAL,PHI 115,"Critical Thinking (Same as CRT 100)",3,https://www.bmcc.cuny.edu/academics/pathways/individual-and-society/
+BMCC,FC_INDIVIDUAL,PHI 120,"Ethics",3,https://www.bmcc.cuny.edu/academics/pathways/individual-and-society/
+BMCC,FC_INDIVIDUAL,PHI 125,"Philosophy of Psychology",3,https://www.bmcc.cuny.edu/academics/pathways/individual-and-society/
+BMCC,FC_INDIVIDUAL,POL 110,"Introduction to Politics",3,https://www.bmcc.cuny.edu/academics/pathways/individual-and-society/
+BMCC,FC_INDIVIDUAL,POL 120,"Gender and Politics",3,https://www.bmcc.cuny.edu/academics/pathways/individual-and-society/
+BMCC,FC_INDIVIDUAL,SOC 100,"Introduction to Sociology",3,https://www.bmcc.cuny.edu/academics/pathways/individual-and-society/
+BMCC,FC_INDIVIDUAL,SOC 111,"Understanding Technological Society",3,https://www.bmcc.cuny.edu/academics/pathways/individual-and-society/
+BMCC,FC_INDIVIDUAL,SPN 460,"Masculinities in Latin American Literature",3,https://www.bmcc.cuny.edu/academics/pathways/individual-and-society/
+BMCC,FC_INDIVIDUAL,SPN 461,"LGBTQ+ Literature in Spanish",3,https://www.bmcc.cuny.edu/academics/pathways/individual-and-society/
+BMCC,FC_SCIENTIFIC_WORLD,ACL 115,"AI Literacies for Innovative Thinking",3,https://www.bmcc.cuny.edu/academics/pathways/scientific-world/
+BMCC,FC_SCIENTIFIC_WORLD,ACL 205,"Health Literacies",3,https://www.bmcc.cuny.edu/academics/pathways/scientific-world/
+BMCC,FC_SCIENTIFIC_WORLD,AST 106,"Astronomy: Models",3,https://www.bmcc.cuny.edu/academics/pathways/scientific-world/
+BMCC,FC_SCIENTIFIC_WORLD,AST 108,"Astronomy: General Theory",3,https://www.bmcc.cuny.edu/academics/pathways/scientific-world/
+BMCC,FC_SCIENTIFIC_WORLD,AST 110,"General Astronomy",4,https://www.bmcc.cuny.edu/academics/pathways/scientific-world/
+BMCC,FC_SCIENTIFIC_WORLD,BIO 108,"General Biology Theory",3,https://www.bmcc.cuny.edu/academics/pathways/scientific-world/
+BMCC,FC_SCIENTIFIC_WORLD,BIO 111,"Human Biology",4,https://www.bmcc.cuny.edu/academics/pathways/scientific-world/
+BMCC,FC_SCIENTIFIC_WORLD,BIO 210,"Biology I",4,https://www.bmcc.cuny.edu/academics/pathways/scientific-world/
+BMCC,FC_SCIENTIFIC_WORLD,BIO 220,"Biology II",4,https://www.bmcc.cuny.edu/academics/pathways/scientific-world/
+BMCC,FC_SCIENTIFIC_WORLD,BIO 230,"Fundamentals of Microbiology",4,https://www.bmcc.cuny.edu/academics/pathways/scientific-world/
+BMCC,FC_SCIENTIFIC_WORLD,BIO 240,"Genetics",4,https://www.bmcc.cuny.edu/academics/pathways/scientific-world/
+BMCC,FC_SCIENTIFIC_WORLD,BIO 260,"Cell Biology",4,https://www.bmcc.cuny.edu/academics/pathways/scientific-world/
+BMCC,FC_SCIENTIFIC_WORLD,BIO 420,"Microbiology",4,https://www.bmcc.cuny.edu/academics/pathways/scientific-world/
+BMCC,FC_SCIENTIFIC_WORLD,BIO 425,"Anatomy and Physiology I",4,https://www.bmcc.cuny.edu/academics/pathways/scientific-world/
+BMCC,FC_SCIENTIFIC_WORLD,BIO 426,"Anatomy and Physiology II",4,https://www.bmcc.cuny.edu/academics/pathways/scientific-world/
+BMCC,FC_SCIENTIFIC_WORLD,BTE 201,"Introduction to Biotechnology",5,https://www.bmcc.cuny.edu/academics/pathways/scientific-world/
+BMCC,FC_SCIENTIFIC_WORLD,CHE 108,"Concepts in Chemistry",3,https://www.bmcc.cuny.edu/academics/pathways/scientific-world/
+BMCC,FC_SCIENTIFIC_WORLD,CHE 118,"Fundamentals of Chemistry",4,https://www.bmcc.cuny.edu/academics/pathways/scientific-world/
+BMCC,FC_SCIENTIFIC_WORLD,CHE 120,"Fundamentals of Organic Chemistry",4,https://www.bmcc.cuny.edu/academics/pathways/scientific-world/
+BMCC,FC_SCIENTIFIC_WORLD,CHE 121,"Fundamentals of General, Organic & Biological Chemistry I",4,https://www.bmcc.cuny.edu/academics/pathways/scientific-world/
+BMCC,FC_SCIENTIFIC_WORLD,CHE 201,"College Chemistry I",4,https://www.bmcc.cuny.edu/academics/pathways/scientific-world/
+BMCC,FC_SCIENTIFIC_WORLD,CHE 202,"College Chemistry II",4,https://www.bmcc.cuny.edu/academics/pathways/scientific-world/
+BMCC,FC_SCIENTIFIC_WORLD,CHE 205,"Quantitative Analysis",4,https://www.bmcc.cuny.edu/academics/pathways/scientific-world/
+BMCC,FC_SCIENTIFIC_WORLD,CHE 230,"Organic Chemistry I",5,https://www.bmcc.cuny.edu/academics/pathways/scientific-world/
+BMCC,FC_SCIENTIFIC_WORLD,CHE 240,"Organic Chemistry II",5,https://www.bmcc.cuny.edu/academics/pathways/scientific-world/
+BMCC,FC_SCIENTIFIC_WORLD,CRT 150,"Critical Thinking and Scientific Inquiry",3,https://www.bmcc.cuny.edu/academics/pathways/scientific-world/
+BMCC,FC_SCIENTIFIC_WORLD,CSC 101,"Principles in Information Technology and Computation",3,https://www.bmcc.cuny.edu/academics/pathways/scientific-world/
+BMCC,FC_SCIENTIFIC_WORLD,CSC 102,"Exploring Robotics",3,https://www.bmcc.cuny.edu/academics/pathways/scientific-world/
+BMCC,FC_SCIENTIFIC_WORLD,CSC 110,"Computer Programming I",4,https://www.bmcc.cuny.edu/academics/pathways/scientific-world/
+BMCC,FC_SCIENTIFIC_WORLD,CSC 111,"Introduction to Programming",4,https://www.bmcc.cuny.edu/academics/pathways/scientific-world/
+BMCC,FC_SCIENTIFIC_WORLD,CSC 210,"Computer Programming II",3,https://www.bmcc.cuny.edu/academics/pathways/scientific-world/
+BMCC,FC_SCIENTIFIC_WORLD,GIS 101,"Digital Earth",3,https://www.bmcc.cuny.edu/academics/pathways/scientific-world/
+BMCC,FC_SCIENTIFIC_WORLD,GLY 210,"Geology I",4,https://www.bmcc.cuny.edu/academics/pathways/scientific-world/
+BMCC,FC_SCIENTIFIC_WORLD,LIN 101,"Introduction to Linguistics",3,https://www.bmcc.cuny.edu/academics/pathways/scientific-world/
+BMCC,FC_SCIENTIFIC_WORLD,MMP 100,"Introduction to Multimedia",3,https://www.bmcc.cuny.edu/academics/pathways/scientific-world/
+BMCC,FC_SCIENTIFIC_WORLD,PHI 110,"Logic",3,https://www.bmcc.cuny.edu/academics/pathways/scientific-world/
+BMCC,FC_SCIENTIFIC_WORLD,PHI 111,"Cultural and Ethical Issues in Science and Technology",3,https://www.bmcc.cuny.edu/academics/pathways/scientific-world/
+BMCC,FC_SCIENTIFIC_WORLD,PHY 108,"General Physics Theory",3,https://www.bmcc.cuny.edu/academics/pathways/scientific-world/
+BMCC,FC_SCIENTIFIC_WORLD,PHY 110,"General Physics",4,https://www.bmcc.cuny.edu/academics/pathways/scientific-world/
+BMCC,FC_SCIENTIFIC_WORLD,PHY 210,"Physics I",4,https://www.bmcc.cuny.edu/academics/pathways/scientific-world/
+BMCC,FC_SCIENTIFIC_WORLD,PHY 215,"University Physics I",4,https://www.bmcc.cuny.edu/academics/pathways/scientific-world/
+BMCC,FC_SCIENTIFIC_WORLD,PHY 220,"Physics II",4,https://www.bmcc.cuny.edu/academics/pathways/scientific-world/
+BMCC,FC_SCIENTIFIC_WORLD,PHY 225,"University Physics II",4,https://www.bmcc.cuny.edu/academics/pathways/scientific-world/
+BMCC,FC_SCIENTIFIC_WORLD,PHY 240,"Modern Physics",3,https://www.bmcc.cuny.edu/academics/pathways/scientific-world/
+BMCC,FC_SCIENTIFIC_WORLD,PHY 400,"The Physics of Music",4,https://www.bmcc.cuny.edu/academics/pathways/scientific-world/
+BMCC,FC_SCIENTIFIC_WORLD,PSY 100,"Introduction to Psychology",3,https://www.bmcc.cuny.edu/academics/pathways/scientific-world/
+BMCC,FC_SCIENTIFIC_WORLD,SCI 120,"Computer Methods in Science",4,https://www.bmcc.cuny.edu/academics/pathways/scientific-world/
+BMCC,FC_SCIENTIFIC_WORLD,SCI 121,"Computer Methods in Science (Pascal)",4,https://www.bmcc.cuny.edu/academics/pathways/scientific-world/
+BMCC,FC_SCIENTIFIC_WORLD,SCI 140,"Introduction to Microprocessors",4,https://www.bmcc.cuny.edu/academics/pathways/scientific-world/
+BMCC,FC_SCIENTIFIC_WORLD,SCI 430,"Scientific Instrumentation",4,https://www.bmcc.cuny.edu/academics/pathways/scientific-world/
+BMCC,FC_US_EXPERIENCE,ACL 150,"Literacy in the United States",3,https://www.bmcc.cuny.edu/academics/pathways/u-s-experience-in-its-diversity/
+BMCC,FC_US_EXPERIENCE,AFL 161,"Health Problems in Urban Communities",3,https://www.bmcc.cuny.edu/academics/pathways/u-s-experience-in-its-diversity/
+BMCC,FC_US_EXPERIENCE,AFN 123,"African-American History, 17th Century to 1865",3,https://www.bmcc.cuny.edu/academics/pathways/u-s-experience-in-its-diversity/
+BMCC,FC_US_EXPERIENCE,AFN 124,"African-American History, 1865 to Present",3,https://www.bmcc.cuny.edu/academics/pathways/u-s-experience-in-its-diversity/
+BMCC,FC_US_EXPERIENCE,AFN 129,"The Black Man in Contemporary Society",3,https://www.bmcc.cuny.edu/academics/pathways/u-s-experience-in-its-diversity/
+BMCC,FC_US_EXPERIENCE,ANT 125,"Puerto Rican Culture and Folklore (Same as LAT 125)",3,https://www.bmcc.cuny.edu/academics/pathways/u-s-experience-in-its-diversity/
+BMCC,FC_US_EXPERIENCE,ASN 114,"Asian American History",3,https://www.bmcc.cuny.edu/academics/pathways/u-s-experience-in-its-diversity/
+BMCC,FC_US_EXPERIENCE,ASN 211,"Asian Americans in NYC",3,https://www.bmcc.cuny.edu/academics/pathways/u-s-experience-in-its-diversity/
+BMCC,FC_US_EXPERIENCE,ECO 201,"Macroeconomics",3,https://www.bmcc.cuny.edu/academics/pathways/u-s-experience-in-its-diversity/
+BMCC,FC_US_EXPERIENCE,ETH 100,"Introduction to Ethnic Studies",3,https://www.bmcc.cuny.edu/academics/pathways/u-s-experience-in-its-diversity/
+BMCC,FC_US_EXPERIENCE,ETH 125,"Comparative Ethnic Studies (Same as SOC 125)",3,https://www.bmcc.cuny.edu/academics/pathways/u-s-experience-in-its-diversity/
+BMCC,FC_US_EXPERIENCE,HIS 114,"Asian American History (Same as ASN 114)",3,https://www.bmcc.cuny.edu/academics/pathways/u-s-experience-in-its-diversity/
+BMCC,FC_US_EXPERIENCE,HIS 120,"Early American History: Colonial Period to Civil War",3,https://www.bmcc.cuny.edu/academics/pathways/u-s-experience-in-its-diversity/
+BMCC,FC_US_EXPERIENCE,HIS 123,"African American History: 17th Century to 1865  (Same as AFN 123)",3,https://www.bmcc.cuny.edu/academics/pathways/u-s-experience-in-its-diversity/
+BMCC,FC_US_EXPERIENCE,HIS 124,"African-American History: 1865 to Present (Same as AFN 124)",3,https://www.bmcc.cuny.edu/academics/pathways/u-s-experience-in-its-diversity/
+BMCC,FC_US_EXPERIENCE,HIS 125,"Modern American History: Civil War to Present",3,https://www.bmcc.cuny.edu/academics/pathways/u-s-experience-in-its-diversity/
+BMCC,FC_US_EXPERIENCE,HSD 195,"Food, Culture and Society",3,https://www.bmcc.cuny.edu/academics/pathways/u-s-experience-in-its-diversity/
+BMCC,FC_US_EXPERIENCE,LAT 125,"Puerto Rican Culture and Folklore",3,https://www.bmcc.cuny.edu/academics/pathways/u-s-experience-in-its-diversity/
+BMCC,FC_US_EXPERIENCE,LAT 140,"Introduction to Mexican-American Studies",3,https://www.bmcc.cuny.edu/academics/pathways/u-s-experience-in-its-diversity/
+BMCC,FC_US_EXPERIENCE,LIN 150,"Language, Race, and Ethnicity",3,https://www.bmcc.cuny.edu/academics/pathways/u-s-experience-in-its-diversity/
+BMCC,FC_US_EXPERIENCE,POL 100,"American Government",3,https://www.bmcc.cuny.edu/academics/pathways/u-s-experience-in-its-diversity/
+BMCC,FC_US_EXPERIENCE,SOC 125,"Comparative Ethnic Studies I (Same as AFL 125)",3,https://www.bmcc.cuny.edu/academics/pathways/u-s-experience-in-its-diversity/
+BMCC,FC_US_EXPERIENCE,SOC 129,"The Black Man in Contemporary Society (Same as AFN 129)",3,https://www.bmcc.cuny.edu/academics/pathways/u-s-experience-in-its-diversity/
+BMCC,FC_US_EXPERIENCE,SOC 150,"The Latino Experience in the U.S.  (Same as LAT 150)",3,https://www.bmcc.cuny.edu/academics/pathways/u-s-experience-in-its-diversity/
+BMCC,FC_US_EXPERIENCE,SOC 161,"Health Problems in Urban Communities (Same as AFL 161)",3,https://www.bmcc.cuny.edu/academics/pathways/u-s-experience-in-its-diversity/
+BMCC,FC_US_EXPERIENCE,SPN 485,"New York Literature in Spanish",3,https://www.bmcc.cuny.edu/academics/pathways/u-s-experience-in-its-diversity/
+BMCC,FC_US_EXPERIENCE,SPN 490,"Spanish in the U.S.",3,https://www.bmcc.cuny.edu/academics/pathways/u-s-experience-in-its-diversity/
+BMCC,FC_US_EXPERIENCE,URB 100,"Introduction to Urban Studies",3,https://www.bmcc.cuny.edu/academics/pathways/u-s-experience-in-its-diversity/
+BMCC,FC_WORLD_CULTURES,ACL 195,"Literacy, Development, and Social Justice",3,https://www.bmcc.cuny.edu/academics/pathways/world-cultures-and-global-issues/
+BMCC,FC_WORLD_CULTURES,AFL 151,"Political Economy of the Caribbean",3,https://www.bmcc.cuny.edu/academics/pathways/world-cultures-and-global-issues/
+BMCC,FC_WORLD_CULTURES,AFN 121,"History of African Civilization",3,https://www.bmcc.cuny.edu/academics/pathways/world-cultures-and-global-issues/
+BMCC,FC_WORLD_CULTURES,AFN 122,"Africa 1500 to Present",3,https://www.bmcc.cuny.edu/academics/pathways/world-cultures-and-global-issues/
+BMCC,FC_WORLD_CULTURES,AFN 128,"Black Women in the Americas and the Caribbean",3,https://www.bmcc.cuny.edu/academics/pathways/world-cultures-and-global-issues/
+BMCC,FC_WORLD_CULTURES,AFN 130,"The History of Haiti",3,https://www.bmcc.cuny.edu/academics/pathways/world-cultures-and-global-issues/
+BMCC,FC_WORLD_CULTURES,AFN 152,"The Black Radical Tradition",3,https://www.bmcc.cuny.edu/academics/pathways/world-cultures-and-global-issues/
+BMCC,FC_WORLD_CULTURES,ANT 100,"Introduction to Anthropology",3,https://www.bmcc.cuny.edu/academics/pathways/world-cultures-and-global-issues/
+BMCC,FC_WORLD_CULTURES,ANT 111,"Chinese Culture and Heritage (Same as ASN 111)",3,https://www.bmcc.cuny.edu/academics/pathways/world-cultures-and-global-issues/
+BMCC,FC_WORLD_CULTURES,ANT 128,"Black Women in the Americas and the Caribbean (Same as AFN 128)",3,https://www.bmcc.cuny.edu/academics/pathways/world-cultures-and-global-issues/
+BMCC,FC_WORLD_CULTURES,ANT 200,"Peoples & Cultures of Latin America and the Caribbean (Same as LAT 200)",3,https://www.bmcc.cuny.edu/academics/pathways/world-cultures-and-global-issues/
+BMCC,FC_WORLD_CULTURES,ARB 105,"Elementary Arabic I",3,https://www.bmcc.cuny.edu/academics/pathways/world-cultures-and-global-issues/
+BMCC,FC_WORLD_CULTURES,ARB 106,"Elementary Arabic II",3,https://www.bmcc.cuny.edu/academics/pathways/world-cultures-and-global-issues/
+BMCC,FC_WORLD_CULTURES,ARB 107,"Elementary Arabic for Speakers of Arabic",3,https://www.bmcc.cuny.edu/academics/pathways/world-cultures-and-global-issues/
+BMCC,FC_WORLD_CULTURES,ARB 121,"Elementary Intensive Arabic I & II",6,https://www.bmcc.cuny.edu/academics/pathways/world-cultures-and-global-issues/
+BMCC,FC_WORLD_CULTURES,ARB 200,"Intermediate Arabic I",3,https://www.bmcc.cuny.edu/academics/pathways/world-cultures-and-global-issues/
+BMCC,FC_WORLD_CULTURES,ARB 210,"Intermediate Arabic II",3,https://www.bmcc.cuny.edu/academics/pathways/world-cultures-and-global-issues/
+BMCC,FC_WORLD_CULTURES,ARB 221,"Intermediate Intensive Arabic I & II",6,https://www.bmcc.cuny.edu/academics/pathways/world-cultures-and-global-issues/
+BMCC,FC_WORLD_CULTURES,ARB 300,"Advanced Arabic",3,https://www.bmcc.cuny.edu/academics/pathways/world-cultures-and-global-issues/
+BMCC,FC_WORLD_CULTURES,ASL 105,"Elementary American Sign Language I",3,https://www.bmcc.cuny.edu/academics/pathways/world-cultures-and-global-issues/
+BMCC,FC_WORLD_CULTURES,ASL 106,"Elementary American Sign Language II",3,https://www.bmcc.cuny.edu/academics/pathways/world-cultures-and-global-issues/
+BMCC,FC_WORLD_CULTURES,ASL 121,"Elementary Intensive ASL I & II",6,https://www.bmcc.cuny.edu/academics/pathways/world-cultures-and-global-issues/
+BMCC,FC_WORLD_CULTURES,ASN 111,"Chinese Culture and History",3,https://www.bmcc.cuny.edu/academics/pathways/world-cultures-and-global-issues/
+BMCC,FC_WORLD_CULTURES,ASN 214,"Asian Pacific Islander American Media Representations",3,https://www.bmcc.cuny.edu/academics/pathways/world-cultures-and-global-issues/
+BMCC,FC_WORLD_CULTURES,CHI 105,"Elementary Chinese I",3,https://www.bmcc.cuny.edu/academics/pathways/world-cultures-and-global-issues/
+BMCC,FC_WORLD_CULTURES,CHI 106,"Elementary Chinese II",3,https://www.bmcc.cuny.edu/academics/pathways/world-cultures-and-global-issues/
+BMCC,FC_WORLD_CULTURES,CHI 107,"Elementary Chinese for Heritage Speakers",3,https://www.bmcc.cuny.edu/academics/pathways/world-cultures-and-global-issues/
+BMCC,FC_WORLD_CULTURES,CHI 170E,"Literature, Culture, and Civilization of China",3,https://www.bmcc.cuny.edu/academics/pathways/world-cultures-and-global-issues/
+BMCC,FC_WORLD_CULTURES,CHI 200,"Intermediate Chinese I",3,https://www.bmcc.cuny.edu/academics/pathways/world-cultures-and-global-issues/
+BMCC,FC_WORLD_CULTURES,CHI 203,"Chinese Culture and Civilization",3,https://www.bmcc.cuny.edu/academics/pathways/world-cultures-and-global-issues/
+BMCC,FC_WORLD_CULTURES,CHI 210,"Intermediate Chinese II",3,https://www.bmcc.cuny.edu/academics/pathways/world-cultures-and-global-issues/
+BMCC,FC_WORLD_CULTURES,CHI 300,"Advanced Chinese",3,https://www.bmcc.cuny.edu/academics/pathways/world-cultures-and-global-issues/
+BMCC,FC_WORLD_CULTURES,CHI 411,"Modern Chinese Film",3,https://www.bmcc.cuny.edu/academics/pathways/world-cultures-and-global-issues/
+BMCC,FC_WORLD_CULTURES,CHI 440,"20th Century Chinese literature",3,https://www.bmcc.cuny.edu/academics/pathways/world-cultures-and-global-issues/
+BMCC,FC_WORLD_CULTURES,CHI 476,"Chinese Civilization and Language",3,https://www.bmcc.cuny.edu/academics/pathways/world-cultures-and-global-issues/
+BMCC,FC_WORLD_CULTURES,COM 255,"Intercultural Communication",3,https://www.bmcc.cuny.edu/academics/pathways/world-cultures-and-global-issues/
+BMCC,FC_WORLD_CULTURES,ECO 151,"Political Economy of the Caribbean (Same as AFL 151)",3,https://www.bmcc.cuny.edu/academics/pathways/world-cultures-and-global-issues/
+BMCC,FC_WORLD_CULTURES,FRN 105,"Elementary French I",3,https://www.bmcc.cuny.edu/academics/pathways/world-cultures-and-global-issues/
+BMCC,FC_WORLD_CULTURES,FRN 106,"Elementary French II",3,https://www.bmcc.cuny.edu/academics/pathways/world-cultures-and-global-issues/
+BMCC,FC_WORLD_CULTURES,FRN 121,"Elementary Intensive French 1 & 2",6,https://www.bmcc.cuny.edu/academics/pathways/world-cultures-and-global-issues/
+BMCC,FC_WORLD_CULTURES,FRN 200,"Intermediate French I",3,https://www.bmcc.cuny.edu/academics/pathways/world-cultures-and-global-issues/
+BMCC,FC_WORLD_CULTURES,FRN 204,"French Film and Conversation",3,https://www.bmcc.cuny.edu/academics/pathways/world-cultures-and-global-issues/
+BMCC,FC_WORLD_CULTURES,FRN 210,"Intermediate French II",3,https://www.bmcc.cuny.edu/academics/pathways/world-cultures-and-global-issues/
+BMCC,FC_WORLD_CULTURES,FRN 221,"Intermediate Intensive French I & II",6,https://www.bmcc.cuny.edu/academics/pathways/world-cultures-and-global-issues/
+BMCC,FC_WORLD_CULTURES,FRN 265,"Children and Young Adult Literature in French",3,https://www.bmcc.cuny.edu/academics/pathways/world-cultures-and-global-issues/
+BMCC,FC_WORLD_CULTURES,FRN 280E,"French Caribbean Literature in Translation",3,https://www.bmcc.cuny.edu/academics/pathways/world-cultures-and-global-issues/
+BMCC,FC_WORLD_CULTURES,FRN 281E,"French-Speaking Women Writers in Translation",3,https://www.bmcc.cuny.edu/academics/pathways/world-cultures-and-global-issues/
+BMCC,FC_WORLD_CULTURES,FRN 300,"Advanced French",3,https://www.bmcc.cuny.edu/academics/pathways/world-cultures-and-global-issues/
+BMCC,FC_WORLD_CULTURES,FRN 370,"Modern French Civilization",3,https://www.bmcc.cuny.edu/academics/pathways/world-cultures-and-global-issues/
+BMCC,FC_WORLD_CULTURES,FRN 400,"Francophone Literature",3,https://www.bmcc.cuny.edu/academics/pathways/world-cultures-and-global-issues/
+BMCC,FC_WORLD_CULTURES,FRN 430,"French Literature from the Middle Ages to the 17th Century",3,https://www.bmcc.cuny.edu/academics/pathways/world-cultures-and-global-issues/
+BMCC,FC_WORLD_CULTURES,FRN 435,"French Literature from the 18th and 19th Centuries",3,https://www.bmcc.cuny.edu/academics/pathways/world-cultures-and-global-issues/
+BMCC,FC_WORLD_CULTURES,FRN 440,"French Literature from the 20th and 21st Centuries",3,https://www.bmcc.cuny.edu/academics/pathways/world-cultures-and-global-issues/
+BMCC,FC_WORLD_CULTURES,FRN 446,"Literature and Cinema from West Africa",3,https://www.bmcc.cuny.edu/academics/pathways/world-cultures-and-global-issues/
+BMCC,FC_WORLD_CULTURES,FRN 456,"Advanced French Composition",3,https://www.bmcc.cuny.edu/academics/pathways/world-cultures-and-global-issues/
+BMCC,FC_WORLD_CULTURES,FRN 461,"The Individual and Society in 19th Century French Literature",3,https://www.bmcc.cuny.edu/academics/pathways/world-cultures-and-global-issues/
+BMCC,FC_WORLD_CULTURES,FRN 462,"History of French Drama and Theater",3,https://www.bmcc.cuny.edu/academics/pathways/world-cultures-and-global-issues/
+BMCC,FC_WORLD_CULTURES,FRN 476,"Intermediate and Advanced French Abroad",3,https://www.bmcc.cuny.edu/academics/pathways/world-cultures-and-global-issues/
+BMCC,FC_WORLD_CULTURES,GEO 100,"Introduction to Human Geography",3,https://www.bmcc.cuny.edu/academics/pathways/world-cultures-and-global-issues/
+BMCC,FC_WORLD_CULTURES,GLS 100,"Introduction to Diplomacy",3,https://www.bmcc.cuny.edu/academics/pathways/world-cultures-and-global-issues/
+BMCC,FC_WORLD_CULTURES,HIS 121,"History of African Civilization (Same as AFN 121)",3,https://www.bmcc.cuny.edu/academics/pathways/world-cultures-and-global-issues/
+BMCC,FC_WORLD_CULTURES,HIS 122,"Africa 1500 to Present (Same as AFN 122)",3,https://www.bmcc.cuny.edu/academics/pathways/world-cultures-and-global-issues/
+BMCC,FC_WORLD_CULTURES,HIS 130,"History of Latin America (Same as LAT 130)",3,https://www.bmcc.cuny.edu/academics/pathways/world-cultures-and-global-issues/
+BMCC,FC_WORLD_CULTURES,HIS 131,"History of Dominican Republic (Same as LAT 131)",3,https://www.bmcc.cuny.edu/academics/pathways/world-cultures-and-global-issues/
+BMCC,FC_WORLD_CULTURES,ITL 105,"Elementary Italian I",3,https://www.bmcc.cuny.edu/academics/pathways/world-cultures-and-global-issues/
+BMCC,FC_WORLD_CULTURES,ITL 106,"Elementary Italian II",3,https://www.bmcc.cuny.edu/academics/pathways/world-cultures-and-global-issues/
+BMCC,FC_WORLD_CULTURES,ITL 121,"Elementary Intensive Italian 1 & 2",6,https://www.bmcc.cuny.edu/academics/pathways/world-cultures-and-global-issues/
+BMCC,FC_WORLD_CULTURES,ITL 170E,"Literature, Culture and Civilization of Italy",3,https://www.bmcc.cuny.edu/academics/pathways/world-cultures-and-global-issues/
+BMCC,FC_WORLD_CULTURES,ITL 200,"Intermediate Italian I",3,https://www.bmcc.cuny.edu/academics/pathways/world-cultures-and-global-issues/
+BMCC,FC_WORLD_CULTURES,ITL 204,"Italian Film and Conversation",3,https://www.bmcc.cuny.edu/academics/pathways/world-cultures-and-global-issues/
+BMCC,FC_WORLD_CULTURES,ITL 205E,"Italian Cinema in Context",3,https://www.bmcc.cuny.edu/academics/pathways/world-cultures-and-global-issues/
+BMCC,FC_WORLD_CULTURES,ITL 210,"Intermediate Italian II",3,https://www.bmcc.cuny.edu/academics/pathways/world-cultures-and-global-issues/
+BMCC,FC_WORLD_CULTURES,ITL 221,"Intermediate Intensive Italian 1 & 2",6,https://www.bmcc.cuny.edu/academics/pathways/world-cultures-and-global-issues/
+BMCC,FC_WORLD_CULTURES,ITL 260,"The Modern Italian Short Story",3,https://www.bmcc.cuny.edu/academics/pathways/world-cultures-and-global-issues/
+BMCC,FC_WORLD_CULTURES,ITL 265,"Children and Young Adult Literature in Italian",3,https://www.bmcc.cuny.edu/academics/pathways/world-cultures-and-global-issues/
+BMCC,FC_WORLD_CULTURES,ITL 300,"Advanced Italian",3,https://www.bmcc.cuny.edu/academics/pathways/world-cultures-and-global-issues/
+BMCC,FC_WORLD_CULTURES,ITL 312E,"Modern Italian Theater",3,https://www.bmcc.cuny.edu/academics/pathways/world-cultures-and-global-issues/
+BMCC,FC_WORLD_CULTURES,ITL 330,"Survey of Italian Literature",3,https://www.bmcc.cuny.edu/academics/pathways/world-cultures-and-global-issues/
+BMCC,FC_WORLD_CULTURES,LAT 130,"History of Latin America (Same as HIS 130)",3,https://www.bmcc.cuny.edu/academics/pathways/world-cultures-and-global-issues/
+BMCC,FC_WORLD_CULTURES,LAT 131,"History of the Dominican Republic",3,https://www.bmcc.cuny.edu/academics/pathways/world-cultures-and-global-issues/
+BMCC,FC_WORLD_CULTURES,LAT 200,"Peoples & Cultures of Latin America and the Caribbean",3,https://www.bmcc.cuny.edu/academics/pathways/world-cultures-and-global-issues/
+BMCC,FC_WORLD_CULTURES,LAT 475,"Latin American & Caribbean Society",3,https://www.bmcc.cuny.edu/academics/pathways/world-cultures-and-global-issues/
+BMCC,FC_WORLD_CULTURES,LIN 140,"World/Global Englishes",3,https://www.bmcc.cuny.edu/academics/pathways/world-cultures-and-global-issues/
+BMCC,FC_WORLD_CULTURES,MES 140,"Introduction to the Moving Image",3,https://www.bmcc.cuny.edu/academics/pathways/world-cultures-and-global-issues/
+BMCC,FC_WORLD_CULTURES,MES 160,"World History of Animation",3,https://www.bmcc.cuny.edu/academics/pathways/world-cultures-and-global-issues/
+BMCC,FC_WORLD_CULTURES,POL 111,"Politics of Technology and Science",3,https://www.bmcc.cuny.edu/academics/pathways/world-cultures-and-global-issues/
+BMCC,FC_WORLD_CULTURES,PRT 105,"Elementary Portuguese I",3,https://www.bmcc.cuny.edu/academics/pathways/world-cultures-and-global-issues/
+BMCC,FC_WORLD_CULTURES,PRT 106,"Elementary Portuguese II",3,https://www.bmcc.cuny.edu/academics/pathways/world-cultures-and-global-issues/
+BMCC,FC_WORLD_CULTURES,SPN 105,"Elementary Spanish I",3,https://www.bmcc.cuny.edu/academics/pathways/world-cultures-and-global-issues/
+BMCC,FC_WORLD_CULTURES,SPN 106,"Elementary Spanish II",3,https://www.bmcc.cuny.edu/academics/pathways/world-cultures-and-global-issues/
+BMCC,FC_WORLD_CULTURES,SPN 107,"Elementary Spanish for Speakers of Spanish I",3,https://www.bmcc.cuny.edu/academics/pathways/world-cultures-and-global-issues/
+BMCC,FC_WORLD_CULTURES,SPN 108,"Elementary Spanish for Speakers of Spanish II",3,https://www.bmcc.cuny.edu/academics/pathways/world-cultures-and-global-issues/
+BMCC,FC_WORLD_CULTURES,SPN 121,"Elementary Intensive Spanish 1 & 2",6,https://www.bmcc.cuny.edu/academics/pathways/world-cultures-and-global-issues/
+BMCC,FC_WORLD_CULTURES,SPN 150,"Basic Spanish Conversation",3,https://www.bmcc.cuny.edu/academics/pathways/world-cultures-and-global-issues/
+BMCC,FC_WORLD_CULTURES,SPN 200,"Intermediate Spanish I",3,https://www.bmcc.cuny.edu/academics/pathways/world-cultures-and-global-issues/
+BMCC,FC_WORLD_CULTURES,SPN 204,"Spanish Film and Conversation",3,https://www.bmcc.cuny.edu/academics/pathways/world-cultures-and-global-issues/
+BMCC,FC_WORLD_CULTURES,SPN 207,"Intermediate Spanish for Speakers of Spanish",3,https://www.bmcc.cuny.edu/academics/pathways/world-cultures-and-global-issues/
+BMCC,FC_WORLD_CULTURES,SPN 210,"Intermediate Spanish II",3,https://www.bmcc.cuny.edu/academics/pathways/world-cultures-and-global-issues/
+BMCC,FC_WORLD_CULTURES,SPN 221,"Intermediate Intensive Spanish (1 & 2)",6,https://www.bmcc.cuny.edu/academics/pathways/world-cultures-and-global-issues/
+BMCC,FC_WORLD_CULTURES,SPN 300,"Advanced Spanish",3,https://www.bmcc.cuny.edu/academics/pathways/world-cultures-and-global-issues/
+BMCC,FC_WORLD_CULTURES,SPN 370,"Literature and Civilization of Latin America",3,https://www.bmcc.cuny.edu/academics/pathways/world-cultures-and-global-issues/
+BMCC,FC_WORLD_CULTURES,SPN 371,"Literature and Civilization of Spain",3,https://www.bmcc.cuny.edu/academics/pathways/world-cultures-and-global-issues/
+BMCC,FC_WORLD_CULTURES,SPN 400,"Latin American Women Writers",3,https://www.bmcc.cuny.edu/academics/pathways/world-cultures-and-global-issues/
+BMCC,FC_WORLD_CULTURES,SPN 410,"Latin American Theater",3,https://www.bmcc.cuny.edu/academics/pathways/world-cultures-and-global-issues/
+BMCC,FC_WORLD_CULTURES,SPN 420,"Introduction to Spanish Theatre",3,https://www.bmcc.cuny.edu/academics/pathways/world-cultures-and-global-issues/
+BMCC,FC_WORLD_CULTURES,SPN 425,"Introduction to Spanish Poetry of the 20th Century",3,https://www.bmcc.cuny.edu/academics/pathways/world-cultures-and-global-issues/
+BMCC,FC_WORLD_CULTURES,SPN 426,"Creative Writing in Spanish",3,https://www.bmcc.cuny.edu/academics/pathways/world-cultures-and-global-issues/
+BMCC,FC_WORLD_CULTURES,SPN 430,"Medieval and Golden Age Spanish Literature",3,https://www.bmcc.cuny.edu/academics/pathways/world-cultures-and-global-issues/
+BMCC,FC_WORLD_CULTURES,SPN 435,"Spanish Literature of the 18th and 19th Centuries",3,https://www.bmcc.cuny.edu/academics/pathways/world-cultures-and-global-issues/
+BMCC,FC_WORLD_CULTURES,SPN 439,"The Short Story in the Spanish Speaking Caribbean (Same as LAT 239)",3,https://www.bmcc.cuny.edu/academics/pathways/world-cultures-and-global-issues/
+BMCC,FC_WORLD_CULTURES,SPN 440,"Spanish Literature of the 20th and 21st Centuries",3,https://www.bmcc.cuny.edu/academics/pathways/world-cultures-and-global-issues/
+BMCC,FC_WORLD_CULTURES,SPN 445,"Colonial and 19th Century Latin American Literature",3,https://www.bmcc.cuny.edu/academics/pathways/world-cultures-and-global-issues/
+BMCC,FC_WORLD_CULTURES,SPN 450,"Latin American Literature of the 20th and 21st Centuries",3,https://www.bmcc.cuny.edu/academics/pathways/world-cultures-and-global-issues/
+BMCC,FC_WORLD_CULTURES,SPN 455,"Advanced Spanish Grammar and Composition",3,https://www.bmcc.cuny.edu/academics/pathways/world-cultures-and-global-issues/
+BMCC,FC_WORLD_CULTURES,SPN 456,"Advanced Spanish Composition",3,https://www.bmcc.cuny.edu/academics/pathways/world-cultures-and-global-issues/
+BMCC,FC_WORLD_CULTURES,SPN 472,"Literature, Culture and Civilization of the Greater Antilles",3,https://www.bmcc.cuny.edu/academics/pathways/world-cultures-and-global-issues/
+BMCC,FC_WORLD_CULTURES,SPN 476,"Intermediate and Advanced Spanish Abroad",3,https://www.bmcc.cuny.edu/academics/pathways/world-cultures-and-global-issues/
+BMCC,FC_WORLD_CULTURES,SPN 480,"Spanish and Latin American Texts into Films",3,https://www.bmcc.cuny.edu/academics/pathways/world-cultures-and-global-issues/
+BMCC,FC_WORLD_CULTURES,TRS 201,"Introduction to Translation and Interpretation Theory",3,https://www.bmcc.cuny.edu/academics/pathways/world-cultures-and-global-issues/
+BMCC,FC_WORLD_CULTURES,TRS 206,"The Structure of the Spanish Language",3,https://www.bmcc.cuny.edu/academics/pathways/world-cultures-and-global-issues/
+BMCC,FC_WORLD_CULTURES,TRS 233,"Spanish Translation & Interpretation for Healthcare",3,https://www.bmcc.cuny.edu/academics/pathways/world-cultures-and-global-issues/
+BMCC,FC_WORLD_CULTURES,TRS 237,"Editing for Translators",3,https://www.bmcc.cuny.edu/academics/pathways/world-cultures-and-global-issues/
+BMCC,FC_WORLD_CULTURES,TRS 238,"Introduction to Consecutive Interpretation",3,https://www.bmcc.cuny.edu/academics/pathways/world-cultures-and-global-issues/

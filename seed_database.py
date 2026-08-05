@@ -189,10 +189,13 @@ def parse_faq_file(path):
 
 def discover_major_files():
     files = sorted(DOCS_DIR.glob("*_courses.csv"))
+    non_major_files = {"pathways_courses.csv"}
 
     majors = []
 
     for file_path in files:
+        if file_path.name in non_major_files:
+            continue
         stem = file_path.stem
         program_code = stem.replace("_courses", "").upper()
 
@@ -556,6 +559,93 @@ def seed_choice_group_courses(db):
     db.flush()
     print("Seeded pathways_courses.csv")
 
+
+def split_course_codes(value):
+    return {
+        code.strip().upper()
+        for code in (value or "").split("|")
+        if code.strip()
+    }
+
+
+def seed_program_choice_group_adjustments(db):
+    """Materialize program-specific subsets of institution Pathways pools."""
+    path = DOCS_DIR / "program_choice_group_adjustments.csv"
+
+    if not path.exists():
+        return
+
+    with path.open(newline="", encoding="utf-8-sig") as f:
+        reader = csv.DictReader(f)
+
+        for row in reader:
+            institution_code = row["institution_code"].strip().upper()
+            program_code = row["program_code"].strip().upper()
+            derived_code = row["derived_group_code"].strip().upper()
+            base_code = row["base_group_code"].strip().upper()
+
+            institution = db.query(Institution).filter_by(code=institution_code).first()
+            if not institution:
+                continue
+
+            program_exists = (
+                db.query(Program)
+                .join(Department, Program.department_id == Department.id)
+                .filter(
+                    Department.institution_id == institution.id,
+                    Program.code == program_code,
+                )
+                .first()
+            )
+            if not program_exists:
+                continue
+
+            base_group = db.query(ChoiceGroup).filter_by(
+                institution_id=institution.id,
+                code=base_code,
+            ).first()
+            if not base_group:
+                continue
+
+            required_credits_raw = (row.get("required_credits") or "").strip()
+            required_count_raw = (row.get("required_course_count") or "").strip()
+            derived_group = get_or_create(
+                db,
+                ChoiceGroup,
+                institution_id=institution.id,
+                code=derived_code,
+                defaults={
+                    "name": row["derived_group_name"].strip(),
+                    "group_type": (row.get("group_type") or base_group.group_type).strip(),
+                },
+            )
+            derived_group.name = row["derived_group_name"].strip()
+            derived_group.group_type = (row.get("group_type") or base_group.group_type).strip()
+            derived_group.required_credits = int(required_credits_raw) if required_credits_raw else None
+            derived_group.required_course_count = int(required_count_raw) if required_count_raw else None
+            db.flush()
+
+            # The adjustment CSV is authoritative for derived memberships.
+            db.query(ChoiceGroupCourse).filter_by(choice_group_id=derived_group.id).delete()
+
+            include_codes = split_course_codes(row.get("include_course_codes"))
+            exclude_codes = split_course_codes(row.get("exclude_course_codes"))
+            base_courses = [link.course for link in base_group.course_links]
+            selected_courses = [
+                course for course in base_courses
+                if (not include_codes or course.code.upper() in include_codes)
+                and course.code.upper() not in exclude_codes
+            ]
+
+            for course in selected_courses:
+                db.add(ChoiceGroupCourse(
+                    choice_group_id=derived_group.id,
+                    course_id=course.id,
+                ))
+
+    db.flush()
+    print("Seeded program_choice_group_adjustments.csv")
+
 def seed_faq(db, program, faq_path):
     for question, answer in parse_faq_file(faq_path):
         db.add(
@@ -747,6 +837,7 @@ def seed():
         seed_course_equivalencies(db)
         seed_choice_groups(db)
         seed_choice_group_courses(db)
+        seed_program_choice_group_adjustments(db)
 
         major_files = discover_major_files()
 

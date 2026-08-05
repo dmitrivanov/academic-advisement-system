@@ -268,3 +268,28 @@ maintainer merges curriculum data.
 - Clean local seeding succeeds.
 - Program Selector, progress, prerequisite unlocking, and semester plan were tested.
 - The PR changes only the assigned curriculum and its source notes.
+
+## Shared BMCC Pathways groups
+
+Do not copy the complete BMCC Common Core and Flexible Core course lists into every
+major CSV. The college-wide pools are maintained once in:
+
+- `docs/pathways_groups.csv` - group metadata;
+- `docs/pathways_courses.csv` - approved course membership and official source URL.
+
+A major CSV references a pool by placing its code in `choice_group_code`. The
+placeholder course code must still be unique and descriptive, for example
+`FC-WORLD-CULTURES`.
+
+When a program permits only a subset of a college-wide pool, add a row to
+`docs/program_choice_group_adjustments.csv`. A derived group may use:
+
+- `include_course_codes` as an allow-list;
+- `exclude_course_codes` to remove otherwise approved courses;
+- program-specific required credits or course count.
+
+Use pipe-separated course codes in both adjustment columns. Do not edit the base
+Pathways pool to enforce a restriction that applies to only one major.
+
+The database seeder materializes derived groups after loading the shared Pathways
+groups and before importing major curricula.

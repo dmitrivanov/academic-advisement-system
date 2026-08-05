@@ -1,6 +1,9 @@
-institution_code,group_code,group_name,group_type,required_credits,required_course_count
-BMCC,FC_INDIVIDUAL,Individual and Society Requirement,flexible_core,3,1
-BMCC,FC_CREATIVE,Creative Expression Requirement,flexible_core,3,1
-BMCC,FC_US_EXPERIENCE,U.S. Experience in Its Diversity Requirement,flexible_core,3,1
-BMCC,FC_WORLD_CULTURES,World Cultures and Global Issues Requirement,flexible_core,3,1
-BMCC,FC_SCIENTIFIC_WORLD,Scientific World Requirement,flexible_core,3,1
+institution_code,group_code,group_name,group_type,required_credits,required_course_count,source
+BMCC,RC_ENGLISH_COMPOSITION,English Composition,common_core,6,,https://www.bmcc.cuny.edu/academics/pathways/english-composition/
+BMCC,RC_MATH_QUANT,Mathematical and Quantitative Reasoning,common_core,3,1,https://www.bmcc.cuny.edu/academics/pathways/mathematical-and-quantitative-reasoning/
+BMCC,RC_LIFE_PHYSICAL,Life and Physical Sciences,common_core,3,1,https://www.bmcc.cuny.edu/academics/pathways/life-and-physical-sciences/
+BMCC,FC_CREATIVE,Creative Expression,flexible_core,3,1,https://www.bmcc.cuny.edu/academics/pathways/creative-expression/
+BMCC,FC_INDIVIDUAL,Individual and Society,flexible_core,3,1,https://www.bmcc.cuny.edu/academics/pathways/individual-and-society/
+BMCC,FC_SCIENTIFIC_WORLD,Scientific World,flexible_core,3,1,https://www.bmcc.cuny.edu/academics/pathways/scientific-world/
+BMCC,FC_US_EXPERIENCE,U.S. Experience in Its Diversity,flexible_core,3,1,https://www.bmcc.cuny.edu/academics/pathways/u-s-experience-in-its-diversity/
+BMCC,FC_WORLD_CULTURES,World Cultures and Global Issues,flexible_core,3,1,https://www.bmcc.cuny.edu/academics/pathways/world-cultures-and-global-issues/

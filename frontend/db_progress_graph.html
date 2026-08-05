@@ -1675,11 +1675,17 @@ async function fetchJson(url) {
 async function loadOfficialDegreeMap() {
   const program = CURRENT_REQUIREMENTS?.program;
   OFFICIAL_DEGREE_MAP = null;
-  if (program?.institution_code !== "BMCC" || program?.code !== "CS") return;
+  if (program?.institution_code !== "BMCC") return;
+  const mapFiles = {
+    CS: "/docs/bmcc_cs_degree_map_2026_2027.json",
+    MAT_AS: "/docs/bmcc_mat_degree_map_2025_2026.json"
+  };
+  const mapFile = mapFiles[program?.code];
+  if (!mapFile) return;
   try {
-    OFFICIAL_DEGREE_MAP = await fetchJson("/docs/bmcc_cs_degree_map_2026_2027.json");
+    OFFICIAL_DEGREE_MAP = await fetchJson(mapFile);
   } catch (err) {
-    console.warn("Official BMCC CS degree-map guidance could not be loaded:", err);
+    console.warn("Official BMCC degree-map guidance could not be loaded:", err);
   }
 }
 
@@ -3330,7 +3336,7 @@ function renderDegreePlan() {
   const desiredSemesters = Number(document.getElementById("targetSemesterCount").value || 0);
   const remainingCredits = remainingRequiredCredits(getCompletedCourses());
   const sourceNote = OFFICIAL_DEGREE_MAP
-    ? ` Guidance is based on the <a href="${OFFICIAL_DEGREE_MAP.source_pdf}" target="_blank" rel="noopener">BMCC Computer Science 2026-2027 Degree Map</a> with the faculty Speech-in-semester-1 adjustment.`
+    ? ` Guidance is based on the <a href="${OFFICIAL_DEGREE_MAP.source_pdf}" target="_blank" rel="noopener">official ${OFFICIAL_DEGREE_MAP.program_name} ${OFFICIAL_DEGREE_MAP.catalog_year} degree map</a>.`
     : "";
   const unscheduledCredits = Math.max(0, remainingCredits - totalCredits);
   const schedulingNote = unscheduledCredits

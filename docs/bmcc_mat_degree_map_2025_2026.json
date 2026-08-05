@@ -1,0 +1,51 @@
+{
+  "institution_code": "BMCC",
+  "program_code": "MAT_AS",
+  "program_name": "Mathematics",
+  "degree_type": "AS",
+  "catalog_year": "2025-2026",
+  "default_semesters": 4,
+  "total_credits": 60,
+  "source_pdf": "https://www.bmcc.cuny.edu/academics/departments/math/mathematics-program/",
+  "faculty_override_note": "The official two-year map is the default. The official five-semester map is an alternate lighter-load pathway.",
+  "semesters": [
+    {
+      "number": 1,
+      "target_credits": 14,
+      "course_codes": ["MAT 206", "ENG 101", "MAT-AS-LPS", "FC-US-EXP"]
+    },
+    {
+      "number": 2,
+      "target_credits": 17,
+      "course_codes": ["ENG 201", "MAT 301", "MAT-AS-SCIWORLD", "FC-WORLD-CULTURES", "SPE 100", "SPE 102"]
+    },
+    {
+      "number": 3,
+      "target_credits": 16,
+      "course_codes": ["MAT 302", "MAT-AS-CREATIVE", "FC-INDIVIDUAL"],
+      "program_elective_slots": 2
+    },
+    {
+      "number": 4,
+      "target_credits": 13,
+      "course_codes": ["MAT 303", "MAT 315"],
+      "program_elective_slots": 2
+    }
+  ],
+  "alternate_pathways": [
+    {
+      "name": "Official five-semester map",
+      "semester_credit_targets": [10, 13, 14, 14, 9]
+    }
+  ],
+  "sequence_notes": [
+    "MAT 206 precedes MAT 301, which precedes MAT 302 and MAT 303.",
+    "MAT 302 precedes MAT 315.",
+    "The first laboratory science is BIO 210, CHE 201, PHY 210, or PHY 215.",
+    "The Scientific World selection is BIO 220, CHE 202, CSC 110, CSC 111, PHY 220, or PHY 225.",
+    "SPE 100 and SPE 102 are alternatives; only one is required.",
+    "The second Creative Expression course cannot be SPE 100 or SPE 102.",
+    "Four program electives totaling at least 12 credits are required.",
+    "A Writing Intensive course is required for graduation."
+  ]
+}
