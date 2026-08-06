@@ -1560,7 +1560,7 @@ body { background: #f5f5f7; color: #1d1d1f; }
 
 <div id="advisorBackdrop" class="advisor-backdrop hidden" onclick="closeAdvisorDrawer()"></div>
 
-<div id="advisorDrawer" class="advisor-drawer" role="dialog" aria-modal="true" aria-labelledby="advisorDrawerTitle">
+<div id="advisorDrawer" class="advisor-drawer" role="dialog" aria-modal="true" aria-labelledby="advisorDrawerTitle" aria-hidden="true" inert>
   <div class="advisor-header">
     <div>
       <h3 id="advisorDrawerTitle">AI Academic Advisor</h3>
@@ -3497,8 +3497,11 @@ let advisorDrawerTrigger = null;
 
 function openAdvisorDrawer() {
   advisorDrawerTrigger = document.activeElement;
+  const drawer = document.getElementById("advisorDrawer");
   document.getElementById("advisorBackdrop").classList.remove("hidden");
-  document.getElementById("advisorDrawer").classList.add("open");
+  drawer.inert = false;
+  drawer.setAttribute("aria-hidden", "false");
+  drawer.classList.add("open");
   setTimeout(() => document.getElementById("advisorQuestion").focus(), 150);
 }
 
@@ -3506,6 +3509,8 @@ function closeAdvisorDrawer() {
   const drawer = document.getElementById("advisorDrawer");
   const wasOpen = drawer.classList.contains("open");
   drawer.classList.remove("open");
+  drawer.inert = true;
+  drawer.setAttribute("aria-hidden", "true");
   document.getElementById("advisorBackdrop").classList.add("hidden");
 
   if (wasOpen && advisorDrawerTrigger) {

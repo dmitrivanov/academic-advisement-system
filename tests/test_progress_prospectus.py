@@ -60,6 +60,31 @@ class ProgressProspectusTests(unittest.TestCase):
         self.assertIn("function hasSelectedChoiceCourse(courseCode)", self.html)
         self.assertIn("completed.has(prereq) || hasSelectedChoiceCourse(prereq)", self.html)
 
+    def test_advisor_drawer_closed_state_is_not_focusable_or_exposed(self):
+        self.assertRegex(
+            self.html,
+            re.compile(
+                r'id="advisorDrawer"[^>]*role="dialog"[^>]*aria-modal="true"'
+                r'[^>]*aria-labelledby="advisorDrawerTitle"[^>]*aria-hidden="true"[^>]*inert'
+            ),
+        )
+        self.assertRegex(
+            self.html,
+            re.compile(
+                r"function openAdvisorDrawer\(\).*?drawer\.inert = false;"
+                r'.*?drawer\.setAttribute\("aria-hidden", "false"\);',
+                re.DOTALL,
+            ),
+        )
+        self.assertRegex(
+            self.html,
+            re.compile(
+                r"function closeAdvisorDrawer\(\).*?drawer\.inert = true;"
+                r'.*?drawer\.setAttribute\("aria-hidden", "true"\);',
+                re.DOTALL,
+            ),
+        )
+
 
 if __name__ == "__main__":
     unittest.main()
