@@ -5,7 +5,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 from database import Base
-from models import ChoiceGroup, ChoiceGroupCourse, Course, CurriculumDraft, Department, Institution, Program, RequirementGroup
+from models import ChoiceGroup, ChoiceGroupCourse, Course, CurriculumDraft, Department, Institution, Program, RequirementGroup, RequirementGroupCourse
 
 try:
     from api_db_routes import curriculum_validation, preview_curriculum_draft, publish_curriculum_draft
@@ -102,6 +102,33 @@ class CurriculumDraftValidationTests(unittest.TestCase):
         result = curriculum_validation(draft, self.db)
         self.assertFalse(result["valid"])
         self.assertTrue(any("placeholder must also be placed" in error for error in result["errors"]))
+
+    def test_core_group_card_previews_and_publishes_as_selectable_placeholder(self):
+        document = {
+            "metadata": {"code": "SCI-CORE", "degree_type": "A.S.", "catalog_year": "2026-2027", "source_url": "https://example.edu"},
+            "concentrations": [{
+                "name": "General",
+                "bins": {"major_required": [], "major_electives": [], "common_core": [], "flex_core": []},
+                "core_groups": [{"code": "TEST-FLEX", "name": "Test Flexible Core", "bin": "flex_core", "required_credits": 3, "required_course_count": 1}],
+                "bin_requirements": {"flex_core": {"required_credits": 3, "required_course_count": 1}},
+            }],
+            "rules": {},
+        }
+        draft = self.make_draft(document)
+        self.assertTrue(curriculum_validation(draft, self.db)["valid"])
+        self.db.add(draft)
+        self.db.commit()
+        preview = preview_curriculum_draft(draft.id, 0, None, self.db)
+        self.assertEqual("TEST-FLEX", preview["groups"][0]["courses"][0]["choice_group_code"])
+
+        draft.status = "approved"
+        self.db.commit()
+        publish_curriculum_draft(draft.id, None, self.db)
+        program = self.db.query(Program).filter_by(code="SCI-CORE").one()
+        group = self.db.query(RequirementGroup).filter_by(program_id=program.id, name="Flexible Core").one()
+        link = self.db.query(RequirementGroupCourse).filter_by(requirement_group_id=group.id).one()
+        placeholder = self.db.query(Course).filter_by(id=link.course_id).one()
+        self.assertEqual("TEST-FLEX", placeholder.choice_group_code)
 
     def test_publish_materializes_targets_pools_and_core_adjustment(self):
         document = {

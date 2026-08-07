@@ -40,6 +40,8 @@ Do not infer a rule from course scheduling order alone. A course appearing earli
 
 Before starting, confirm that every required course exists under **Admin → Courses**. The constructor can select existing database courses but cannot create a missing catalog course.
 
+After a campus is selected, the course library shows only courses associated with that campus through its published curricula or institutional choice groups. Courses already used by programs in the selected department appear first, followed by the remaining campus catalog in course-code order.
+
 ## 3. Create the draft and enter metadata
 
 Open **Admin → Major Constructor** and choose **New major draft**.
@@ -57,6 +59,8 @@ Complete every metadata field:
 The program code and catalog year identify the published curriculum. Publishing refuses to overwrite an existing record with the same department, code, and catalog year.
 
 Choose **Save draft** before moving to curriculum entry.
+
+Selecting a campus also pre-populates each concentration's Common Core and Flexible Core bins with that campus's canonical elective groups. These group cards are selectable requirements, not a copy of every eligible course. Remove a group only when the official program does not use it, and use a Core adjustment to narrow its eligible course pool.
 
 ## 4. Model concentrations
 
@@ -100,6 +104,8 @@ Use the **Board** mode for a visual, Trello-style curriculum layout. The same fo
 Board mode does not create a second copy of the curriculum. Both views edit the same active concentration and save the same draft document. Switching views therefore cannot lose or duplicate saved rules.
 
 For keyboard or touch input, select the destination above the course library and activate a course card. Course cards accept Enter or Space, so drag-and-drop is optional. The selected view is remembered on that browser.
+
+Rule and elective-pool course menus intentionally contain only courses already placed in the active concentration's four bins. Add a course to a bin before using it in an OR rule, prerequisite, elective pool, or Core adjustment. Server validation also rejects rules that reference courses outside the applicable curriculum bins.
 
 A course may appear in more than one bin when the official curriculum intentionally allows or requires double placement. Validation reports this as a warning, and the student progress system synchronizes completion state for the same course.
 

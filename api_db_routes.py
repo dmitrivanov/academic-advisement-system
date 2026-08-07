@@ -126,6 +126,7 @@ def curriculum_validation(draft: CurriculumDraft, db: Session):
     if not concentrations:
         errors.append("Add at least one concentration.")
     known_ids = {row[0] for row in db.query(Course.id).all()}
+    selected_by_concentration = []
     for index, concentration in enumerate(concentrations, 1):
         name = str(concentration.get("name") or "").strip()
         if not name:
@@ -139,19 +140,32 @@ def curriculum_validation(draft: CurriculumDraft, db: Session):
             if missing:
                 errors.append(f"{name or f'Concentration {index}'} references missing course IDs: {missing}.")
             requirement = (concentration.get("bin_requirements") or {}).get(key) or {}
-            if requirement.get("required_course_count") and requirement["required_course_count"] > len(values):
+            group_option_count = sum(1 for item in concentration.get("core_groups") or [] if item.get("bin") == key)
+            if requirement.get("required_course_count") and requirement["required_course_count"] > len(values) + group_option_count:
                 errors.append(f"{name or f'Concentration {index}'} requires more courses in {key} than it provides.")
-        if not selected:
+        core_groups = concentration.get("core_groups") or []
+        selected_group_codes = {item.get("code") for item in core_groups if item.get("code")}
+        campus_group_codes = {
+            row[0] for row in db.query(ChoiceGroup.code).filter_by(institution_id=draft.institution_id).all()
+        } if draft.institution_id else set()
+        missing_groups = sorted(selected_group_codes - campus_group_codes)
+        if missing_groups:
+            errors.append(f"{name or f'Concentration {index}'} references missing Core groups: {missing_groups}.")
+        if not selected and not core_groups:
             errors.append(f"{name or f'Concentration {index}'} has no curriculum courses.")
         duplicates = sorted({course_id for course_id in selected if selected.count(course_id) > 1})
+        selected_by_concentration.append(set(selected))
         if duplicates:
             warnings.append(f"{name or f'Concentration {index}'} uses {len(duplicates)} course(s) in multiple bins; completion will be synchronized.")
     rules = document.get("rules") or {}
     for rule_type in ("alternatives", "prerequisites"):
         for rule in rules.get(rule_type) or []:
-            ids = [value for value in rule.values() if isinstance(value, int)]
+            ids = [rule.get("course_id"), rule.get("alternative_course_id" if rule_type == "alternatives" else "prerequisite_course_id")]
             if any(course_id not in known_ids for course_id in ids):
                 errors.append(f"A {rule_type[:-1]} rule references a missing course.")
+            selected_ids = set().union(*selected_by_concentration) if selected_by_concentration else set()
+            if any(course_id not in selected_ids for course_id in ids):
+                errors.append(f"A {rule_type[:-1]} rule references a course outside the curriculum bins.")
     placeholder_ids = []
     for pool in rules.get("elective_pools") or []:
         if not str(pool.get("name") or "").strip():
@@ -162,19 +176,31 @@ def curriculum_validation(draft: CurriculumDraft, db: Session):
             errors.append(f"Elective pool {pool.get('name') or ''} has no course options.")
         if any(course_id not in known_ids for course_id in pool.get("course_ids") or []):
             errors.append(f"Elective pool {pool.get('name') or ''} references a missing course.")
+        concentration_index = pool.get("concentration_index", 0)
+        selected_ids = selected_by_concentration[concentration_index] if 0 <= concentration_index < len(selected_by_concentration) else set()
+        if any(course_id not in selected_ids for course_id in pool.get("course_ids") or []):
+            errors.append(f"Elective pool {pool.get('name') or ''} references a course outside its concentration bins.")
     for adjustment in rules.get("core_adjustments") or []:
         placeholder_id = adjustment.get("placeholder_course_id")
-        placeholder_ids.append(placeholder_id)
-        if placeholder_id not in known_ids:
+        placeholder_group_code = adjustment.get("placeholder_group_code")
+        placeholder_ids.append(placeholder_id or f"group:{placeholder_group_code}")
+        if not placeholder_group_code and placeholder_id not in known_ids:
             errors.append("A Core adjustment references a missing placeholder course.")
         concentration_index = adjustment.get("concentration_index", 0)
         if concentration_index < 0 or concentration_index >= len(concentrations):
             errors.append("A Core adjustment references a missing concentration.")
+        elif placeholder_group_code:
+            placed_groups = {item.get("code") for item in concentrations[concentration_index].get("core_groups") or []}
+            if placeholder_group_code not in placed_groups:
+                errors.append("A Core adjustment group must also be placed in a curriculum bin.")
         elif placeholder_id not in [course_id for values in (concentrations[concentration_index].get("bins") or {}).values() for course_id in values]:
             errors.append("A Core adjustment placeholder must also be placed in a curriculum bin.")
         adjusted_ids = (adjustment.get("include_course_ids") or []) + (adjustment.get("exclude_course_ids") or [])
         if any(course_id not in known_ids for course_id in adjusted_ids):
             errors.append("A Core adjustment references a missing included or excluded course.")
+        selected_ids = selected_by_concentration[concentration_index] if 0 <= concentration_index < len(selected_by_concentration) else set()
+        if any(course_id not in selected_ids for course_id in adjusted_ids):
+            errors.append("A Core adjustment references a course outside its concentration bins.")
         institution = db.query(Institution).filter_by(id=draft.institution_id).first() if draft.institution_id else None
         base_group = db.query(ChoiceGroup).filter_by(
             institution_id=institution.id if institution else None,
@@ -459,6 +485,10 @@ def preview_curriculum_draft(
     rules = document.get("rules") or {}
     metadata = document.get("metadata") or {}
     course_cache = {course.id: course for course in db.query(Course).all()}
+    choice_group_cache = {
+        group.code: group
+        for group in db.query(ChoiceGroup).filter_by(institution_id=draft.institution_id).all()
+    }
 
     def preview_course(course_id: int):
         course = course_cache.get(course_id)
@@ -503,6 +533,19 @@ def preview_curriculum_draft(
     for order, (key, label, group_type) in enumerate(bin_labels):
         course_payloads = [preview_course(course_id) for course_id in (selected.get("bins") or {}).get(key, [])]
         course_payloads = [course for course in course_payloads if course]
+        for core_item in selected.get("core_groups") or []:
+            if core_item.get("bin") != key:
+                continue
+            choice_group = choice_group_cache.get(core_item.get("code"))
+            if choice_group:
+                course_payloads.append({
+                    "code": f"CORE-{choice_group.code}",
+                    "title": choice_group.name,
+                    "credits": core_item.get("required_credits") or choice_group.required_credits or 0,
+                    "choice_group_code": choice_group.code,
+                    "prereqs": [],
+                    "alternatives": [],
+                })
         requirement = (selected.get("bin_requirements") or {}).get(key) or {}
         if course_payloads:
             groups.append({
@@ -605,13 +648,34 @@ def publish_curriculum_draft(
             db.add(program)
             db.flush()
             created_ids.append(program.id)
+            core_placeholders = {}
             for order, (key, label, group_type) in enumerate((
                 ("major_required", "Major Requirements", "program_required"),
                 ("major_electives", "Major Electives", "program_elective"),
                 ("common_core", "Common Core", "common_core"),
                 ("flex_core", "Flexible Core", "flexible_core"),
             )):
-                course_ids = concentration.get("bins", {}).get(key) or []
+                course_ids = list(concentration.get("bins", {}).get(key) or [])
+                for core_item in concentration.get("core_groups") or []:
+                    if core_item.get("bin") != key:
+                        continue
+                    choice_group = db.query(ChoiceGroup).filter_by(
+                        institution_id=draft.institution_id,
+                        code=core_item.get("code"),
+                    ).first()
+                    if not choice_group:
+                        continue
+                    placeholder_code = f"{code}-{choice_group.code}".upper()
+                    placeholder = Course(
+                        code=placeholder_code,
+                        title=choice_group.name,
+                        credits=core_item.get("required_credits") or choice_group.required_credits or 0,
+                        choice_group_code=choice_group.code,
+                    )
+                    db.add(placeholder)
+                    db.flush()
+                    course_ids.append(placeholder.id)
+                    core_placeholders[choice_group.code] = placeholder
                 if not course_ids:
                     continue
                 requirement = concentration.get("bin_requirements", {}).get(key, {})
@@ -700,7 +764,9 @@ def publish_curriculum_draft(
                 db.flush()
                 for course_id in sorted(selected_ids):
                     db.add(ChoiceGroupCourse(choice_group_id=derived.id, course_id=course_id))
-                placeholder = db.query(Course).filter_by(id=adjustment["placeholder_course_id"]).first()
+                placeholder = core_placeholders.get(adjustment.get("placeholder_group_code"))
+                if not placeholder:
+                    placeholder = db.query(Course).filter_by(id=adjustment.get("placeholder_course_id")).first()
                 placeholder.choice_group_code = derived_code
         draft.status = "published"
         draft.published_program_id = created_ids[0]
@@ -987,6 +1053,35 @@ def get_programs(db: Session = Depends(get_db)):
 def get_all_courses(db: Session = Depends(get_db)):
     courses = db.query(Course).order_by(Course.code).all()
 
+    institution_codes: dict[int, set[str]] = {course.id: set() for course in courses}
+    department_ids: dict[int, set[int]] = {course.id: set() for course in courses}
+    for course_id, institution_code in (
+        db.query(ChoiceGroupCourse.course_id, Institution.code)
+        .join(ChoiceGroup, ChoiceGroupCourse.choice_group_id == ChoiceGroup.id)
+        .join(Institution, ChoiceGroup.institution_id == Institution.id)
+        .all()
+    ):
+        institution_codes.setdefault(course_id, set()).add(institution_code)
+    for course_id, department_id, institution_code in (
+        db.query(RequirementGroupCourse.course_id, Department.id, Institution.code)
+        .join(RequirementGroup, RequirementGroupCourse.requirement_group_id == RequirementGroup.id)
+        .join(Program, RequirementGroup.program_id == Program.id)
+        .join(Department, Program.department_id == Department.id)
+        .join(Institution, Department.institution_id == Institution.id)
+        .all()
+    ):
+        institution_codes.setdefault(course_id, set()).add(institution_code)
+        department_ids.setdefault(course_id, set()).add(department_id)
+    for course_id, department_id, institution_code in (
+        db.query(ProgramCourse.course_id, Department.id, Institution.code)
+        .join(Program, ProgramCourse.program_id == Program.id)
+        .join(Department, Program.department_id == Department.id)
+        .join(Institution, Department.institution_id == Institution.id)
+        .all()
+    ):
+        institution_codes.setdefault(course_id, set()).add(institution_code)
+        department_ids.setdefault(course_id, set()).add(department_id)
+
     return [
         {
             "id": c.id,
@@ -994,6 +1089,8 @@ def get_all_courses(db: Session = Depends(get_db)):
             "title": c.title,
             "credits": c.credits,
             "choice_group_code": c.choice_group_code,
+            "institution_codes": sorted(institution_codes.get(c.id, set())),
+            "department_ids": sorted(department_ids.get(c.id, set())),
         }
         for c in courses
     ]
