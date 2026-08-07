@@ -334,3 +334,28 @@ explains the major-specific restriction, because the progress screen displays it
 the top of the course-choice modal. The modal globally groups options by subject and
 orders each subject by catalog number; do not duplicate presentation groupings in
 individual major CSV files.
+
+# Major Constructor workflow
+
+Administrators can open **Admin → Major Constructor** to assemble a curriculum without changing live program data. The constructor is a draft-first companion to the CSV workflow described below.
+
+1. Create a draft and select the campus and department.
+2. Enter the program name, code, degree type, catalog year, and official source URL.
+3. Add one concentration tab for each independently selectable curriculum. A program with no official concentrations should keep the default `General` tab.
+4. Search the canonical course catalog and add courses to Major Requirements, Major Electives, Common Core, or Flexible Core. Each bin displays its current credit total.
+5. Add OR alternatives, prerequisites, and any major-specific Core adjustment note. The note must translate the official footnote into student-facing language.
+6. Save frequently and create named version snapshots at meaningful review points.
+7. Preview and validate. Missing metadata, empty curricula, and missing course references block submission.
+8. Submit for review. A reviewer may approve it or request changes. Only an approved draft can be published.
+9. Publishing creates new program and requirement records in one database transaction. It refuses to overwrite an existing program with the same department, code, and catalog year.
+
+Draft lifecycle:
+
+```text
+draft → in_review → approved → published
+                    ↘ changes_requested → in_review
+```
+
+Version restore returns an unpublished draft to editable `draft` status. Published records are immutable in this first constructor release; revise them by creating a new draft/catalog version. This prevents rollback from silently changing requirements already used by student records.
+
+The source CSV files remain the repository's reviewable curriculum record. Until constructor export is added, a published constructor curriculum should also be represented in the appropriate CSV files before the next full database reseed. Major-specific Core adjustments are preserved in the draft/version document, but their base-group include/exclude editor and CSV export are a subsequent constructor stage.
