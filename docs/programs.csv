@@ -27,7 +27,8 @@ BMCC,ALL,SPA_AA,Modern Languages: Spanish,AA,2026
 BMCC,ALL,STI_AA,Modern Languages: Spanish Translation and Interpretation,AA,2026
 BMCC,SSH,PHI_AA,Philosophy,AA,2026
 BMCC,SSH,POL_AA,Political Science,AA,2026
-BMCC,SSH,PSY_AA,Psychology,AA,2026
+BMCC,SSH,PSY_AA,Psychology - General Concentration,AA,2025-2026
+BMCC,SSH,PSY_STEM_AA,Psychology - STEM Concentration,AA,2025-2026
 BMCC,SSH,SESS_AA,Secondary Education for Social Studies,AA,2026
 BMCC,SSH,SOC_AA,Sociology,AA,2026
 BMCC,SSH,URB_AA,Urban Studies,AA,2026

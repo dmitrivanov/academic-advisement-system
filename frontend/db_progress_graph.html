@@ -1680,7 +1680,9 @@ async function loadOfficialDegreeMap() {
   if (program?.institution_code !== "BMCC") return;
   const mapFiles = {
     CS: "/docs/bmcc_cs_degree_map_2026_2027.json",
-    MAT_AS: "/docs/bmcc_mat_degree_map_2025_2026.json"
+    MAT_AS: "/docs/bmcc_mat_degree_map_2025_2026.json",
+    PSY_AA: "/docs/bmcc_psy_general_degree_map_2025_2026.json",
+    PSY_STEM_AA: "/docs/bmcc_psy_stem_degree_map_2025_2026.json"
   };
   const mapFile = mapFiles[program?.code];
   if (!mapFile) return;
@@ -1971,11 +1973,15 @@ function updateSelectedProgramHeader() {
   if (!info || !CURRENT_REQUIREMENTS || !CURRENT_REQUIREMENTS.program) return;
 
   const program = CURRENT_REQUIREMENTS.program;
+  const sourceLinks = (OFFICIAL_DEGREE_MAP?.source_pdfs || []).map(source =>
+    `<a href="${source.url}" target="_blank" rel="noopener">${source.label}</a>`
+  ).join(" · ");
 
   info.innerHTML = `
     <span class="program-context-item"><strong>Campus</strong> ${program.institution || program.institution_code || "Not specified"}</span>
     <span class="program-context-item"><strong>Program</strong> ${program.code} — ${program.name}</span>
     <span class="program-context-item"><strong>Catalog</strong> ${program.catalog_year || "Not specified"}</span>
+    ${sourceLinks ? `<span class="program-context-item"><strong>Official maps</strong> ${sourceLinks}</span>` : ""}
   `;
 }
 
@@ -2175,9 +2181,9 @@ async function loadProgramRequirements() {
 
   CURRENT_REQUIREMENTS = await fetchJson(`/api/db/programs/${code}/requirements`);
 
-  updateSelectedProgramHeader();
   ensurePlaceholderGroups();
   await loadOfficialDegreeMap();
+  updateSelectedProgramHeader();
   configurePlannerDefaults();
   applySmartPlannerPreferences();
   renderCompletedCourseGrid();

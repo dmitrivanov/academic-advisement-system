@@ -1,0 +1,26 @@
+{
+  "institution_code": "BMCC", "program_code": "PSY_STEM_AA",
+  "program_name": "Psychology - STEM Concentration", "degree_type": "AA",
+  "catalog_year": "2025-2026", "default_semesters": 4, "total_credits": 60,
+  "source_pdf": "/docs/degree_maps/bmcc_psychology_stem_2_year_2025_2026.pdf",
+  "source_pdfs": [
+    {"label": "STEM 2-Year Degree Map", "url": "/docs/degree_maps/bmcc_psychology_stem_2_year_2025_2026.pdf"},
+    {"label": "STEM 5-Semester Degree Map", "url": "/docs/degree_maps/bmcc_psychology_stem_5_semester_2025_2026.pdf"}
+  ],
+  "faculty_override_note": "The official four-semester map is the default; the official five-semester map is an alternate lighter-load pathway. DegreeWorks and faculty advisement remain authoritative.",
+  "semesters": [
+    {"number": 1, "target_credits": 14, "course_codes": ["PSY-STEM-MATH", "ENG 101", "PSY 100", "PSY-STEM-LPS"]},
+    {"number": 2, "target_credits": 17, "course_codes": ["ENG 201", "PSY 225", "PSY-STEM-CREATIVE", "BIO 220", "MAT 301"]},
+    {"number": 3, "target_credits": 16, "course_codes": ["PSY 220", "PSY 255", "PSY-STEM-INDIVIDUAL", "FC-US-EXP"], "program_elective_slots": 1},
+    {"number": 4, "target_credits": 13, "course_codes": ["PSY 265", "FC-WORLD-CULTURES"], "program_elective_slots": 2}
+  ],
+  "alternate_pathways": [{"name": "Official five-semester map", "semester_credit_targets": [10, 13, 14, 14, 9]}],
+  "sequence_notes": [
+    "MAT 206 or MAT 206.5 precedes MAT 301.",
+    "BIO 210 precedes BIO 220; the current shared Pathways model does not attach prerequisites to derived choice-group members.",
+    "PSY 100 should be completed in the first semester because it is the prerequisite for later Psychology courses.",
+    "Three Psychology electives totaling at least 9 credits are required.",
+    "PSY 265 requires PSY 100 and two completed 200-level Psychology courses; the current prerequisite model records PSY 100 and the planner keeps PSY 265 late in the sequence.",
+    "A Writing Intensive course is required for graduation."
+  ]
+}
