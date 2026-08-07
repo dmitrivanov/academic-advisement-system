@@ -109,6 +109,49 @@ def validate_draft_references(payload: CurriculumDraftPayload, db: Session):
             raise HTTPException(status_code=400, detail="Department does not belong to the selected institution")
 
 
+def curriculum_validation(draft: CurriculumDraft, db: Session):
+    document = json.loads(draft.document_json or "{}")
+    metadata = document.get("metadata") or {}
+    concentrations = document.get("concentrations") or []
+    errors, warnings = [], []
+    if not draft.institution_id:
+        errors.append("Select a campus.")
+    if not draft.department_id:
+        errors.append("Select a department.")
+    if not draft.name.strip() or draft.name == "Untitled program":
+        errors.append("Enter a program name.")
+    for field, label in (("code", "program code"), ("degree_type", "degree type"), ("catalog_year", "catalog year"), ("source_url", "official source URL")):
+        if not str(metadata.get(field) or "").strip():
+            errors.append(f"Enter the {label}.")
+    if not concentrations:
+        errors.append("Add at least one concentration.")
+    known_ids = {row[0] for row in db.query(Course.id).all()}
+    for index, concentration in enumerate(concentrations, 1):
+        name = str(concentration.get("name") or "").strip()
+        if not name:
+            errors.append(f"Concentration {index} needs a name.")
+        bins = concentration.get("bins") or {}
+        selected = []
+        for key in ("major_required", "major_electives", "common_core", "flex_core"):
+            values = bins.get(key) or []
+            selected.extend(values)
+            missing = [course_id for course_id in values if course_id not in known_ids]
+            if missing:
+                errors.append(f"{name or f'Concentration {index}'} references missing course IDs: {missing}.")
+        if not selected:
+            errors.append(f"{name or f'Concentration {index}'} has no curriculum courses.")
+        duplicates = sorted({course_id for course_id in selected if selected.count(course_id) > 1})
+        if duplicates:
+            warnings.append(f"{name or f'Concentration {index}'} uses {len(duplicates)} course(s) in multiple bins; completion will be synchronized.")
+    rules = document.get("rules") or {}
+    for rule_type in ("alternatives", "prerequisites"):
+        for rule in rules.get(rule_type) or []:
+            ids = [value for value in rule.values() if isinstance(value, int)]
+            if any(course_id not in known_ids for course_id in ids):
+                errors.append(f"A {rule_type[:-1]} rule references a missing course.")
+    return {"valid": not errors, "errors": errors, "warnings": warnings}
+
+
 def serialize_equivalency(rule: CourseEquivalency):
     return {
         "id": rule.id,
@@ -334,6 +377,106 @@ def transition_curriculum_draft(
     draft.updated_at = datetime.now(timezone.utc)
     db.commit()
     return serialize_draft(draft, include_document=False)
+
+
+@router.get("/curriculum-drafts/{draft_id}/validate")
+def validate_curriculum_draft(draft_id: int, _admin=Depends(require_admin), db: Session = Depends(get_db)):
+    draft = db.query(CurriculumDraft).filter_by(id=draft_id).first()
+    if not draft:
+        raise HTTPException(status_code=404, detail="Curriculum draft not found")
+    return curriculum_validation(draft, db)
+
+
+@router.post("/curriculum-drafts/{draft_id}/versions/{version_number}/restore")
+def restore_curriculum_version(
+    draft_id: int,
+    version_number: int,
+    _admin=Depends(require_admin),
+    db: Session = Depends(get_db),
+):
+    draft = db.query(CurriculumDraft).filter_by(id=draft_id).first()
+    version = db.query(CurriculumDraftVersion).filter_by(draft_id=draft_id, version_number=version_number).first()
+    if not draft or not version:
+        raise HTTPException(status_code=404, detail="Draft version not found")
+    if draft.status == "published":
+        raise HTTPException(status_code=409, detail="Published records are immutable; create a new draft to revise them")
+    draft.document_json = version.document_json
+    draft.status = "draft"
+    draft.updated_at = datetime.now(timezone.utc)
+    db.commit()
+    return serialize_draft(draft)
+
+
+@router.post("/curriculum-drafts/{draft_id}/publish")
+def publish_curriculum_draft(
+    draft_id: int,
+    _admin=Depends(require_admin),
+    db: Session = Depends(get_db),
+):
+    draft = db.query(CurriculumDraft).filter_by(id=draft_id).first()
+    if not draft:
+        raise HTTPException(status_code=404, detail="Curriculum draft not found")
+    if draft.status != "approved":
+        raise HTTPException(status_code=409, detail="Only an approved curriculum can be published")
+    validation = curriculum_validation(draft, db)
+    if not validation["valid"]:
+        raise HTTPException(status_code=422, detail={"message": "Validation failed", **validation})
+    document = json.loads(draft.document_json)
+    metadata = document["metadata"]
+    concentrations = document["concentrations"]
+    created_ids = []
+    try:
+        for index, concentration in enumerate(concentrations):
+            suffix = "" if len(concentrations) == 1 else f"-{index + 1}"
+            code = f"{metadata['code']}{suffix}"
+            duplicate = db.query(Program).filter_by(
+                department_id=draft.department_id,
+                code=code,
+                catalog_year=metadata["catalog_year"],
+            ).first()
+            if duplicate:
+                raise HTTPException(status_code=409, detail=f"Program {code} for this catalog year already exists")
+            program_name = draft.name if len(concentrations) == 1 else f"{draft.name} - {concentration['name']}"
+            program = Program(department_id=draft.department_id, code=code, name=program_name, degree_type=metadata["degree_type"], catalog_year=metadata["catalog_year"])
+            db.add(program)
+            db.flush()
+            created_ids.append(program.id)
+            for order, (key, label, group_type) in enumerate((
+                ("major_required", "Major Requirements", "major_required"),
+                ("major_electives", "Major Electives", "major_elective"),
+                ("common_core", "Common Core", "common_core"),
+                ("flex_core", "Flexible Core", "flex_core"),
+            )):
+                course_ids = concentration.get("bins", {}).get(key) or []
+                if not course_ids:
+                    continue
+                group = RequirementGroup(program_id=program.id, name=label, group_type=group_type, display_order=order)
+                db.add(group)
+                db.flush()
+                for course_id in course_ids:
+                    db.add(RequirementGroupCourse(requirement_group_id=group.id, course_id=course_id))
+            rules = document.get("rules") or {}
+            for rule in rules.get("alternatives") or []:
+                db.add(CourseAlternative(
+                    program_id=program.id,
+                    course_id=rule["course_id"],
+                    alternative_course_id=rule["alternative_course_id"],
+                ))
+            for rule in rules.get("prerequisites") or []:
+                db.add(CoursePrerequisite(
+                    program_id=program.id,
+                    course_id=rule["course_id"],
+                    prereq_course_id=rule["prerequisite_course_id"],
+                    group_id=rule.get("group_id", 1),
+                ))
+        draft.status = "published"
+        draft.published_program_id = created_ids[0]
+        draft.updated_at = datetime.now(timezone.utc)
+        db.commit()
+    except HTTPException:
+        db.rollback()
+        raise
+    return {"status": "published", "program_ids": created_ids}
 
 
 @router.get("/equivalencies")
