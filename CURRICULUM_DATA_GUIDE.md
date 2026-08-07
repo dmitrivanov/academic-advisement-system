@@ -270,7 +270,158 @@ Verify all of the following:
 Attach screenshots of Program Selector, Academic Progress, and the semester plan to
 the pull request.
 
-### 12. Review the diff and open a draft PR
+### 12. Programs with a standard and an alternate degree map
+
+Some majors publish two official maps for the same catalog year: a standard
+four-semester (two-year) sequence and a lighter-load alternate, commonly five
+semesters. Treat the standard four-semester map as the default planning
+sequence. Record the alternate as a secondary pathway rather than a second
+program — both maps describe the same 60-credit requirement set, just paced
+differently. Compare both maps course-by-course; if a course only appears on
+one map (for example, a placement-gated alternate like an intensive
+composition course), do not add it as an interchangeable equivalent — record
+it as a placement limitation in source notes instead (see step 7 and the
+"Encode prerequisites correctly" rules).
+
+### 13. Retain official degree-map PDFs (only when the issue permits)
+
+By default, link to the official source rather than copying it. Only add a
+PDF to the repository when the assigned issue explicitly requests retaining
+it and the official source permits redistribution.
+
+When retention is permitted:
+
+1. Save each official PDF under `docs/degree_maps/` using a descriptive,
+   stable filename that encodes the institution, program, map variant, and
+   catalog year, for example `bmcc_mathematics_2_year_2025_2026.pdf` and
+   `bmcc_mathematics_5_semester_2025_2026.pdf`.
+2. Do not rename or overwrite another program's retained PDF.
+3. Record both source PDF URLs and both retained repository paths in the
+   source-notes file.
+
+### 14. Create and register a degree-map JSON file
+
+A degree-map JSON file drives official semester-sequencing guidance and
+source-PDF links shown on the Academic Progress screen. It is optional — add
+one only when the issue asks for official sequencing guidance or retained
+PDF links.
+
+1. Create `docs/bmcc_<program>_degree_map_<catalog_year>.json` (for example
+   `docs/bmcc_ds_as_degree_map_2024_2025.json`), following the structure of
+   an existing file such as `docs/bmcc_mat_degree_map_2025_2026.json`.
+2. Required top-level fields: `institution_code`, `program_code`,
+   `program_name`, `degree_type`, `catalog_year`, `default_semesters`,
+   `total_credits`, `source_pdf`, `faculty_override_note`, `semesters`
+   (an array with `number`, `target_credits`, `course_codes`, and optionally
+   `program_elective_slots`), and `sequence_notes` (a plain-language list of
+   the same placement rules, footnotes, and limitations recorded in source
+   notes).
+3. `course_codes` in each semester must use the exact `course_code` values
+   from the program's curriculum CSV, including placeholder codes such as
+   `FC-INDIVIDUAL` — not the names of specific pool courses like `SOC 100`,
+   unless that specific course is the only literal, non-placeholder row in
+   the CSV (see step 8 and step 15 below).
+4. When retaining more than one official PDF (step 13), add a `source_pdfs`
+   array of `{"label": ..., "url": ...}` objects alongside the single
+   `source_pdf` field. `source_pdf` keeps existing single-PDF consumers
+   working; `source_pdfs` is what the Academic Progress screen renders as
+   labeled links. Always add both fields together — do not remove
+   `source_pdf` to avoid breaking programs that only ever had one map.
+5. When an alternate pathway exists (step 12), add an `alternate_pathways`
+   array with a `name` and `semester_credit_targets` list. The values are
+   advisory pacing targets, not hard constraints — they do not need to sum
+   exactly to the literal credits of every course listed in that semester
+   when a group's published total absorbs credits across categories (see
+   the STEM-variant note in step 15).
+6. Register the new file in `frontend/db_progress_graph.html` by adding one
+   line to the `mapFiles` lookup inside `loadOfficialDegreeMap()`:
+   `PROGRAM_CODE: "/docs/bmcc_<program>_degree_map_<catalog_year>.json"`.
+   This is the only application-code change a curriculum-data issue should
+   make. The source-PDF links, "Official maps" label, safe
+   `target="_blank" rel="noopener"` attributes, and mobile layout are
+   already generic and apply automatically to any program with a
+   `source_pdfs` array — do not duplicate that rendering logic per program.
+
+### 15. Use `program_choice_group_adjustments.csv` for major-specific footnotes
+
+Many degree maps restrict a shared Pathways category (Common Core or
+Flexible Core) to a specific course, or add a second required slot in a
+category that is normally a single course. Before writing a restriction,
+classify the footnote:
+
+- **A stated requirement or restriction** ("students are required to take
+  X," "X satisfies this area," a specific course shown on every version of
+  the map with no other option offered) — add a row to
+  `docs/program_choice_group_adjustments.csv` with a program-prefixed
+  `derived_group_code` (for example `MAT_AS_LIFE_PHYSICAL`,
+  `ECO_AA_MATH_QUANT`) referencing the shared `base_group_code`, and use
+  that derived code — not the base code — as the `choice_group_code` on the
+  matching curriculum-CSV row.
+- **An advising recommendation** ("students are strongly encouraged to
+  take X," "consult an advisor") — do not restrict the shared pool. Use the
+  base group code directly (for example `FC_INDIVIDUAL`, `FC_US_EXPERIENCE`)
+  with a generic placeholder course code, and record the suggested default
+  course in source notes instead. Restricting a pool to a merely-recommended
+  course accidentally makes an elective mandatory (see step 8).
+
+If a major requires more credits in a Flexible Core category than the
+standard single-course allocation (for example two U.S. Experience in Its
+Diversity courses instead of one), add multiple curriculum-CSV rows that
+share the same `choice_group_code` with distinct, unique `course_code`
+values (for example `FC-US-EXP-1` and `FC-US-EXP-2`). Each row becomes an
+independent selectable slot in the progress UI; the underlying shared pool
+is unaffected.
+
+If a footnote describes a STEM-variant course (4 credits) filling a
+nominally 3-credit Common Core or Flexible Core slot, and the official
+source explains that the resulting excess credit rolls into a General
+Elective or similar catch-all requirement, do not attempt to move credits
+between groups — the current schema does not support that. Model the
+catch-all requirement as a single `program_elective`-type row sized to the
+full published total (see `MAT-AS-GENERAL` / `ECO-AA-GENERAL` for the
+pattern) and explain the mechanism in source notes.
+
+Never invent a new shared Pathways choice-group (a new pool of courses
+usable by multiple future majors) without maintainer approval. If a
+footnote describes an open-ended pool that has no existing shared group code
+(for example "any History course, or one course from several other
+departments"), add a single documented placeholder row with no
+`choice_group_code`, and flag it under "Ambiguities requiring maintainer
+review" in source notes rather than guessing at pool membership.
+
+### 16. Add focused automated tests for the new curriculum
+
+Add a test file under `tests/` named for the program (for example
+`tests/test_ds_as_curriculum.py`). Follow the structure of an existing
+curriculum test file. At minimum, cover:
+
+1. `validate_file(...)` from `scripts/validate_curriculum_csv.py` returns no
+   errors for the new CSV.
+2. Every row has the exact program identity and catalog year.
+3. The distinct group `required_credits` values reconcile to the official
+   published total.
+4. Key required courses (and their prerequisites) are present with the
+   correct group and credits.
+5. Elective groups list more credits than `required_credits`, and required
+   core courses are excluded from the elective pool, so a choice cannot be
+   mistaken for a mandatory list.
+6. Program-specific `program_choice_group_adjustments.csv` rows match what
+   the degree map actually restricts.
+7. No duplicate `(group_name, course_code)` rows, and every `source` URL is
+   a well-formed official HTTPS URL.
+8. If a degree-map JSON file was added (step 14): both the default and any
+   alternate sequence total the published credits, and any retained PDFs
+   (step 13) are both present on disk and referenced in `source_pdfs`.
+9. `frontend/db_progress_graph.html` registers the new program in
+   `mapFiles`, if a degree-map JSON file was added.
+
+When reading `frontend/db_progress_graph.html` or other repository text
+files from a test, always pass `encoding="utf-8"` explicitly. Relying on the
+platform default encoding fails on Windows, where Python's default text
+encoding is not UTF-8 and the file contains non-ASCII punctuation elsewhere
+in the page.
+
+### 17. Review the diff and open a draft PR
 
 ```bash
 git status
@@ -280,6 +431,16 @@ git add docs/ds_as_courses.csv docs/ds_as_sources.md
 git commit -m "Add BMCC Data Science curriculum"
 git push -u origin intern/issue-24-ds-as-curriculum
 ```
+
+If the issue also asked for a degree-map JSON file, retained PDFs, Pathways
+adjustments, or automated tests (steps 13-16), stage only the additional
+files those steps actually created — for example
+`docs/bmcc_ds_as_degree_map_2024_2025.json`,
+`docs/degree_maps/bmcc_data_science_2_year_2024_2025.pdf`,
+`docs/program_choice_group_adjustments.csv`,
+`frontend/db_progress_graph.html`, and `tests/test_ds_as_curriculum.py`.
+Review `git diff -- frontend/db_progress_graph.html` line by line — it should
+contain only the one new `mapFiles` entry, nothing else.
 
 The pull request must identify the issue, official sources, effective year, validator
 result, warnings/ambiguities, local seed result, and manual tests. Only the
