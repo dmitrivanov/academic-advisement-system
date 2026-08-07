@@ -82,7 +82,7 @@ Use the bins as follows:
 | Common Core | Required Core placeholders or specifically required Core courses |
 | Flexible Core | Flexible Core placeholders or specifically required Flexible Core courses |
 
-The displayed number is the sum of all course records currently in the bin. It does not yet represent a configurable required-credit target. For an OR pair, the displayed total can therefore exceed the credits the student must actually complete.
+The displayed number is the sum of all course records currently in the bin. Enter the official **Credits required** and/or **Courses required** beside it. For an OR pair, available credits can exceed required credits; this is expected when multiple options satisfy one requirement.
 
 A course may appear in more than one bin when the official curriculum intentionally allows or requires double placement. Validation reports this as a warning, and the student progress system synchronizes completion state for the same course.
 
@@ -145,14 +145,16 @@ An adjustment may:
 - change required credits or required course count;
 - add a brief student-facing explanation.
 
-The constructor currently records only the **group code and student-facing note** in its versioned draft document. Example:
+The constructor records the base group, placeholder course, restriction fields, overrides, and student-facing note in its versioned draft document. Example:
 
 ```text
 Group code: BMCC-FLEX-SCIENTIFIC-WORLD
 Note: For this major, choose one course from PHY 110, PHY 210, or PHY 215.
 ```
 
-The current constructor does **not** yet apply an include/exclude list to the published choice group. For a real restriction, enter the full rule in `docs/program_choice_group_adjustments.csv` and validate it using the normal CSV workflow. A note by itself does not restrict the courses a student can select.
+Use **Only allow selected courses** as an allow-list, **Allowed subject prefixes** for subject-wide restrictions, and **Exclude selected courses** to remove exceptions. Publishing materializes a program-specific derived choice group and connects the selected placeholder to it. If neither allow-list nor subject prefixes are supplied, the derived group begins with the complete base membership and applies only exclusions.
+
+The constructor writes the derived group to the database, but it does not yet export the equivalent row to `docs/program_choice_group_adjustments.csv`. Record the same reviewed adjustment in the CSV before a future full reseed.
 
 Never edit the college-wide base group to enforce a restriction belonging to only one major.
 
@@ -167,12 +169,12 @@ PSY-GEN-GENERAL — General Elective or Common Core STEM excess credits
 
 A placeholder must never be selectable when its `choice_group_code` is empty or points to a group without courses.
 
-The current constructor can place an existing placeholder course in a bin, but it cannot create or edit the placeholder’s pool membership. Until the elective-pool editor is implemented:
+The constructor supports two pool mechanisms:
 
-1. Define the pool in the canonical CSV architecture.
-2. Seed and verify that the placeholder opens a complete course selector.
-3. Add the existing placeholder course to the constructor bin.
-4. Verify the published program manually on the progress page.
+1. Use an **elective pool** rule for a named “choose N courses/credits” requirement. Enter its destination, required credits/course count, and all course options.
+2. Use a **Core adjustment** when an existing placeholder must open a restricted subset of a canonical Pathways group.
+
+The constructor still cannot create a missing placeholder course. Create it through the reviewed catalog-data workflow first, then select it in the constructor.
 
 ## 10. Save, version, preview, and validate
 
@@ -211,7 +213,7 @@ draft → in_review → approved → published
 
 - **Submit for review** saves and validates the draft before moving it to `in_review`.
 - **Approve** is allowed only from `in_review`.
-- A reviewer can return an in-review draft as `changes_requested` through the API; a dedicated reviewer control is still pending in the page.
+- **Request changes** returns an in-review draft to editable `changes_requested` status.
 - **Publish** is allowed only after approval and another successful server validation.
 
 Publishing creates new program, requirement-group, alternative, and prerequisite records in one database transaction. If any protected operation fails, the transaction is rolled back.
@@ -222,18 +224,14 @@ Restoring a saved version copies that snapshot into the editable draft and retur
 
 The editor is not yet a complete replacement for the CSV curriculum workflow. These features are still pending:
 
-- credit targets and custom credit splits for bins;
-- broad elective pools and “choose N courses/credits” rules;
 - three-or-more-course alternative sets;
 - mixed AND/OR prerequisite expressions;
-- Core adjustment include/exclude course picker;
-- subject-prefix adjustment rules;
 - creating missing courses and placeholders;
 - custom sequences and co-requisites;
 - importing requirements from program-map PDFs;
 - exact completed-courses-page preview;
-- draft deletion, concentration rename/removal, and custom concentration codes;
-- reviewer comments and a page control for requesting changes;
+- custom concentration codes;
+- reviewer comments;
 - CSV import/export and synchronization with repository source files;
 - rollback of already published live program records.
 

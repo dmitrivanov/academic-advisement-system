@@ -138,6 +138,9 @@ def curriculum_validation(draft: CurriculumDraft, db: Session):
             missing = [course_id for course_id in values if course_id not in known_ids]
             if missing:
                 errors.append(f"{name or f'Concentration {index}'} references missing course IDs: {missing}.")
+            requirement = (concentration.get("bin_requirements") or {}).get(key) or {}
+            if requirement.get("required_course_count") and requirement["required_course_count"] > len(values):
+                errors.append(f"{name or f'Concentration {index}'} requires more courses in {key} than it provides.")
         if not selected:
             errors.append(f"{name or f'Concentration {index}'} has no curriculum courses.")
         duplicates = sorted({course_id for course_id in selected if selected.count(course_id) > 1})
@@ -149,6 +152,41 @@ def curriculum_validation(draft: CurriculumDraft, db: Session):
             ids = [value for value in rule.values() if isinstance(value, int)]
             if any(course_id not in known_ids for course_id in ids):
                 errors.append(f"A {rule_type[:-1]} rule references a missing course.")
+    placeholder_ids = []
+    for pool in rules.get("elective_pools") or []:
+        if not str(pool.get("name") or "").strip():
+            errors.append("An elective pool is missing its name.")
+        if not (pool.get("required_credits") or pool.get("required_course_count")):
+            errors.append(f"Elective pool {pool.get('name') or ''} needs a credit or course requirement.")
+        if not pool.get("course_ids"):
+            errors.append(f"Elective pool {pool.get('name') or ''} has no course options.")
+        if any(course_id not in known_ids for course_id in pool.get("course_ids") or []):
+            errors.append(f"Elective pool {pool.get('name') or ''} references a missing course.")
+    for adjustment in rules.get("core_adjustments") or []:
+        placeholder_id = adjustment.get("placeholder_course_id")
+        placeholder_ids.append(placeholder_id)
+        if placeholder_id not in known_ids:
+            errors.append("A Core adjustment references a missing placeholder course.")
+        concentration_index = adjustment.get("concentration_index", 0)
+        if concentration_index < 0 or concentration_index >= len(concentrations):
+            errors.append("A Core adjustment references a missing concentration.")
+        elif placeholder_id not in [course_id for values in (concentrations[concentration_index].get("bins") or {}).values() for course_id in values]:
+            errors.append("A Core adjustment placeholder must also be placed in a curriculum bin.")
+        adjusted_ids = (adjustment.get("include_course_ids") or []) + (adjustment.get("exclude_course_ids") or [])
+        if any(course_id not in known_ids for course_id in adjusted_ids):
+            errors.append("A Core adjustment references a missing included or excluded course.")
+        institution = db.query(Institution).filter_by(id=draft.institution_id).first() if draft.institution_id else None
+        base_group = db.query(ChoiceGroup).filter_by(
+            institution_id=institution.id if institution else None,
+            code=adjustment.get("base_group_code"),
+        ).first() if institution else None
+        if not base_group:
+            errors.append(f"Core adjustment base group {adjustment.get('base_group_code') or '(missing)'} does not exist for this campus.")
+        if not str(adjustment.get("note") or "").strip():
+            errors.append("A Core adjustment is missing its student-facing note.")
+    repeated_placeholders = {course_id for course_id in placeholder_ids if course_id and placeholder_ids.count(course_id) > 1}
+    if repeated_placeholders:
+        errors.append("Each Core adjustment must use a unique placeholder course.")
     return {"valid": not errors, "errors": errors, "warnings": warnings}
 
 
@@ -321,6 +359,22 @@ def update_curriculum_draft(
     return serialize_draft(draft)
 
 
+@router.delete("/curriculum-drafts/{draft_id}")
+def delete_curriculum_draft(
+    draft_id: int,
+    _admin=Depends(require_admin),
+    db: Session = Depends(get_db),
+):
+    draft = db.query(CurriculumDraft).filter_by(id=draft_id).first()
+    if not draft:
+        raise HTTPException(status_code=404, detail="Curriculum draft not found")
+    if draft.status == "published":
+        raise HTTPException(status_code=409, detail="Published curriculum history cannot be deleted")
+    db.delete(draft)
+    db.commit()
+    return {"status": "deleted", "id": draft_id}
+
+
 @router.post("/curriculum-drafts/{draft_id}/versions")
 def snapshot_curriculum_draft(
     draft_id: int,
@@ -450,7 +504,15 @@ def publish_curriculum_draft(
                 course_ids = concentration.get("bins", {}).get(key) or []
                 if not course_ids:
                     continue
-                group = RequirementGroup(program_id=program.id, name=label, group_type=group_type, display_order=order)
+                requirement = concentration.get("bin_requirements", {}).get(key, {})
+                group = RequirementGroup(
+                    program_id=program.id,
+                    name=label,
+                    group_type=group_type,
+                    required_credits=requirement.get("required_credits"),
+                    required_course_count=requirement.get("required_course_count"),
+                    display_order=order,
+                )
                 db.add(group)
                 db.flush()
                 for course_id in course_ids:
@@ -469,11 +531,70 @@ def publish_curriculum_draft(
                     prereq_course_id=rule["prerequisite_course_id"],
                     group_id=rule.get("group_id", 1),
                 ))
+            for pool_index, pool in enumerate(rules.get("elective_pools") or []):
+                if pool.get("concentration_index", 0) != index:
+                    continue
+                pool_group = RequirementGroup(
+                    program_id=program.id,
+                    name=pool["name"],
+                    group_type=pool.get("bin", "major_electives"),
+                    required_credits=pool.get("required_credits"),
+                    required_course_count=pool.get("required_course_count"),
+                    display_order=10 + pool_index,
+                )
+                db.add(pool_group)
+                db.flush()
+                for course_id in pool["course_ids"]:
+                    db.add(RequirementGroupCourse(requirement_group_id=pool_group.id, course_id=course_id))
+            for adjustment_index, adjustment in enumerate(rules.get("core_adjustments") or []):
+                if adjustment.get("concentration_index", 0) != index:
+                    continue
+                base_group = db.query(ChoiceGroup).filter_by(
+                    institution_id=draft.institution_id,
+                    code=adjustment["base_group_code"],
+                ).first()
+                base_ids = {
+                    link.course_id
+                    for link in db.query(ChoiceGroupCourse).filter_by(choice_group_id=base_group.id).all()
+                }
+                allowed_ids = set(adjustment.get("include_course_ids") or [])
+                allowed_subjects = set(adjustment.get("include_subject_codes") or [])
+                if allowed_ids or allowed_subjects:
+                    subject_ids = {
+                        course.id for course in db.query(Course).filter(Course.id.in_(base_ids)).all()
+                        if course.code.split()[0].upper() in allowed_subjects
+                    }
+                    selected_ids = base_ids & (allowed_ids | subject_ids)
+                else:
+                    selected_ids = set(base_ids)
+                selected_ids -= set(adjustment.get("exclude_course_ids") or [])
+                if not selected_ids:
+                    raise HTTPException(status_code=422, detail=f"Core adjustment {adjustment['base_group_code']} produces an empty course pool")
+                derived_code = f"{code}-{adjustment['base_group_code']}".upper()
+                derived = ChoiceGroup(
+                    institution_id=draft.institution_id,
+                    code=derived_code,
+                    name=f"{base_group.name} - {program_name}",
+                    group_type=base_group.group_type,
+                    required_credits=adjustment.get("required_credits") if adjustment.get("required_credits") is not None else base_group.required_credits,
+                    required_course_count=adjustment.get("required_course_count") if adjustment.get("required_course_count") is not None else base_group.required_course_count,
+                    advising_note=adjustment["note"],
+                    source=metadata["source_url"],
+                )
+                db.add(derived)
+                db.flush()
+                for course_id in sorted(selected_ids):
+                    db.add(ChoiceGroupCourse(choice_group_id=derived.id, course_id=course_id))
+                placeholder = db.query(Course).filter_by(id=adjustment["placeholder_course_id"]).first()
+                placeholder.choice_group_code = derived_code
         draft.status = "published"
         draft.published_program_id = created_ids[0]
         draft.updated_at = datetime.now(timezone.utc)
         db.commit()
     except HTTPException:
+        db.rollback()
+        raise
+    except Exception:
         db.rollback()
         raise
     return {"status": "published", "program_ids": created_ids}
