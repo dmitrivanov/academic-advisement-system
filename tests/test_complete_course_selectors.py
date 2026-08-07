@@ -43,6 +43,10 @@ class CompleteCourseSelectorTests(unittest.TestCase):
         self.assertIn("choice-subject-section", source)
         self.assertIn("choice-sequence-track", source)
         self.assertIn("ACTIVE_CHOICE_GROUP?.advising_note", source)
+        self.assertIn("function rebuildCompletedCourses", source)
+        self.assertIn("function updateChoiceSatisfaction", source)
+        self.assertIn("Requirement satisfied", source)
+        self.assertIn('status === "not_needed" || status === "locked"', source)
 
         api_source = (ROOT / "api_db_routes.py").read_text(encoding="utf-8")
         self.assertIn('"advising_note": group.advising_note', api_source)

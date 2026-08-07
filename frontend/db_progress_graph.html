@@ -738,6 +738,27 @@ button:hover {
   border: 1px solid #e6eaf2;
 }
 
+.choice-modal.requirement-satisfied {
+  border-color: #22c55e;
+  box-shadow: 0 20px 55px rgba(22, 163, 74, 0.22);
+  background: linear-gradient(180deg, #f0fdf4 0, #ffffff 190px);
+}
+
+.choice-satisfaction {
+  margin: 0 0 12px;
+  padding: 10px 13px;
+  border-radius: 10px;
+  background: #f1f5f9;
+  color: #475569;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.choice-satisfaction.satisfied {
+  background: #dcfce7;
+  color: #166534;
+}
+
 .choice-modal-header {
   display: flex;
   justify-content: space-between;
@@ -837,6 +858,23 @@ button:hover {
 .choice-course-option.selected {
   border-color: #22c55e;
   background: #dcfce7;
+}
+
+.choice-course-option.completed-elsewhere {
+  border-color: #60a5fa;
+  background: #eff6ff;
+}
+
+.choice-course-option.locked {
+  opacity: 0.52;
+  cursor: not-allowed;
+  filter: grayscale(0.35);
+}
+
+.choice-course-option.locked:hover {
+  border-color: #d7deea;
+  background: #f8fbff;
+  transform: none;
 }
 
 .choice-selected-note {
@@ -1702,6 +1740,7 @@ body { background: #f5f5f7; color: #1d1d1f; }
   </div>
   <input id="choiceCourseSearch" class="choice-search" placeholder="Search course code or title..." oninput="renderChoiceOptions()">
   <div id="choiceRequirementNote" class="choice-requirement-note hidden"></div>
+  <div id="choiceSatisfaction" class="choice-satisfaction"></div>
   <div id="choiceCourseOptions" class="choice-course-list"></div>
 </div>
 
@@ -1714,6 +1753,7 @@ let PROGRAM_AVAILABILITY = {};
 let CURRENT_REQUIREMENTS = null;
 let CURRENT_TAB = "program";
 let COMPLETED_COURSES = new Set();
+let DIRECT_COMPLETED_COURSES = new Set();
 let SHOW_NOT_NEEDED = false;
 let CHOICE_SELECTIONS = {};
 let ALTERNATIVE_SELECTIONS = {};
@@ -2175,6 +2215,7 @@ function populateInstitutionSelect() {
 
 async function handleInstitutionChange() {
   COMPLETED_COURSES.clear();
+  DIRECT_COMPLETED_COURSES.clear();
   CHOICE_SELECTIONS = {};
   ALTERNATIVE_SELECTIONS = {};
   await populateProgramSelect();
@@ -2507,13 +2548,21 @@ function selectedAlternativeCode(group, courses, completed) {
 
 function requiredCourseAllocations(completed) {
   const allocated = new Set();
-  getGroupsByTypes(["program_required"]).forEach(group => {
+  getGroupsByTypes(["common_core", "flexible_core", "program_required"]).forEach(group => {
     alternativeComponents(group.courses).forEach(component => {
       const selected = selectedAlternativeCode(group, component, completed);
-      if (selected) allocated.add(selected);
+      const course = component.find(item => item.code === selected);
+      if (selected && course && !isChoicePlaceholder(course)) allocated.add(selected);
     });
   });
   return allocated;
+}
+
+function courseReservedForExplicitRequirement(code) {
+  return CURRENT_REQUIREMENTS.groups.some(group =>
+    group.group_type !== "program_elective" &&
+    group.courses.some(course => course.code === code && !isChoicePlaceholder(course))
+  );
 }
 
 function hasCompletedAlternative(code, completed) {
@@ -2786,7 +2835,7 @@ function createSelectableCourseCard(course) {
   label.className = `course-card ${status}`;
 
   const checked = completed.has(course.code) ? "checked" : "";
-  const disabled = status === "not_needed" ? "disabled" : "";
+  const disabled = status === "not_needed" || status === "locked" ? "disabled" : "";
 
   const statusText = status === "not_needed"
     ? `<div class="course-detail"><strong>Status:</strong> Not needed / alternative satisfied</div>`
@@ -2888,23 +2937,32 @@ function createAlternativeCourseCard(courses, group) {
 
 function handleAlternativeCourseChange(checkbox, key, alternativeCodes) {
   if (checkbox.checked) {
-    COMPLETED_COURSES.add(checkbox.value);
+    DIRECT_COMPLETED_COURSES.add(checkbox.value);
     ALTERNATIVE_SELECTIONS[key] = checkbox.value;
   } else {
-    COMPLETED_COURSES.delete(checkbox.value);
+    DIRECT_COMPLETED_COURSES.delete(checkbox.value);
     delete ALTERNATIVE_SELECTIONS[key];
   }
 
   alternativeCodes.filter(code => code !== checkbox.value).forEach(code => {
     if (ALTERNATIVE_SELECTIONS[key] === code) delete ALTERNATIVE_SELECTIONS[key];
   });
+  rebuildCompletedCourses();
   refreshProgressViews();
 }
 
 function clearAlternativeSelection(key, selectedCode) {
   delete ALTERNATIVE_SELECTIONS[key];
-  COMPLETED_COURSES.delete(selectedCode);
+  DIRECT_COMPLETED_COURSES.delete(selectedCode);
+  rebuildCompletedCourses();
   refreshProgressViews();
+}
+
+function rebuildCompletedCourses() {
+  COMPLETED_COURSES = new Set(DIRECT_COMPLETED_COURSES);
+  Object.keys(CHOICE_SELECTIONS).forEach(placeholderCode => {
+    selectedChoiceCourses(placeholderCode).forEach(course => COMPLETED_COURSES.add(course.code));
+  });
 }
 
 function refreshProgressViews() {
@@ -2930,13 +2988,18 @@ async function openChoiceModal(placeholderCode) {
   document.getElementById("choiceModalSubtitle").textContent = `Select approved courses totaling ${placeholder.credits} credits for ${placeholder.choice_group_code}.`;
   document.getElementById("choiceCourseSearch").value = "";
   document.getElementById("choiceRequirementNote").classList.add("hidden");
+  document.getElementById("choiceModal").classList.remove("requirement-satisfied");
+  document.getElementById("choiceSatisfaction").classList.remove("satisfied");
+  document.getElementById("choiceSatisfaction").textContent = "Loading requirement progress...";
   document.getElementById("choiceCourseOptions").innerHTML = "Loading...";
   document.getElementById("choiceModalBackdrop").classList.remove("hidden");
   document.getElementById("choiceModal").classList.remove("hidden");
 
   try {
     const institutionCode = CURRENT_REQUIREMENTS?.program?.institution_code || document.getElementById("institutionSelect")?.value || "BMCC";
-    const data = await fetchJson(`/api/db/choice-groups/${placeholder.choice_group_code}/courses?institution_code=${institutionCode}`);
+    const programCode = CURRENT_REQUIREMENTS?.program?.code || "";
+    const params = new URLSearchParams({institution_code: institutionCode, program_code: programCode});
+    const data = await fetchJson(`/api/db/choice-groups/${placeholder.choice_group_code}/courses?${params.toString()}`);
     ACTIVE_CHOICE_OPTIONS = data.courses || [];
     ACTIVE_CHOICE_GROUP = data.group || null;
     const note = document.getElementById("choiceRequirementNote");
@@ -2994,8 +3057,14 @@ function groupedChoiceCourses(courses) {
 
 function createChoiceOption(course, selected, sequencePosition, sequenceLength) {
   const div = document.createElement("div");
-  div.className = `choice-course-option ${selected.some(item => item.code === course.code) ? "selected" : ""}`;
-  div.onclick = () => selectChoiceCourse(course);
+  const applied = selected.some(item => item.code === course.code);
+  const completedElsewhere = !applied && COMPLETED_COURSES.has(course.code);
+  const currentCourse = allCoursesFromGroups()[course.code] || course;
+  const status = getCourseStatus(course.code, currentCourse, getCompletedCourses());
+  const allocatedElsewhere = !applied && courseReservedForExplicitRequirement(course.code);
+  const unavailable = status === "locked" || status === "not_needed" || allocatedElsewhere;
+  div.className = `choice-course-option ${applied ? "selected" : ""} ${completedElsewhere ? "completed-elsewhere" : ""} ${unavailable ? "locked" : ""}`;
+  div.onclick = unavailable ? null : () => selectChoiceCourse(course);
   const sequenceLabel = sequenceLength > 1
     ? `<div class="choice-sequence-label">${sequencePosition + 1} of ${sequenceLength} in catalog-number order</div>`
     : "";
@@ -3003,15 +3072,36 @@ function createChoiceOption(course, selected, sequencePosition, sequenceLength) 
     <div class="course-code">${course.code}</div>
     <div class="course-title">${course.title}</div>
     <div class="course-detail">Credits: ${course.credits}</div>
+    ${status === "locked" ? `<div class="course-detail"><strong>Unavailable:</strong> complete ${formatPrereqs(currentCourse.prereqs)} first.</div>` : ""}
+    ${status === "not_needed" ? `<div class="course-detail"><strong>Unavailable:</strong> this course is not needed for the remaining requirement.</div>` : ""}
+    ${completedElsewhere && !allocatedElsewhere ? `<div class="course-detail"><strong>Completed elsewhere.</strong> Select to apply it here.</div>` : ""}
+    ${allocatedElsewhere ? `<div class="course-detail"><strong>Reserved for its listed Core or major requirement.</strong></div>` : ""}
+    ${applied ? `<div class="course-detail"><strong>Applied to this requirement.</strong></div>` : ""}
     ${sequenceLabel}
   `;
   return div;
+}
+
+function updateChoiceSatisfaction() {
+  const courses = allCoursesFromGroups();
+  const placeholder = courses[ACTIVE_CHOICE_PLACEHOLDER];
+  const required = Number(placeholder?.credits || 0);
+  const selectedCredits = selectedChoiceCredits(ACTIVE_CHOICE_PLACEHOLDER);
+  const satisfied = required > 0 && selectedCredits >= required;
+  const status = document.getElementById("choiceSatisfaction");
+  const modal = document.getElementById("choiceModal");
+  status.classList.toggle("satisfied", satisfied);
+  modal.classList.toggle("requirement-satisfied", satisfied);
+  status.textContent = satisfied
+    ? `✓ Requirement satisfied · ${selectedCredits} selected credits / ${required} required`
+    : `${selectedCredits} selected credits / ${required} required`;
 }
 
 function renderChoiceOptions() {
   const container = document.getElementById("choiceCourseOptions");
   const query = document.getElementById("choiceCourseSearch").value.trim().toLowerCase();
   const selected = selectedChoiceCourses(ACTIVE_CHOICE_PLACEHOLDER);
+  updateChoiceSatisfaction();
 
   const filtered = ACTIVE_CHOICE_OPTIONS.filter(course => {
     const haystack = `${course.code} ${course.title}`.toLowerCase();
@@ -3056,12 +3146,14 @@ function selectChoiceCourse(course) {
     delete CHOICE_SELECTIONS[ACTIVE_CHOICE_PLACEHOLDER];
   }
 
+  rebuildCompletedCourses();
   renderChoiceOptions();
   refreshProgressViews();
 }
 
 function clearChoiceSelection(placeholderCode) {
   delete CHOICE_SELECTIONS[placeholderCode];
+  rebuildCompletedCourses();
 
   renderCompletedCourseGrid();
   renderGraph();
@@ -3089,10 +3181,12 @@ function toggleSatisfiedCourses() {
 }
 function handleCourseCheckboxChange(checkbox) {
   if (checkbox.checked) {
-    COMPLETED_COURSES.add(checkbox.value);
+    DIRECT_COMPLETED_COURSES.add(checkbox.value);
   } else {
-    COMPLETED_COURSES.delete(checkbox.value);
+    DIRECT_COMPLETED_COURSES.delete(checkbox.value);
   }
+
+  rebuildCompletedCourses();
 
   renderCompletedCourseGrid();
   renderGraph();
@@ -3104,6 +3198,7 @@ function handleCourseCheckboxChange(checkbox) {
 
 function clearCompleted() {
   COMPLETED_COURSES.clear();
+  DIRECT_COMPLETED_COURSES.clear();
   CHOICE_SELECTIONS = {};
   ALTERNATIVE_SELECTIONS = {};
 

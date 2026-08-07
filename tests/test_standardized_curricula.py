@@ -88,14 +88,20 @@ class StandardizedCurriculaTests(unittest.TestCase):
         }
         self.assertEqual(expected_electives, by_group["Program Electives"])
         self.assertEqual(
-            {"CSC 211", "CSC 215", "CSC 231", "CSC 331", "CSC 350", "MAT 302"},
+            {"MAT 301", "CSC 211", "CSC 215", "CSC 231", "CSC 331", "CSC 350", "MAT 302"},
             by_group["Curriculum Requirements"],
         )
 
         adjustments = {row["derived_group_code"]: row for row in rows("program_choice_group_adjustments.csv")}
-        self.assertEqual("MAT 206|MAT 301", adjustments["CS_MATH_QUANT"]["include_course_codes"])
+        self.assertEqual("MAT 206", adjustments["CS_MATH_QUANT"]["include_course_codes"])
         self.assertEqual("PHY 215", adjustments["CS_LIFE_PHYSICAL"]["include_course_codes"])
         self.assertEqual("SPE 100|SPE 102", adjustments["CS_CREATIVE"]["include_course_codes"])
+
+    def test_cs_math_sequence_matches_degree_map(self):
+        curriculum = {row["course_code"]: row for row in rows("cs_courses.csv")}
+        self.assertEqual("CS_MATH_QUANT", curriculum["CS-MATH"]["choice_group_code"])
+        self.assertEqual("MAT 206", curriculum["MAT 301"]["prerequisites"])
+        self.assertEqual("MAT 301", curriculum["MAT 302"]["prerequisites"])
 
     def test_ccny_placeholders_are_bound_to_separate_ccny_pools(self):
         curriculum = rows("ccny_cs_bs_courses.csv")

@@ -13,7 +13,10 @@ The published 2025-2026 requirements determine the Common Core restrictions,
 required courses, and finite program-elective lists. CIS and CNT department-elective
 pools use the published ACC/BUS/CIS/CSC/GIS/MMP subject rule and exclude CIS 100.
 Computer Science retains its program selector course set while adding the published
-CIS 317 option and correcting MAT 206-or-MAT 301, PHY 215, and SPE 100-or-SPE 102.
+CIS 317 option. The official degree map resolves an ambiguity in the summary table:
+MAT 206 satisfies Common Core, while MAT 301 and MAT 302 remain a required curriculum
+sequence. CSC 101 and CSC 111 remain in Flexible Core as the required Scientific
+World courses. PHY 215 and SPE 100-or-SPE 102 retain their published Core placement.
 
 ## CCNY
 

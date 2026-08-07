@@ -494,6 +494,7 @@ def get_choice_groups(db: Session = Depends(get_db)):
 def get_choice_group_courses(
     group_code: str,
     institution_code: str = "BMCC",
+    program_code: str | None = None,
     db: Session = Depends(get_db),
 ):
     institution = db.query(Institution).filter_by(
@@ -513,18 +514,34 @@ def get_choice_group_courses(
 
     links = db.query(ChoiceGroupCourse).filter_by(choice_group_id=group.id).all()
 
+    program = None
+    if program_code:
+        program = (
+            db.query(Program)
+            .join(Department, Program.department_id == Department.id)
+            .filter(
+                Department.institution_id == institution.id,
+                Program.code == program_code.strip().upper(),
+            )
+            .first()
+        )
+
     courses = []
     for link in links:
         course = db.query(Course).filter_by(id=link.course_id).first()
         if not course:
             continue
 
-        courses.append({
-            "id": course.id,
+        payload = build_course_payload(db, program.id, course) if program else {
             "code": course.code,
             "title": course.title,
             "credits": course.credits,
-        })
+            "choice_group_code": course.choice_group_code,
+            "prereqs": [],
+            "alternatives": [],
+        }
+        payload["id"] = course.id
+        courses.append(payload)
 
     courses.sort(key=lambda c: c["code"])
 
