@@ -36,6 +36,17 @@ class CompleteCourseSelectorTests(unittest.TestCase):
         self.assertIn("Choose approved courses totaling", source)
         self.assertIn("Math.min(selectedChoiceCredits(code)", source)
 
+    def test_large_selectors_are_grouped_and_explain_adjustments(self):
+        source = (ROOT / "frontend" / "db_progress_graph.html").read_text(encoding="utf-8")
+        self.assertIn("function groupedChoiceCourses", source)
+        self.assertIn("function choiceCourseNumber", source)
+        self.assertIn("choice-subject-section", source)
+        self.assertIn("choice-sequence-track", source)
+        self.assertIn("ACTIVE_CHOICE_GROUP?.advising_note", source)
+
+        api_source = (ROOT / "api_db_routes.py").read_text(encoding="utf-8")
+        self.assertIn('"advising_note": group.advising_note', api_source)
+
     def test_seed_populates_institutional_elective_groups_after_majors(self):
         source = (ROOT / "seed_database.py").read_text(encoding="utf-8")
         self.assertIn("def seed_institutional_elective_groups", source)

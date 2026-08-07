@@ -536,6 +536,8 @@ def get_choice_group_courses(
             "group_type": group.group_type,
             "required_credits": group.required_credits,
             "required_course_count": group.required_course_count,
+            "advising_note": group.advising_note,
+            "source": group.source,
             "institution": institution.name,
             "institution_code": institution.code,
         },

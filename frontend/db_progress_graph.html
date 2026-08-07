@@ -758,10 +758,65 @@ button:hover {
 }
 
 .choice-course-list {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
-  gap: 12px;
   margin-top: 16px;
+}
+
+.choice-requirement-note {
+  margin: 0 0 12px;
+  padding: 11px 13px;
+  border: 1px solid #bfdbfe;
+  border-left: 4px solid #2563eb;
+  border-radius: 10px;
+  background: #eff6ff;
+  color: #1e3a8a;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.choice-subject-section + .choice-subject-section {
+  margin-top: 20px;
+  padding-top: 18px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.choice-subject-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.choice-subject-title { font-weight: 800; color: #172033; }
+.choice-subject-count { color: #667085; font-size: 12px; }
+
+.choice-sequence-track {
+  display: flex;
+  gap: 22px;
+  overflow-x: auto;
+  padding: 2px 2px 10px;
+}
+
+.choice-sequence-track .choice-course-option {
+  position: relative;
+  flex: 0 0 220px;
+}
+.choice-sequence-track .choice-course-option:not(:last-child)::after {
+  content: "\2192";
+  position: absolute;
+  right: -18px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #94a3b8;
+  font-weight: 900;
+}
+
+.choice-sequence-label {
+  display: inline-block;
+  margin-top: 7px;
+  color: #475569;
+  font-size: 11px;
+  font-weight: 700;
 }
 
 .choice-course-option {
@@ -1646,6 +1701,7 @@ body { background: #f5f5f7; color: #1d1d1f; }
     <button class="advisor-close" onclick="closeChoiceModal()">Close</button>
   </div>
   <input id="choiceCourseSearch" class="choice-search" placeholder="Search course code or title..." oninput="renderChoiceOptions()">
+  <div id="choiceRequirementNote" class="choice-requirement-note hidden"></div>
   <div id="choiceCourseOptions" class="choice-course-list"></div>
 </div>
 
@@ -1663,6 +1719,7 @@ let CHOICE_SELECTIONS = {};
 let ALTERNATIVE_SELECTIONS = {};
 let ACTIVE_CHOICE_PLACEHOLDER = null;
 let ACTIVE_CHOICE_OPTIONS = [];
+let ACTIVE_CHOICE_GROUP = null;
 let STUDENT_STATUS = "returning";
 let CURRENT_PLANNING_MODE = "manual";
 let LAST_DEGREE_PLAN = [];
@@ -2867,10 +2924,12 @@ async function openChoiceModal(placeholderCode) {
 
   ACTIVE_CHOICE_PLACEHOLDER = placeholderCode;
   ACTIVE_CHOICE_OPTIONS = [];
+  ACTIVE_CHOICE_GROUP = null;
 
   document.getElementById("choiceModalTitle").textContent = placeholder.title || placeholder.code;
   document.getElementById("choiceModalSubtitle").textContent = `Select approved courses totaling ${placeholder.credits} credits for ${placeholder.choice_group_code}.`;
   document.getElementById("choiceCourseSearch").value = "";
+  document.getElementById("choiceRequirementNote").classList.add("hidden");
   document.getElementById("choiceCourseOptions").innerHTML = "Loading...";
   document.getElementById("choiceModalBackdrop").classList.remove("hidden");
   document.getElementById("choiceModal").classList.remove("hidden");
@@ -2879,6 +2938,15 @@ async function openChoiceModal(placeholderCode) {
     const institutionCode = CURRENT_REQUIREMENTS?.program?.institution_code || document.getElementById("institutionSelect")?.value || "BMCC";
     const data = await fetchJson(`/api/db/choice-groups/${placeholder.choice_group_code}/courses?institution_code=${institutionCode}`);
     ACTIVE_CHOICE_OPTIONS = data.courses || [];
+    ACTIVE_CHOICE_GROUP = data.group || null;
+    const note = document.getElementById("choiceRequirementNote");
+    const explanation = ACTIVE_CHOICE_GROUP?.advising_note;
+    if (explanation) {
+      note.textContent = explanation;
+      note.classList.remove("hidden");
+    } else {
+      note.classList.add("hidden");
+    }
     renderChoiceOptions();
   } catch (err) {
     document.getElementById("choiceCourseOptions").innerHTML = `<span style="color:#b42318;font-weight:bold;">${err.message}</span>`;
@@ -2890,6 +2958,54 @@ function closeChoiceModal() {
   document.getElementById("choiceModal").classList.add("hidden");
   ACTIVE_CHOICE_PLACEHOLDER = null;
   ACTIVE_CHOICE_OPTIONS = [];
+  ACTIVE_CHOICE_GROUP = null;
+}
+
+const CHOICE_SUBJECT_NAMES = {
+  ARB: "Arabic", ASL: "American Sign Language", CHI: "Chinese", FRN: "French",
+  GER: "German", ITL: "Italian", JPN: "Japanese", POR: "Portuguese",
+  RUS: "Russian", SPN: "Spanish", PSY: "Psychology", SOC: "Sociology",
+  MAT: "Mathematics", BIO: "Biology", CHE: "Chemistry", PHY: "Physics",
+  ENG: "English", CSC: "Computer Science", CIS: "Computer Information Systems"
+};
+
+function choiceCourseSubject(course) {
+  return String(course.code || "Other").trim().split(/\s+/)[0] || "Other";
+}
+
+function choiceCourseNumber(course) {
+  const match = String(course.code || "").match(/\s(\d+(?:\.\d+)?)/);
+  return match ? Number(match[1]) : Number.MAX_SAFE_INTEGER;
+}
+
+function groupedChoiceCourses(courses) {
+  const groups = new Map();
+  courses.forEach(course => {
+    const subject = choiceCourseSubject(course);
+    if (!groups.has(subject)) groups.set(subject, []);
+    groups.get(subject).push(course);
+  });
+  return [...groups.entries()]
+    .sort(([left], [right]) => left.localeCompare(right))
+    .map(([subject, items]) => [subject, items.sort((left, right) =>
+      choiceCourseNumber(left) - choiceCourseNumber(right) || left.code.localeCompare(right.code)
+    )]);
+}
+
+function createChoiceOption(course, selected, sequencePosition, sequenceLength) {
+  const div = document.createElement("div");
+  div.className = `choice-course-option ${selected.some(item => item.code === course.code) ? "selected" : ""}`;
+  div.onclick = () => selectChoiceCourse(course);
+  const sequenceLabel = sequenceLength > 1
+    ? `<div class="choice-sequence-label">${sequencePosition + 1} of ${sequenceLength} in catalog-number order</div>`
+    : "";
+  div.innerHTML = `
+    <div class="course-code">${course.code}</div>
+    <div class="course-title">${course.title}</div>
+    <div class="course-detail">Credits: ${course.credits}</div>
+    ${sequenceLabel}
+  `;
+  return div;
 }
 
 function renderChoiceOptions() {
@@ -2908,19 +3024,23 @@ function renderChoiceOptions() {
   }
 
   container.innerHTML = "";
-
-  filtered.forEach(course => {
-    const div = document.createElement("div");
-    div.className = `choice-course-option ${selected.some(item => item.code === course.code) ? "selected" : ""}`;
-    div.onclick = () => selectChoiceCourse(course);
-
-    div.innerHTML = `
-      <div class="course-code">${course.code}</div>
-      <div class="course-title">${course.title}</div>
-      <div class="course-detail">Credits: ${course.credits}</div>
+  groupedChoiceCourses(filtered).forEach(([subject, courses]) => {
+    const section = document.createElement("section");
+    section.className = "choice-subject-section";
+    const subjectName = CHOICE_SUBJECT_NAMES[subject];
+    section.innerHTML = `
+      <div class="choice-subject-header">
+        <div class="choice-subject-title">${subjectName ? `${subjectName} (${subject})` : subject}</div>
+        <div class="choice-subject-count">${courses.length} course${courses.length === 1 ? "" : "s"} · catalog order</div>
+      </div>
     `;
-
-    container.appendChild(div);
+    const track = document.createElement("div");
+    track.className = "choice-sequence-track";
+    courses.forEach((course, index) => {
+      track.appendChild(createChoiceOption(course, selected, index, courses.length));
+    });
+    section.appendChild(track);
+    container.appendChild(section);
   });
 }
 

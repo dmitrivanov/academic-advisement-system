@@ -232,6 +232,8 @@ class ChoiceGroup(Base):
     group_type = Column(String, nullable=False)
     required_credits = Column(Integer, nullable=True)
     required_course_count = Column(Integer, nullable=True)
+    advising_note = Column(String, nullable=True)
+    source = Column(String, nullable=True)
 
     institution = relationship("Institution", back_populates="choice_groups")
     course_links = relationship("ChoiceGroupCourse", back_populates="choice_group")

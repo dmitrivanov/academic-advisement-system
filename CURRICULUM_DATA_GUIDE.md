@@ -328,3 +328,9 @@ The database seeder materializes derived groups after importing the major curric
 and building broad institutional elective pools. This permits an adjustment to derive
 from either a Pathways area or an institutional elective pool. Base and derived group
 codes are institution-scoped; BMCC and CCNY memberships must never be mixed.
+
+The adjustment `notes` value is student-facing. Keep it to one short sentence that
+explains the major-specific restriction, because the progress screen displays it at
+the top of the course-choice modal. The modal globally groups options by subject and
+orders each subject by catalog number; do not duplicate presentation groupings in
+individual major CSV files.

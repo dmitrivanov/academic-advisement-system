@@ -66,6 +66,15 @@ def ensure_course_columns(db):
         db.execute(text("ALTER TABLE courses ADD COLUMN choice_group_code VARCHAR"))
         db.commit()
 
+
+def ensure_choice_group_columns(db):
+    inspector = inspect(engine)
+    columns = {col["name"] for col in inspector.get_columns("choice_groups")}
+    for column_name in ("advising_note", "source"):
+        if column_name not in columns:
+            db.execute(text(f"ALTER TABLE choice_groups ADD COLUMN {column_name} VARCHAR"))
+    db.commit()
+
 def parse_relationships(value):
     if not value or not value.strip():
         return []
@@ -506,6 +515,8 @@ def seed_choice_groups(db):
             group.group_type = (row.get("group_type") or "flexible_core").strip()
             group.required_credits = required_credits
             group.required_course_count = required_course_count
+            group.advising_note = None
+            group.source = (row.get("source") or "").strip() or None
 
     db.flush()
     print("Seeded pathways_groups.csv")
@@ -623,6 +634,8 @@ def seed_program_choice_group_adjustments(db):
             derived_group.group_type = (row.get("group_type") or base_group.group_type).strip()
             derived_group.required_credits = int(required_credits_raw) if required_credits_raw else None
             derived_group.required_course_count = int(required_count_raw) if required_count_raw else None
+            derived_group.advising_note = (row.get("notes") or "").strip() or None
+            derived_group.source = (row.get("source") or "").strip() or None
             db.flush()
 
             # The adjustment CSV is authoritative for derived memberships.
@@ -954,6 +967,7 @@ def seed():
     try:
         ensure_institution_columns(db)
         ensure_course_columns(db)
+        ensure_choice_group_columns(db)
         seed_institutions(db)
         seed_departments(db)
         seed_programs(db)
