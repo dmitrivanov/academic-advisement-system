@@ -15,6 +15,22 @@ def rows(filename):
 
 
 class StandardizedCurriculaTests(unittest.TestCase):
+    def test_program_catalog_matches_authoritative_curriculum(self):
+        with (DOCS / "programs.csv").open(newline="", encoding="utf-8-sig") as handle:
+            programs = {
+                (row["institution_code"], row["program_code"]): row["catalog_year"]
+                for row in csv.DictReader(handle)
+            }
+        for filename in ("cs_courses.csv", "cis_courses.csv", "cnt_courses.csv"):
+            curriculum = rows(filename)
+            key = (curriculum[0]["institution_code"], curriculum[0]["program_code"])
+            self.assertEqual(curriculum[0]["catalog_year"], programs[key])
+
+    def test_seeder_removes_superseded_populated_programs(self):
+        source = (ROOT / "seed_database.py").read_text(encoding="utf-8")
+        self.assertIn("Removed superseded program curriculum", source)
+        self.assertIn("clear_program_data(db, stale_program)", source)
+
     def test_every_curriculum_uses_full_schema(self):
         legacy = []
         for path in sorted(DOCS.glob("*_courses.csv")):

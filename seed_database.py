@@ -1011,6 +1011,35 @@ def seed():
 
             department.name = program_info["department"]
 
+            # Program-facing APIs select curricula by institution and program
+            # code, not by catalog year. A full curriculum CSV is therefore the
+            # authoritative active record for that code. Remove older populated
+            # records as well as empty placeholders so the selector cannot show
+            # duplicates or resolve to stale requirements.
+            same_code_programs = (
+                db.query(Program)
+                .join(Department, Program.department_id == Department.id)
+                .filter(
+                    Department.institution_id == institution.id,
+                    Program.code == program_info["program_code"],
+                )
+                .all()
+            )
+            for stale_program in same_code_programs:
+                if (
+                    stale_program.department_id == department.id
+                    and stale_program.catalog_year == program_info["catalog_year"]
+                ):
+                    continue
+                stale_catalog = stale_program.catalog_year
+                clear_program_data(db, stale_program)
+                db.delete(stale_program)
+                db.flush()
+                print(
+                    "Removed superseded program curriculum: "
+                    f"{program_info['program_code']} ({stale_catalog})"
+                )
+
             program = get_or_create(
                 db,
                 Program,
