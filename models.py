@@ -1,4 +1,6 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, UniqueConstraint
+from datetime import datetime, timezone
+
+from sqlalchemy import Column, DateTime, Integer, String, Text, ForeignKey, UniqueConstraint
 from sqlalchemy.orm import relationship
 from database import Base
 
@@ -255,4 +257,48 @@ class ChoiceGroupCourse(Base):
 
     __table_args__ = (
         UniqueConstraint("choice_group_id", "course_id", name="uq_choice_group_course"),
+    )
+
+
+class CurriculumDraft(Base):
+    """Editable major-constructor document, kept separate from published curricula."""
+
+    __tablename__ = "curriculum_drafts"
+
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String, nullable=False, default="Untitled program")
+    institution_id = Column(Integer, ForeignKey("institutions.id"), nullable=True, index=True)
+    department_id = Column(Integer, ForeignKey("departments.id"), nullable=True, index=True)
+    status = Column(String, nullable=False, default="draft", index=True)
+    document_json = Column(Text, nullable=False, default="{}")
+    created_by = Column(String, nullable=True)
+    created_at = Column(DateTime, nullable=False, default=lambda: datetime.now(timezone.utc))
+    updated_at = Column(DateTime, nullable=False, default=lambda: datetime.now(timezone.utc))
+    published_program_id = Column(Integer, ForeignKey("programs.id"), nullable=True)
+
+    versions = relationship(
+        "CurriculumDraftVersion",
+        back_populates="draft",
+        cascade="all, delete-orphan",
+        order_by="CurriculumDraftVersion.version_number",
+    )
+
+
+class CurriculumDraftVersion(Base):
+    """Immutable snapshot used for review, publication, and rollback."""
+
+    __tablename__ = "curriculum_draft_versions"
+
+    id = Column(Integer, primary_key=True, index=True)
+    draft_id = Column(Integer, ForeignKey("curriculum_drafts.id"), nullable=False, index=True)
+    version_number = Column(Integer, nullable=False)
+    document_json = Column(Text, nullable=False)
+    note = Column(String, nullable=True)
+    created_by = Column(String, nullable=True)
+    created_at = Column(DateTime, nullable=False, default=lambda: datetime.now(timezone.utc))
+
+    draft = relationship("CurriculumDraft", back_populates="versions")
+
+    __table_args__ = (
+        UniqueConstraint("draft_id", "version_number", name="uq_curriculum_draft_version"),
     )

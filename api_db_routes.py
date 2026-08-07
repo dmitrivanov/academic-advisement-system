@@ -1,7 +1,9 @@
-from typing import Optional
+import json
+from datetime import datetime, timezone
+from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Request
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
@@ -19,6 +21,8 @@ from models import (
     ChoiceGroup,
     ChoiceGroupCourse,
     CourseEquivalency,
+    CurriculumDraft,
+    CurriculumDraftVersion,
 )
 
 
@@ -51,6 +55,18 @@ class CourseEquivalencyPayload(BaseModel):
     notes: Optional[str] = None
 
 
+class CurriculumDraftPayload(BaseModel):
+    name: str = "Untitled program"
+    institution_id: Optional[int] = None
+    department_id: Optional[int] = None
+    document: dict[str, Any] = Field(default_factory=dict)
+
+
+class DraftStatusPayload(BaseModel):
+    status: str
+    note: Optional[str] = None
+
+
 def require_admin(request: Request):
     if request.session.get("logged_in") is not True:
         raise HTTPException(status_code=401, detail="Admin login required")
@@ -62,6 +78,35 @@ def optional_text(value):
 
 def normalize_course_code(value: str):
     return " ".join(value.strip().upper().split())
+
+
+def serialize_draft(draft: CurriculumDraft, include_document: bool = True):
+    result = {
+        "id": draft.id,
+        "name": draft.name,
+        "institution_id": draft.institution_id,
+        "department_id": draft.department_id,
+        "status": draft.status,
+        "created_by": draft.created_by,
+        "created_at": draft.created_at.isoformat() if draft.created_at else None,
+        "updated_at": draft.updated_at.isoformat() if draft.updated_at else None,
+        "published_program_id": draft.published_program_id,
+        "version_count": len(draft.versions),
+    }
+    if include_document:
+        result["document"] = json.loads(draft.document_json or "{}")
+    return result
+
+
+def validate_draft_references(payload: CurriculumDraftPayload, db: Session):
+    if payload.institution_id and not db.query(Institution).filter_by(id=payload.institution_id).first():
+        raise HTTPException(status_code=400, detail="Institution not found")
+    if payload.department_id:
+        department = db.query(Department).filter_by(id=payload.department_id).first()
+        if not department:
+            raise HTTPException(status_code=400, detail="Department not found")
+        if payload.institution_id and department.institution_id != payload.institution_id:
+            raise HTTPException(status_code=400, detail="Department does not belong to the selected institution")
 
 
 def serialize_equivalency(rule: CourseEquivalency):
@@ -157,7 +202,138 @@ def db_health(db: Session = Depends(get_db)):
         "courses": db.query(Course).count(),
         "choice_groups": db.query(ChoiceGroup).count(),
         "course_equivalencies": db.query(CourseEquivalency).count(),
+        "curriculum_drafts": db.query(CurriculumDraft).count(),
     }
+
+
+@router.get("/curriculum-drafts")
+def list_curriculum_drafts(_admin=Depends(require_admin), db: Session = Depends(get_db)):
+    drafts = db.query(CurriculumDraft).order_by(CurriculumDraft.updated_at.desc()).all()
+    return [serialize_draft(draft, include_document=False) for draft in drafts]
+
+
+@router.post("/curriculum-drafts")
+def create_curriculum_draft(
+    payload: CurriculumDraftPayload,
+    request: Request,
+    _admin=Depends(require_admin),
+    db: Session = Depends(get_db),
+):
+    validate_draft_references(payload, db)
+    now = datetime.now(timezone.utc)
+    draft = CurriculumDraft(
+        name=payload.name.strip() or "Untitled program",
+        institution_id=payload.institution_id,
+        department_id=payload.department_id,
+        document_json=json.dumps(payload.document),
+        created_by=request.session.get("username"),
+        created_at=now,
+        updated_at=now,
+    )
+    db.add(draft)
+    db.commit()
+    db.refresh(draft)
+    return serialize_draft(draft)
+
+
+@router.get("/curriculum-drafts/{draft_id}")
+def get_curriculum_draft(draft_id: int, _admin=Depends(require_admin), db: Session = Depends(get_db)):
+    draft = db.query(CurriculumDraft).filter_by(id=draft_id).first()
+    if not draft:
+        raise HTTPException(status_code=404, detail="Curriculum draft not found")
+    result = serialize_draft(draft)
+    result["versions"] = [
+        {
+            "id": version.id,
+            "version_number": version.version_number,
+            "note": version.note,
+            "created_by": version.created_by,
+            "created_at": version.created_at.isoformat() if version.created_at else None,
+        }
+        for version in draft.versions
+    ]
+    return result
+
+
+@router.put("/curriculum-drafts/{draft_id}")
+def update_curriculum_draft(
+    draft_id: int,
+    payload: CurriculumDraftPayload,
+    _admin=Depends(require_admin),
+    db: Session = Depends(get_db),
+):
+    draft = db.query(CurriculumDraft).filter_by(id=draft_id).first()
+    if not draft:
+        raise HTTPException(status_code=404, detail="Curriculum draft not found")
+    if draft.status not in {"draft", "changes_requested"}:
+        raise HTTPException(status_code=409, detail="Only editable drafts can be changed")
+    validate_draft_references(payload, db)
+    draft.name = payload.name.strip() or "Untitled program"
+    draft.institution_id = payload.institution_id
+    draft.department_id = payload.department_id
+    draft.document_json = json.dumps(payload.document)
+    draft.updated_at = datetime.now(timezone.utc)
+    db.commit()
+    db.refresh(draft)
+    return serialize_draft(draft)
+
+
+@router.post("/curriculum-drafts/{draft_id}/versions")
+def snapshot_curriculum_draft(
+    draft_id: int,
+    request: Request,
+    note: Optional[str] = None,
+    _admin=Depends(require_admin),
+    db: Session = Depends(get_db),
+):
+    draft = db.query(CurriculumDraft).filter_by(id=draft_id).first()
+    if not draft:
+        raise HTTPException(status_code=404, detail="Curriculum draft not found")
+    latest = db.query(func.max(CurriculumDraftVersion.version_number)).filter_by(draft_id=draft_id).scalar() or 0
+    version = CurriculumDraftVersion(
+        draft_id=draft.id,
+        version_number=latest + 1,
+        document_json=draft.document_json,
+        note=optional_text(note),
+        created_by=request.session.get("username"),
+    )
+    db.add(version)
+    db.commit()
+    return {"id": version.id, "version_number": version.version_number}
+
+
+@router.post("/curriculum-drafts/{draft_id}/status")
+def transition_curriculum_draft(
+    draft_id: int,
+    payload: DraftStatusPayload,
+    request: Request,
+    _admin=Depends(require_admin),
+    db: Session = Depends(get_db),
+):
+    draft = db.query(CurriculumDraft).filter_by(id=draft_id).first()
+    if not draft:
+        raise HTTPException(status_code=404, detail="Curriculum draft not found")
+    allowed = {
+        "draft": {"in_review"},
+        "changes_requested": {"in_review"},
+        "in_review": {"approved", "changes_requested"},
+        "approved": {"draft"},
+    }
+    target = payload.status.strip().lower()
+    if target not in allowed.get(draft.status, set()):
+        raise HTTPException(status_code=409, detail=f"Cannot move {draft.status} to {target}")
+    latest = db.query(func.max(CurriculumDraftVersion.version_number)).filter_by(draft_id=draft_id).scalar() or 0
+    db.add(CurriculumDraftVersion(
+        draft_id=draft.id,
+        version_number=latest + 1,
+        document_json=draft.document_json,
+        note=optional_text(payload.note) or f"Status changed to {target}",
+        created_by=request.session.get("username"),
+    ))
+    draft.status = target
+    draft.updated_at = datetime.now(timezone.utc)
+    db.commit()
+    return serialize_draft(draft, include_document=False)
 
 
 @router.get("/equivalencies")

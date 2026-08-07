@@ -13,9 +13,12 @@ from pathlib import Path
 from typing import Optional, Dict, Any
 
 from api_db_routes import router as db_router
+from database import Base, engine
+import models  # noqa: F401 - registers all SQLAlchemy tables
 
 
 app = FastAPI()
+Base.metadata.create_all(bind=engine)
 app.include_router(db_router)
 
 SESSION_SECRET = os.environ.get("SESSION_SECRET", "dev-secret-change-this")
@@ -255,6 +258,13 @@ def serve_ai_settings(request: Request):
     if not is_logged_in(request):
         return RedirectResponse("/login", status_code=303)
     return FileResponse("frontend/ai_settings.html")
+
+
+@app.get("/admin/major-constructor")
+def serve_major_constructor(request: Request):
+    if not is_logged_in(request):
+        return RedirectResponse("/login", status_code=303)
+    return FileResponse("frontend/major_constructor.html")
 
 
 app.mount("/frontend", StaticFiles(directory="frontend"), name="frontend")
