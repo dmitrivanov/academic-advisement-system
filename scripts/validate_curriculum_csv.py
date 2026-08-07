@@ -270,7 +270,7 @@ def validate_file(path: Path, *, docs_dir: Path | None = None) -> ValidationResu
             "catalog_year",
         )
     }
-    course_rows: dict[str, int] = {}
+    course_rows: dict[str, tuple[int, str]] = {}
     local_course_codes: set[str] = set()
     relationships: list[tuple[int, str, str, str]] = []
     group_metadata: dict[str, tuple[str, str, str]] = {}
@@ -332,14 +332,15 @@ def validate_file(path: Path, *, docs_dir: Path | None = None) -> ValidationResu
 
         code = row.get("course_code", "").upper()
         if code:
-            if code in course_rows:
+            previous_course = course_rows.get(code)
+            if previous_course and previous_course[1] == row.get("group_name", ""):
                 findings.append(Finding(
                     "error",
-                    f"Duplicate course `{code}`; first listed on row {course_rows[code]}.",
+                    f"Duplicate course `{code}` in group `{row.get('group_name', '')}`; first listed on row {previous_course[0]}.",
                     index,
                 ))
             else:
-                course_rows[code] = index
+                course_rows.setdefault(code, (index, row.get("group_name", "")))
                 local_course_codes.add(code)
 
         group_name = row.get("group_name", "")
@@ -359,7 +360,7 @@ def validate_file(path: Path, *, docs_dir: Path | None = None) -> ValidationResu
             group_metadata.setdefault(group_name, metadata)
             if credits is not None:
                 group_rows.setdefault(group_name, []).append(
-                    (code, float(credits), row.get("choice_group_code", ""))
+                    (code, float(credits), row.get("choice_group_code", ""), row.get("alternatives", ""))
                 )
 
         for field in ("prerequisites", "alternatives"):
@@ -407,7 +408,25 @@ def validate_file(path: Path, *, docs_dir: Path | None = None) -> ValidationResu
         required = parse_number(group_metadata[group_name][1])
         if required is None:
             continue
-        listed_credits = sum(item[1] for item in entries)
+        by_code = {item[0]: item for item in entries}
+        visited = set()
+        listed_credits = 0
+        for code, credits, _, alternatives in entries:
+            if code in visited:
+                continue
+            stack = [code]
+            component_credits = []
+            while stack:
+                current = stack.pop()
+                if current in visited or current not in by_code:
+                    continue
+                visited.add(current)
+                current_entry = by_code[current]
+                component_credits.append(current_entry[1])
+                for alternative in relationship_codes(current_entry[3]):
+                    if alternative in by_code and alternative not in visited:
+                        stack.append(alternative)
+            listed_credits += max(component_credits or [credits])
         if listed_credits < required:
             findings.append(Finding(
                 "error",

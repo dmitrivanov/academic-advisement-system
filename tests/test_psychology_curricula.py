@@ -3,6 +3,8 @@ import json
 import unittest
 from pathlib import Path
 
+from scripts.validate_curriculum_csv import validate_file
+
 
 ROOT = Path(__file__).resolve().parents[1]
 DOCS = ROOT / "docs"
@@ -50,6 +52,10 @@ class PsychologyCurriculaTests(unittest.TestCase):
                 self.assertEqual("AA", row["degree_type"])
             self.assertEqual(60, sum(groups.values()))
 
+    def test_both_curriculum_files_validate_without_errors(self):
+        for filename in ("psy_aa_courses.csv", "psy_stem_aa_courses.csv"):
+            self.assertFalse(validate_file(DOCS / filename, docs_dir=DOCS).errors)
+
     def test_concentration_specific_required_courses(self):
         general_codes = {row["course_code"] for row in self.general}
         stem_codes = {row["course_code"] for row in self.stem}
@@ -63,6 +69,30 @@ class PsychologyCurriculaTests(unittest.TestCase):
             self.assertGreaterEqual(len(elective_rows), 8)
             self.assertEqual({"9"}, {row["required_credits"] for row in elective_rows})
             self.assertTrue(all(row["prerequisites"] == "PSY 100" for row in elective_rows))
+
+    def test_general_requirements_match_published_or_pairs_and_elective_pool(self):
+        required = [row for row in self.general if row["group_name"] == "Concentration Requirements"]
+        by_code = {row["course_code"]: row for row in required}
+        expected_pairs = {
+            "PSY 240": "PSY 250", "PSY 250": "PSY 240",
+            "PSY 230": "PSY 260", "PSY 260": "PSY 230",
+            "ANT 100": "SOC 100", "SOC 100": "ANT 100",
+        }
+        for code, alternative in expected_pairs.items():
+            self.assertEqual(alternative, by_code[code]["alternatives"])
+
+        elective_codes = {
+            row["course_code"] for row in self.general
+            if row["group_name"] == "Psychology Electives"
+        }
+        self.assertEqual(
+            {
+                "PSY 200", "PSY 210", "PSY 225", "PSY 230", "PSY 240",
+                "PSY 245", "PSY 250", "PSY 255", "PSY 260", "PSY 271",
+                "PSY 280", "PSY 290", "PSY 295",
+            },
+            elective_codes,
+        )
 
     def test_program_specific_pathways_adjustments_exist(self):
         by_program = {}
@@ -104,6 +134,29 @@ class PsychologyCurriculaTests(unittest.TestCase):
         self.assertIn('PSY_STEM_AA: "/docs/bmcc_psy_stem_degree_map_2025_2026.json"', page)
         self.assertIn("OFFICIAL_DEGREE_MAP?.source_pdfs", page)
         self.assertIn("Official maps", page)
+        self.assertIn("function alternativeComponents(courses)", page)
+        self.assertIn("function createAlternativeCourseCard(courses, group)", page)
+        self.assertIn("function requiredCourseAllocations(completed)", page)
+        self.assertIn('group?.group_type === "program_elective"', page)
+
+    def test_added_curricula_render_both_sides_of_each_or_requirement(self):
+        filenames = (
+            "bte_as_courses.csv", "ds_as_courses.csv", "esc_as_courses.csv",
+            "fsc_as_courses.csv", "mat_as_courses.csv", "psy_aa_courses.csv",
+            "sci_as_courses.csv", "shp_as_courses.csv",
+        )
+        for filename in filenames:
+            rows = read_csv(filename)
+            rows_by_group_code = {
+                (row["group_name"], row["course_code"]): row for row in rows
+            }
+            for row in rows:
+                if not row["alternatives"]:
+                    continue
+                for alternative in row["alternatives"].split(" or "):
+                    counterpart = rows_by_group_code.get((row["group_name"], alternative))
+                    self.assertIsNotNone(counterpart, f"{filename}: missing visible {alternative}")
+                    self.assertIn(row["course_code"], counterpart["alternatives"].split(" or "))
 
 
 if __name__ == "__main__":

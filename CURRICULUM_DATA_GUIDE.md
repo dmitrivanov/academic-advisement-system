@@ -177,6 +177,31 @@ definition is present in the project, and explain the rule in source notes. Do n
 create a new choice-group code without approval. The validator reports when listed
 course credits exceed group-required credits so the reviewer can inspect the rule.
 
+#### Published OR-course pairs
+
+When the official curriculum prints named courses separated by `OR`, add every named
+course as its own row in the same requirement group. Make the `alternatives`
+relationship reciprocal so the progress screen renders one visual "Choose one" card:
+
+```text
+PSY 240 ... alternatives: PSY 250
+PSY 250 ... alternatives: PSY 240
+```
+
+Do not preserve a published alternative only as hidden text on another course row.
+Selecting one option satisfies the card and hides the other option until the student
+chooses to change the selection.
+
+A course may legitimately appear in both a required OR pair and an official elective
+pool. Repeat it in both groups when the source does. The progress calculation allocates
+the completion to the required group first, preventing the same completion from also
+satisfying elective credits. A separately completed alternative may count as an
+elective when the official pool permits it.
+
+Use a descriptive placeholder only when the source itself publishes an open category
+such as `XXX xxx - Liberal Arts Elective` or `General Elective`. Do not use a
+placeholder instead of a finite list of named OR options.
+
 ### 9. Validate before seeding
 
 Run the validator on the new file:

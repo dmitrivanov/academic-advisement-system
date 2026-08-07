@@ -28,10 +28,10 @@ Expression courses, and 21 fixed/choice curriculum credits plus 9 Psychology
 elective credits. STEM uses MAT 206/206.5, BIO 210, PSY 100 plus BIO 220 in
 Scientific World, and 21 fixed curriculum credits plus 9 Psychology elective credits.
 
-The General elective list overlaps with fixed and paired concentration choices.
-Courses already represented as fixed rows (`PSY 220`, `PSY 230`, and `PSY 240`) are
-not duplicated in the elective group because the current model would double-count
-one completion across both requirements. Their official alternates remain available.
+The General elective list overlaps with paired concentration choices. The CSV keeps
+the official rows in both groups, while the progress UI allocates a completed course
+to the required concentration choice first. A course consumed there is hidden from
+the elective pool; an additional completed alternative may count as an elective.
 Four-credit STEM variants create surplus Core credits that the maps apply toward
 General Electives; the UI describes this but does not automatically transfer surplus.
 

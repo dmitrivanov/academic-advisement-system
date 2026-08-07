@@ -104,6 +104,51 @@ select {
   border-color: #dc2626;
   color: #991b1b;
 }
+
+.alternative-card {
+  border: 2px solid #8b5cf6;
+  border-radius: 16px;
+  padding: 12px;
+  background: #f5f3ff;
+}
+
+.alternative-card.completed {
+  border-color: #22c55e;
+  background: #ecfdf3;
+}
+
+.alternative-card-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  align-items: flex-start;
+  margin-bottom: 9px;
+}
+
+.alternative-badge {
+  flex: 0 0 auto;
+  padding: 4px 8px;
+  border-radius: 999px;
+  color: #5b21b6;
+  background: #ede9fe;
+  font-size: 11px;
+  font-weight: bold;
+  text-transform: uppercase;
+}
+
+.alternative-options {
+  display: grid;
+  gap: 8px;
+}
+
+.alternative-option {
+  display: block;
+  padding: 9px;
+  border: 1px solid #c4b5fd;
+  border-radius: 11px;
+  background: white;
+  cursor: pointer;
+}
 .course-code {
   font-size: 17px;
   font-weight: bold;
@@ -1615,6 +1660,7 @@ let CURRENT_TAB = "program";
 let COMPLETED_COURSES = new Set();
 let SHOW_NOT_NEEDED = false;
 let CHOICE_SELECTIONS = {};
+let ALTERNATIVE_SELECTIONS = {};
 let ACTIVE_CHOICE_PLACEHOLDER = null;
 let ACTIVE_CHOICE_OPTIONS = [];
 let STUDENT_STATUS = "returning";
@@ -2073,6 +2119,7 @@ function populateInstitutionSelect() {
 async function handleInstitutionChange() {
   COMPLETED_COURSES.clear();
   CHOICE_SELECTIONS = {};
+  ALTERNATIVE_SELECTIONS = {};
   await populateProgramSelect();
 }
 
@@ -2281,11 +2328,18 @@ function allCoursesFromGroups() {
 
   CURRENT_REQUIREMENTS.groups.forEach(group => {
     group.courses.forEach(course => {
-      map[course.code] = {
+      const candidate = {
         ...course,
+        requirement_group_id: group.id,
         group_type: group.group_type,
         group_name: group.name
       };
+      if (!map[course.code] || (
+        map[course.code].group_type === "program_elective" &&
+        group.group_type !== "program_elective"
+      )) {
+        map[course.code] = candidate;
+      }
     });
   });
 
@@ -2344,6 +2398,54 @@ function getAlternativeSet(code) {
   return alternatives;
 }
 
+function alternativeComponents(courses) {
+  const byCode = Object.fromEntries(courses.map(course => [course.code, course]));
+  const visited = new Set();
+  const components = [];
+
+  courses.forEach(course => {
+    if (visited.has(course.code)) return;
+    const stack = [course.code];
+    const component = [];
+
+    while (stack.length) {
+      const code = stack.pop();
+      if (visited.has(code) || !byCode[code]) continue;
+      visited.add(code);
+      component.push(byCode[code]);
+      getAlternativeSet(code).forEach(altCode => {
+        if (byCode[altCode] && !visited.has(altCode)) stack.push(altCode);
+      });
+    }
+
+    components.push(component);
+  });
+
+  return components;
+}
+
+function alternativeComponentKey(group, courses) {
+  return `${group.id || group.name}:${courses.map(course => course.code).sort().join("|")}`;
+}
+
+function selectedAlternativeCode(group, courses, completed) {
+  const key = alternativeComponentKey(group, courses);
+  const selected = ALTERNATIVE_SELECTIONS[key];
+  if (selected && completed.has(selected)) return selected;
+  return courses.find(course => completed.has(course.code))?.code || null;
+}
+
+function requiredCourseAllocations(completed) {
+  const allocated = new Set();
+  getGroupsByTypes(["program_required"]).forEach(group => {
+    alternativeComponents(group.courses).forEach(component => {
+      const selected = selectedAlternativeCode(group, component, completed);
+      if (selected) allocated.add(selected);
+    });
+  });
+  return allocated;
+}
+
 function hasCompletedAlternative(code, completed) {
   const alternatives = getAlternativeSet(code);
 
@@ -2359,8 +2461,24 @@ function hasCompletedAlternative(code, completed) {
 function groupCreditsCompleted(group, completed) {
   let credits = 0;
 
-  group.courses.forEach(course => {
-    credits += courseCompletedCredits(course.code, course, completed);
+  const allocatedRequired = group.group_type === "program_elective"
+    ? requiredCourseAllocations(completed)
+    : new Set();
+
+  alternativeComponents(group.courses).forEach(component => {
+    if (group.group_type === "program_elective") {
+      component.forEach(course => {
+        if (!allocatedRequired.has(course.code)) {
+          credits += courseCompletedCredits(course.code, course, completed);
+        }
+      });
+      return;
+    }
+
+    const selected = selectedAlternativeCode(group, component, completed);
+    if (!selected) return;
+    const course = component.find(item => item.code === selected);
+    credits += courseCompletedCredits(selected, course, completed);
   });
 
   return credits;
@@ -2389,14 +2507,18 @@ function findCourseGroup(courseCode) {
   return null;
 }
 
-function isNotNeeded(code, course, completed) {
+function isNotNeeded(code, course, completed, group = null) {
   if (isCourseCompleted(code, course, completed)) return false;
 
-  if (hasCompletedAlternative(code, completed)) {
+  if (group?.group_type !== "program_elective" && hasCompletedAlternative(code, completed)) {
     return true;
   }
 
-  const group = findCourseGroup(code);
+  group = group || findCourseGroup(code);
+
+  if (group?.group_type === "program_elective" && requiredCourseAllocations(completed).has(code)) {
+    return true;
+  }
 
   if (group && groupRequirementSatisfied(group, completed)) {
     return true;
@@ -2427,9 +2549,14 @@ function courseCompletedCredits(code, course, completed) {
   return 0;
 }
 
-function getCourseStatus(code, course, completed) {
+function getCourseStatus(code, course, completed, group = null) {
+  if (
+    group?.group_type === "program_elective" &&
+    completed.has(code) &&
+    requiredCourseAllocations(completed).has(code)
+  ) return "not_needed";
   if (isCourseCompleted(code, course, completed)) return "completed";
-  if (isNotNeeded(code, course, completed)) return "not_needed";
+  if (isNotNeeded(code, course, completed, group)) return "not_needed";
   if (allPrereqsSatisfied(course, completed)) return "available";
   return "locked";
 }
@@ -2514,21 +2641,34 @@ function renderCompletedCourseGrid() {
     list.className = "course-list";
 
     const groups = getGroupsByTypes(area.types);
-    let courses = [];
+    const items = [];
 
     groups.forEach(group => {
-      courses = courses.concat(group.courses.map(course => ({
-        ...course,
-        group_type: group.group_type,
-        group_name: group.name
-      })));
+      const components = group.group_type === "program_elective"
+        ? group.courses.map(course => [course])
+        : alternativeComponents(group.courses);
+
+      components.forEach(component => {
+        const enriched = component.map(course => ({
+          ...course,
+          requirement_group_id: group.id,
+          group_type: group.group_type,
+          group_name: group.name,
+          _group: group
+        }));
+        items.push(enriched.length > 1
+          ? {type: "alternative", courses: enriched, group}
+          : {type: "course", course: enriched[0], group});
+      });
     });
 
     const completed = getCompletedCourses();
     let hiddenSatisfiedCount = 0;
 
-    const visibleCourses = courses.filter(course => {
-      const status = getCourseStatus(course.code, course, completed);
+    const visibleItems = items.filter(item => {
+      if (item.type === "alternative") return true;
+      const course = item.course;
+      const status = getCourseStatus(course.code, course, completed, item.group);
 
       if (status === "not_needed" && !SHOW_NOT_NEEDED) {
         hiddenSatisfiedCount += 1;
@@ -2538,14 +2678,16 @@ function renderCompletedCourseGrid() {
       return true;
     });
 
-    if (visibleCourses.length === 0) {
+    if (visibleItems.length === 0) {
       const empty = document.createElement("div");
       empty.className = "empty-message";
       empty.textContent = "No visible courses in this area.";
       list.appendChild(empty);
     } else {
-      visibleCourses.forEach(course => {
-        list.appendChild(createSelectableCourseCard(course));
+      visibleItems.forEach(item => {
+        list.appendChild(item.type === "alternative"
+          ? createAlternativeCourseCard(item.courses, item.group)
+          : createSelectableCourseCard(item.course));
       });
     }
 
@@ -2563,7 +2705,7 @@ function renderCompletedCourseGrid() {
 
 function createSelectableCourseCard(course) {
   const completed = getCompletedCourses();
-  const status = getCourseStatus(course.code, course, completed);
+  const status = getCourseStatus(course.code, course, completed, course._group);
   const isChoice = isChoicePlaceholder(course);
   const selectedChoice = CHOICE_SELECTIONS[course.code];
 
@@ -2629,6 +2771,76 @@ function createSelectableCourseCard(course) {
   `;
 
   return label;
+}
+
+function createAlternativeCourseCard(courses, group) {
+  const completed = getCompletedCourses();
+  const key = alternativeComponentKey(group, courses);
+  const selectedCode = selectedAlternativeCode(group, courses, completed);
+  const selectedCourse = courses.find(course => course.code === selectedCode);
+  const visibleCourses = selectedCourse ? [selectedCourse] : courses;
+  const card = document.createElement("div");
+  card.className = `alternative-card ${selectedCourse ? "completed" : ""}`;
+
+  const options = visibleCourses.map(course => {
+    const status = getCourseStatus(course.code, course, completed, group);
+    const disabled = status === "locked" ? "disabled" : "";
+    const checked = completed.has(course.code) ? "checked" : "";
+    return `
+      <label class="alternative-option">
+        <div class="course-code">
+          <input type="checkbox" class="course-check" value="${course.code}" ${checked} ${disabled}
+            onchange='handleAlternativeCourseChange(this, ${JSON.stringify(key)}, ${JSON.stringify(courses.map(item => item.code))})'>
+          ${course.code}
+        </div>
+        <div class="course-title">${course.title}</div>
+        <div class="course-detail">${course.credits} credits · Prereqs: ${formatPrereqs(course.prereqs)}</div>
+      </label>
+    `;
+  }).join("");
+
+  card.innerHTML = `
+    <div class="alternative-card-header">
+      <div>
+        <div class="course-code">Alternative requirement</div>
+        <div class="course-title">Choose one course for ${group.name}.</div>
+      </div>
+      <span class="alternative-badge">Choose one</span>
+    </div>
+    <div class="alternative-options">${options}</div>
+    ${selectedCourse ? `<button type="button" class="toggle-button" onclick='clearAlternativeSelection(${JSON.stringify(key)}, ${JSON.stringify(selectedCourse.code)})'>Change selection</button>` : ""}
+  `;
+  return card;
+}
+
+function handleAlternativeCourseChange(checkbox, key, alternativeCodes) {
+  if (checkbox.checked) {
+    COMPLETED_COURSES.add(checkbox.value);
+    ALTERNATIVE_SELECTIONS[key] = checkbox.value;
+  } else {
+    COMPLETED_COURSES.delete(checkbox.value);
+    delete ALTERNATIVE_SELECTIONS[key];
+  }
+
+  alternativeCodes.filter(code => code !== checkbox.value).forEach(code => {
+    if (ALTERNATIVE_SELECTIONS[key] === code) delete ALTERNATIVE_SELECTIONS[key];
+  });
+  refreshProgressViews();
+}
+
+function clearAlternativeSelection(key, selectedCode) {
+  delete ALTERNATIVE_SELECTIONS[key];
+  COMPLETED_COURSES.delete(selectedCode);
+  refreshProgressViews();
+}
+
+function refreshProgressViews() {
+  renderCompletedCourseGrid();
+  renderGraph();
+  renderSummary();
+  renderRecommendations();
+  updateProgressWidget();
+  refreshPlannerTimelineFromProgress();
 }
 
 async function openChoiceModal(placeholderCode) {
@@ -2755,6 +2967,7 @@ function handleCourseCheckboxChange(checkbox) {
 function clearCompleted() {
   COMPLETED_COURSES.clear();
   CHOICE_SELECTIONS = {};
+  ALTERNATIVE_SELECTIONS = {};
 
   renderCompletedCourseGrid();
   renderGraph();
@@ -2808,14 +3021,13 @@ function renderGroupCard(group) {
   const locked = [];
   const notNeeded = [];
 
-  let completedCredits = 0;
+  const completedCredits = groupCreditsCompleted(group, completed);
 
   group.courses.forEach(course => {
-    const status = getCourseStatus(course.code, course, completed);
+    const status = getCourseStatus(course.code, course, completed, group);
 
     if (status === "completed") {
       taken.push([course.code, course, status]);
-      completedCredits += courseCompletedCredits(course.code, course, completed);
     } else if (status === "available") {
       available.push([course.code, course, status]);
     } else if (status === "not_needed") {
