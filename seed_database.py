@@ -646,6 +646,81 @@ def seed_program_choice_group_adjustments(db):
     db.flush()
     print("Seeded program_choice_group_adjustments.csv")
 
+
+def seed_institutional_elective_groups(db):
+    """Populate broad elective pools after every curriculum course exists."""
+    institution = db.query(Institution).filter_by(code="BMCC").first()
+    if not institution:
+        return
+
+    groups = {
+        group.code: group
+        for group in db.query(ChoiceGroup).filter_by(institution_id=institution.id).all()
+    }
+
+    general_group = groups.get("BMCC_GENERAL_ELECTIVE")
+    liberal_group = groups.get("BMCC_LIBERAL_ARTS_ELECTIVE")
+    language_group = groups.get("BMCC_MODERN_LANGUAGE_CONTINUATION")
+    targets = [group for group in (general_group, liberal_group, language_group) if group]
+    for group in targets:
+        db.query(ChoiceGroupCourse).filter_by(choice_group_id=group.id).delete()
+
+    curriculum_courses = (
+        db.query(Course)
+        .join(RequirementGroupCourse, RequirementGroupCourse.course_id == Course.id)
+        .join(RequirementGroup, RequirementGroup.id == RequirementGroupCourse.requirement_group_id)
+        .join(Program, Program.id == RequirementGroup.program_id)
+        .join(Department, Department.id == Program.department_id)
+        .filter(Department.institution_id == institution.id)
+        .distinct()
+        .all()
+    )
+    pathway_groups = [
+        group for code, group in groups.items()
+        if code.startswith("RC_") or code.startswith("FC_")
+    ]
+    pathway_courses = {
+        link.course
+        for group in pathway_groups
+        for link in group.course_links
+    }
+
+    # Placeholder identifiers contain hyphens; real catalog codes contain a
+    # subject/number space (for example, PSY 240 or MAT 301).
+    general_courses = {
+        course for course in (*curriculum_courses, *pathway_courses)
+        if " " in course.code and has_positive_credits(course.credits)
+    }
+    liberal_courses = {
+        course for course in pathway_courses
+        if " " in course.code and has_positive_credits(course.credits)
+    }
+    language_prefixes = {"ARB", "ASL", "CHI", "FRN", "GER", "ITL", "JPN", "POR", "RUS", "SPN"}
+    continuation_numbers = {"106", "108", "200", "207", "210", "221", "300", "456", "476"}
+    language_courses = {
+        course for course in pathway_courses
+        if len(course.code.split()) == 2
+        and course.code.split()[0] in language_prefixes
+        and course.code.split()[1] in continuation_numbers
+    }
+
+    for group, courses in (
+        (general_group, general_courses),
+        (liberal_group, liberal_courses),
+        (language_group, language_courses),
+    ):
+        if not group:
+            continue
+        for course in sorted(courses, key=lambda item: item.code):
+            db.add(ChoiceGroupCourse(choice_group_id=group.id, course_id=course.id))
+
+    db.flush()
+    print("Seeded institutional elective choice groups")
+
+
+def has_positive_credits(value):
+    return value is not None and int(value) > 0
+
 def seed_faq(db, program, faq_path):
     for question, answer in parse_faq_file(faq_path):
         db.add(
@@ -918,6 +993,8 @@ def seed():
                 f"Seeded program: {program_info['program_code']} "
                 f"from {csv_path}"
             )
+
+        seed_institutional_elective_groups(db)
 
         db.commit()
         print("Database seeding completed.")

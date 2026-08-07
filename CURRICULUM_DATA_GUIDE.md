@@ -200,7 +200,13 @@ elective when the official pool permits it.
 
 Use a descriptive placeholder only when the source itself publishes an open category
 such as `XXX xxx - Liberal Arts Elective` or `General Elective`. Do not use a
-placeholder instead of a finite list of named OR options.
+placeholder instead of a finite list of named OR options. Every open-category row must
+also set `choice_group_code`; otherwise it renders as a fictitious checkbox rather than
+a course selector. Reuse `BMCC_GENERAL_ELECTIVE` for any-credit-bearing BMCC elective,
+`BMCC_LIBERAL_ARTS_ELECTIVE` for a liberal-arts elective, and
+`BMCC_MODERN_LANGUAGE_CONTINUATION` for the second course in a language sequence.
+Selectors accept multiple courses and apply their credits up to the placeholder's
+published credit requirement.
 
 ### 9. Validate before seeding
 

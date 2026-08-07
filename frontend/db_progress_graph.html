@@ -2354,8 +2354,21 @@ function getCompletedCourses() {
   return new Set(COMPLETED_COURSES);
 }
 
+function selectedChoiceCourses(placeholderCode) {
+  const selection = CHOICE_SELECTIONS[placeholderCode];
+  if (!selection) return [];
+  return Array.isArray(selection) ? selection : [selection];
+}
+
+function selectedChoiceCredits(placeholderCode) {
+  return selectedChoiceCourses(placeholderCode)
+    .reduce((total, course) => total + Number(course.credits || 0), 0);
+}
+
 function hasSelectedChoiceCourse(courseCode) {
-  return Object.values(CHOICE_SELECTIONS).some(choice => choice?.code === courseCode);
+  return Object.keys(CHOICE_SELECTIONS).some(placeholderCode =>
+    selectedChoiceCourses(placeholderCode).some(course => course.code === courseCode)
+  );
 }
 
 function prereqSatisfied(prereq, completed) {
@@ -2533,13 +2546,15 @@ function isChoicePlaceholder(course) {
 
 function isCourseCompleted(code, course, completed) {
   if (completed.has(code)) return true;
-  if (isChoicePlaceholder(course) && CHOICE_SELECTIONS[code]) return true;
+  if (isChoicePlaceholder(course)) {
+    return selectedChoiceCredits(code) >= Number(course.credits || 0);
+  }
   return false;
 }
 
 function courseCompletedCredits(code, course, completed) {
-  if (isChoicePlaceholder(course) && CHOICE_SELECTIONS[code]) {
-    return Number(CHOICE_SELECTIONS[code].credits || course.credits || 0);
+  if (isChoicePlaceholder(course)) {
+    return Math.min(selectedChoiceCredits(code), Number(course.credits || 0));
   }
 
   if (completed.has(code)) {
@@ -2707,7 +2722,8 @@ function createSelectableCourseCard(course) {
   const completed = getCompletedCourses();
   const status = getCourseStatus(course.code, course, completed, course._group);
   const isChoice = isChoicePlaceholder(course);
-  const selectedChoice = CHOICE_SELECTIONS[course.code];
+  const selectedChoices = selectedChoiceCourses(course.code);
+  const choiceCredits = selectedChoiceCredits(course.code);
 
   const label = document.createElement("label");
   label.className = `course-card ${status}`;
@@ -2719,14 +2735,14 @@ function createSelectableCourseCard(course) {
     ? `<div class="course-detail"><strong>Status:</strong> Not needed / alternative satisfied</div>`
     : "";
 
-  const selectedChoiceText = selectedChoice
-    ? `<div class="choice-selected-note">Completed with: ${selectedChoice.code} — ${selectedChoice.title} (${selectedChoice.credits} credits)</div>`
+  const selectedChoiceText = selectedChoices.length
+    ? `<div class="choice-selected-note">Selected (${choiceCredits} / ${course.credits} credits): ${selectedChoices.map(choice => `${choice.code} — ${choice.title}`).join("; ")}</div>`
     : "";
 
   if (isChoice) {
     label.innerHTML = `
       <div class="course-code">${course.title || course.code}</div>
-      <div class="course-title">Choose 1 approved course to satisfy this requirement.</div>
+      <div class="course-title">Choose approved courses totaling ${course.credits} credits.</div>
       ${selectedChoiceText}
 
       <details class="course-details">
@@ -2738,9 +2754,9 @@ function createSelectableCourseCard(course) {
       </details>
 
       <button type="button" onclick="event.preventDefault(); event.stopPropagation(); openChoiceModal('${course.code}')">
-        ${selectedChoice ? "Change selected course" : "Choose course"}
+        ${selectedChoices.length ? "Change selected courses" : "Choose courses"}
       </button>
-      ${selectedChoice ? `<button type="button" class="toggle-button" onclick="event.preventDefault(); event.stopPropagation(); clearChoiceSelection('${course.code}')">Clear choice</button>` : ""}
+      ${selectedChoices.length ? `<button type="button" class="toggle-button" onclick="event.preventDefault(); event.stopPropagation(); clearChoiceSelection('${course.code}')">Clear choices</button>` : ""}
       ${statusText}
     `;
     return label;
@@ -2853,7 +2869,7 @@ async function openChoiceModal(placeholderCode) {
   ACTIVE_CHOICE_OPTIONS = [];
 
   document.getElementById("choiceModalTitle").textContent = placeholder.title || placeholder.code;
-  document.getElementById("choiceModalSubtitle").textContent = `Select one approved course for ${placeholder.choice_group_code}.`;
+  document.getElementById("choiceModalSubtitle").textContent = `Select approved courses totaling ${placeholder.credits} credits for ${placeholder.choice_group_code}.`;
   document.getElementById("choiceCourseSearch").value = "";
   document.getElementById("choiceCourseOptions").innerHTML = "Loading...";
   document.getElementById("choiceModalBackdrop").classList.remove("hidden");
@@ -2879,7 +2895,7 @@ function closeChoiceModal() {
 function renderChoiceOptions() {
   const container = document.getElementById("choiceCourseOptions");
   const query = document.getElementById("choiceCourseSearch").value.trim().toLowerCase();
-  const selected = CHOICE_SELECTIONS[ACTIVE_CHOICE_PLACEHOLDER];
+  const selected = selectedChoiceCourses(ACTIVE_CHOICE_PLACEHOLDER);
 
   const filtered = ACTIVE_CHOICE_OPTIONS.filter(course => {
     const haystack = `${course.code} ${course.title}`.toLowerCase();
@@ -2895,7 +2911,7 @@ function renderChoiceOptions() {
 
   filtered.forEach(course => {
     const div = document.createElement("div");
-    div.className = `choice-course-option ${selected && selected.code === course.code ? "selected" : ""}`;
+    div.className = `choice-course-option ${selected.some(item => item.code === course.code) ? "selected" : ""}`;
     div.onclick = () => selectChoiceCourse(course);
 
     div.innerHTML = `
@@ -2911,15 +2927,17 @@ function renderChoiceOptions() {
 function selectChoiceCourse(course) {
   if (!ACTIVE_CHOICE_PLACEHOLDER) return;
 
-  CHOICE_SELECTIONS[ACTIVE_CHOICE_PLACEHOLDER] = course;
-  closeChoiceModal();
+  const selected = selectedChoiceCourses(ACTIVE_CHOICE_PLACEHOLDER);
+  const alreadySelected = selected.some(item => item.code === course.code);
+  CHOICE_SELECTIONS[ACTIVE_CHOICE_PLACEHOLDER] = alreadySelected
+    ? selected.filter(item => item.code !== course.code)
+    : [...selected, course];
+  if (!CHOICE_SELECTIONS[ACTIVE_CHOICE_PLACEHOLDER].length) {
+    delete CHOICE_SELECTIONS[ACTIVE_CHOICE_PLACEHOLDER];
+  }
 
-  renderCompletedCourseGrid();
-  renderGraph();
-  renderSummary();
-  renderRecommendations();
-  updateProgressWidget();
-  refreshPlannerTimelineFromProgress();
+  renderChoiceOptions();
+  refreshProgressViews();
 }
 
 function clearChoiceSelection(placeholderCode) {
@@ -3099,9 +3117,9 @@ function renderStatusSection(parent, title, subtitle, courses) {
       const div = document.createElement("div");
       div.className = `status-course ${status}`;
 
-      const selectedChoice = CHOICE_SELECTIONS[code];
-      const selectedChoiceText = selectedChoice
-        ? `<div class="choice-selected-note">Completed with: ${selectedChoice.code} — ${selectedChoice.title} (${selectedChoice.credits} credits)</div>`
+      const selectedChoices = selectedChoiceCourses(code);
+      const selectedChoiceText = selectedChoices.length
+        ? `<div class="choice-selected-note">Selected: ${selectedChoices.map(choice => `${choice.code} — ${choice.title}`).join("; ")}</div>`
         : "";
 
       div.innerHTML = `
@@ -3111,7 +3129,7 @@ function renderStatusSection(parent, title, subtitle, courses) {
 
         <details class="course-details">
           <summary>Class details</summary>
-          <div>Credits: ${selectedChoice ? selectedChoice.credits : course.credits}</div>
+          <div>Credits: ${selectedChoices.length ? `${selectedChoiceCredits(code)} selected / ${course.credits} required` : course.credits}</div>
           <div>Prereqs: ${formatPrereqs(course.prereqs)}</div>
           <div>Alternatives: ${formatAlternatives(course.alternatives)}</div>
           ${course.choice_group_code ? `<div>Choice group: ${course.choice_group_code}</div>` : ""}
@@ -3665,17 +3683,19 @@ function buildTransferSnapshot() {
     }
   });
 
-  Object.entries(CHOICE_SELECTIONS).forEach(([placeholderCode, selectedCourse]) => {
+  Object.keys(CHOICE_SELECTIONS).forEach(placeholderCode => {
     const placeholder = courses[placeholderCode];
-    completedCourseDetails.push({
-      code: selectedCourse.code,
-      title: selectedCourse.title,
-      credits: selectedCourse.credits,
-      area: placeholder ? placeholder.group_name : "Choice requirement",
-      group_type: placeholder ? placeholder.group_type : "choice_requirement",
-      type: "choice_selection",
-      satisfies_placeholder: placeholderCode,
-      choice_group_code: placeholder ? placeholder.choice_group_code : null
+    selectedChoiceCourses(placeholderCode).forEach(selectedCourse => {
+      completedCourseDetails.push({
+        code: selectedCourse.code,
+        title: selectedCourse.title,
+        credits: selectedCourse.credits,
+        area: placeholder ? placeholder.group_name : "Choice requirement",
+        group_type: placeholder ? placeholder.group_type : "choice_requirement",
+        type: "choice_selection",
+        satisfies_placeholder: placeholderCode,
+        choice_group_code: placeholder ? placeholder.choice_group_code : null
+      });
     });
   });
 
