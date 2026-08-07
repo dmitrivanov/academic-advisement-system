@@ -12,6 +12,8 @@ An administrator can:
 - represent concentrations as separate curriculum tabs;
 - search the canonical course database;
 - add courses to Major Requirements, Major Electives, Common Core, and Flexible Core;
+- switch between a compact List editor and a visual Board editor;
+- drag courses from the course library into curriculum bins or move them between bins;
 - see the total credits currently placed in each bin;
 - create pairwise course alternatives (`Course A OR Course B`);
 - create direct prerequisite rules (`Course A requires Course B`);
@@ -83,6 +85,21 @@ Use the bins as follows:
 | Flexible Core | Flexible Core placeholders or specifically required Flexible Core courses |
 
 The displayed number is the sum of all course records currently in the bin. Enter the official **Credits required** and/or **Courses required** beside it. For an OR pair, available credits can exceed required credits; this is expected when multiple options satisfy one requirement.
+
+### List and Board modes
+
+Use the **List** mode for compact data entry. Select a destination bin and activate a course result to add it.
+
+Use the **Board** mode for a visual, Trello-style curriculum layout. The same four bins become columns. You can:
+
+1. drag a course from the horizontal course library into a column;
+2. drag an existing course card from one column to another;
+3. remove a card with its × button;
+4. edit each column's required-credit and required-course targets in place.
+
+Board mode does not create a second copy of the curriculum. Both views edit the same active concentration and save the same draft document. Switching views therefore cannot lose or duplicate saved rules.
+
+For keyboard or touch input, select the destination above the course library and activate a course card. Course cards accept Enter or Space, so drag-and-drop is optional. The selected view is remembered on that browser.
 
 A course may appear in more than one bin when the official curriculum intentionally allows or requires double placement. Validation reports this as a warning, and the student progress system synchronizes completion state for the same course.
 
