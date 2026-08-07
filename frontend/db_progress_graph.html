@@ -3001,6 +3001,11 @@ async function openChoiceModal(placeholderCode) {
     const institutionCode = CURRENT_REQUIREMENTS?.program?.institution_code || document.getElementById("institutionSelect")?.value || "BMCC";
     const programCode = CURRENT_REQUIREMENTS?.program?.code || "";
     const params = new URLSearchParams({institution_code: institutionCode, program_code: programCode});
+    const pageParams = new URLSearchParams(window.location.search);
+    if (pageParams.get("draftPreview")) {
+      params.set("draft_preview", pageParams.get("draftPreview"));
+      params.set("concentration", pageParams.get("concentration") || "0");
+    }
     const data = await fetchJson(`/api/db/choice-groups/${placeholder.choice_group_code}/courses?${params.toString()}`);
     ACTIVE_CHOICE_OPTIONS = data.courses || [];
     ACTIVE_CHOICE_GROUP = data.group || null;
@@ -4140,6 +4145,12 @@ document.addEventListener("keydown", function(event) {
 });
 
 async function initializePage() {
+  const previewParams = new URLSearchParams(window.location.search);
+  const draftPreviewId = previewParams.get("draftPreview");
+  if (draftPreviewId) {
+    await initializeDraftPreview(draftPreviewId, Number(previewParams.get("concentration") || 0));
+    return;
+  }
   const savedSelection = getSavedProgramSelection();
 
   if (!savedSelection || !savedSelection.institutionCode || !savedSelection.programCode) {
@@ -4150,6 +4161,38 @@ async function initializePage() {
   applyOnboardingState();
   await loadInstitutions();
   await loadPrograms();
+}
+
+async function initializeDraftPreview(draftId, concentrationIndex) {
+  applyOnboardingState();
+  CURRENT_REQUIREMENTS = await fetchJson(`/api/db/curriculum-drafts/${encodeURIComponent(draftId)}/preview?concentration=${encodeURIComponent(concentrationIndex)}`);
+  const program = CURRENT_REQUIREMENTS.program;
+  const institutionSelect = document.getElementById("institutionSelect");
+  const programSelect = document.getElementById("programSelect");
+  institutionSelect.innerHTML = "";
+  programSelect.innerHTML = "";
+  institutionSelect.add(new Option(program.institution, program.institution_code));
+  programSelect.add(new Option(`${program.code} — ${program.name} — DRAFT PREVIEW`, program.code));
+  institutionSelect.disabled = true;
+  programSelect.disabled = true;
+  const note = document.getElementById("programAvailabilityNote");
+  note.textContent = "Draft preview — no curriculum records have been published. Return to the constructor to edit or approve this major.";
+  note.classList.remove("hidden-note");
+  note.style.display = "block";
+  note.style.padding = "12px 16px";
+  note.style.marginTop = "12px";
+  note.style.borderRadius = "12px";
+  note.style.background = "#fff7d6";
+  note.style.color = "#725500";
+  OFFICIAL_DEGREE_MAP = null;
+  ensurePlaceholderGroups();
+  updateSelectedProgramHeader();
+  configurePlannerDefaults();
+  renderCompletedCourseGrid();
+  renderGraph();
+  renderSummary();
+  renderRecommendations();
+  updateProgressWidget();
 }
 
 initializePage().catch(err => {

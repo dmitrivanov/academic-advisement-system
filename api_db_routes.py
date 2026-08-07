@@ -441,6 +441,116 @@ def validate_curriculum_draft(draft_id: int, _admin=Depends(require_admin), db: 
     return curriculum_validation(draft, db)
 
 
+@router.get("/curriculum-drafts/{draft_id}/preview")
+def preview_curriculum_draft(
+    draft_id: int,
+    concentration: int = 0,
+    _admin=Depends(require_admin),
+    db: Session = Depends(get_db),
+):
+    draft = db.query(CurriculumDraft).filter_by(id=draft_id).first()
+    if not draft:
+        raise HTTPException(status_code=404, detail="Curriculum draft not found")
+    document = json.loads(draft.document_json or "{}")
+    concentrations = document.get("concentrations") or []
+    if concentration < 0 or concentration >= len(concentrations):
+        raise HTTPException(status_code=404, detail="Draft concentration not found")
+    selected = concentrations[concentration]
+    rules = document.get("rules") or {}
+    metadata = document.get("metadata") or {}
+    course_cache = {course.id: course for course in db.query(Course).all()}
+
+    def preview_course(course_id: int):
+        course = course_cache.get(course_id)
+        if not course:
+            return None
+        prereq_groups = {}
+        for rule in rules.get("prerequisites") or []:
+            if rule.get("course_id") == course_id:
+                prereq = course_cache.get(rule.get("prerequisite_course_id"))
+                if prereq:
+                    prereq_groups.setdefault(rule.get("group_id", 1), []).append(prereq.code)
+        alternatives = []
+        for rule in rules.get("alternatives") or []:
+            if rule.get("course_id") == course_id:
+                alternative = course_cache.get(rule.get("alternative_course_id"))
+                if alternative:
+                    alternatives.append(alternative.code)
+        adjustment = next(
+            (
+                item for item in rules.get("core_adjustments") or []
+                if item.get("concentration_index", 0) == concentration
+                and item.get("placeholder_course_id") == course_id
+            ),
+            None,
+        )
+        return {
+            "code": course.code,
+            "title": course.title,
+            "credits": course.credits,
+            "choice_group_code": adjustment.get("base_group_code") if adjustment else course.choice_group_code,
+            "prereqs": [values[0] if len(values) == 1 else values for _, values in sorted(prereq_groups.items())],
+            "alternatives": alternatives,
+        }
+
+    groups = []
+    bin_labels = (
+        ("major_required", "Major Requirements", "program_required"),
+        ("major_electives", "Major Electives", "program_elective"),
+        ("common_core", "Common Core", "common_core"),
+        ("flex_core", "Flexible Core", "flexible_core"),
+    )
+    for order, (key, label, group_type) in enumerate(bin_labels):
+        course_payloads = [preview_course(course_id) for course_id in (selected.get("bins") or {}).get(key, [])]
+        course_payloads = [course for course in course_payloads if course]
+        requirement = (selected.get("bin_requirements") or {}).get(key) or {}
+        if course_payloads:
+            groups.append({
+                "id": f"draft-bin-{order}",
+                "name": label,
+                "group_type": group_type,
+                "required_credits": requirement.get("required_credits"),
+                "required_course_count": requirement.get("required_course_count"),
+                "display_order": order,
+                "courses": course_payloads,
+            })
+    for pool_index, pool in enumerate(rules.get("elective_pools") or []):
+        if pool.get("concentration_index", 0) != concentration:
+            continue
+        course_payloads = [preview_course(course_id) for course_id in pool.get("course_ids") or []]
+        groups.append({
+            "id": f"draft-pool-{pool_index}",
+            "name": pool.get("name") or "Elective Pool",
+            "group_type": {
+                "major_required": "program_required",
+                "major_electives": "program_elective",
+                "common_core": "common_core",
+                "flex_core": "flexible_core",
+            }.get(pool.get("bin"), "program_elective"),
+            "required_credits": pool.get("required_credits"),
+            "required_course_count": pool.get("required_course_count"),
+            "display_order": 10 + pool_index,
+            "courses": [course for course in course_payloads if course],
+        })
+    institution = db.query(Institution).filter_by(id=draft.institution_id).first()
+    department = db.query(Department).filter_by(id=draft.department_id).first()
+    return {
+        "preview": True,
+        "draft_id": draft.id,
+        "concentration_index": concentration,
+        "program": {
+            "code": metadata.get("code") or f"DRAFT-{draft.id}",
+            "name": draft.name if len(concentrations) == 1 else f"{draft.name} - {selected.get('name', 'Concentration')}",
+            "catalog_year": metadata.get("catalog_year"),
+            "degree_type": metadata.get("degree_type"),
+            "department": department.name if department else "Draft department",
+            "institution": institution.name if institution else "Draft campus",
+            "institution_code": institution.code if institution else "DRAFT",
+        },
+        "groups": groups,
+    }
+
+
 @router.post("/curriculum-drafts/{draft_id}/versions/{version_number}/restore")
 def restore_curriculum_version(
     draft_id: int,
@@ -496,10 +606,10 @@ def publish_curriculum_draft(
             db.flush()
             created_ids.append(program.id)
             for order, (key, label, group_type) in enumerate((
-                ("major_required", "Major Requirements", "major_required"),
-                ("major_electives", "Major Electives", "major_elective"),
+                ("major_required", "Major Requirements", "program_required"),
+                ("major_electives", "Major Electives", "program_elective"),
                 ("common_core", "Common Core", "common_core"),
-                ("flex_core", "Flexible Core", "flex_core"),
+                ("flex_core", "Flexible Core", "flexible_core"),
             )):
                 course_ids = concentration.get("bins", {}).get(key) or []
                 if not course_ids:
@@ -537,7 +647,12 @@ def publish_curriculum_draft(
                 pool_group = RequirementGroup(
                     program_id=program.id,
                     name=pool["name"],
-                    group_type=pool.get("bin", "major_electives"),
+                    group_type={
+                        "major_required": "program_required",
+                        "major_electives": "program_elective",
+                        "common_core": "common_core",
+                        "flex_core": "flexible_core",
+                    }.get(pool.get("bin"), "program_elective"),
                     required_credits=pool.get("required_credits"),
                     required_course_count=pool.get("required_course_count"),
                     display_order=10 + pool_index,
@@ -933,8 +1048,11 @@ def get_choice_groups(db: Session = Depends(get_db)):
 @router.get("/choice-groups/{group_code}/courses")
 def get_choice_group_courses(
     group_code: str,
+    request: Request,
     institution_code: str = "BMCC",
     program_code: str | None = None,
+    draft_preview: int | None = None,
+    concentration: int = 0,
     db: Session = Depends(get_db),
 ):
     institution = db.query(Institution).filter_by(
@@ -953,6 +1071,37 @@ def get_choice_group_courses(
         raise HTTPException(status_code=404, detail="Choice group not found")
 
     links = db.query(ChoiceGroupCourse).filter_by(choice_group_id=group.id).all()
+    advising_note = group.advising_note
+    required_credits = group.required_credits
+    required_course_count = group.required_course_count
+    if draft_preview is not None:
+        require_admin(request)
+        draft = db.query(CurriculumDraft).filter_by(id=draft_preview).first()
+        if not draft:
+            raise HTTPException(status_code=404, detail="Curriculum draft not found")
+        document = json.loads(draft.document_json or "{}")
+        adjustment = next((
+            item for item in (document.get("rules") or {}).get("core_adjustments") or []
+            if item.get("concentration_index", 0) == concentration
+            and item.get("base_group_code") == group.code
+        ), None)
+        if adjustment:
+            allowed_ids = set(adjustment.get("include_course_ids") or [])
+            allowed_subjects = set(adjustment.get("include_subject_codes") or [])
+            excluded_ids = set(adjustment.get("exclude_course_ids") or [])
+            if allowed_ids or allowed_subjects:
+                links = [
+                    link for link in links
+                    if link.course_id in allowed_ids
+                    or (
+                        link.course
+                        and link.course.code.split()[0].upper() in allowed_subjects
+                    )
+                ]
+            links = [link for link in links if link.course_id not in excluded_ids]
+            advising_note = adjustment.get("note") or advising_note
+            required_credits = adjustment.get("required_credits") if adjustment.get("required_credits") is not None else required_credits
+            required_course_count = adjustment.get("required_course_count") if adjustment.get("required_course_count") is not None else required_course_count
 
     program = None
     if program_code:
@@ -991,9 +1140,9 @@ def get_choice_group_courses(
             "code": group.code,
             "name": group.name,
             "group_type": group.group_type,
-            "required_credits": group.required_credits,
-            "required_course_count": group.required_course_count,
-            "advising_note": group.advising_note,
+            "required_credits": required_credits,
+            "required_course_count": required_course_count,
+            "advising_note": advising_note,
             "source": group.source,
             "institution": institution.name,
             "institution_code": institution.code,

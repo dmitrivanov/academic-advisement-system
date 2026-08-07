@@ -187,7 +187,7 @@ Use **Create version** at review boundaries, for example:
 - reviewer corrections complete;
 - ready for approval.
 
-**Preview major** shows the active concentration, its bins, and selected course codes. This is currently a structural preview, not a pixel-identical copy of the completed-courses page.
+**Preview major** saves the draft and opens the real completed-courses/progress page in read-only draft mode. It renders the active concentration, credit targets, elective pools, alternatives, prerequisites, and adjusted Core selector without publishing program records. A yellow banner identifies the page as a draft preview.
 
 **Validate** currently blocks submission when:
 
@@ -229,7 +229,6 @@ The editor is not yet a complete replacement for the CSV curriculum workflow. Th
 - creating missing courses and placeholders;
 - custom sequences and co-requisites;
 - importing requirements from program-map PDFs;
-- exact completed-courses-page preview;
 - custom concentration codes;
 - reviewer comments;
 - CSV import/export and synchronization with repository source files;

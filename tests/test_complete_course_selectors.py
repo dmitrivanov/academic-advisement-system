@@ -49,7 +49,7 @@ class CompleteCourseSelectorTests(unittest.TestCase):
         self.assertIn('status === "not_needed" || status === "locked"', source)
 
         api_source = (ROOT / "api_db_routes.py").read_text(encoding="utf-8")
-        self.assertIn('"advising_note": group.advising_note', api_source)
+        self.assertIn('"advising_note": advising_note', api_source)
 
     def test_seed_populates_institutional_elective_groups_after_majors(self):
         source = (ROOT / "seed_database.py").read_text(encoding="utf-8")

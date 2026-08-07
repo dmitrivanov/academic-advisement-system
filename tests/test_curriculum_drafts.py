@@ -8,12 +8,13 @@ from database import Base
 from models import ChoiceGroup, ChoiceGroupCourse, Course, CurriculumDraft, Department, Institution, Program, RequirementGroup
 
 try:
-    from api_db_routes import curriculum_validation, publish_curriculum_draft
+    from api_db_routes import curriculum_validation, preview_curriculum_draft, publish_curriculum_draft
 except ModuleNotFoundError as exc:
     if exc.name != "fastapi":
         raise
     curriculum_validation = None
     publish_curriculum_draft = None
+    preview_curriculum_draft = None
 
 
 @unittest.skipUnless(curriculum_validation, "FastAPI application dependencies are not installed")
@@ -127,8 +128,14 @@ class CurriculumDraftValidationTests(unittest.TestCase):
         major_group = self.db.query(RequirementGroup).filter_by(program_id=program.id, name="Major Requirements").one()
         pool_group = self.db.query(RequirementGroup).filter_by(program_id=program.id, name="Science electives").one()
         self.assertEqual(3, major_group.required_credits)
+        self.assertEqual("program_required", major_group.group_type)
         self.assertEqual(3, pool_group.required_credits)
+        self.assertEqual("program_elective", pool_group.group_type)
         self.assertTrue(self.db.query(ChoiceGroup).filter_by(code="SCI-NEW-TEST-FLEX").first())
+        preview = preview_curriculum_draft(draft.id, 0, None, self.db)
+        self.assertTrue(preview["preview"])
+        self.assertEqual("SCI-NEW", preview["program"]["code"])
+        self.assertEqual(["Major Requirements", "Science electives"], [group["name"] for group in preview["groups"]])
 
 
 if __name__ == "__main__":
