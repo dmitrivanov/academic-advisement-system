@@ -630,10 +630,12 @@ def seed_program_choice_group_adjustments(db):
 
             include_codes = split_course_codes(row.get("include_course_codes"))
             exclude_codes = split_course_codes(row.get("exclude_course_codes"))
+            include_subjects = split_course_codes(row.get("include_subject_codes"))
             base_courses = [link.course for link in base_group.course_links]
             selected_courses = [
                 course for course in base_courses
                 if (not include_codes or course.code.upper() in include_codes)
+                and (not include_subjects or course.code.upper().split()[0] in include_subjects)
                 and course.code.upper() not in exclude_codes
             ]
 
@@ -661,7 +663,8 @@ def seed_institutional_elective_groups(db):
     general_group = groups.get("BMCC_GENERAL_ELECTIVE")
     liberal_group = groups.get("BMCC_LIBERAL_ARTS_ELECTIVE")
     language_group = groups.get("BMCC_MODERN_LANGUAGE_CONTINUATION")
-    targets = [group for group in (general_group, liberal_group, language_group) if group]
+    aas_flexible_group = groups.get("FC_AAS_OPEN_AREA")
+    targets = [group for group in (general_group, liberal_group, language_group, aas_flexible_group) if group]
     for group in targets:
         db.query(ChoiceGroupCourse).filter_by(choice_group_id=group.id).delete()
 
@@ -703,11 +706,17 @@ def seed_institutional_elective_groups(db):
         and course.code.split()[0] in language_prefixes
         and course.code.split()[1] in continuation_numbers
     }
+    aas_flexible_courses = {
+        link.course
+        for code in ("FC_CREATIVE", "FC_INDIVIDUAL", "FC_US_EXPERIENCE", "FC_WORLD_CULTURES")
+        for link in groups[code].course_links
+    }
 
     for group, courses in (
         (general_group, general_courses),
         (liberal_group, liberal_courses),
         (language_group, language_courses),
+        (aas_flexible_group, aas_flexible_courses),
     ):
         if not group:
             continue
@@ -716,6 +725,45 @@ def seed_institutional_elective_groups(db):
 
     db.flush()
     print("Seeded institutional elective choice groups")
+
+
+def seed_ccny_elective_groups(db):
+    institution = db.query(Institution).filter_by(code="CCNY").first()
+    if not institution:
+        return
+    groups = {
+        group.code: group
+        for group in db.query(ChoiceGroup).filter_by(institution_id=institution.id).all()
+    }
+    technical = groups.get("CCNY_TECHNICAL_ELECTIVE")
+    free = groups.get("CCNY_FREE_ELECTIVE")
+    if not technical or not free:
+        return
+    for group in (technical, free):
+        db.query(ChoiceGroupCourse).filter_by(choice_group_id=group.id).delete()
+
+    courses = (
+        db.query(Course)
+        .join(RequirementGroupCourse, RequirementGroupCourse.course_id == Course.id)
+        .join(RequirementGroup, RequirementGroup.id == RequirementGroupCourse.requirement_group_id)
+        .join(Program, Program.id == RequirementGroup.program_id)
+        .join(Department, Department.id == Program.department_id)
+        .filter(Department.institution_id == institution.id)
+        .distinct()
+        .all()
+    )
+    real_courses = {course for course in courses if " " in course.code and has_positive_credits(course.credits)}
+    technical_subjects = {"CSC", "BIO", "CHEM", "EAS", "MATH", "PHYS", "ENGR"}
+    technical_courses = {
+        course for course in real_courses
+        if course.code.split()[0] in technical_subjects
+        and not course.code.split()[1].startswith("1")
+    }
+    for group, selected in ((technical, technical_courses), (free, real_courses)):
+        for course in sorted(selected, key=lambda item: item.code):
+            db.add(ChoiceGroupCourse(choice_group_id=group.id, course_id=course.id))
+    db.flush()
+    print("Seeded CCNY elective choice groups")
 
 
 def has_positive_credits(value):
@@ -912,8 +960,6 @@ def seed():
         seed_course_equivalencies(db)
         seed_choice_groups(db)
         seed_choice_group_courses(db)
-        seed_program_choice_group_adjustments(db)
-
         major_files = discover_major_files()
 
         if not major_files:
@@ -995,6 +1041,8 @@ def seed():
             )
 
         seed_institutional_elective_groups(db)
+        seed_ccny_elective_groups(db)
+        seed_program_choice_group_adjustments(db)
 
         db.commit()
         print("Database seeding completed.")

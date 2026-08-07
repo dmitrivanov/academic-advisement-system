@@ -316,11 +316,15 @@ When a program permits only a subset of a college-wide pool, add a row to
 `docs/program_choice_group_adjustments.csv`. A derived group may use:
 
 - `include_course_codes` as an allow-list;
+- `include_subject_codes` as a subject-prefix allow-list for rules such as
+  "any ACC, BUS, CIS, CSC, GIS, or MMP course";
 - `exclude_course_codes` to remove otherwise approved courses;
 - program-specific required credits or course count.
 
 Use pipe-separated course codes in both adjustment columns. Do not edit the base
 Pathways pool to enforce a restriction that applies to only one major.
 
-The database seeder materializes derived groups after loading the shared Pathways
-groups and before importing major curricula.
+The database seeder materializes derived groups after importing the major curricula
+and building broad institutional elective pools. This permits an adjustment to derive
+from either a Pathways area or an institutional elective pool. Base and derived group
+codes are institution-scoped; BMCC and CCNY memberships must never be mixed.

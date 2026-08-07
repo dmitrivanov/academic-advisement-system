@@ -1,14 +1,29 @@
-code,title,credits,prerequisites,alternatives
-ACC 122,Accounting Principles I,3,,
-BUS 104,Introduction to Business,3,,
-CSC 101,Principles in Information Technology and Computation,3,,
-CSC 110,Computer Programming I,4,CSC 101,CSC 111
-CSC 210,Computer Programming II,3,CSC 110 or CSC 111,
-CIS 345,Telecommunication Network I,3,CSC 110 or CSC 111,
-CIS 385,Web Programming I,3,CSC 110 or CSC 111,
-CIS 395,Database System I,3,CSC 110 or CSC 111,
-CIS 440,Unix,3,CSC 110 or CSC 111,
-CIS 485,Web Programming II,3,CIS 385|CSC 210,
-CIS 495,Database System II,3,CIS 395,
-PHY 110,General Physics,4,,AST 110
-MAT 206,Precalculus,4,,MAT 301
+institution_code,department,department_code,program_code,program_name,degree_type,catalog_year,group_name,group_type,required_credits,display_order,course_code,title,credits,prerequisites,alternatives,choice_group_code,source
+BMCC,Computer Information Systems,CIS,CIS,Computer Information Systems,AAS,2025-2026,Required Common Core,common_core,14,10,ENG 101,English Composition,3,,,,https://www.bmcc.cuny.edu/academics/departments/cis/computer-information-systems-cis/
+BMCC,Computer Information Systems,CIS,CIS,Computer Information Systems,AAS,2025-2026,Required Common Core,common_core,14,10,ENG 201,Introduction to Literature,3,ENG 101,,,https://www.bmcc.cuny.edu/academics/departments/cis/computer-information-systems-cis/
+BMCC,Computer Information Systems,CIS,CIS,Computer Information Systems,AAS,2025-2026,Required Common Core,common_core,14,10,CIS-MATH,Mathematical and Quantitative Reasoning - CIS,4,,,CIS_MATH_QUANT,https://www.bmcc.cuny.edu/academics/departments/cis/computer-information-systems-cis/
+BMCC,Computer Information Systems,CIS,CIS,Computer Information Systems,AAS,2025-2026,Required Common Core,common_core,14,10,CIS-LPS,Life and Physical Sciences - CIS,4,,,CIS_LIFE_PHYSICAL,https://www.bmcc.cuny.edu/academics/departments/cis/computer-information-systems-cis/
+BMCC,Computer Information Systems,CIS,CIS,Computer Information Systems,AAS,2025-2026,Flexible Core,flexible_core,10,20,CIS-OPEN-FLEX,Choose Creative Expression Individual and Society US Experience or World Cultures,3,,,FC_AAS_OPEN_AREA,https://www.bmcc.cuny.edu/academics/departments/cis/computer-information-systems-cis/
+BMCC,Computer Information Systems,CIS,CIS,Computer Information Systems,AAS,2025-2026,Flexible Core,flexible_core,10,20,CSC 101,Principles in Information Technology and Computation,3,,,,https://www.bmcc.cuny.edu/academics/departments/cis/computer-information-systems-cis/
+BMCC,Computer Information Systems,CIS,CIS,Computer Information Systems,AAS,2025-2026,Flexible Core,flexible_core,10,20,CSC 110,Computer Programming I,4,CSC 101,CSC 111,,https://www.bmcc.cuny.edu/academics/departments/cis/computer-information-systems-cis/
+BMCC,Computer Information Systems,CIS,CIS,Computer Information Systems,AAS,2025-2026,Flexible Core,flexible_core,10,20,CSC 111,Introduction to Programming,4,CSC 101|MAT 206 or MAT 206.5 or MAT 301,CSC 110,,https://www.bmcc.cuny.edu/academics/departments/cis/computer-information-systems-cis/
+BMCC,Computer Information Systems,CIS,CIS,Computer Information Systems,AAS,2025-2026,Curriculum Requirements,program_required,27,30,ACC 122,Accounting Principles I,3,,,,https://www.bmcc.cuny.edu/academics/departments/cis/computer-information-systems-cis/
+BMCC,Computer Information Systems,CIS,CIS,Computer Information Systems,AAS,2025-2026,Curriculum Requirements,program_required,27,30,BUS 104,Introduction to Business,3,,,,https://www.bmcc.cuny.edu/academics/departments/cis/computer-information-systems-cis/
+BMCC,Computer Information Systems,CIS,CIS,Computer Information Systems,AAS,2025-2026,Curriculum Requirements,program_required,27,30,CIS 345,Telecommunication Networks I,3,CSC 110 or CIS 165 or CSC 111,,,https://www.bmcc.cuny.edu/academics/departments/cis/computer-information-systems-cis/
+BMCC,Computer Information Systems,CIS,CIS,Computer Information Systems,AAS,2025-2026,Curriculum Requirements,program_required,27,30,CIS 385,Web Programming I,3,CSC 110 or CSC 111,,,https://www.bmcc.cuny.edu/academics/departments/cis/computer-information-systems-cis/
+BMCC,Computer Information Systems,CIS,CIS,Computer Information Systems,AAS,2025-2026,Curriculum Requirements,program_required,27,30,CIS 395,Database Systems I,3,CSC 110 or CSC 111,,,https://www.bmcc.cuny.edu/academics/departments/cis/computer-information-systems-cis/
+BMCC,Computer Information Systems,CIS,CIS,Computer Information Systems,AAS,2025-2026,Curriculum Requirements,program_required,27,30,CIS 440,UNIX,3,CSC 110 or CSC 111 or CIS 165,,,https://www.bmcc.cuny.edu/academics/departments/cis/computer-information-systems-cis/
+BMCC,Computer Information Systems,CIS,CIS,Computer Information Systems,AAS,2025-2026,Curriculum Requirements,program_required,27,30,CIS 485,Web Programming II,3,CIS 385|CSC 210 or CSC 211,,,https://www.bmcc.cuny.edu/academics/departments/cis/computer-information-systems-cis/
+BMCC,Computer Information Systems,CIS,CIS,Computer Information Systems,AAS,2025-2026,Curriculum Requirements,program_required,27,30,CIS 495,Database Systems II,3,CIS 395,,,https://www.bmcc.cuny.edu/academics/departments/cis/computer-information-systems-cis/
+BMCC,Computer Information Systems,CIS,CIS,Computer Information Systems,AAS,2025-2026,Curriculum Requirements,program_required,27,30,CSC 210,Computer Programming II,3,CSC 110 or CSC 111,,,https://www.bmcc.cuny.edu/academics/departments/cis/computer-information-systems-cis/
+BMCC,Computer Information Systems,CIS,CIS,Computer Information Systems,AAS,2025-2026,Program Electives,program_elective,6,40,GIS 101,Introduction to Geographic Information Systems,3,,,,https://www.bmcc.cuny.edu/academics/departments/cis/computer-information-systems-cis/
+BMCC,Computer Information Systems,CIS,CIS,Computer Information Systems,AAS,2025-2026,Program Electives,program_elective,6,40,GIS 201,Introduction to Geographic Methods,4,GEO 100,,,https://www.bmcc.cuny.edu/academics/departments/cis/computer-information-systems-cis/
+BMCC,Computer Information Systems,CIS,CIS,Computer Information Systems,AAS,2025-2026,Program Electives,program_elective,6,40,CIS 359,Information Assurance,3,,,,https://www.bmcc.cuny.edu/academics/departments/cis/computer-information-systems-cis/
+BMCC,Computer Information Systems,CIS,CIS,Computer Information Systems,AAS,2025-2026,Program Electives,program_elective,6,40,CIS 362,Cloud Computing,3,,,,https://www.bmcc.cuny.edu/academics/departments/cis/computer-information-systems-cis/
+BMCC,Computer Information Systems,CIS,CIS,Computer Information Systems,AAS,2025-2026,Program Electives,program_elective,6,40,CIS 364,Mobile Device Programming,3,,,,https://www.bmcc.cuny.edu/academics/departments/cis/computer-information-systems-cis/
+BMCC,Computer Information Systems,CIS,CIS,Computer Information Systems,AAS,2025-2026,Program Electives,program_elective,6,40,CIS 459,Security Penetration Testing,3,,,,https://www.bmcc.cuny.edu/academics/departments/cis/computer-information-systems-cis/
+BMCC,Computer Information Systems,CIS,CIS,Computer Information Systems,AAS,2025-2026,Program Electives,program_elective,6,40,CIS 490,Introduction to Data Science,3,,,,https://www.bmcc.cuny.edu/academics/departments/cis/computer-information-systems-cis/
+BMCC,Computer Information Systems,CIS,CIS,Computer Information Systems,AAS,2025-2026,Program Electives,program_elective,6,40,CIS 316,Introduction to Digital Forensics,3,,,,https://www.bmcc.cuny.edu/academics/departments/cis/computer-information-systems-cis/
+BMCC,Computer Information Systems,CIS,CIS,Computer Information Systems,AAS,2025-2026,Program Electives,program_elective,6,40,CIS 272,Introduction to Mobile App Development,3,,,,https://www.bmcc.cuny.edu/academics/departments/cis/computer-information-systems-cis/
+BMCC,Computer Information Systems,CIS,CIS,Computer Information Systems,AAS,2025-2026,Program Electives,program_elective,6,40,CIS 285,Mobile Device Security,3,,,,https://www.bmcc.cuny.edu/academics/departments/cis/computer-information-systems-cis/
+BMCC,Computer Information Systems,CIS,CIS,Computer Information Systems,AAS,2025-2026,Department Elective,program_elective,3,50,CIS-DEPARTMENT-ELECTIVE,ACC BUS CIS CSC GIS or MMP elective except CIS 100,3,,,CIS_DEPARTMENT_ELECTIVE,https://www.bmcc.cuny.edu/academics/departments/cis/computer-information-systems-cis/

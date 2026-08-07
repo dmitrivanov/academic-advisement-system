@@ -318,3 +318,41 @@ BMCC,FC_WORLD_CULTURES,TRS 206,"The Structure of the Spanish Language",3,https:/
 BMCC,FC_WORLD_CULTURES,TRS 233,"Spanish Translation & Interpretation for Healthcare",3,https://www.bmcc.cuny.edu/academics/pathways/world-cultures-and-global-issues/
 BMCC,FC_WORLD_CULTURES,TRS 237,"Editing for Translators",3,https://www.bmcc.cuny.edu/academics/pathways/world-cultures-and-global-issues/
 BMCC,FC_WORLD_CULTURES,TRS 238,"Introduction to Consecutive Interpretation",3,https://www.bmcc.cuny.edu/academics/pathways/world-cultures-and-global-issues/
+CCNY,CCNY_FC_CREATIVE,ART 10000,Introduction to Visual Arts of the World,3,https://www.ccny.cuny.edu/sites/default/files/2026-03/CCNY%20Pathways%20Common%20Core%20Courses%20fall%202026.pdf
+CCNY,CCNY_FC_CREATIVE,ENGL 22000,Creative Writing Workshop,3,https://www.ccny.cuny.edu/sites/default/files/2026-03/CCNY%20Pathways%20Common%20Core%20Courses%20fall%202026.pdf
+CCNY,CCNY_FC_CREATIVE,ENGL 23000,Writing Workshop in Prose,3,https://www.ccny.cuny.edu/sites/default/files/2026-03/CCNY%20Pathways%20Common%20Core%20Courses%20fall%202026.pdf
+CCNY,CCNY_FC_CREATIVE,MUS 10000,Popular Music,3,https://www.ccny.cuny.edu/sites/default/files/2026-03/CCNY%20Pathways%20Common%20Core%20Courses%20fall%202026.pdf
+CCNY,CCNY_FC_CREATIVE,MUS 10100,Introduction to Music,3,https://www.ccny.cuny.edu/sites/default/files/2026-03/CCNY%20Pathways%20Common%20Core%20Courses%20fall%202026.pdf
+CCNY,CCNY_FC_CREATIVE,MUS 10200,Introduction to World Music,3,https://www.ccny.cuny.edu/sites/default/files/2026-03/CCNY%20Pathways%20Common%20Core%20Courses%20fall%202026.pdf
+CCNY,CCNY_FC_CREATIVE,THTR 13100,Introduction to Theatre,3,https://www.ccny.cuny.edu/sites/default/files/2026-03/CCNY%20Pathways%20Common%20Core%20Courses%20fall%202026.pdf
+CCNY,CCNY_FC_CREATIVE,URB 20010,Introduction to Urban Studies,3,https://www.ccny.cuny.edu/sites/default/files/2026-03/CCNY%20Pathways%20Common%20Core%20Courses%20fall%202026.pdf
+CCNY,CCNY_FC_WORLD_CULTURES,JWST 11700,The Bible as Literature,3,https://www.ccny.cuny.edu/sites/default/files/2026-03/CCNY%20Pathways%20Common%20Core%20Courses%20fall%202026.pdf
+CCNY,CCNY_FC_WORLD_CULTURES,FREN 28300,The Literature of Contemporary France,3,https://www.ccny.cuny.edu/sites/default/files/2026-03/CCNY%20Pathways%20Common%20Core%20Courses%20fall%202026.pdf
+CCNY,CCNY_FC_WORLD_CULTURES,THTR 21100,Theatre History I,3,https://www.ccny.cuny.edu/sites/default/files/2026-03/CCNY%20Pathways%20Common%20Core%20Courses%20fall%202026.pdf
+CCNY,CCNY_FC_WORLD_CULTURES,THTR 21200,Theatre History II,3,https://www.ccny.cuny.edu/sites/default/files/2026-03/CCNY%20Pathways%20Common%20Core%20Courses%20fall%202026.pdf
+CCNY,CCNY_FC_WORLD_CULTURES,THTR 21300,Theatre History III,3,https://www.ccny.cuny.edu/sites/default/files/2026-03/CCNY%20Pathways%20Common%20Core%20Courses%20fall%202026.pdf
+CCNY,CCNY_FC_WORLD_CULTURES,WHUM 10100,World Humanities I,3,https://www.ccny.cuny.edu/sites/default/files/2026-03/CCNY%20Pathways%20Common%20Core%20Courses%20fall%202026.pdf
+CCNY,CCNY_FC_WORLD_CULTURES,WHUM 10200,World Humanities II,3,https://www.ccny.cuny.edu/sites/default/files/2026-03/CCNY%20Pathways%20Common%20Core%20Courses%20fall%202026.pdf
+CCNY,CCNY_FC_WORLD_CULTURES,ANTH 10100,General Anthropology,3,https://www.ccny.cuny.edu/sites/default/files/2026-03/CCNY%20Pathways%20Common%20Core%20Courses%20fall%202026.pdf
+CCNY,CCNY_FC_WORLD_CULTURES,ANTH 20000,Archaeology,3,https://www.ccny.cuny.edu/sites/default/files/2026-03/CCNY%20Pathways%20Common%20Core%20Courses%20fall%202026.pdf
+CCNY,CCNY_FC_WORLD_CULTURES,ASIA 10100,Asia and its Peoples,3,https://www.ccny.cuny.edu/sites/default/files/2026-03/CCNY%20Pathways%20Common%20Core%20Courses%20fall%202026.pdf
+CCNY,CCNY_FC_WORLD_CULTURES,ASIA 20200,Contemporary Asia,3,https://www.ccny.cuny.edu/sites/default/files/2026-03/CCNY%20Pathways%20Common%20Core%20Courses%20fall%202026.pdf
+CCNY,CCNY_FC_WORLD_CULTURES,BLST 10200,African Heritage Caribbean-Brazilian Experience,3,https://www.ccny.cuny.edu/sites/default/files/2026-03/CCNY%20Pathways%20Common%20Core%20Courses%20fall%202026.pdf
+CCNY,CCNY_FC_WORLD_CULTURES,HIST 20140,Early Societies to 1500,3,https://www.ccny.cuny.edu/sites/default/files/2026-03/CCNY%20Pathways%20Common%20Core%20Courses%20fall%202026.pdf
+CCNY,CCNY_FC_WORLD_CULTURES,HIST 20150,From 1500 to the Present,3,https://www.ccny.cuny.edu/sites/default/files/2026-03/CCNY%20Pathways%20Common%20Core%20Courses%20fall%202026.pdf
+CCNY,CCNY_FC_WORLD_CULTURES,INTL 10100,Introduction to International and Global Studies,3,https://www.ccny.cuny.edu/sites/default/files/2026-03/CCNY%20Pathways%20Common%20Core%20Courses%20fall%202026.pdf
+CCNY,CCNY_FC_WORLD_CULTURES,LALS 10100,The Heritage of the Spanish Antilles,3,https://www.ccny.cuny.edu/sites/default/files/2026-03/CCNY%20Pathways%20Common%20Core%20Courses%20fall%202026.pdf
+CCNY,CCNY_FC_INDIVIDUAL,ANTH 20100,Cross Cultural Perspectives,3,https://www.ccny.cuny.edu/sites/default/files/2026-03/CCNY%20Pathways%20Common%20Core%20Courses%20fall%202026.pdf
+CCNY,CCNY_FC_INDIVIDUAL,ECO 10250,Principles of Microeconomics,3,https://www.ccny.cuny.edu/sites/default/files/2026-03/CCNY%20Pathways%20Common%20Core%20Courses%20fall%202026.pdf
+CCNY,CCNY_FC_INDIVIDUAL,EDCE 25600,"Language, Mind, and Society",3,https://www.ccny.cuny.edu/sites/default/files/2026-03/CCNY%20Pathways%20Common%20Core%20Courses%20fall%202026.pdf
+CCNY,CCNY_FC_INDIVIDUAL,ENGL 27000,Literatures of Diversity,3,https://www.ccny.cuny.edu/sites/default/files/2026-03/CCNY%20Pathways%20Common%20Core%20Courses%20fall%202026.pdf
+CCNY,CCNY_FC_INDIVIDUAL,JWST 28100,The Holocaust,3,https://www.ccny.cuny.edu/sites/default/files/2026-03/CCNY%20Pathways%20Common%20Core%20Courses%20fall%202026.pdf
+CCNY,CCNY_FC_INDIVIDUAL,PSY 10200,Psychology in the Modern World,3,https://www.ccny.cuny.edu/sites/default/files/2026-03/CCNY%20Pathways%20Common%20Core%20Courses%20fall%202026.pdf
+CCNY,CCNY_FC_INDIVIDUAL,SOC 10500,"Individual, Group and Society",3,https://www.ccny.cuny.edu/sites/default/files/2026-03/CCNY%20Pathways%20Common%20Core%20Courses%20fall%202026.pdf
+CCNY,CCNY_FC_INDIVIDUAL,WS 10000,Women and Gender Roles in Contemporary Society,3,https://www.ccny.cuny.edu/sites/default/files/2026-03/CCNY%20Pathways%20Common%20Core%20Courses%20fall%202026.pdf
+CCNY,CCNY_FC_US_EXPERIENCE,BLST 10100,African Heritage and the Afro-American Experience,3,https://www.ccny.cuny.edu/sites/default/files/2026-03/CCNY%20Pathways%20Common%20Core%20Courses%20fall%202026.pdf
+CCNY,CCNY_FC_US_EXPERIENCE,ENGL 15500,American Literature,3,https://www.ccny.cuny.edu/sites/default/files/2026-03/CCNY%20Pathways%20Common%20Core%20Courses%20fall%202026.pdf
+CCNY,CCNY_FC_US_EXPERIENCE,PSC 10100,American Government and Politics,3,https://www.ccny.cuny.edu/sites/default/files/2026-03/CCNY%20Pathways%20Common%20Core%20Courses%20fall%202026.pdf
+CCNY,CCNY_FC_US_EXPERIENCE,USSO 10100,US Society,3,https://www.ccny.cuny.edu/sites/default/files/2026-03/CCNY%20Pathways%20Common%20Core%20Courses%20fall%202026.pdf
+CCNY,CCNY_FC_US_EXPERIENCE,HIST 24000,The United States From Its Origins to 1877,3,https://www.ccny.cuny.edu/sites/default/files/2026-03/CCNY%20Pathways%20Common%20Core%20Courses%20fall%202026.pdf
+CCNY,CCNY_FC_US_EXPERIENCE,HIST 24100,The United States Since 1865,3,https://www.ccny.cuny.edu/sites/default/files/2026-03/CCNY%20Pathways%20Common%20Core%20Courses%20fall%202026.pdf

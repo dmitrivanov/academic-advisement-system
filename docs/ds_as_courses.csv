@@ -1,7 +1,7 @@
 institution_code,department,department_code,program_code,program_name,degree_type,catalog_year,group_name,group_type,required_credits,display_order,course_code,title,credits,prerequisites,alternatives,choice_group_code,source
 BMCC,Mathematics,MAT,DS_AS,Data Science,AS,2024-2025,Required Common Core,common_core,12,10,ENG 101,English Composition,3,,,,https://www.bmcc.cuny.edu/academics/departments/math/data-science/
 BMCC,Mathematics,MAT,DS_AS,Data Science,AS,2024-2025,Required Common Core,common_core,12,10,ENG 201,Introduction to Literature,3,ENG 101,,,https://www.bmcc.cuny.edu/academics/departments/math/data-science/
-BMCC,Mathematics,MAT,DS_AS,Data Science,AS,2024-2025,Required Common Core,common_core,12,10,MAT 206.5,Intermediate Algebra and Precalculus,4,,,,https://www.bmcc.cuny.edu/academics/departments/math/course-listings/
+BMCC,Mathematics,MAT,DS_AS,Data Science,AS,2024-2025,Required Common Core,common_core,12,10,DS-MATH,Mathematical and Quantitative Reasoning - Data Science,4,,,DS_AS_MATH_QUANT,https://www.bmcc.cuny.edu/academics/departments/math/data-science/
 BMCC,Mathematics,MAT,DS_AS,Data Science,AS,2024-2025,Required Common Core,common_core,12,10,CC-LIFE-PHYSICAL,Life and Physical Sciences Requirement,3,,,RC_LIFE_PHYSICAL,https://www.bmcc.cuny.edu/academics/departments/math/data-science/
 BMCC,Mathematics,MAT,DS_AS,Data Science,AS,2024-2025,Flexible Core,flexible_core,18,20,SPE 100,Fundamentals of Public Speaking,3,,SPE 102,,https://www.bmcc.cuny.edu/academics/departments/math/data-science/
 BMCC,Mathematics,MAT,DS_AS,Data Science,AS,2024-2025,Flexible Core,flexible_core,18,20,SPE 102,Fundamentals of Public Speaking for Non-Native Speakers,3,,SPE 100,,https://www.bmcc.cuny.edu/academics/departments/math/data-science/

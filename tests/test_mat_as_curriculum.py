@@ -66,13 +66,20 @@ class MathematicsCurriculumTests(unittest.TestCase):
             "FC_CREATIVE", "FC_INDIVIDUAL", "FC_SCIENTIFIC_WORLD",
             "FC_US_EXPERIENCE", "FC_WORLD_CULTURES",
         }
-        actual_groups = {row["group_code"] for row in self.pathways}
+        actual_groups = {
+            row["group_code"] for row in self.pathways
+            if row["institution_code"] == "BMCC" and row["group_code"].startswith(("RC_", "FC_"))
+            and row["group_code"] != "FC_AAS_OPEN_AREA"
+        }
         self.assertEqual(expected_groups, actual_groups)
         self.assertGreaterEqual(len(self.pathways), 300)
 
         memberships = [(row["group_code"], row["course_code"]) for row in self.pathways]
         self.assertEqual(len(memberships), len(set(memberships)))
-        self.assertTrue(all(row["source"].startswith("https://www.bmcc.cuny.edu/") for row in self.pathways))
+        self.assertTrue(all(
+            row["source"].startswith("https://www.bmcc.cuny.edu/")
+            for row in self.pathways if row["institution_code"] == "BMCC"
+        ))
 
     def test_mathematics_derived_choice_groups(self):
         by_code = {

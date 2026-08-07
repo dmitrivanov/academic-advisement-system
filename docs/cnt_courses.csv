@@ -1,11 +1,30 @@
-code,title,credits,prerequisites,alternatives
-CSC 101,Principles in Information Technology and Computation,3,,
-CSC 110,Computer Programming I,4,,CSC 111
-CIS 165,Introduction to Operating Systems,3,CSC 101,
-CIS 255,Computer Software,3,CIS 165,
-CIS 345,Telecommunication Network I,3,CSC 110 or CSC 111,
-CIS 445,Telecommunication Network II / LAN,3,CIS 345,
-CIS 455,Network Security,3,CIS 345,
-CIS 440,Unix,3,CSC 110 or CSC 111,
-PHY 110,General Physics,4,,AST 110
-MAT 206,Precalculus,4,,MAT 301
+institution_code,department,department_code,program_code,program_name,degree_type,catalog_year,group_name,group_type,required_credits,display_order,course_code,title,credits,prerequisites,alternatives,choice_group_code,source
+BMCC,Computer Information Systems,CIS,CNT,Computer Network Technology,AAS,2025-2026,Required Common Core,common_core,14,10,ENG 101,English Composition,3,,,,https://www.bmcc.cuny.edu/academics/departments/cis/computer-network-technology/
+BMCC,Computer Information Systems,CIS,CNT,Computer Network Technology,AAS,2025-2026,Required Common Core,common_core,14,10,ENG 201,Introduction to Literature,3,ENG 101,,,https://www.bmcc.cuny.edu/academics/departments/cis/computer-network-technology/
+BMCC,Computer Information Systems,CIS,CNT,Computer Network Technology,AAS,2025-2026,Required Common Core,common_core,14,10,CNT-MATH,Mathematical and Quantitative Reasoning - CNT,4,,,CNT_MATH_QUANT,https://www.bmcc.cuny.edu/academics/departments/cis/computer-network-technology/
+BMCC,Computer Information Systems,CIS,CNT,Computer Network Technology,AAS,2025-2026,Required Common Core,common_core,14,10,CNT-LPS,Life and Physical Sciences - CNT,4,,,CNT_LIFE_PHYSICAL,https://www.bmcc.cuny.edu/academics/departments/cis/computer-network-technology/
+BMCC,Computer Information Systems,CIS,CNT,Computer Network Technology,AAS,2025-2026,Flexible Core,flexible_core,10,20,CNT-OPEN-FLEX,Choose Creative Expression Individual and Society US Experience or World Cultures,3,,,FC_AAS_OPEN_AREA,https://www.bmcc.cuny.edu/academics/departments/cis/computer-network-technology/
+BMCC,Computer Information Systems,CIS,CNT,Computer Network Technology,AAS,2025-2026,Flexible Core,flexible_core,10,20,CSC 101,Principles in Information Technology and Computation,3,,,,https://www.bmcc.cuny.edu/academics/departments/cis/computer-network-technology/
+BMCC,Computer Information Systems,CIS,CNT,Computer Network Technology,AAS,2025-2026,Flexible Core,flexible_core,10,20,CSC 110,Computer Programming I,4,CSC 101,CSC 111,,https://www.bmcc.cuny.edu/academics/departments/cis/computer-network-technology/
+BMCC,Computer Information Systems,CIS,CNT,Computer Network Technology,AAS,2025-2026,Flexible Core,flexible_core,10,20,CSC 111,Introduction to Programming,4,CSC 101|MAT 206 or MAT 206.5 or MAT 301,CSC 110,,https://www.bmcc.cuny.edu/academics/departments/cis/computer-network-technology/
+BMCC,Computer Information Systems,CIS,CNT,Computer Network Technology,AAS,2025-2026,Curriculum Requirements,program_required,24,30,ACC 122,Accounting Principles I,3,,,,https://www.bmcc.cuny.edu/academics/departments/cis/computer-network-technology/
+BMCC,Computer Information Systems,CIS,CNT,Computer Network Technology,AAS,2025-2026,Curriculum Requirements,program_required,24,30,BUS 104,Introduction to Business,3,,,,https://www.bmcc.cuny.edu/academics/departments/cis/computer-network-technology/
+BMCC,Computer Information Systems,CIS,CNT,Computer Network Technology,AAS,2025-2026,Curriculum Requirements,program_required,24,30,CIS 165,Introduction to Operating Systems,3,CSC 101,,,https://www.bmcc.cuny.edu/academics/departments/cis/computer-network-technology/
+BMCC,Computer Information Systems,CIS,CNT,Computer Network Technology,AAS,2025-2026,Curriculum Requirements,program_required,24,30,CIS 255,Computer Software,3,CIS 165,,,https://www.bmcc.cuny.edu/academics/departments/cis/computer-network-technology/
+BMCC,Computer Information Systems,CIS,CNT,Computer Network Technology,AAS,2025-2026,Curriculum Requirements,program_required,24,30,CIS 345,Telecommunication Networks I,3,CSC 110 or CIS 165 or CSC 111,,,https://www.bmcc.cuny.edu/academics/departments/cis/computer-network-technology/
+BMCC,Computer Information Systems,CIS,CNT,Computer Network Technology,AAS,2025-2026,Curriculum Requirements,program_required,24,30,CIS 440,UNIX,3,CSC 110 or CSC 111 or CIS 165,,,https://www.bmcc.cuny.edu/academics/departments/cis/computer-network-technology/
+BMCC,Computer Information Systems,CIS,CNT,Computer Network Technology,AAS,2025-2026,Curriculum Requirements,program_required,24,30,CIS 445,Telecommunications Networks II LAN,3,CIS 345,,,https://www.bmcc.cuny.edu/academics/departments/cis/computer-network-technology/
+BMCC,Computer Information Systems,CIS,CNT,Computer Network Technology,AAS,2025-2026,Curriculum Requirements,program_required,24,30,CIS 455,Network Security,3,CIS 345,,,https://www.bmcc.cuny.edu/academics/departments/cis/computer-network-technology/
+BMCC,Computer Information Systems,CIS,CNT,Computer Network Technology,AAS,2025-2026,Program Electives,program_elective,6,40,GIS 101,Introduction to Geographic Information Systems,3,,,,https://www.bmcc.cuny.edu/academics/departments/cis/computer-network-technology/
+BMCC,Computer Information Systems,CIS,CNT,Computer Network Technology,AAS,2025-2026,Program Electives,program_elective,6,40,GIS 201,Introduction to Geographic Methods,4,GEO 100,,,https://www.bmcc.cuny.edu/academics/departments/cis/computer-network-technology/
+BMCC,Computer Information Systems,CIS,CNT,Computer Network Technology,AAS,2025-2026,Program Electives,program_elective,6,40,CIS 115,Introduction to Programming with Visual BASIC,3,,,,https://www.bmcc.cuny.edu/academics/departments/cis/computer-network-technology/
+BMCC,Computer Information Systems,CIS,CNT,Computer Network Technology,AAS,2025-2026,Program Electives,program_elective,6,40,CSC 103,Introduction to Data Analytics,3,,,,https://www.bmcc.cuny.edu/academics/departments/cis/computer-network-technology/
+BMCC,Computer Information Systems,CIS,CNT,Computer Network Technology,AAS,2025-2026,Program Electives,program_elective,6,40,CIS 359,Information Assurance,3,,,,https://www.bmcc.cuny.edu/academics/departments/cis/computer-network-technology/
+BMCC,Computer Information Systems,CIS,CNT,Computer Network Technology,AAS,2025-2026,Program Electives,program_elective,6,40,CIS 362,Cloud Computing,3,,,,https://www.bmcc.cuny.edu/academics/departments/cis/computer-network-technology/
+BMCC,Computer Information Systems,CIS,CNT,Computer Network Technology,AAS,2025-2026,Program Electives,program_elective,6,40,CIS 364,Mobile Device Programming,3,,,,https://www.bmcc.cuny.edu/academics/departments/cis/computer-network-technology/
+BMCC,Computer Information Systems,CIS,CNT,Computer Network Technology,AAS,2025-2026,Program Electives,program_elective,6,40,CIS 459,Security Penetration Testing,3,,,,https://www.bmcc.cuny.edu/academics/departments/cis/computer-network-technology/
+BMCC,Computer Information Systems,CIS,CNT,Computer Network Technology,AAS,2025-2026,Program Electives,program_elective,6,40,CIS 490,Introduction to Data Science,3,,,,https://www.bmcc.cuny.edu/academics/departments/cis/computer-network-technology/
+BMCC,Computer Information Systems,CIS,CNT,Computer Network Technology,AAS,2025-2026,Program Electives,program_elective,6,40,CIS 316,Introduction to Digital Forensics,3,,,,https://www.bmcc.cuny.edu/academics/departments/cis/computer-network-technology/
+BMCC,Computer Information Systems,CIS,CNT,Computer Network Technology,AAS,2025-2026,Program Electives,program_elective,6,40,CIS 272,Introduction to Mobile App Development,3,,,,https://www.bmcc.cuny.edu/academics/departments/cis/computer-network-technology/
+BMCC,Computer Information Systems,CIS,CNT,Computer Network Technology,AAS,2025-2026,Program Electives,program_elective,6,40,CIS 285,Mobile Device Security,3,,,,https://www.bmcc.cuny.edu/academics/departments/cis/computer-network-technology/
+BMCC,Computer Information Systems,CIS,CNT,Computer Network Technology,AAS,2025-2026,Department Electives,program_elective,6,50,CNT-DEPARTMENT-ELECTIVE,ACC BUS CIS CSC GIS or MMP electives except CIS 100,6,,,CNT_DEPARTMENT_ELECTIVE,https://www.bmcc.cuny.edu/academics/departments/cis/computer-network-technology/

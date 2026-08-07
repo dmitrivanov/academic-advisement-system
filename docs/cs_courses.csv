@@ -1,32 +1,31 @@
-program_code,program_name,catalog_year,group_name,group_type,required_credits,course_code,title,credits,prerequisites,alternatives,choice_group_code
-CS,Computer Science,2026,Required Common Core,common_core,12,ENG 101,English Composition,3,,,
-CS,Computer Science,2026,Required Common Core,common_core,12,ENG 201,Introduction to Literature,3,ENG 101,,
-CS,Computer Science,2026,Required Common Core,common_core,12,MAT 206,Precalculus,4,,,
-CS,Computer Science,2026,Required Common Core,common_core,12,PHY 215,Life and Physical Sciences requirement,4,MAT 301,,
-CS,Computer Science,2026,Flexible Core,flexible_core,18,SPE 102,Fundamentals of Public Speaking ,3,,SPE 100,
-CS,Computer Science,2026,Flexible Core,flexible_core,18,SPE 100,Fundamentals of Public Speaking for Non-Native Speakers,3,,SPE 102,
-CS,Computer Science,2026,Flexible Core ,flexible_core,18,FC-INDIVIDUAL,Individual and Society Requirement,3,,,FC_INDIVIDUAL
-CS,Computer Science,2026,Flexible Core,flexible_core,18,FC-SCI-WORLD,Scientific World Requirement,6,,,FC_SCIENTIFIC_WORLD
-CS,Computer Science,2026,Flexible Core,flexible_core,18,FC-US-EXP,U.S. Experience in Its Diversity Requirement,3,,,FC_US_EXPERIENCE
-CS,Computer Science,2026,Flexible Core,flexible_core,18,FC-WORLD-CULTURES,World Cultures and Global Issues Requirement,3,,,FC_WORLD_CULTURES
-CS,Computer Science,2026,Program Requirements,program_required,30,CSC 101,Principles in Information Technology and Computation,3,,,
-CS,Computer Science,2026,Program Requirements,program_required,30,CSC 111,Introduction to Programming,4,CSC 101|MAT 206,,
-CS,Computer Science,2026,Program Requirements,program_required,30,CSC 211,Advanced Programming Techniques,3,CSC 111,,
-CS,Computer Science,2026,Program Requirements,program_required,30,CSC 215,Fundamentals of Computer Systems,3,CSC 111,,
-CS,Computer Science,2026,Program Requirements,program_required,30,CSC 231,Discrete Structures and Applications to Computer Science,4,CSC 111|MAT 301,,
-CS,Computer Science,2026,Program Requirements,program_required,30,CSC 331,Data Structures,3,CSC 211|CSC 231,,
-CS,Computer Science,2026,Program Requirements,program_required,30,CSC 350,Software Development,3,CSC 211,,
-CS,Computer Science,2026,Program Requirements,program_required,30,MAT 301,Analytic Geometry and Calculus I,4,MAT 206,,
-CS,Computer Science,2026,Program Requirements,program_required,30,MAT 302,Analytic Geometry and Calculus II,4,MAT 301,,
-CS,Computer Science,2026,Program Electives,program_elective,6,CIS 345,Telecommunication Networks I,3,CSC 110 or CSC 111 or CIS 165,,
-CS,Computer Science,2026,Program Electives,program_elective,6,CIS 359,Information Assurance,3,CSC 110 or CSC 111 or CIS 165,,
-CS,Computer Science,2026,Program Electives,program_elective,6,CIS 362,Cloud Computing,3,CSC 110 or CSC 111 or CIS 165,,
-CS,Computer Science,2026,Program Electives,program_elective,6,CIS 364,Mobile Device Programming,3,CSC 210,,
-CS,Computer Science,2026,Program Electives,program_elective,6,CIS 385,Web Programming I,3,CSC 110 or CSC 111,,
-CS,Computer Science,2026,Program Electives,program_elective,6,CIS 395,Database Systems I,3,CSC 110 or CSC 111,,
-CS,Computer Science,2026,Program Electives,program_elective,6,CSC 103,Introduction to Data Analytics,3,,,
-CS,Computer Science,2026,Program Electives,program_elective,6,GIS 201,Introduction to Geographic Methods,4,GEO 100,,
-CS,Computer Science,2026,Program Electives,program_elective,6,CIS 316,Introduction to Digital Forensics,3,,,
-CS,Computer Science,2026,Program Electives,program_elective,6,CIS 272,Introduction to Mobile App Development,3,CSC 101,,
-CS,Computer Science,2026,Program Electives,program_elective,6,CIS 285,Mobile Device Security,3,CSC 101,,
-CS,Computer Science,2026,Program Electives,program_elective,6,CSC 203,Python Programming for Data Science,3,CSC 101|MAT 206,,
+institution_code,department,department_code,program_code,program_name,degree_type,catalog_year,group_name,group_type,required_credits,display_order,course_code,title,credits,prerequisites,alternatives,choice_group_code,source
+BMCC,Computer Information Systems,CIS,CS,Computer Science,AS,2025-2026,Required Common Core,common_core,12,10,ENG 101,English Composition,3,,,,https://www.bmcc.cuny.edu/academics/departments/cis/computer-science/
+BMCC,Computer Information Systems,CIS,CS,Computer Science,AS,2025-2026,Required Common Core,common_core,12,10,ENG 201,Introduction to Literature,3,ENG 101,,,https://www.bmcc.cuny.edu/academics/departments/cis/computer-science/
+BMCC,Computer Information Systems,CIS,CS,Computer Science,AS,2025-2026,Required Common Core,common_core,12,10,CS-MATH,Mathematical and Quantitative Reasoning - Computer Science,4,,,CS_MATH_QUANT,https://www.bmcc.cuny.edu/academics/departments/cis/computer-science/
+BMCC,Computer Information Systems,CIS,CS,Computer Science,AS,2025-2026,Required Common Core,common_core,12,10,CS-LPS,Life and Physical Sciences - Computer Science,4,,,CS_LIFE_PHYSICAL,https://www.bmcc.cuny.edu/academics/departments/cis/computer-science/
+BMCC,Computer Information Systems,CIS,CS,Computer Science,AS,2025-2026,Flexible Core,flexible_core,18,20,CS-CREATIVE,Creative Expression - Computer Science,3,,,CS_CREATIVE,https://www.bmcc.cuny.edu/academics/departments/cis/computer-science/
+BMCC,Computer Information Systems,CIS,CS,Computer Science,AS,2025-2026,Flexible Core,flexible_core,18,20,FC-INDIVIDUAL,Individual and Society Requirement,3,,,FC_INDIVIDUAL,https://www.bmcc.cuny.edu/academics/departments/cis/computer-science/
+BMCC,Computer Information Systems,CIS,CS,Computer Science,AS,2025-2026,Flexible Core,flexible_core,18,20,CSC 101,Principles in Information Technology and Computation,3,,,,https://www.bmcc.cuny.edu/academics/departments/cis/computer-science/
+BMCC,Computer Information Systems,CIS,CS,Computer Science,AS,2025-2026,Flexible Core,flexible_core,18,20,CSC 111,Introduction to Programming,4,CSC 101|MAT 206 or MAT 301,,,https://www.bmcc.cuny.edu/academics/departments/cis/computer-science/
+BMCC,Computer Information Systems,CIS,CS,Computer Science,AS,2025-2026,Flexible Core,flexible_core,18,20,FC-US-EXP,U.S. Experience in Its Diversity Requirement,3,,,FC_US_EXPERIENCE,https://www.bmcc.cuny.edu/academics/departments/cis/computer-science/
+BMCC,Computer Information Systems,CIS,CS,Computer Science,AS,2025-2026,Flexible Core,flexible_core,18,20,FC-WORLD-CULTURES,World Cultures and Global Issues Requirement,3,,,FC_WORLD_CULTURES,https://www.bmcc.cuny.edu/academics/departments/cis/computer-science/
+BMCC,Computer Information Systems,CIS,CS,Computer Science,AS,2025-2026,Curriculum Requirements,program_required,20,30,CSC 211,Advanced Programming Techniques,3,CSC 111,,,https://www.bmcc.cuny.edu/academics/departments/cis/computer-science/
+BMCC,Computer Information Systems,CIS,CS,Computer Science,AS,2025-2026,Curriculum Requirements,program_required,20,30,CSC 215,Fundamentals of Computer Systems,3,CSC 111,,,https://www.bmcc.cuny.edu/academics/departments/cis/computer-science/
+BMCC,Computer Information Systems,CIS,CS,Computer Science,AS,2025-2026,Curriculum Requirements,program_required,20,30,CSC 231,Discrete Structures and Applications to Computer Science,4,CSC 111|MAT 301,,,https://www.bmcc.cuny.edu/academics/departments/cis/computer-science/
+BMCC,Computer Information Systems,CIS,CS,Computer Science,AS,2025-2026,Curriculum Requirements,program_required,20,30,CSC 331,Data Structures,3,CSC 211|CSC 231,,,https://www.bmcc.cuny.edu/academics/departments/cis/computer-science/
+BMCC,Computer Information Systems,CIS,CS,Computer Science,AS,2025-2026,Curriculum Requirements,program_required,20,30,CSC 350,Software Development,3,CSC 211,,,https://www.bmcc.cuny.edu/academics/departments/cis/computer-science/
+BMCC,Computer Information Systems,CIS,CS,Computer Science,AS,2025-2026,Curriculum Requirements,program_required,20,30,MAT 302,Analytic Geometry and Calculus II,4,MAT 301,,,https://www.bmcc.cuny.edu/academics/departments/cis/computer-science/
+BMCC,Computer Information Systems,CIS,CS,Computer Science,AS,2025-2026,Program Electives,program_elective,6,40,CIS 317,Data Analytics with Python,3,,,,https://www.bmcc.cuny.edu/academics/departments/cis/computer-science/
+BMCC,Computer Information Systems,CIS,CS,Computer Science,AS,2025-2026,Program Electives,program_elective,6,40,CIS 345,Telecommunication Networks I,3,CSC 110 or CSC 111 or CIS 165,,,https://www.bmcc.cuny.edu/academics/departments/cis/computer-science/
+BMCC,Computer Information Systems,CIS,CS,Computer Science,AS,2025-2026,Program Electives,program_elective,6,40,CIS 359,Information Assurance,3,CSC 110 or CSC 111 or CIS 165,,,https://www.bmcc.cuny.edu/academics/departments/cis/computer-science/
+BMCC,Computer Information Systems,CIS,CS,Computer Science,AS,2025-2026,Program Electives,program_elective,6,40,CIS 362,Cloud Computing,3,CSC 110 or CSC 111 or CIS 165,,,https://www.bmcc.cuny.edu/academics/departments/cis/computer-science/
+BMCC,Computer Information Systems,CIS,CS,Computer Science,AS,2025-2026,Program Electives,program_elective,6,40,CIS 364,Mobile Device Programming,3,CSC 210,,,https://www.bmcc.cuny.edu/academics/departments/cis/computer-science/
+BMCC,Computer Information Systems,CIS,CS,Computer Science,AS,2025-2026,Program Electives,program_elective,6,40,CIS 385,Web Programming I,3,CSC 110 or CSC 111,,,https://www.bmcc.cuny.edu/academics/departments/cis/computer-science/
+BMCC,Computer Information Systems,CIS,CS,Computer Science,AS,2025-2026,Program Electives,program_elective,6,40,CIS 395,Database Systems I,3,CSC 110 or CSC 111,,,https://www.bmcc.cuny.edu/academics/departments/cis/computer-science/
+BMCC,Computer Information Systems,CIS,CS,Computer Science,AS,2025-2026,Program Electives,program_elective,6,40,CSC 103,Introduction to Data Analytics,3,,,,https://www.bmcc.cuny.edu/academics/departments/cis/computer-science/
+BMCC,Computer Information Systems,CIS,CS,Computer Science,AS,2025-2026,Program Electives,program_elective,6,40,GIS 201,Introduction to Geographic Methods,4,GEO 100,,,https://www.bmcc.cuny.edu/academics/departments/cis/computer-science/
+BMCC,Computer Information Systems,CIS,CS,Computer Science,AS,2025-2026,Program Electives,program_elective,6,40,CIS 316,Introduction to Digital Forensics,3,,,,https://www.bmcc.cuny.edu/academics/departments/cis/computer-science/
+BMCC,Computer Information Systems,CIS,CS,Computer Science,AS,2025-2026,Program Electives,program_elective,6,40,CIS 272,Introduction to Mobile App Development,3,CSC 101,,,https://www.bmcc.cuny.edu/academics/departments/cis/computer-science/
+BMCC,Computer Information Systems,CIS,CS,Computer Science,AS,2025-2026,Program Electives,program_elective,6,40,CIS 285,Mobile Device Security,3,CSC 101,,,https://www.bmcc.cuny.edu/academics/departments/cis/computer-science/
+BMCC,Computer Information Systems,CIS,CS,Computer Science,AS,2025-2026,Program Electives,program_elective,6,40,CSC 203,Python Programming for Data Science,3,CSC 101|MAT 206 or MAT 301,,,https://www.bmcc.cuny.edu/academics/departments/cis/computer-science/
+BMCC,Computer Information Systems,CIS,CS,Computer Science,AS,2025-2026,General Elective,program_elective,4,50,CS-GENERAL,General Elective or Common Core STEM excess credits,4,,,BMCC_GENERAL_ELECTIVE,https://www.bmcc.cuny.edu/academics/departments/cis/computer-science/
