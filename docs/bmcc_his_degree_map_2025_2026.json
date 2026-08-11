@@ -1,0 +1,31 @@
+{
+  "institution_code": "BMCC", "program_code": "HIS_AA",
+  "program_name": "History", "degree_type": "AA",
+  "catalog_year": "2025-2026", "default_semesters": 4, "total_credits": 60,
+  "source_pdf": "/docs/degree_maps/bmcc_history_2_year_2025_2026.pdf",
+  "source_pdfs": [
+    {"label": "History 2-Year Degree Map", "url": "/docs/degree_maps/bmcc_history_2_year_2025_2026.pdf"},
+    {"label": "History 5-Semester Degree Map", "url": "/docs/degree_maps/bmcc_history_5_semester_2025_2026.pdf"}
+  ],
+  "faculty_override_note": "The official two-year, four-semester map is the default. The official five-semester map is an alternate lighter-load pathway. DegreeWorks and faculty advisement remain authoritative. This plan assumes the HIS 101/HIS 102 sequence pair by default; a student pursuing the HIS 115/HIS 116 or HIS 120/HIS 125 pair should adjust the plan with an advisor (see sequence_notes).",
+  "semesters": [
+    {"number": 1, "target_credits": 15, "course_codes": ["HIS-AA-MATHQUANT", "ENG 101", "HIS 101", "SPE 100", "PHI 100"]},
+    {"number": 2, "target_credits": 15, "course_codes": ["ENG 201", "HIS 102", "HIS-AA-WORLDCULT", "HIS-AA-USEXP"], "program_elective_slots": 1},
+    {"number": 3, "target_credits": 15, "course_codes": ["HIS-AA-LPS", "HIS-AA-SCIWORLD"], "program_elective_slots": 3},
+    {"number": 4, "target_credits": 15, "course_codes": ["HIS 275", "HIS-AA-CREATIVE2"], "program_elective_slots": 3}
+  ],
+  "alternate_pathways": [{"name": "Official five-semester map", "semester_credit_targets": [12, 12, 12, 12, 12]}],
+  "sequence_notes": [
+    "The required History Sequence is enforced as one linked pair: HIS 101 and HIS 102, HIS 115 and HIS 116, or HIS 120 and HIS 125. Mixed pairs do not satisfy the requirement.",
+    "HIS 275 requires ENG 201 plus completion of a valid History Sequence pair; both conditions are enforced.",
+    "At least one History elective must be a non-Western History course. The eligible set follows the asterisked courses in the official degree maps: HIS 114, HIS 121, HIS 122, HIS 126, HIS 129, HIS 130, HIS 131, or HIS 226.",
+    "PHI 100 is the shown Individual and Society course; ECO 100 is listed as its alternate.",
+    "Select any Creative Expression Pathways course other than SPE 100 or SPE 102 for the second Creative Expression requirement.",
+    "Students are advised (not required) to complete 1 course from AFN/HIS 123, AFN/HIS 124, ASN 114, HED 195, HIS 120, HIS 125, or POL 100 for U.S. Experience in Its Diversity.",
+    "Students are strongly encouraged (not required) to take a modern language course to satisfy World Cultures and Global Issues.",
+    "SPE 102 is the listed alternate to SPE 100 for non-native speakers of English.",
+    "A total of 6 credits (2 courses) from AFL, AFN, ANT, ASN, ECO, GEO, HIS, LAT, PHI, POL, PSY, or SOC is required for the Social Science or Ethnic Studies elective; an Ethnic Studies course is an explicit alternate option.",
+    "A total of 6 credits (2 courses) of General Elective is required; a 300-level English course, a Health Education course, and/or Modern Language course(s) are recommended but not required.",
+    "A Writing Intensive course is required for graduation."
+  ]
+}

@@ -167,6 +167,24 @@ class CoursePrerequisite(Base):
     )
 
 
+class CourseRequirementGroupPrerequisite(Base):
+    __tablename__ = "course_requirement_group_prerequisites"
+
+    id = Column(Integer, primary_key=True, index=True)
+    program_id = Column(Integer, ForeignKey("programs.id"), nullable=False)
+    course_id = Column(Integer, ForeignKey("courses.id"), nullable=False)
+    requirement_group_id = Column(Integer, ForeignKey("requirement_groups.id"), nullable=False)
+
+    __table_args__ = (
+        UniqueConstraint(
+            "program_id",
+            "course_id",
+            "requirement_group_id",
+            name="uq_course_requirement_group_prerequisite",
+        ),
+    )
+
+
 class CourseAlternative(Base):
     __tablename__ = "course_alternatives"
 
@@ -206,6 +224,8 @@ class RequirementGroup(Base):
     required_credits = Column(Integer, nullable=True)
     required_course_count = Column(Integer, nullable=True)
     display_order = Column(Integer, default=0)
+    completion_options = Column(Text, nullable=True)
+    required_course_sets = Column(Text, nullable=True)
 
     __table_args__ = (
         UniqueConstraint("program_id", "name", name="uq_program_requirement_group"),

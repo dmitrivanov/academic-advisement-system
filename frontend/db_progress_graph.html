@@ -1828,7 +1828,8 @@ async function loadOfficialDegreeMap() {
     MAT_AS: "/docs/bmcc_mat_degree_map_2025_2026.json",
     PSY_AA: "/docs/bmcc_psy_general_degree_map_2025_2026.json",
     PSY_STEM_AA: "/docs/bmcc_psy_stem_degree_map_2025_2026.json",
-    ECO_AA: "/docs/bmcc_eco_degree_map_2025_2026.json"
+    ECO_AA: "/docs/bmcc_eco_degree_map_2025_2026.json",
+    HIS_AA: "/docs/bmcc_his_degree_map_2025_2026.json"
   };
   const mapFile = mapFiles[program?.code];
   if (!mapFile) return;
@@ -1968,7 +1969,7 @@ function prospectusCourseRows(courses, completed) {
   }
 
   return `<div class="prospectus-course-list">${courses.map(course => {
-    const prerequisites = formatPrereqs(course.prereqs);
+    const prerequisites = formatPrereqs(course.prereqs, course.prerequisite_groups);
     const area = course.group_name || "Curriculum requirement";
     const unlocks = countUnlocks(course, completed);
     return `
@@ -2481,13 +2482,20 @@ function prereqSatisfied(prereq, completed) {
 }
 
 function allPrereqsSatisfied(course, completed) {
-  if (!course.prereqs || course.prereqs.length === 0) return true;
-  return course.prereqs.every(prereq => prereqSatisfied(prereq, completed));
+  const coursePrereqsMet = !course.prereqs || course.prereqs.length === 0 ||
+    course.prereqs.every(prereq => prereqSatisfied(prereq, completed));
+  const groupPrereqsMet = !course.prerequisite_groups ||
+    course.prerequisite_groups.every(groupName => {
+      const group = CURRENT_REQUIREMENTS.groups.find(item => item.name === groupName);
+      return group && groupRequirementSatisfied(group, completed);
+    });
+  return coursePrereqsMet && groupPrereqsMet;
 }
 
-function formatPrereqs(prereqs) {
-  if (!prereqs || prereqs.length === 0) return "None";
-  return prereqs.map(p => Array.isArray(p) ? p.join(" or ") : p).join(", ");
+function formatPrereqs(prereqs, prerequisiteGroups = []) {
+  const labels = (prereqs || []).map(p => Array.isArray(p) ? p.join(" or ") : p);
+  labels.push(...prerequisiteGroups.map(name => `${name} requirement`));
+  return labels.length ? labels.join(", ") : "None";
 }
 
 function formatAlternatives(alts) {
@@ -2581,6 +2589,15 @@ function hasCompletedAlternative(code, completed) {
 }
 
 function groupCreditsCompleted(group, completed) {
+  if (group.completion_options?.length) {
+    return Math.max(0, ...group.completion_options.map(option =>
+      option.reduce((total, code) => {
+        const course = group.courses.find(item => item.code === code);
+        return total + (course ? courseCompletedCredits(code, course, completed) : 0);
+      }, 0)
+    ));
+  }
+
   let credits = 0;
 
   const allocatedRequired = group.group_type === "program_elective"
@@ -2607,6 +2624,26 @@ function groupCreditsCompleted(group, completed) {
 }
 
 function groupRequirementSatisfied(group, completed) {
+  if (group.completion_options?.length) {
+    const hasCompletedOption = group.completion_options.some(option =>
+      option.every(code => {
+        const course = group.courses.find(item => item.code === code);
+        return course && isCourseCompleted(code, course, completed);
+      })
+    );
+    if (!hasCompletedOption) return false;
+  }
+
+  if (group.required_course_sets?.length) {
+    const hasEveryRequiredSet = group.required_course_sets.every(courseSet =>
+      courseSet.some(code => {
+        const course = group.courses.find(item => item.code === code);
+        return course && isCourseCompleted(code, course, completed);
+      })
+    );
+    if (!hasEveryRequiredSet) return false;
+  }
+
   if (group.required_credits) {
     return groupCreditsCompleted(group, completed) >= Number(group.required_credits);
   }
@@ -2887,7 +2924,7 @@ function createSelectableCourseCard(course) {
     <details class="course-details">
       <summary>Class details</summary>
       <div>Credits: ${course.credits}</div>
-      <div>Prereqs: ${formatPrereqs(course.prereqs)}</div>
+      <div>Prereqs: ${formatPrereqs(course.prereqs, course.prerequisite_groups)}</div>
       <div>Alternatives: ${formatAlternatives(course.alternatives)}</div>
       <div>Area: ${course.group_name}</div>
     </details>
@@ -2919,7 +2956,7 @@ function createAlternativeCourseCard(courses, group) {
           ${course.code}
         </div>
         <div class="course-title">${course.title}</div>
-        <div class="course-detail">${course.credits} credits · Prereqs: ${formatPrereqs(course.prereqs)}</div>
+        <div class="course-detail">${course.credits} credits · Prereqs: ${formatPrereqs(course.prereqs, course.prerequisite_groups)}</div>
       </label>
     `;
   }).join("");
@@ -3080,7 +3117,7 @@ function createChoiceOption(course, selected, sequencePosition, sequenceLength) 
     <div class="course-code">${course.code}</div>
     <div class="course-title">${course.title}</div>
     <div class="course-detail">Credits: ${course.credits}</div>
-    ${status === "locked" ? `<div class="course-detail"><strong>Unavailable:</strong> complete ${formatPrereqs(currentCourse.prereqs)} first.</div>` : ""}
+    ${status === "locked" ? `<div class="course-detail"><strong>Unavailable:</strong> complete ${formatPrereqs(currentCourse.prereqs, currentCourse.prerequisite_groups)} first.</div>` : ""}
     ${status === "not_needed" ? `<div class="course-detail"><strong>Unavailable:</strong> this course is not needed for the remaining requirement.</div>` : ""}
     ${completedElsewhere && !allocatedElsewhere ? `<div class="course-detail"><strong>Completed elsewhere.</strong> Select to apply it here.</div>` : ""}
     ${allocatedElsewhere ? `<div class="course-detail"><strong>Reserved for its listed Core or major requirement.</strong></div>` : ""}
@@ -3353,7 +3390,7 @@ function renderStatusSection(parent, title, subtitle, courses) {
         <details class="course-details">
           <summary>Class details</summary>
           <div>Credits: ${selectedChoices.length ? `${selectedChoiceCredits(code)} selected / ${course.credits} required` : course.credits}</div>
-          <div>Prereqs: ${formatPrereqs(course.prereqs)}</div>
+          <div>Prereqs: ${formatPrereqs(course.prereqs, course.prerequisite_groups)}</div>
           <div>Alternatives: ${formatAlternatives(course.alternatives)}</div>
           ${course.choice_group_code ? `<div>Choice group: ${course.choice_group_code}</div>` : ""}
         </details>
