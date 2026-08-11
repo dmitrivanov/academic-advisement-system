@@ -1,4 +1,5 @@
 import csv
+import json
 from pathlib import Path
 
 from sqlalchemy import inspect, text
@@ -11,6 +12,7 @@ from models import (
     Course,
     ProgramCourse,
     CoursePrerequisite,
+    CourseRequirementGroupPrerequisite,
     CourseAlternative,
     FAQEntry,
     RequirementGroup,
@@ -74,6 +76,24 @@ def ensure_choice_group_columns(db):
         if column_name not in columns:
             db.execute(text(f"ALTER TABLE choice_groups ADD COLUMN {column_name} VARCHAR"))
     db.commit()
+
+
+def ensure_requirement_group_columns(db):
+    inspector = inspect(engine)
+    columns = {col["name"] for col in inspector.get_columns("requirement_groups")}
+    for column_name in ("completion_options", "required_course_sets"):
+        if column_name not in columns:
+            db.execute(text(f"ALTER TABLE requirement_groups ADD COLUMN {column_name} TEXT"))
+    db.commit()
+
+
+def parse_code_sets(value):
+    if not value or not value.strip():
+        return None
+    return json.dumps([
+        [code.strip() for code in option.split("+") if code.strip()]
+        for option in value.split("||") if option.strip()
+    ])
 
 def parse_relationships(value):
     if not value or not value.strip():
@@ -275,6 +295,10 @@ def clear_program_data(db, program):
         .all()
     ]
 
+    db.query(CourseRequirementGroupPrerequisite).filter_by(
+        program_id=program.id
+    ).delete(synchronize_session=False)
+
     if group_ids:
         db.query(RequirementGroupCourse).filter(
             RequirementGroupCourse.requirement_group_id.in_(group_ids)
@@ -348,6 +372,7 @@ def seed_old_format(db, program, csv_path):
 
 def seed_new_format(db, program, csv_path):
     rows = []
+    initialized_group_rules = set()
 
     with csv_path.open(newline="", encoding="utf-8-sig") as f:
         reader = csv.DictReader(f)
@@ -380,6 +405,16 @@ def seed_new_format(db, program, csv_path):
             group.group_type = group_type
             group.required_credits = required_credits
             group.display_order = display_order
+            completion_options = parse_code_sets(row.get("completion_options", ""))
+            required_course_sets = parse_code_sets(row.get("required_course_sets", ""))
+            if group.id not in initialized_group_rules:
+                group.completion_options = completion_options
+                group.required_course_sets = required_course_sets
+                initialized_group_rules.add(group.id)
+            elif completion_options and completion_options != group.completion_options:
+                raise ValueError(f"Conflicting completion_options for group {group_name!r}")
+            elif required_course_sets and required_course_sets != group.required_course_sets:
+                raise ValueError(f"Conflicting required_course_sets for group {group_name!r}")
 
             code = row["course_code"].strip()
             title = row["title"].strip()
@@ -468,6 +503,21 @@ def add_relationships(db, program, rows, old_format):
                     course_id=course.id,
                     alternative_course_id=alt.id,
                 )
+
+        for group_name in [name.strip() for name in (row.get("prerequisite_groups") or "").split("|") if name.strip()]:
+            requirement_group = db.query(RequirementGroup).filter_by(
+                program_id=program.id,
+                name=group_name,
+            ).first()
+            if not requirement_group:
+                raise ValueError(f"Unknown prerequisite group {group_name!r} for {course_code}")
+            get_or_create(
+                db,
+                CourseRequirementGroupPrerequisite,
+                program_id=program.id,
+                course_id=course.id,
+                requirement_group_id=requirement_group.id,
+            )
 
 
 
@@ -968,6 +1018,7 @@ def seed():
         ensure_institution_columns(db)
         ensure_course_columns(db)
         ensure_choice_group_columns(db)
+        ensure_requirement_group_columns(db)
         seed_institutions(db)
         seed_departments(db)
         seed_programs(db)

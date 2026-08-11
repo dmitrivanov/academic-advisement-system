@@ -59,21 +59,18 @@ class HistoryCurriculumTests(unittest.TestCase):
         )
         self.assertEqual({"6"}, {row["required_credits"] for row in sequence_rows})
 
-    def test_sequence_pairs_cannot_be_mixed_without_a_documented_limitation(self):
-        # The current choice-group schema only supports flat "pick any N" pools,
-        # not linked two-course bundles with mutual exclusivity between bundles.
-        # As a partial safeguard, each pair's second course requires its own
-        # pair's first course -- this does NOT prevent picking across pairs
-        # (e.g. HIS 101 + HIS 116), which is why the limitation must be
-        # prominently documented rather than silently treated as solved.
+    def test_sequence_pairs_are_machine_enforced_and_cannot_be_mixed(self):
         by_code = {row["course_code"]: row for row in self.rows}
+        expected = "HIS 101+HIS 102||HIS 115+HIS 116||HIS 120+HIS 125"
+        sequence_rows = [row for row in self.rows if row["group_name"] == "History Sequence"]
+        self.assertEqual([expected], [row["completion_options"] for row in sequence_rows if row["completion_options"]])
         self.assertEqual("HIS 101", by_code["HIS 102"]["prerequisites"])
         self.assertEqual("HIS 115", by_code["HIS 116"]["prerequisites"])
         self.assertEqual("HIS 120", by_code["HIS 125"]["prerequisites"])
 
-        sources_text = (DOCS / "his_aa_sources.md").read_text(encoding="utf-8")
-        self.assertIn("KNOWN LIMITATION", sources_text)
-        self.assertIn("linked", sources_text.lower())
+        page = (ROOT / "frontend" / "db_progress_graph.html").read_text(encoding="utf-8")
+        self.assertIn("group.completion_options.some", page)
+        self.assertIn("option.every", page)
 
     def test_history_electives_require_nine_credits_from_a_larger_pool(self):
         elective_rows = [row for row in self.rows if row["group_name"] == "History Electives"]
@@ -89,13 +86,22 @@ class HistoryCurriculumTests(unittest.TestCase):
         self.assertNotIn("HIS 125", elective_codes)
         self.assertNotIn("HIS 275", elective_codes)
 
-    def test_non_western_rule_is_documented_as_unenforced(self):
+    def test_non_western_rule_is_machine_enforced(self):
         elective_rows = [row for row in self.rows if row["group_name"] == "History Electives"]
-        non_western_titled = [row for row in elective_rows if "non-Western" in row["title"]]
-        self.assertGreaterEqual(len(non_western_titled), 1)
+        encoded = [row["required_course_sets"] for row in elective_rows if row["required_course_sets"]]
+        self.assertEqual(1, len(encoded))
+        self.assertEqual(
+            {"HIS 114", "HIS 121", "HIS 122", "HIS 126", "HIS 129", "HIS 130", "HIS 131", "HIS 226"},
+            set(encoded[0].split("+")),
+        )
+        self.assertTrue(all("(non-Western)" not in row["title"] for row in elective_rows))
 
-        sources_text = (DOCS / "his_aa_sources.md").read_text(encoding="utf-8")
-        self.assertIn("not mechanically enforced", sources_text)
+    def test_his_275_requires_english_and_a_valid_history_sequence(self):
+        his_275 = next(row for row in self.rows if row["course_code"] == "HIS 275")
+        self.assertEqual("ENG 201", his_275["prerequisites"])
+        self.assertEqual("History Sequence", his_275["prerequisite_groups"])
+        page = (ROOT / "frontend" / "db_progress_graph.html").read_text(encoding="utf-8")
+        self.assertIn("course.prerequisite_groups.every", page)
 
     def test_social_science_ethnic_selector_is_populated_and_requires_six_credits(self):
         rows = [row for row in self.rows if row["group_name"] == "Social Science or Ethnic Studies Electives"]

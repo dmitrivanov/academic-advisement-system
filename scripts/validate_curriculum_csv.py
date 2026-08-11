@@ -33,6 +33,12 @@ CANONICAL_COLUMNS = [
     "source",
 ]
 
+OPTIONAL_COLUMNS = [
+    "completion_options",
+    "required_course_sets",
+    "prerequisite_groups",
+]
+
 REQUIRED_COLUMNS = {
     "program_code",
     "program_name",
@@ -246,10 +252,10 @@ def validate_file(path: Path, *, docs_dir: Path | None = None) -> ValidationResu
             "warning",
             "Not using the full contributor schema; missing: " + ", ".join(missing_canonical) + ".",
         ))
-    elif headers != CANONICAL_COLUMNS:
+    elif headers != CANONICAL_COLUMNS + [name for name in OPTIONAL_COLUMNS if name in headers]:
         findings.append(Finding("warning", "Columns are not in the canonical template order."))
 
-    unexpected = sorted(set(headers) - set(CANONICAL_COLUMNS))
+    unexpected = sorted(set(headers) - set(CANONICAL_COLUMNS) - set(OPTIONAL_COLUMNS))
     if unexpected:
         findings.append(Finding("warning", f"Unexpected column(s) are ignored by the seeder: {', '.join(unexpected)}."))
 
@@ -276,6 +282,8 @@ def validate_file(path: Path, *, docs_dir: Path | None = None) -> ValidationResu
     group_metadata: dict[str, tuple[str, str, str]] = {}
     group_rows: dict[str, list[tuple[str, float, str]]] = {}
     non_url_source_rows: list[int] = []
+    code_set_rules: list[tuple[int, str, str]] = []
+    prerequisite_group_rules: list[tuple[int, str]] = []
 
     for index, raw_row in enumerate(rows, start=2):
         row = {key: clean(value) for key, value in raw_row.items() if key is not None}
@@ -373,11 +381,45 @@ def validate_file(path: Path, *, docs_dir: Path | None = None) -> ValidationResu
                 for referenced_code in relationship_codes(value):
                     relationships.append((index, code, field, referenced_code.upper()))
 
+        for field in ("completion_options", "required_course_sets"):
+            value = row.get(field, "")
+            if value:
+                code_set_rules.append((index, field, value))
+                if any(not option.strip() for option in value.split("||")):
+                    findings.append(Finding("error", f"Malformed `{field}` syntax: {value}.", index))
+
+        for group_name_ref in row.get("prerequisite_groups", "").split("|"):
+            if group_name_ref.strip():
+                prerequisite_group_rules.append((index, group_name_ref.strip()))
+
     for field, values in program_values.items():
         if len(values) > 1:
             findings.append(Finding(
                 "error",
                 f"A curriculum file must describe one program; `{field}` has multiple values: {', '.join(sorted(values))}.",
+            ))
+
+    for index, field, value in code_set_rules:
+        for option in value.split("||"):
+            codes = [clean(code).upper() for code in option.split("+")]
+            if not codes or any(not code for code in codes):
+                findings.append(Finding("error", f"Malformed `{field}` syntax: {value}.", index))
+                continue
+            missing = sorted(set(codes) - local_course_codes)
+            if missing:
+                findings.append(Finding(
+                    "error",
+                    f"`{field}` references course(s) outside this curriculum: {', '.join(missing)}.",
+                    index,
+                ))
+
+    known_group_names = set(group_metadata)
+    for index, group_name_ref in prerequisite_group_rules:
+        if group_name_ref not in known_group_names:
+            findings.append(Finding(
+                "error",
+                f"`prerequisite_groups` references unknown group `{group_name_ref}`.",
+                index,
             ))
 
     if non_url_source_rows:

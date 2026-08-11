@@ -15,6 +15,7 @@ from models import (
     Course,
     ProgramCourse,
     CoursePrerequisite,
+    CourseRequirementGroupPrerequisite,
     CourseAlternative,
     RequirementGroup,
     RequirementGroupCourse,
@@ -1260,6 +1261,11 @@ def build_course_payload(db: Session, program_id: int, course: Course):
         .filter_by(program_id=program_id, course_id=course.id)
         .all()
     )
+    group_prereq_rows = (
+        db.query(CourseRequirementGroupPrerequisite)
+        .filter_by(program_id=program_id, course_id=course.id)
+        .all()
+    )
 
     prereq_groups = {}
 
@@ -1278,6 +1284,12 @@ def build_course_payload(db: Session, program_id: int, course: Course):
         if alt_course:
             alternatives.append(alt_course.code)
 
+    prerequisite_groups = []
+    for row in group_prereq_rows:
+        group = db.query(RequirementGroup).filter_by(id=row.requirement_group_id).first()
+        if group:
+            prerequisite_groups.append(group.name)
+
     return {
         "code": course.code,
         "title": course.title,
@@ -1285,6 +1297,7 @@ def build_course_payload(db: Session, program_id: int, course: Course):
         "choice_group_code": course.choice_group_code,
         "prereqs": prereqs,
         "alternatives": alternatives,
+        "prerequisite_groups": prerequisite_groups,
     }
 
 
@@ -1385,6 +1398,8 @@ def get_program_requirements(program_code: str, db: Session = Depends(get_db)):
             "required_credits": group.required_credits,
             "required_course_count": group.required_course_count,
             "display_order": group.display_order,
+            "completion_options": json.loads(group.completion_options) if group.completion_options else [],
+            "required_course_sets": json.loads(group.required_course_sets) if group.required_course_sets else [],
             "courses": courses,
         })
 

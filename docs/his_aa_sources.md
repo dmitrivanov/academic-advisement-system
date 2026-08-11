@@ -80,9 +80,9 @@ default. Required Common Core course credits therefore sum to exactly 12
 
 ## Choices and alternatives
 
-- **History Sequence (6 credits) — the required linked-pair choice.** See
-  "KNOWN LIMITATION" in "Ambiguities requiring maintainer review" below. This
-  is the most significant modeling decision in this submission.
+- **History Sequence (6 credits) — the required linked-pair choice.** Encoded
+  as three valid completion bundles: HIS 101+102, HIS 115+116, or HIS 120+125.
+  Mixed pairs do not satisfy the requirement.
 - **MAT 161 (Common Core, Mathematical and Quantitative Reasoning).** Shown
   as the default on both maps with no restrictive footnote. Left as the
   standard, unrestricted `RC_MATH_QUANT` pool (placeholder `HIS-AA-MATHQUANT`).
@@ -126,7 +126,9 @@ default. Required Common Core course credits therefore sum to exactly 12
   129, 130, 131, 225, 226) are listed, `required_credits=9` — the validator
   is expected to warn that listed credits (42) exceed required (9), the
   intended "choose 3 of 14" behavior.
-- **Non-Western History requirement.** See "KNOWN LIMITATION" below.
+- **Non-Western History requirement.** Mechanically enforced as at least one
+  course from HIS 114, 121, 122, 126, 129, 130, 131, or 226, the courses the
+  official map marks with an asterisk in its History-elective list.
 - **Social Science or Ethnic Studies Electives (6 credits, 2 courses).**
   Footnote: "Choose from AFL, AFN, ANT, ASN, ECO, GEO, HIS, LAT, PHI, POL,
   PSY, or SOC." `BMCC_GENERAL_ELECTIVE` already exists as a canonical shared
@@ -160,11 +162,9 @@ default. Required Common Core course credits therefore sum to exactly 12
 
 - **HIS 275 (History Research and Writing Methods).** Officially requires
   "ENG 201 & (HIS 101 and HIS 102) or (HIS 115 and HIS 116) or (HIS 120 and
-  HIS 125)." The prerequisite grammar (`|` for AND, ` or ` for OR) has no
-  grouping/parentheses, so the grouped "(A and B) or (C and D) or (E and F)"
-  structure cannot be expressed. Only `ENG 201` is encoded as HIS 275's
-  prerequisite; the sequence-completion portion is unenforced. **Flagged for
-  maintainer review.**
+  HIS 125)." `ENG 201` is encoded as a course prerequisite and `History
+  Sequence` as a requirement-group prerequisite, so a valid completed pair
+  is required before HIS 275 becomes available.
 - **ECO 202 note (reused from Economics).** Not applicable here; ECO 100 is
   only referenced as PHI 100's alternate and carries no prerequisite of its
   own in this program.
@@ -187,54 +187,18 @@ default. Required Common Core course credits therefore sum to exactly 12
 
 ## Ambiguities requiring maintainer review
 
-1. **KNOWN LIMITATION — linked History Sequence pairs are not enforced.**
-   The degree requires choosing exactly one pair: HIS 101 & HIS 102, or
-   HIS 115 & HIS 116, or HIS 120 & HIS 125. I investigated the schema
-   directly (`models.py`'s `ChoiceGroup`/`ChoiceGroupCourse` tables, the
-   `program_choice_group_adjustments.csv` mechanism, and the frontend's
-   choice-selection logic in `frontend/db_progress_graph.html`) and
-   confirmed it only supports flat "pick any N courses/credits from a pool"
-   selection — there is no concept of a linked, mutually-exclusive
-   multi-course bundle. Building true enforcement would require a schema
-   change (a new grouping concept, new validator logic, new UI, new
-   completion-checking logic) beyond a single curriculum-data submission, so
-   per this issue's explicit instruction I did not force an inaccurate model.
-   Instead: all 6 sequence courses are listed under a single "History
-   Sequence" requirement group (`required_credits=6`), each second-course
-   (HIS 102, HIS 116, HIS 125) has its own pair's first course as a
-   prerequisite as a partial safeguard, and the limitation is documented
-   here, in the degree-map JSON's `sequence_notes`, and should be called out
-   prominently in the pull request. **A student could currently mark courses
-   from two different pairs as complete without the UI blocking it — that
-   would not satisfy the real degree requirement.**
-2. **Non-Western History requirement is not mechanically enforced.** Neither
-   degree map nor the official course-listing page publishes an authoritative
-   "these specific courses count as non-Western" list — only the requirement
-   text itself ("at least one course must be a non-western History course").
-   I labeled the courses whose titles clearly indicate non-Western/global
-   regional content — HIS 114 (Asian American History), HIS 121/122
-   (African Civilization/Africa 1500-Present), HIS 129 (Middle East), HIS 226
-   (Middle East Conflict) — with "(non-Western)" in the curriculum data as an
-   advisory aid. Several other courses (HIS 123/124 African American
-   History, HIS 126 Caribbean History, HIS 127/128 Puerto Rico, HIS 130
-   Latin America, HIS 131 Dominican Republic) plausibly also qualify
-   depending on BMCC's specific classification, but I did not label them
-   without an authoritative source, to avoid guessing. **The system does not
-   block a student from completing zero non-Western electives.** Recommend
-   the maintainer confirm an authoritative non-Western course list with the
-   History department.
-3. `docs/programs.csv` listed HIS_AA's catalog year as `2026`; corrected to
+1. `docs/programs.csv` listed HIS_AA's catalog year as `2026`; corrected to
    `2025-2026` per the issue and both official maps (see "Program identity").
-4. `HIS_AA_SOCSCI_ETHNIC` is a subject-prefix-restricted view over the
+2. `HIS_AA_SOCSCI_ETHNIC` is a subject-prefix-restricted view over the
    canonical `BMCC_GENERAL_ELECTIVE` pool (auto-populated from every real
    course in the system at seed time — 96 courses across the 12 relevant
    departments as of this submission). Its completeness depends on which
    curricula have been added to the repository so far, so it will grow (not
    require manual editing) as more majors are added.
-5. HIS 275's sequence-completion prerequisite and HIS 225/HIS 226's
-   "any history course" / "any Social Science course" prerequisites are not
-   encoded (see "Prerequisite review").
-6. ENG 100.5 / MAT 161.5 placement-track alternates (five-semester map only)
+3. HIS 225/HIS 226's "any history course" / "any Social Science course"
+   prerequisites are not encoded (see "Prerequisite review"). HIS 275 now
+   requires ENG 201 and completion of a valid History Sequence bundle.
+4. ENG 100.5 / MAT 161.5 placement-track alternates (five-semester map only)
    are not modeled as additional course rows (see "Prerequisite review").
 
 ## Validator and local testing
@@ -247,9 +211,8 @@ default. Required Common Core course credits therefore sum to exactly 12
      curriculum files (Mathematics, Economics).
   2. `alternatives` references `ECO 100` — expected; already exists in
      `eco_aa_courses.csv`.
-  3. `History Sequence` lists 18 credits but requires 6 — expected; see the
-     linked-pair limitation above. This is the closest safe approximation of
-     "choose one pair," not a true "choose any 2" elective.
+  3. `History Sequence` lists 18 credits but requires 6 — expected; its
+     `completion_options` rule restricts completion to one valid linked pair.
   4. `History Electives` lists 42 credits but requires 9 — expected
      "choose 3 of 14" elective pool.
 - Local seed completed: `python seed_database.py` — confirmed the stale
