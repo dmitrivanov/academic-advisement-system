@@ -1649,6 +1649,10 @@ body { background: #f5f5f7; color: #1d1d1f; }
           <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h9l3 3v15H6zM14 3v4h4M9 12h6M9 16h6"/></svg>
           View Degree Plan
         </button>
+        <button id="downloadPlanPdfButton" class="planner-secondary" onclick="downloadPlanPdf()">
+          <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0l-4-4m4 4l4-4M5 19h14"/></svg>
+          Download / Save PDF
+        </button>
       </div>
       <div id="aiPlanExplanation" class="ai-plan-box" style="display:none;"></div>
       <div id="degreePlanSummary" class="plan-note"></div>
@@ -2109,6 +2113,13 @@ function printPlanProspectus() {
 
   window.addEventListener("afterprint", restore);
   window.print();
+}
+
+function downloadPlanPdf() {
+  openPlanProspectus("degree");
+  // Let the newly rendered prospectus paint before opening the browser's
+  // print dialog, where the user can choose “Save as PDF”.
+  window.requestAnimationFrame(() => window.requestAnimationFrame(printPlanProspectus));
 }
 
 function changeProgram() {

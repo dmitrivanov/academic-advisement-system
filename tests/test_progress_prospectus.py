@@ -44,6 +44,18 @@ class ProgressProspectusTests(unittest.TestCase):
             re.compile(r"async function generateAIStudyPlan\(\).*?openPlanProspectus\(\"degree\"\)", re.DOTALL),
         )
 
+    def test_degree_planner_exposes_direct_pdf_export(self):
+        self.assertIn('id="downloadPlanPdfButton"', self.html)
+        self.assertIn('onclick="downloadPlanPdf()"', self.html)
+        self.assertRegex(
+            self.html,
+            re.compile(
+                r"function downloadPlanPdf\(\).*?openPlanProspectus\(\"degree\"\);"
+                r".*?requestAnimationFrame\(printPlanProspectus\)",
+                re.DOTALL,
+            ),
+        )
+
     def test_ai_commentary_preserves_sanitized_markdown_html(self):
         self.assertIn('class="prospectus-commentary"', self.html)
         self.assertIn('class="advisor-markdown"', self.html)
