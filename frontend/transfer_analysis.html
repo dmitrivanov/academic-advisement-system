@@ -410,7 +410,7 @@ function renderSourceSummary() {
 async function loadInitialData() {
   INSTITUTIONS = await fetchJson("/api/db/institutions");
   DEPARTMENTS = await fetchJson("/api/db/departments");
-  PROGRAMS = await fetchJson("/api/db/programs");
+  PROGRAMS = await fetchJson("/api/db/programs?selector_only=true");
   PROGRAM_AVAILABILITY = Object.fromEntries(
     PROGRAMS.map(program => [
       program.code,

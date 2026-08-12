@@ -2155,7 +2155,7 @@ async function loadPrograms() {
   const programSelect = document.getElementById("programSelect");
   programSelect.innerHTML = "";
 
-  PROGRAMS = await fetchJson("/api/db/programs");
+  PROGRAMS = await fetchJson("/api/db/programs?selector_only=true");
 
   PROGRAM_AVAILABILITY = Object.fromEntries(
     PROGRAMS.map(program => [

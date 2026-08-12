@@ -467,7 +467,7 @@ async function loadInstitutions() {
 }
 
 async function loadPrograms() {
-  PROGRAMS = await fetchJson("/api/db/programs");
+  PROGRAMS = await fetchJson("/api/db/programs?selector_only=true");
 
   PROGRAM_AVAILABILITY = Object.fromEntries(
     PROGRAMS.map(program => [

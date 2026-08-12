@@ -5,9 +5,10 @@ from typing import Any, Optional
 from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel, Field
 from sqlalchemy import func
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 
 from database import get_db
+from program_selector_logic import canonical_selector_programs
 from models import (
     Institution,
     Department,
@@ -996,8 +997,13 @@ def get_departments(db: Session = Depends(get_db)):
 
 
 @router.get("/programs")
-def get_programs(db: Session = Depends(get_db)):
-    programs = db.query(Program).order_by(Program.name).all()
+def get_programs(selector_only: bool = False, db: Session = Depends(get_db)):
+    programs = (
+        db.query(Program)
+        .options(joinedload(Program.department).joinedload(Department.institution))
+        .order_by(Program.name, Program.id)
+        .all()
+    )
 
     # Calculate curriculum availability in two aggregate queries instead of
     # making one requirements request for every program in the frontend.
@@ -1047,7 +1053,7 @@ def get_programs(db: Session = Depends(get_db)):
             "has_curriculum": course_count > 0,
         })
 
-    return result
+    return canonical_selector_programs(result) if selector_only else result
 
 
 @router.get("/courses")
