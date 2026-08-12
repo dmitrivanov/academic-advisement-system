@@ -1,0 +1,29 @@
+{
+  "institution_code": "BMCC", "program_code": "CRJ_AA",
+  "program_name": "Criminal Justice", "degree_type": "AA",
+  "catalog_year": "2025-2026", "default_semesters": 4, "total_credits": 60,
+  "source_pdf": "/docs/degree_maps/bmcc_criminal_justice_2_year_2025_2026.pdf",
+  "source_pdfs": [
+    {"label": "Criminal Justice 2-Year Degree Map", "url": "/docs/degree_maps/bmcc_criminal_justice_2_year_2025_2026.pdf"},
+    {"label": "Criminal Justice 5-Semester Degree Map", "url": "/docs/degree_maps/bmcc_criminal_justice_5_semester_2025_2026.pdf"}
+  ],
+  "faculty_override_note": "The official two-year, four-semester map is the default. The official five-semester map is an alternate lighter-load pathway. DegreeWorks and faculty advisement remain authoritative.",
+  "semesters": [
+    {"number": 1, "target_credits": 16, "course_codes": ["MAT 150", "ENG 101", "CRJ 101", "CRJ-AA-INDIVIDUAL", "CRJ-AA-USEXP"]},
+    {"number": 2, "target_credits": 15, "course_codes": ["ENG 201", "CRJ 102", "CRJ 200", "SPE 100", "CRJ-AA-WORLDCULT"]},
+    {"number": 3, "target_credits": 15, "course_codes": ["LIN 250", "CRJ 201", "CRJ-AA-MODLANG", "CRJ-AA-LPS", "CRJ-AA-SCIWORLD"]},
+    {"number": 4, "target_credits": 14, "course_codes": ["CRJ 204", "CRJ 202", "ECO 201", "CRJ-AA-CREATIVE2", "CRJ-AA-GENERAL"]}
+  ],
+  "alternate_pathways": [{"name": "Official five-semester map", "semester_credit_targets": [10, 12, 12, 12, 14]}],
+  "sequence_notes": [
+    "CRJ 101 is a prerequisite for all 200-level CRJ courses (CRJ 200, 201, 202, 204) per the degree map footnotes; the official course-listings page specifically lists CRJ 200's own prerequisite as POL 100, not CRJ 101.",
+    "CRJ 102 requires SOC 100; CRJ 200 requires POL 100. Both prerequisite courses are also strongly recommended (not required) to satisfy the Individual and Society and U.S. Experience in Its Diversity Flexible Core areas respectively, so those two Flexible Core slots remain open, unrestricted selections rather than being locked to SOC 100 / POL 100.",
+    "CRJ 204 requires both CRJ 101 and CRJ 102, confirmed identically by both degree maps and the official course-listings page.",
+    "MAT 150 (Introduction to Statistics, 4 credits) is the required Mathematical and Quantitative Reasoning course, a STEM variant one credit above the nominal 3-credit Common Core slot.",
+    "General Elective is officially a 3-credit requirement; the degree maps show only 2 explicit credits in the final semester because the 4th MAT 150 credit (STEM variant excess) counts toward the remaining credit. The data model cannot move credits between groups, so General Elective is modeled as a single flat 3-credit placeholder, matching the identical pattern used in eco_aa_courses.csv.",
+    "The Modern Language slot represents the second semester of the same Modern Foreign Language; one of the two semesters may also satisfy World Cultures and Global Issues, but the system cannot detect reuse of the same specific course across two different requirement slots.",
+    "Select any Creative Expression Pathways course other than SPE 100 or SPE 102 for the second Creative Expression requirement.",
+    "LIN 250 (Forensic Linguistics) is the listed required course; any 300-level English course is an alternate option per the degree map footnotes, but is not separately enumerated since no specific course list is published.",
+    "A Writing Intensive course is required for graduation."
+  ]
+}
