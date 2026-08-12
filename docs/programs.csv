@@ -32,7 +32,8 @@ BMCC,SSH,PSY_STEM_AA,Psychology - STEM Concentration,AA,2025-2026
 BMCC,SSH,SESS_AA,Secondary Education for Social Studies,AA,2026
 BMCC,SSH,SOC_AA,Sociology,AA,2026
 BMCC,SSH,URB_AA,Urban Studies,AA,2026
-BMCC,ENG,WAL_AA,Writing and Literature,AA,2026
+BMCC,ENG,WAL_AA,Writing and Literature - General Concentration,AA,2025-2026
+BMCC,ENG,WAL_JRN_AA,Writing and Literature - Journalism Concentration,AA,2025-2026
 BMCC,ACC,FAA_AS,Accounting for Forensic Accounting,AS,2026
 BMCC,MMA,AMG_AS,Animation and Motion Graphics,AS,2026
 BMCC,ART,AFS_AS,Art Foundations: Studio Art,AS,2026

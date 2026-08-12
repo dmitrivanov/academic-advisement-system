@@ -1,0 +1,26 @@
+{
+  "institution_code": "BMCC",
+  "program_code": "WAL_AA",
+  "program_name": "Writing and Literature - General Concentration",
+  "degree_type": "AA",
+  "catalog_year": "2025-2026",
+  "default_semesters": 4,
+  "total_credits": 60,
+  "source_pdf": "/docs/degree_maps/bmcc_wal_general_2_year_2025_2026.pdf",
+  "source_pdfs": [
+    {"label": "General Concentration 2-Year Degree Map", "url": "/docs/degree_maps/bmcc_wal_general_2_year_2025_2026.pdf"}
+  ],
+  "faculty_override_note": "The official two-year map is the planning default. DegreeWorks and faculty advisement remain authoritative.",
+  "semesters": [
+    {"number": 1, "target_credits": 15, "course_codes": ["ENG 101", "WAL-GEN-MATH", "SPE 100", "WAL-GEN-INDIVIDUAL", "WAL-GEN-CREATIVE"]},
+    {"number": 2, "target_credits": 15, "course_codes": ["ENG 201", "ENG 250", "WAL-GEN-LPS", "WAL-GEN-SCIENTIFIC", "WAL-GEN-WORLD"]},
+    {"number": 3, "target_credits": 15, "course_codes": ["WAL-GEN-ENG-ELECTIVE-1", "WAL-GEN-LANGUAGE", "WAL-GEN-US"], "program_elective_slots": 2},
+    {"number": 4, "target_credits": 15, "course_codes": ["WAL-GEN-ENG-ELECTIVE-2", "WAL-GEN-LIBERAL-1", "WAL-GEN-LIBERAL-2", "WAL-GEN-GENERAL"], "program_elective_slots": 1}
+  ],
+  "sequence_notes": [
+    "Choose one course from three different General concentration categories: Writing, American Literature, British Literature, and Transnational or Multi-Ethnic Literature.",
+    "Two additional 300-level English or cross-listed AFN, ASN, or LAT literature courses are required and cannot double-count concentration-category selections.",
+    "Two semesters of the same Modern Foreign Language are required. One language course may satisfy World Cultures; ITL 170 and courses taught in English do not qualify.",
+    "A Writing Intensive course is required for graduation."
+  ]
+}

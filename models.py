@@ -226,6 +226,7 @@ class RequirementGroup(Base):
     display_order = Column(Integer, default=0)
     completion_options = Column(Text, nullable=True)
     required_course_sets = Column(Text, nullable=True)
+    required_course_set_count = Column(Integer, nullable=True)
 
     __table_args__ = (
         UniqueConstraint("program_id", "name", name="uq_program_requirement_group"),

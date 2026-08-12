@@ -1400,6 +1400,7 @@ def get_program_requirements(program_code: str, db: Session = Depends(get_db)):
             "display_order": group.display_order,
             "completion_options": json.loads(group.completion_options) if group.completion_options else [],
             "required_course_sets": json.loads(group.required_course_sets) if group.required_course_sets else [],
+            "required_course_set_count": group.required_course_set_count,
             "courses": courses,
         })
 

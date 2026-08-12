@@ -1832,6 +1832,8 @@ async function loadOfficialDegreeMap() {
     MAT_AS: "/docs/bmcc_mat_degree_map_2025_2026.json",
     PSY_AA: "/docs/bmcc_psy_general_degree_map_2025_2026.json",
     PSY_STEM_AA: "/docs/bmcc_psy_stem_degree_map_2025_2026.json",
+    WAL_AA: "/docs/bmcc_wal_general_degree_map_2025_2026.json",
+    WAL_JRN_AA: "/docs/bmcc_wal_journalism_degree_map_2025_2026.json",
     ECO_AA: "/docs/bmcc_eco_degree_map_2025_2026.json",
     HIS_AA: "/docs/bmcc_his_degree_map_2025_2026.json"
   };
@@ -2618,6 +2620,13 @@ function groupCreditsCompleted(group, completed) {
   alternativeComponents(group.courses).forEach(component => {
     if (group.group_type === "program_elective") {
       component.forEach(course => {
+        if (isChoicePlaceholder(course)) {
+          const unallocatedCredits = selectedChoiceCourses(course.code)
+            .filter(selected => !allocatedRequired.has(selected.code))
+            .reduce((total, selected) => total + Number(selected.credits || 0), 0);
+          credits += Math.min(unallocatedCredits, Number(course.credits || 0));
+          return;
+        }
         if (!allocatedRequired.has(course.code)) {
           credits += courseCompletedCredits(course.code, course, completed);
         }
@@ -2646,13 +2655,16 @@ function groupRequirementSatisfied(group, completed) {
   }
 
   if (group.required_course_sets?.length) {
-    const hasEveryRequiredSet = group.required_course_sets.every(courseSet =>
+    const completedSetCount = group.required_course_sets.filter(courseSet =>
       courseSet.some(code => {
         const course = group.courses.find(item => item.code === code);
         return course && isCourseCompleted(code, course, completed);
       })
+    ).length;
+    const requiredSetCount = Number(
+      group.required_course_set_count || group.required_course_sets.length
     );
-    if (!hasEveryRequiredSet) return false;
+    if (completedSetCount < requiredSetCount) return false;
   }
 
   if (group.required_credits) {

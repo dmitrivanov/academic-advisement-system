@@ -36,6 +36,7 @@ CANONICAL_COLUMNS = [
 OPTIONAL_COLUMNS = [
     "completion_options",
     "required_course_sets",
+    "required_course_set_count",
     "prerequisite_groups",
 ]
 
@@ -387,6 +388,17 @@ def validate_file(path: Path, *, docs_dir: Path | None = None) -> ValidationResu
                 code_set_rules.append((index, field, value))
                 if any(not option.strip() for option in value.split("||")):
                     findings.append(Finding("error", f"Malformed `{field}` syntax: {value}.", index))
+
+        set_count = row.get("required_course_set_count", "")
+        if set_count:
+            parsed_set_count = parse_number(set_count, integer=True)
+            available_sets = len([item for item in row.get("required_course_sets", "").split("||") if item.strip()])
+            if parsed_set_count is None or parsed_set_count <= 0 or parsed_set_count > available_sets:
+                findings.append(Finding(
+                    "error",
+                    "`required_course_set_count` must be a positive integer no greater than the number of required course sets.",
+                    index,
+                ))
 
         for group_name_ref in row.get("prerequisite_groups", "").split("|"):
             if group_name_ref.strip():

@@ -81,9 +81,13 @@ def ensure_choice_group_columns(db):
 def ensure_requirement_group_columns(db):
     inspector = inspect(engine)
     columns = {col["name"] for col in inspector.get_columns("requirement_groups")}
-    for column_name in ("completion_options", "required_course_sets"):
+    for column_name, column_type in (
+        ("completion_options", "TEXT"),
+        ("required_course_sets", "TEXT"),
+        ("required_course_set_count", "INTEGER"),
+    ):
         if column_name not in columns:
-            db.execute(text(f"ALTER TABLE requirement_groups ADD COLUMN {column_name} TEXT"))
+            db.execute(text(f"ALTER TABLE requirement_groups ADD COLUMN {column_name} {column_type}"))
     db.commit()
 
 
@@ -407,14 +411,19 @@ def seed_new_format(db, program, csv_path):
             group.display_order = display_order
             completion_options = parse_code_sets(row.get("completion_options", ""))
             required_course_sets = parse_code_sets(row.get("required_course_sets", ""))
+            required_set_count_raw = (row.get("required_course_set_count") or "").strip()
+            required_course_set_count = int(required_set_count_raw) if required_set_count_raw else None
             if group.id not in initialized_group_rules:
                 group.completion_options = completion_options
                 group.required_course_sets = required_course_sets
+                group.required_course_set_count = required_course_set_count
                 initialized_group_rules.add(group.id)
             elif completion_options and completion_options != group.completion_options:
                 raise ValueError(f"Conflicting completion_options for group {group_name!r}")
             elif required_course_sets and required_course_sets != group.required_course_sets:
                 raise ValueError(f"Conflicting required_course_sets for group {group_name!r}")
+            elif required_course_set_count and required_course_set_count != group.required_course_set_count:
+                raise ValueError(f"Conflicting required_course_set_count for group {group_name!r}")
 
             code = row["course_code"].strip()
             title = row["title"].strip()
@@ -697,8 +706,11 @@ def seed_program_choice_group_adjustments(db):
             base_courses = [link.course for link in base_group.course_links]
             selected_courses = [
                 course for course in base_courses
-                if (not include_codes or course.code.upper() in include_codes)
-                and (not include_subjects or course.code.upper().split()[0] in include_subjects)
+                if (
+                    (not include_codes and not include_subjects)
+                    or course.code.upper() in include_codes
+                    or course.code.upper().split()[0] in include_subjects
+                )
                 and course.code.upper() not in exclude_codes
             ]
 
@@ -728,6 +740,9 @@ def seed_institutional_elective_groups(db):
     language_group = groups.get("BMCC_MODERN_LANGUAGE_CONTINUATION")
     aas_flexible_group = groups.get("FC_AAS_OPEN_AREA")
     targets = [group for group in (general_group, liberal_group, language_group, aas_flexible_group) if group]
+    explicit_general_courses = {
+        link.course for link in general_group.course_links
+    } if general_group else set()
     for group in targets:
         db.query(ChoiceGroupCourse).filter_by(choice_group_id=group.id).delete()
 
@@ -754,7 +769,7 @@ def seed_institutional_elective_groups(db):
     # Placeholder identifiers contain hyphens; real catalog codes contain a
     # subject/number space (for example, PSY 240 or MAT 301).
     general_courses = {
-        course for course in (*curriculum_courses, *pathway_courses)
+        course for course in (*curriculum_courses, *pathway_courses, *explicit_general_courses)
         if " " in course.code and has_positive_credits(course.credits)
     }
     liberal_courses = {
