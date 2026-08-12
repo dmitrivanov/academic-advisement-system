@@ -1,0 +1,28 @@
+{
+  "institution_code": "BMCC",
+  "program_code": "ACCT_AAS",
+  "program_name": "Accounting",
+  "degree_type": "AAS",
+  "catalog_year": "2025-2026",
+  "default_semesters": 4,
+  "total_credits": 60,
+  "source_pdf": "/docs/degree_maps/bmcc_accounting_2_year_2025_2026.pdf",
+  "source_pdfs": [
+    {"label": "Accounting 2-Year Degree Map", "url": "/docs/degree_maps/bmcc_accounting_2_year_2025_2026.pdf"}
+  ],
+  "faculty_override_note": "The official two-year map is the planning default. DegreeWorks and Accounting faculty advisement remain authoritative.",
+  "semesters": [
+    {"number": 1, "target_credits": 16, "course_codes": ["ACC 122", "ENG 101", "MAT 150", "BUS 110", "ECO 201"]},
+    {"number": 2, "target_credits": 15, "course_codes": ["ACC 222", "ACC 231", "ENG 201", "ACCT-MEDIA-ARTS", "CIS 100"]},
+    {"number": 3, "target_credits": 14, "course_codes": ["ACC 241", "ACC 330", "SPE 100", "CED 201", "ACCT-HEALTH"]},
+    {"number": 4, "target_credits": 15, "course_codes": ["ACC 350", "ACC 430", "AST 110", "CED 301"], "program_elective_slots": 1}
+  ],
+  "sequence_notes": [
+    "ACC 122 should be taken in the first semester and precedes later Accounting coursework.",
+    "MAT 206 may replace MAT 150; ECO 202 may replace ECO 201 but requires MAT 206 eligibility.",
+    "CIS 200 may replace CIS 100 after computer competency and an ACC or BUS course; the selector enforces the modeled ACC 122 course prerequisite, while competency testing remains an advising check.",
+    "Choose one Accounting elective from ACC 150, ACC 242, ACC 331, ACC 360, or ACC 370.",
+    "CED 301 requires permission from Internship and Experiential Learning.",
+    "A Writing Intensive course is required for graduation."
+  ]
+}
