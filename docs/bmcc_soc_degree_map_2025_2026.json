@@ -1,0 +1,29 @@
+{
+  "institution_code": "BMCC", "program_code": "SOC_AA",
+  "program_name": "Sociology", "degree_type": "AA",
+  "catalog_year": "2025-2026", "default_semesters": 4, "total_credits": 60,
+  "source_pdf": "/docs/degree_maps/bmcc_sociology_2_year_2025_2026.pdf",
+  "source_pdfs": [
+    {"label": "Sociology 2-Year Degree Map", "url": "/docs/degree_maps/bmcc_sociology_2_year_2025_2026.pdf"},
+    {"label": "Sociology 5-Semester Degree Map", "url": "/docs/degree_maps/bmcc_sociology_5_semester_2025_2026.pdf"}
+  ],
+  "faculty_override_note": "The official two-year, four-semester map is the default. The official five-semester map is an alternate lighter-load pathway. DegreeWorks and faculty advisement remain authoritative.",
+  "semesters": [
+    {"number": 1, "target_credits": 15, "course_codes": ["SOC-AA-MATHQUANT", "ENG 101", "SOC 100", "SPE 100", "SOC-AA-USEXP"]},
+    {"number": 2, "target_credits": 15, "course_codes": ["ENG 201", "SOC-AA-LIBERAL", "SOC-AA-SOCSCI", "SOC-AA-WORLDCULT"], "program_elective_slots": 1},
+    {"number": 3, "target_credits": 15, "course_codes": ["SOC-AA-ETHNICRACE", "SOC-AA-CREATIVE2", "SOC-AA-SCIWORLD", "SOC-AA-LPS"], "program_elective_slots": 1},
+    {"number": 4, "target_credits": 15, "course_codes": ["SOC 350", "SOC-AA-INDIVIDUAL"], "program_elective_slots": 1}
+  ],
+  "alternate_pathways": [{"name": "Official five-semester map", "semester_credit_targets": [12, 12, 12, 12, 12]}],
+  "sequence_notes": [
+    "SOC 100 is a prerequisite for all upper-level Sociology courses; Sociology majors should take it in their first semester.",
+    "KNOWN LIMITATION: both degree maps state 'No more than two courses in any discipline or interdisciplinary field can be used to satisfy Flexible Common Core requirements.' This constraint spans multiple independent Flexible Core selectors (Creative Expression x2, Individual and Society, Scientific World, U.S. Experience, World Cultures), and the current choice-group schema has no mechanism to count selections across multiple different selectors and cap them by subject. It is not enforced by this system and is flagged for maintainer review.",
+    "KNOWN LIMITATION: the Sociology elective requirement is 'three courses from SOC xxx (except SOC 100), at least two 200-level.' All 17 non-SOC-100 SOC courses are offered as a 9-credit choice pool; the '2 of 3 must be 200-level' constraint is not enforced (course numbering makes the level visible to students and advisors, but the system will not block an all-100-level selection).",
+    "SOC 350 (Sociology Capstone) officially requires (ENG 100.5 or ENG 101) and SOC 100 and two Sociology elective courses, one of which must be 200-level. Only the (ENG 100.5 or ENG 101) and SOC 100 portions are encoded as prerequisites; the 'two Sociology electives, one 200-level' portion cannot be expressed in the current prerequisite grammar (no support for 'any N of a pool with a level constraint') and is not enforced.",
+    "The Social Science elective allows either a whole-discipline course from ANT, ECO, GEO, GWS, HIS, PHI, POL, or PSY, or one of four specific courses (CRJ 102, CRJ 202, CRJ 204, HUM 101). The adjustment schema cannot combine a subject-prefix allow-list and individual course exceptions in one derived group (they combine as AND, not OR), so the four specific courses are modeled as separate literal rows alongside the subject-restricted selector, all contributing to the same 6-credit requirement.",
+    "SPE 102 is the listed alternate to SPE 100 for non-native speakers of English.",
+    "Select any Creative Expression Pathways course other than SPE 100 or SPE 102 for the second Creative Expression requirement.",
+    "Students are strongly encouraged (not required) to take a modern language course to satisfy World Cultures and Global Issues.",
+    "A Writing Intensive course is required for graduation."
+  ]
+}
