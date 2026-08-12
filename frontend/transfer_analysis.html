@@ -838,6 +838,63 @@ function buildTransferAdvisorContext() {
   };
 }
 
+const AI_SUMMARY_TIMEOUT_MS = 90000;
+
+function waitForRetry(delayMs) {
+  return new Promise(resolve => window.setTimeout(resolve, delayMs));
+}
+
+async function requestAISummary(payload, maxAttempts = 2) {
+  let lastError;
+
+  for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+    const controller = new AbortController();
+    const timeoutId = window.setTimeout(() => controller.abort(), AI_SUMMARY_TIMEOUT_MS);
+
+    try {
+      const response = await fetch("/ai-agent-ask", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+        signal: controller.signal
+      });
+
+      let data = null;
+      try {
+        data = await response.json();
+      } catch (parseError) {
+        // Preserve the HTTP status below when an upstream proxy returns HTML or no body.
+      }
+
+      if (!response.ok) {
+        const detail = data?.detail || data?.message;
+        const responseError = new Error(detail || `AI request failed (${response.status})`);
+        responseError.retryable = response.status >= 500;
+        throw responseError;
+      }
+
+      return data;
+    } catch (error) {
+      const timedOut = error?.name === "AbortError";
+      const networkFailure = error instanceof TypeError;
+      lastError = timedOut
+        ? new Error("The AI summary request timed out.")
+        : error;
+
+      if (attempt < maxAttempts && (timedOut || networkFailure || error?.retryable)) {
+        await waitForRetry(750);
+        continue;
+      }
+
+      throw lastError;
+    } finally {
+      window.clearTimeout(timeoutId);
+    }
+  }
+
+  throw lastError || new Error("The AI summary could not be generated.");
+}
+
 async function generateAITransferSummary() {
   if (!LAST_ANALYSIS) {
     await runTransferAnalysis();
@@ -852,24 +909,22 @@ async function generateAITransferSummary() {
   button.textContent = "Thinking...";
 
   try {
-    const response = await fetch("/ai-agent-ask", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        agent_id: "transfer_analysis",
-        page_name: "Transfer Analysis",
-        page_url: "/transfer-analysis",
-        user_question: "Explain this transfer analysis to the student. Summarize what likely transfers, what remains, estimated time to finish, and clearly state that this is not an official transfer evaluation.",
-        page_context: buildTransferAdvisorContext()
-      })
+    const isMajorChange = ANALYSIS_MODE === "major-change";
+    const data = await requestAISummary({
+      agent_id: isMajorChange ? "major_change_analysis" : "transfer_analysis",
+      page_name: isMajorChange ? "Major Change Analysis" : "Transfer Analysis",
+      page_url: isMajorChange ? "/transfer-analysis?mode=major-change" : "/transfer-analysis",
+      user_question: isMajorChange
+        ? "Explain this major change analysis to the student. Summarize which completed courses apply, what remains, estimated time to finish, and clearly state that this is a planning estimate rather than an official degree audit."
+        : "Explain this transfer analysis to the student. Summarize what likely transfers, what remains, estimated time to finish, and clearly state that this is not an official transfer evaluation.",
+      page_context: buildTransferAdvisorContext()
     });
-
-    if (!response.ok) throw new Error(`AI request failed (${response.status})`);
-
-    const data = await response.json();
     box.innerHTML = formatMarkdown(data.answer || "No AI summary generated.");
   } catch (err) {
-    box.textContent = `Error: ${err.message}`;
+    const message = err instanceof TypeError
+      ? "The AI service could not be reached after retrying. Please try again in a moment."
+      : err.message;
+    box.textContent = `Error: ${message}`;
   } finally {
     button.disabled = false;
     button.textContent = "Generate AI Summary";
