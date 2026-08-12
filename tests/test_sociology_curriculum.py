@@ -25,6 +25,7 @@ class SociologyCurriculumTests(unittest.TestCase):
             if row["program_code"] == "SOC_AA"
         ]
         cls.pathways_groups = read_csv("pathways_groups.csv")
+        cls.pathways_courses = read_csv("pathways_courses.csv")
         cls.degree_map = json.loads(
             (DOCS / "bmcc_soc_degree_map_2025_2026.json").read_text(encoding="utf-8")
         )
@@ -65,6 +66,13 @@ class SociologyCurriculumTests(unittest.TestCase):
         self.assertEqual("Program Requirements", by_code["SOC 350"]["group_name"])
         self.assertEqual("3", by_code["SOC 100"]["credits"])
         self.assertEqual("4", by_code["SOC 350"]["credits"])
+
+    def test_speech_alternatives_are_visible_and_reciprocal(self):
+        by_code = {row["course_code"]: row for row in self.rows}
+        self.assertEqual("SPE 102", by_code["SPE 100"]["alternatives"])
+        self.assertEqual("SPE 100", by_code["SPE 102"]["alternatives"])
+        self.assertEqual("Flexible Core", by_code["SPE 100"]["group_name"])
+        self.assertEqual("Flexible Core", by_code["SPE 102"]["group_name"])
 
     def test_sociology_elective_selector_requires_nine_credits_excludes_soc_100(self):
         rows = [row for row in self.rows if row["group_name"] == "Sociology Electives"]
@@ -137,28 +145,60 @@ class SociologyCurriculumTests(unittest.TestCase):
         for row in placeholders:
             self.assertTrue(row["choice_group_code"], row["course_code"])
 
+    def test_every_referenced_choice_group_is_defined_and_has_candidates(self):
+        base_codes = {row["group_code"] for row in self.pathways_groups}
+        adjustments = {row["derived_group_code"]: row for row in self.adjustments}
+        referenced = {row["choice_group_code"] for row in self.rows if row["choice_group_code"]}
+        self.assertTrue(referenced)
+
+        pathway_members = {}
+        for row in self.pathways_courses:
+            pathway_members.setdefault(row["group_code"], set()).add(row["course_code"])
+
+        curriculum_codes = set()
+        for path in DOCS.glob("*_courses.csv"):
+            for row in read_csv(path.name):
+                code = (row.get("course_code") or "").strip()
+                if code and "-" not in code:
+                    curriculum_codes.add(code)
+
+        for code in referenced:
+            self.assertIn(code, base_codes | set(adjustments), f"undefined choice group: {code}")
+            if code in adjustments:
+                adjustment = adjustments[code]
+                candidates = set(pathway_members.get(adjustment["base_group_code"], set()))
+                if adjustment["base_group_code"] in {
+                    "BMCC_GENERAL_ELECTIVE", "BMCC_LIBERAL_ARTS_ELECTIVE"
+                }:
+                    candidates |= curriculum_codes
+                subjects = {item for item in adjustment["include_subject_codes"].split("|") if item}
+                if subjects:
+                    candidates = {item for item in candidates if item.split()[0] in subjects}
+                included = {item for item in adjustment["include_course_codes"].split("|") if item}
+                if included:
+                    candidates &= included
+                excluded = {item for item in adjustment["exclude_course_codes"].split("|") if item}
+                candidates -= excluded
+            elif code in {"BMCC_GENERAL_ELECTIVE", "BMCC_LIBERAL_ARTS_ELECTIVE"}:
+                candidates = curriculum_codes
+            else:
+                candidates = pathway_members.get(code, set())
+            self.assertTrue(candidates, f"choice group has no candidate courses: {code}")
+
     def test_flexible_core_two_per_discipline_limit_is_documented_as_unsupported(self):
         sources_text = (DOCS / "soc_aa_sources.md").read_text(encoding="utf-8")
         self.assertIn("No more than two courses", sources_text)
         self.assertIn("KNOWN LIMITATION", sources_text)
 
-    def test_soc_350_requires_english_and_a_satisfied_sociology_electives_group(self):
+    def test_soc_350_enforces_only_the_exactly_representable_prerequisites(self):
         by_code = {row["course_code"]: row for row in self.rows}
         soc_350 = by_code["SOC 350"]
-        # The cleanly-expressible AND/OR portion stays in `prerequisites`; the
-        # elective-count portion is enforced separately via `prerequisite_groups`
-        # (same mechanism as HIS 275 -> "History Sequence").
         self.assertEqual("SOC 100|ENG 100.5 or ENG 101", soc_350["prerequisites"])
-        self.assertEqual("Sociology Electives", soc_350["prerequisite_groups"])
-
-        page = (ROOT / "frontend" / "db_progress_graph.html").read_text(encoding="utf-8")
-        self.assertIn("course.prerequisite_groups.every", page)
+        self.assertFalse(soc_350["prerequisite_groups"])
 
         sources_text = (DOCS / "soc_aa_sources.md").read_text(encoding="utf-8")
-        self.assertIn("prerequisite_groups=Sociology Electives", sources_text)
-        # The documentation must be honest that this is stricter than the
-        # official 2-elective rule, not a silent approximation.
-        self.assertIn("not a perfect match to the official rule", sources_text)
+        self.assertIn("cannot be represented exactly", sources_text)
+        self.assertIn("not enforced", sources_text)
 
     def test_no_duplicate_rows(self):
         seen = set()

@@ -192,26 +192,14 @@ credits therefore sum to exactly 12 (3+3+3+3), no STEM-variant overage.
 - **SOC 350 (Sociology Capstone).** Official prerequisite (confirmed from
   the course-listings page): "[ENG 100.5 or ENG 101] and SOC 100 and two
   (2) SOC major electives of which one (1) must be a 200-level course."
-  The flat prerequisite grammar (`|` for AND, ` or ` for OR) still has no
-  grouping/parentheses or "any N of a pool" primitive, so the elective-count
-  portion cannot live in the `prerequisites` column alone. It is now instead
-  encoded via `prerequisite_groups=Sociology Electives`
-  (`CourseRequirementGroupPrerequisite`), so SOC 350 additionally requires
-  `groupRequirementSatisfied()` to return true for the Sociology Electives
-  group — same pattern as HIS 275's `prerequisite_groups=History Sequence`.
-  Combined with `prerequisites=SOC 100|ENG 100.5 or ENG 101`, the encoded
-  rule is: SOC 100 AND (ENG 100.5 OR ENG 101) AND the Sociology Electives
-  group satisfied.
-  **This is not a perfect match to the official rule and is flagged for
-  maintainer review:** "group satisfied" means the *entire* Sociology
-  Electives requirement (all 3 electives, 9 credits, ≥2 at the 200 level, per
-  the bullet above), not the official rule's smaller "2 electives, ≥1 at the
-  200 level" (6 credits). This makes SOC 350 unlock somewhat *later* than
-  the official requirement allows — the reverse of the previous encoding's
-  problem (unlocking too early with no elective check at all), and a safer
-  direction, but still not exact. There is no schema primitive today for "N
-  of a group's courses, independent of the group's own full-completion
-  threshold," so an exact encoding is not currently possible.
+  `prerequisites=SOC 100|ENG 100.5 or ENG 101` enforces the course-based
+  portion exactly. The remaining "any two Sociology electives, at least one
+  200-level" prerequisite cannot be represented exactly by the current flat
+  prerequisite grammar or `prerequisite_groups`: linking the whole Sociology
+  Electives group would incorrectly require all three electives and two
+  200-level courses. That knowingly stricter approximation is therefore not
+  used. The two-elective portion is documented but not enforced until the
+  rule engine supports a per-course minimum count and subset constraint.
 - **SOC 110 (Sociology of Urban Education).** Official prerequisite:
   "Permission of department." Not a course-based prerequisite; left blank
   and documented here rather than translated inaccurately.
@@ -254,12 +242,11 @@ credits therefore sum to exactly 12 (3+3+3+3), no STEM-variant overage.
    `required_course_set_count` on the Sociology Electives group. See
    "Choices and alternatives" above for the encoding and how it was verified
    live via the API.
-3. **SOC 350's elective-count prerequisite sub-condition is now
-   machine-enforced, but not exactly** — `prerequisite_groups=Sociology
-   Electives` requires the *entire* 9-credit/3-course Sociology Electives
-   group (not just 2 of the 3 electives) before SOC 350 unlocks, which is
-   stricter/later than the official 2-elective rule. See "Prerequisite
-   review" above for detail.
+3. **SOC 350's elective-count prerequisite sub-condition is not enforced.**
+   The current rule engine cannot express "any two from this group, including
+   at least one from this subset" as a prerequisite on one course. Requiring
+   the entire Sociology Electives group would be inaccurate and is not used.
+   See "Prerequisite review" above for detail.
 4. `docs/programs.csv` listed SOC_AA's catalog year as `2026`; corrected to
    `2025-2026` per the issue and both official maps (see "Program identity").
 5. `SOC_AA_SOCIAL_SCIENCE` and `SOC_AA_ETHNIC_RACE` are subject-prefix
@@ -282,60 +269,27 @@ credits therefore sum to exactly 12 (3+3+3+3), no STEM-variant overage.
 
 - Validator command: `python scripts/validate_curriculum_csv.py docs/soc_aa_courses.csv`
 - Validator command (strict): `python scripts/validate_curriculum_csv.py --strict docs/soc_aa_courses.csv`
-- Validator result: `Validated 1 file(s): 0 error(s), 11 warning(s).`
-- Warnings explained (all 11):
-  1. `alternatives` references `SPE 102` — expected; already exists in
+- Validator result: `Validated 1 file(s): 0 error(s), 10 warning(s).`
+- Warnings explained (all 10):
+  1. `prerequisites` references `ENG 100.5` — expected; already exists in
      other curriculum files.
-  2. `prerequisites` references `ENG 100.5` — expected; already exists in
-     other curriculum files.
-  3-7. `prerequisites` references `ANT 100` (SOC 154, 161, 234, 250, 256) —
+  2-6. `prerequisites` references `ANT 100` (SOC 154, 161, 234, 250, 256) —
      external course, not part of SOC_AA; see "Prerequisite review" above.
-  8-9. `prerequisites` references `CRJ 101` (CRJ 202, CRJ 204) — external
+  7-8. `prerequisites` references `CRJ 101` (CRJ 202, CRJ 204) — external
      course, not part of SOC_AA; see "Prerequisite review" above.
-  10. `Sociology Electives` lists 51 credits but requires 9 — expected
+  9. `Sociology Electives` lists 51 credits but requires 9 — expected
       "choose 3 of 17" elective pool.
-  11. `Social Science Electives` lists 18 credits but requires 6 — expected
+  10. `Social Science Electives` lists 18 credits but requires 6 — expected
       (6-credit placeholder + 4 literal 3-credit alternatives, "choose
       enough to reach 6" behavior).
 - Local seed completed: `python seed_database.py` — confirmed the stale
-  `SOC_AA (2026)` placeholder was removed and 36 courses are now linked to
+  `SOC_AA (2026)` placeholder was removed and 37 courses are now linked to
   the corrected `SOC_AA (2025-2026)` program row.
 - Choice-group population confirmed via `/api/db/choice-groups/<code>/courses`:
-  `SOC_AA_SOCIAL_SCIENCE` (71 courses), `SOC_AA_ETHNIC_RACE` (20 courses),
-  `BMCC_LIBERAL_ARTS_ELECTIVE` (294 courses) — no empty selectors.
-- Full test suite: `python -m pytest -q` — 129 passed, 1 pre-existing,
-  unrelated `test_psychology_curricula.py` Windows-encoding failure
-  (confirmed identical on `main` before this branch). `tests/test_sociology_curriculum.py`:
-  17/17 passed. No regressions to existing majors' structures.
-- `completion_options`/`required_course_sets`/`required_course_set_count`/
-  `prerequisite_groups` verified live, not just in the CSV: fetched
-  `GET /api/db/programs/SOC_AA/requirements` after reseeding and confirmed
-  `Sociology Electives`' `required_course_sets` is nine single-code sets
-  with `required_course_set_count: 2`, and `SOC 350`'s course object has
-  `prerequisite_groups: ["Sociology Electives"]`. First attempt showed these
-  fields missing entirely — root cause was a stale `uvicorn` process still
-  running the pre-merge `api_db_routes.py` from before this session's
-  syncs (Python module code doesn't hot-reload on file change without
-  `--reload`/a restart, unlike the static CSV/HTML/JS files the same
-  process re-reads per request). Restarting the server against the current
-  code resolved it. Recorded here per lesson 4 (verify real behavior, not
-  just the CSV encoding) — the CSV/JSON encoding alone would not have
-  caught this class of bug.
-- Real-behavior browser verification (Playwright, logged in as `admin`,
-  program selector -> onboarding -> `/db-progress`), driving the actual
-  `groupRequirementSatisfied()` / prerequisite logic rather than just
-  reading the CSV/JSON encoding, per lesson 4:
-  1. Baseline (nothing completed): SOC 350 card is `locked`.
-  2. SOC 100 + ENG 101 completed, no electives: SOC 350 still `locked`
-     (correctly still gated on the Sociology Electives group).
-  3. SOC 100 + ENG 101 + 3 electives totaling 9 credits, but only **one**
-     at the 200 level (SOC 111, SOC 125, SOC 200): SOC 350 still `locked`
-     -- confirms the 200-level sub-constraint is genuinely blocking, not
-     just decorative.
-  4. Same, but swapping in a second 200-level elective (SOC 111, SOC 200,
-     SOC 210): SOC 350 becomes `available` -- confirms the group's full
-     required-credits-plus-set-count condition unlocks it once actually
-     met.
-  All group cards (Program Requirements, Program Electives, Common Core,
-  Flexible Core) render with clean titles (no "(200-level)" suffix
-  anywhere on the page) and correct credit targets; no console errors.
+  `SOC_AA_CREATIVE` (20 courses), `SOC_AA_SOCIAL_SCIENCE` (70 courses),
+  `SOC_AA_ETHNIC_RACE` (26 courses), and `BMCC_LIBERAL_ARTS_ELECTIVE`
+  (290 courses) — no empty selectors.
+- A clean-seed database check confirmed the Sociology Electives group stores
+  nine single-code 200-level sets with `required_course_set_count=2`, while
+  SOC 350 has no inaccurate whole-group prerequisite link.
+- Review regression suite: `python -m unittest discover -s tests`.
