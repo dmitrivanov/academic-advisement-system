@@ -1,0 +1,31 @@
+{
+  "institution_code": "BMCC",
+  "program_code": "BBA_AS",
+  "program_name": "Business Administration",
+  "degree_type": "AS",
+  "catalog_year": "2025-2026",
+  "default_semesters": 4,
+  "total_credits": 60,
+  "source_pdf": "/docs/degree_maps/bmcc_business_administration_2_year_2025_2026.pdf",
+  "source_pdfs": [
+    {"label": "Business Administration 2-Year Degree Map", "url": "/docs/degree_maps/bmcc_business_administration_2_year_2025_2026.pdf"}
+  ],
+  "faculty_override_note": "The official 2025-2026 two-year map is the planning default. DegreeWorks and Business Management faculty advisement remain authoritative.",
+  "semesters": [
+    {"number": 1, "target_credits": 13, "course_codes": ["BBA-AS-MATH", "ENG 101", "BUS 104", "BBA-AS-WORLD"]},
+    {"number": 2, "target_credits": 16, "course_codes": ["MAT 301", "ENG 201", "BUS 110", "MAR 100", "CIS 200"]},
+    {"number": 3, "target_credits": 16, "course_codes": ["BBA-AS-US", "MAT 209", "ACC 122", "BUS 150", "SPE 100"]},
+    {"number": 4, "target_credits": 15, "course_codes": ["BBA-AS-INDIVIDUAL", "BBA-AS-CREATIVE2", "BBA-AS-SCIENTIFIC", "BBA-AS-LPS"], "program_elective_slots": 1}
+  ],
+  "sequence_notes": [
+    "MAT 206 is recommended for Mathematical and Quantitative Reasoning and is the course shown on the official map, but the published curriculum does not restrict that Pathways area to MAT 206.",
+    "MAT 206 or MAT 206.5 precedes MAT 209 and MAT 301. BUS 320 is the published alternative to MAT 301 and requires MAT 209.",
+    "BUS 150 requires ENG 101, ENG 201, and BUS 104.",
+    "CIS 200 requires any ACC or BUS course plus the CIS 100 course or competency test. The course-based ACC/BUS portion is modeled; the competency-test alternative remains an advising check.",
+    "The official map places ECO 201 in U.S. Experience and ECO 202 in Individual and Society, while the full approved Pathways pools remain selectable.",
+    "Choose one Business Elective from ACC 222, BUS 200, BUS 201, BUS 225, FNB 100, or SBE 100.",
+    "A one-credit Liberal Arts Elective may be satisfied by excess credit from a Common Core STEM variant.",
+    "The cross-Flexible-Core limit of no more than two courses in one discipline is published but is not enforced by the current cross-group rule engine.",
+    "A Writing Intensive course is required for graduation."
+  ]
+}
