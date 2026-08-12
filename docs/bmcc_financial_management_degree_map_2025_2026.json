@@ -1,0 +1,29 @@
+{
+  "institution_code": "BMCC",
+  "program_code": "FMG_AS",
+  "program_name": "Financial Management",
+  "degree_type": "AS",
+  "catalog_year": "2025-2026",
+  "default_semesters": 4,
+  "total_credits": 60,
+  "source_pdf": "/docs/degree_maps/bmcc_financial_management_2_year_2025_2026.pdf",
+  "source_pdfs": [
+    {"label": "Financial Management 2-Year Degree Map", "url": "/docs/degree_maps/bmcc_financial_management_2_year_2025_2026.pdf"}
+  ],
+  "faculty_override_note": "The official 2025-2026 two-year map is the planning default. DegreeWorks and Business Management faculty advisement remain authoritative.",
+  "semesters": [
+    {"number": 1, "target_credits": 13, "course_codes": ["FMG-AS-MATH", "ENG 101", "BUS 104", "FNB 100"]},
+    {"number": 2, "target_credits": 16, "course_codes": ["ENG 201", "ACC 122", "SPE 100", "MAT 301", "FMG-AS-US"]},
+    {"number": 3, "target_credits": 15, "course_codes": ["FNB 230", "FNB 250", "FMG-AS-SCIENTIFIC", "FMG-AS-LPS", "FMG-AS-INDIVIDUAL"]},
+    {"number": 4, "target_credits": 16, "course_codes": ["FNB 300", "FMG-AS-WORLD", "BUS 110", "FMG-AS-CREATIVE2"], "program_elective_slots": 1}
+  ],
+  "sequence_notes": [
+    "MAT 206 is strongly recommended for Mathematical and Quantitative Reasoning and is the course shown on the official map; the full approved Pathways pool remains selectable.",
+    "MAT 206 or MAT 206.5 must be completed before MAT 301.",
+    "FNB 100 and ACC 122 must be completed before FNB 230 and FNB 300.",
+    "ECO 202 is strongly recommended for Individual and Society, and ECO 201 is strongly recommended for U.S. Experience in Its Diversity.",
+    "The General Elective requirement is five credits. Common Core STEM excess credit may satisfy part of it; MAT 209, ACC 222, or CIS 200 is recommended.",
+    "The cross-Flexible-Core limit of no more than two courses in one discipline is published but is not enforced by the current cross-group rule engine.",
+    "A Writing Intensive course is required for graduation."
+  ]
+}
