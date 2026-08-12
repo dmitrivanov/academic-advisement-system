@@ -78,6 +78,7 @@ class SociologyCurriculumTests(unittest.TestCase):
         rows = [row for row in self.rows if row["group_name"] == "Sociology Electives"]
         codes = {row["course_code"] for row in rows}
 
+        self.assertEqual({"program_required"}, {row["group_type"] for row in rows})
         self.assertEqual({"9"}, {row["required_credits"] for row in rows})
         self.assertNotIn("SOC 100", codes)
         self.assertNotIn("SOC 350", codes)
@@ -106,6 +107,7 @@ class SociologyCurriculumTests(unittest.TestCase):
 
     def test_social_science_selector_requires_six_credits_and_correct_pool(self):
         rows = [row for row in self.rows if row["group_name"] == "Social Science Electives"]
+        self.assertEqual({"program_required"}, {row["group_type"] for row in rows})
         self.assertEqual({"6"}, {row["required_credits"] for row in rows})
 
         placeholder = next(row for row in rows if row["course_code"] == "SOC-AA-SOCSCI")
@@ -123,6 +125,7 @@ class SociologyCurriculumTests(unittest.TestCase):
     def test_ethnic_and_race_studies_selector_requires_three_credits_and_correct_pool(self):
         rows = [row for row in self.rows if row["group_name"] == "Ethnic and Race Studies Elective"]
         self.assertEqual(1, len(rows))
+        self.assertEqual("program_required", rows[0]["group_type"])
         self.assertEqual("3", rows[0]["required_credits"])
         self.assertEqual("SOC_AA_ETHNIC_RACE", rows[0]["choice_group_code"])
 

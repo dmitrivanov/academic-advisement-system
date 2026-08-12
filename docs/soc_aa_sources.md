@@ -57,6 +57,13 @@ seeder's stale-row cleanup removed the old placeholder after the fix
 | Liberal Arts Elective | 5 | Program page + degree-map footnote |
 | **Published program total** | **60** | Both degree maps, "TOTAL: 60 CREDITS" |
 
+The three footnoted choice groups — Sociology Electives, Social Science
+Electives, and Ethnic and Race Studies Elective — are classified as
+`program_required` so they render under Program Requirements. They remain
+choice-based requirements with their published credit rules; this
+classification does not make every listed course individually required. The
+unrestricted 5-credit Liberal Arts Elective remains under Program Electives.
+
 Unlike Economics or Mathematics, neither Sociology degree map attaches a
 "required"-style footnote to MAT 161 (Mathematical and Quantitative
 Reasoning) or Life and Physical Sciences — both are shown as open,
