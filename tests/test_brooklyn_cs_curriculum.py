@@ -84,6 +84,10 @@ class BrooklynComputerScienceTests(unittest.TestCase):
         self.assertIn('UniqueConstraint("institution_id", "code", name="uq_course_institution_code")', source)
         self.assertNotIn("code = Column(String, nullable=False, unique=True)", source)
 
+    def test_brooklyn_elective_seed_uses_compatible_set_types(self):
+        source = (ROOT / "seed_database.py").read_text(encoding="utf-8")
+        self.assertIn("set(curriculum_courses) | pathway_courses", source)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -1,0 +1,29 @@
+{
+  "institution_code": "BMCC",
+  "program_code": "PNA_AS",
+  "program_name": "Public and Nonprofit Administration",
+  "degree_type": "AS",
+  "catalog_year": "2025-2026",
+  "default_semesters": 4,
+  "total_credits": 60,
+  "source_pdf": "/docs/degree_maps/bmcc_public_nonprofit_administration_2_year_2025_2026.pdf",
+  "source_pdfs": [
+    {"label": "Public and Nonprofit Administration 2-Year Degree Map", "url": "/docs/degree_maps/bmcc_public_nonprofit_administration_2_year_2025_2026.pdf"}
+  ],
+  "faculty_override_note": "The official 2025-2026 two-year map is the planning default. DegreeWorks and Business Management faculty advisement remain authoritative.",
+  "semesters": [
+    {"number": 1, "target_credits": 16, "course_codes": ["PNA-AS-MATH", "ENG 101", "BUS 104", "CIS 100", "SPE 100"]},
+    {"number": 2, "target_credits": 15, "course_codes": ["ENG 201", "PAN 100", "ECO 201", "PNA-AS-SCIENTIFIC", "PNA-AS-LPS"]},
+    {"number": 3, "target_credits": 15, "course_codes": ["PAN 230", "PNA-AS-WORLD", "PNA-AS-INDIVIDUAL"], "program_elective_slots": 2},
+    {"number": 4, "target_credits": 14, "course_codes": ["BUS 110", "PNA-AS-CREATIVE2"], "program_elective_slots": 2}
+  ],
+  "sequence_notes": [
+    "MAT 150 is shown on the official map; MAT 206 is an explicit alternative depending on the intended transfer institution.",
+    "SPE 102 may replace SPE 100 for non-native speakers of English.",
+    "PAN 100 is the prerequisite for PAN 230 and all 200-level PAN electives.",
+    "Choose three program electives from BUS 150, BUS 200, ECO 225, MAR 100, PAN 240, or PAN 250.",
+    "Choose the second Creative Expression course from the approved Pathways pool excluding SPE 100 and SPE 102.",
+    "The General Elective requirement is six credits; Common Core STEM excess may satisfy part of it.",
+    "A Writing Intensive course is required for graduation."
+  ]
+}

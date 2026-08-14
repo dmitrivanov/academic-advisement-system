@@ -939,7 +939,7 @@ def seed_brooklyn_elective_groups(db):
     )
     pathway_courses = {link.course for group in groups.values() for link in group.course_links}
     db.query(ChoiceGroupCourse).filter_by(choice_group_id=general.id).delete()
-    for course in sorted(curriculum_courses | pathway_courses, key=lambda item: item.display_code):
+    for course in sorted(set(curriculum_courses) | pathway_courses, key=lambda item: item.display_code):
         if " " in course.display_code and has_positive_credits(course.credits):
             db.add(ChoiceGroupCourse(choice_group_id=general.id, course_id=course.id))
     db.flush()
