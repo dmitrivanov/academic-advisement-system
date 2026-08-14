@@ -1,0 +1,30 @@
+{
+  "institution_code": "BMCC", "program_code": "VAT_AS",
+  "program_name": "Video Arts and Technology", "degree_type": "AS",
+  "catalog_year": "2025-2026", "default_semesters": 4, "total_credits": 60,
+  "source_pdf": "/docs/degree_maps/bmcc_vat_2_year_2025_2026.pdf",
+  "source_pdfs": [
+    {"label": "Video Arts and Technology 2-Year Degree Map", "url": "/docs/degree_maps/bmcc_vat_2_year_2025_2026.pdf"},
+    {"label": "Video Arts and Technology 5-Semester Degree Map", "url": "/docs/degree_maps/bmcc_vat_3_year_2025_2026.pdf"}
+  ],
+  "faculty_override_note": "The official two-year, four-semester map is the default. The official five-semester map is an alternate lighter-load pathway that uses MAT 161.5 (not a STEM variant) instead of MAT 160, so it shows General Elective as 3 credits instead of 2 -- see sequence_notes. DegreeWorks and faculty advisement remain authoritative. VAT Production Course slots shown here are illustrative picks from the 6-course pool; a student may choose any 4 of the 6 eligible courses.",
+  "semesters": [
+    {"number": 1, "target_credits": 16, "course_codes": ["MAT 160", "ENG 101", "SPE 100", "MES 153", "VAT 100"]},
+    {"number": 2, "target_credits": 16, "course_codes": ["ENG 201", "PHY 110", "VAT 161", "VAT 165", "MES 152"]},
+    {"number": 3, "target_credits": 15, "course_codes": ["VAT 171", "VAT 261", "MMP 100", "MES 140", "COM 240"]},
+    {"number": 4, "target_credits": 13, "course_codes": ["VAT-AS-ADVISED", "VAT-AS-PROGRAM", "MEA 371", "VAT-AS-USEXP", "VAT-AS-GENERAL"]}
+  ],
+  "alternate_pathways": [{"name": "Official five-semester map", "semester_credit_targets": [12, 12, 12, 12, 12]}],
+  "sequence_notes": [
+    "The four VAT Production Course map slots (two in Semester 2, two in Semester 3) are one pooled requirement: choose any 4 of 6 courses (VAT 161, 165, 171, 261, 265, 271) totaling 12 credits, not four independent requirements.",
+    "VAT 100 and MES 153 are prerequisites for VAT 161, VAT 165, and VAT 171; MES 152 is a corequisite for the same three courses (not enforced -- the current prerequisite grammar has no same-semester corequisite primitive).",
+    "VAT 261 requires VAT 161 (an alternate 'or permission of the department' path is not encoded); VAT 271 requires VAT 171 (same alternate-path pattern); VAT 265 requires both VAT 165 and MMP 100.",
+    "VAT Advised Elective (one course, 3 credits) is officially chosen from 10 named courses across multiple departments (ANI 401, BUS 200, COM 245, HED 250, MEA 211, MEA 300, MMA 100, MMP 270, MUS 225, THE 110). Only 6 could be independently verified against an accessible department course-listing page (ANI 401, BUS 200, MEA 211, MEA 300, MMA 100, MMP 270); COM 245, HED 250, MUS 225, and THE 110 are officially eligible per the degree map footnote but were not added as rows since their titles/credits could not be confirmed (the relevant department pages returned HTTP 503 repeatedly). Flagged for maintainer review.",
+    "VAT Program Elective (one course, 3 credits) is officially chosen from VAT 300, VAT 301/ANI 301, VAT 302, VAT 303, or VAT 306. VAT 300 and VAT 306 could not be found on the department's course-listings page and were not added as rows (not guessed at). VAT 301 and ANI 301 were both added as separate options: the degree map's footnote reads 'VAT 301/ANI 301' as if they were one cross-listed course, but the official course-listings page states VAT 301 is actually cross-listed with MMP 301 (title 'Introduction to Video Graphics'), while ANI 301 is a distinct course ('Introduction to Motion Graphics and Visual Effects') with its own prerequisites -- flagged for maintainer review.",
+    "VAT 301's official prerequisite is '(VAT 161 or VAT 171) and CIS 100' -- a grouped AND-of-OR expression the current flat prerequisite grammar (`|` for AND, ` or ` for OR, no parentheses) cannot represent, so it is left unencoded rather than guessed at.",
+    "Media Arts and Technology Internship: MEA 371 (2 credits) with alternate MEA 201 (2 credits). MEA 371 requires departmental approval, a non-course gate, not encoded. MEA 201's official prerequisite ('ANI 401, or two 200-level-or-higher MMA/MMP courses, or two courses from the VAT Production Course pool') cannot be represented in the current grammar (no 'any two of a pool' primitive) and is left unencoded.",
+    "General Elective is officially 4 credits ('Some of these credits can be satisfied by taking STEM variants in the Common Core'); the two-year map shows only 2 explicit credits because MAT 160 (4 credits) and PHY 110 (4 credits) are each one credit above their nominal 3-credit Common Core slots (2 credits total STEM excess). The five-semester map's MAT 161.5 is not a STEM variant, so only PHY 110 contributes excess there, and General Elective shows 3 credits instead. The data model cannot move credits between groups, so General Elective is modeled as a single flat 4-credit placeholder, matching the pattern already used in eco_aa_courses.csv and crj_aa_courses.csv.",
+    "SPE 102 is modeled as its own row, reciprocally alternate to SPE 100.",
+    "A Writing Intensive course is required for graduation."
+  ]
+}
