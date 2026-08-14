@@ -1,5 +1,6 @@
 import csv
 import json
+from functools import lru_cache
 from pathlib import Path
 
 from sqlalchemy import inspect, text
@@ -73,6 +74,18 @@ def ensure_course_columns(db):
             db.execute(text(f"ALTER TABLE courses ADD COLUMN {column_name} {column_type}"))
     db.commit()
 
+    # PostgreSQL can remove the legacy global course-code constraint in place.
+    # SQLite installations created under the old schema retain the compatibility
+    # namespace until their database is rebuilt; fresh databases use (campus, code).
+    if engine.dialect.name == "postgresql":
+        inspector = inspect(engine)
+        for constraint in inspector.get_unique_constraints("courses"):
+            if constraint.get("column_names") == ["code"] and constraint.get("name"):
+                db.execute(text(f'ALTER TABLE courses DROP CONSTRAINT "{constraint["name"]}"'))
+        db.execute(text("UPDATE courses SET code = catalog_code WHERE catalog_code IS NOT NULL"))
+        db.execute(text("CREATE UNIQUE INDEX IF NOT EXISTS uq_course_institution_code_idx ON courses (institution_id, code)"))
+        db.commit()
+
 
 def ensure_choice_group_columns(db):
     inspector = inspect(engine)
@@ -144,13 +157,20 @@ def get_or_create(db, model, defaults=None, **kwargs):
     return obj
 
 
+@lru_cache(maxsize=1)
+def has_legacy_global_course_key():
+    return any(
+        item.get("column_names") == ["code"]
+        for item in inspect(engine).get_unique_constraints("courses")
+    )
+
+
 def get_or_create_course(db, institution, catalog_code, title, credits):
     """Return a campus-scoped course without breaking legacy globally keyed DBs."""
     catalog_code = " ".join(catalog_code.strip().upper().split())
-    course = db.query(Course).filter_by(
-        institution_id=institution.id,
-        catalog_code=catalog_code,
-    ).first()
+    course = db.query(Course).filter_by(institution_id=institution.id, code=catalog_code).first()
+    if not course:
+        course = db.query(Course).filter_by(institution_id=institution.id, catalog_code=catalog_code).first()
     if course:
         return course
 
@@ -166,7 +186,9 @@ def get_or_create_course(db, institution, catalog_code, title, credits):
         course.catalog_code = catalog_code
         return course
 
-    storage_code = catalog_code if course is None else f"{institution.code}::{catalog_code}"
+    storage_code = catalog_code
+    if has_legacy_global_course_key() and course is not None:
+        storage_code = f"{institution.code}::{catalog_code}"
     course = Course(
         institution_id=institution.id,
         code=storage_code,
@@ -883,6 +905,47 @@ def seed_ccny_elective_groups(db):
     print("Seeded CCNY elective choice groups")
 
 
+def seed_brooklyn_elective_groups(db):
+    """Build Brooklyn College option and general-elective pools campus-locally."""
+    institution = db.query(Institution).filter_by(code="BROOKLYN").first()
+    if not institution:
+        return
+    groups = {g.code: g for g in db.query(ChoiceGroup).filter_by(institution_id=institution.id)}
+    college = groups.get("BC_COLLEGE_OPTION")
+    general = groups.get("BC_GENERAL_ELECTIVE")
+    if not college or not general:
+        return
+
+    # College Option is placement/proficiency dependent. Its reusable pool is
+    # the union of the published BC-option Pathways areas plus explicit ICC/LOTE
+    # memberships maintained in pathways_courses.csv.
+    option_codes = {"BC_RC_LPS", "BC_FC_WORLD", "BC_FC_US", "BC_COLLEGE_OPTION"}
+    option_courses = {
+        link.course for code in option_codes if groups.get(code)
+        for link in groups[code].course_links
+    }
+    db.query(ChoiceGroupCourse).filter_by(choice_group_id=college.id).delete()
+    for course in sorted(option_courses, key=lambda item: item.display_code):
+        db.add(ChoiceGroupCourse(choice_group_id=college.id, course_id=course.id))
+
+    curriculum_courses = (
+        db.query(Course)
+        .join(RequirementGroupCourse, RequirementGroupCourse.course_id == Course.id)
+        .join(RequirementGroup, RequirementGroup.id == RequirementGroupCourse.requirement_group_id)
+        .join(Program, Program.id == RequirementGroup.program_id)
+        .join(Department, Department.id == Program.department_id)
+        .filter(Department.institution_id == institution.id)
+        .distinct().all()
+    )
+    pathway_courses = {link.course for group in groups.values() for link in group.course_links}
+    db.query(ChoiceGroupCourse).filter_by(choice_group_id=general.id).delete()
+    for course in sorted(curriculum_courses | pathway_courses, key=lambda item: item.display_code):
+        if " " in course.display_code and has_positive_credits(course.credits):
+            db.add(ChoiceGroupCourse(choice_group_id=general.id, course_id=course.id))
+    db.flush()
+    print("Seeded Brooklyn College elective choice groups")
+
+
 def has_positive_credits(value):
     return value is not None and int(value) > 0
 
@@ -1190,6 +1253,7 @@ def seed():
 
         seed_institutional_elective_groups(db)
         seed_ccny_elective_groups(db)
+        seed_brooklyn_elective_groups(db)
         seed_program_choice_group_adjustments(db)
 
         db.commit()

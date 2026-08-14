@@ -33,3 +33,12 @@ JOHNJAY,JJAY_COLLEGE_COMMUNICATIONS,Communications,college_option,3,1,https://jj
 JOHNJAY,JJAY_CSIS_CSCI_ELECTIVE,CSIS Computer Science Elective (Category A),program_elective,3,1,https://jjay.smartcatalogiq.com/en/2024-2025/undergraduate-bulletin/general-education/
 JOHNJAY,JJAY_CSIS_MATH_ELECTIVE,CSIS Mathematics Elective (Category B),program_elective,3,1,https://jjay.smartcatalogiq.com/en/2024-2025/undergraduate-bulletin/general-education/
 JOHNJAY,JJAY_FREE_ELECTIVE,John Jay Free Electives,program_elective,16,,https://jjay.smartcatalogiq.com/en/2024-2025/undergraduate-bulletin/general-education/
+BROOKLYN,BC_RC_LPS,Life and Physical Sciences,common_core,3,1,https://www.brooklyn.edu/advisement/pathways/2025-26/
+BROOKLYN,BC_FC_WORLD,World Cultures and Global Issues,flexible_core,3,1,https://www.brooklyn.edu/advisement/pathways/2025-26/
+BROOKLYN,BC_FC_US,U.S. Experience in Its Diversity,flexible_core,3,1,https://www.brooklyn.edu/advisement/pathways/2025-26/
+BROOKLYN,BC_FC_CREATIVE,Creative Expression,flexible_core,6,2,https://www.brooklyn.edu/advisement/pathways/2025-26/
+BROOKLYN,BC_FC_INDIVIDUAL,Individual and Society,flexible_core,3,1,https://www.brooklyn.edu/advisement/pathways/2025-26/
+BROOKLYN,BC_FC_SCIENTIFIC,Scientific World,flexible_core,3,1,https://www.brooklyn.edu/advisement/pathways/2025-26/
+BROOKLYN,BC_COLLEGE_OPTION,Brooklyn College Option (placement/proficiency dependent),college_option,12,4,https://www.brooklyn.edu/advisement/pathways/2025-26/
+BROOKLYN,BC_CS_ADV_CISC,Advanced CISC electives numbered 3000–4899,program_elective,9,3,https://www.brooklyn.edu/advisement/pathways/2025-26/
+BROOKLYN,BC_GENERAL_ELECTIVE,Brooklyn College general electives,program_elective,22,,https://www.brooklyn.edu/advisement/pathways/2025-26/

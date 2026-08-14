@@ -1,0 +1,27 @@
+{
+  "program_code": "BC_CS_BS",
+  "program_name": "Computer Science B.S.",
+  "catalog_year": "2026-2027",
+  "total_credits": 120,
+  "source_pdf": "https://pub.brooklyn.edu/DegreeMaps/stdn_view_degree_map.jsp",
+  "source_pdfs": [
+    {"label": "Brooklyn College 2026–27 Four-Year Degree Map", "url": "https://pub.brooklyn.edu/DegreeMaps/stdn_view_degree_map.jsp"},
+    {"label": "Official Computer Science Requirements", "url": "https://www.brooklyn.edu/academics/programs/computer-science-bs/"}
+  ],
+  "faculty_override_note": "The bulletin and DegreeWorks control. Mathematics preparation can vary with placement, and College Option selections depend on transfer status and language proficiency.",
+  "sequence_notes": [
+    "The map contains 42 Pathways credits, 56 mapped major credits, 22 general-elective credits, and 120 total credits.",
+    "Choose one course in each published OR block and three advanced CISC courses numbered 3000–4899.",
+    "The B.S. requires at least 60 science/mathematics credits and 24 advanced CISC credits completed at Brooklyn College with grades of C or higher."
+  ],
+  "semesters": [
+    {"number": 1, "credits": 16, "courses": ["ENGL 1010", "MATH 1011", "BC-CS-US", "CISC 1115", "BC-CS-GENERAL"]},
+    {"number": 2, "credits": 17, "courses": ["ENGL 1012", "BC-CS-LPS", "BC-CS-WORLD", "CISC 3115", "MATH 1201"]},
+    {"number": 3, "credits": 17, "courses": ["BC-CS-IND", "BC-CS-CREATIVE-1", "CISC 2210", "CISC 3130", "MATH 1206"]},
+    {"number": 4, "credits": 15, "courses": ["BC-CS-SCI", "BC-CS-CREATIVE-2", "CISC 3310", "MATH 2501", "BC-CS-GENERAL"]},
+    {"number": 5, "credits": 15, "courses": ["BC-CS-COLLEGE-OPTION", "CISC 2820W", "CISC 3142", "CISC 3220"]},
+    {"number": 6, "credits": 15, "courses": ["BC-CS-COLLEGE-OPTION", "CISC 3320", "BC-CS-ADV-CISC", "BC-CS-GENERAL"]},
+    {"number": 7, "credits": 12, "courses": ["CISC 3140", "BC-CS-ADV-CISC", "BC-CS-GENERAL"]},
+    {"number": 8, "credits": 13, "courses": ["CISC 4900", "BC-CS-ADV-CISC", "BC-CS-GENERAL"]}
+  ]
+}

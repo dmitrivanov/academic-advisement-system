@@ -33,9 +33,9 @@ class Institution(Base):
 class CourseEquivalency(Base):
     """A directional, institution-scoped transfer rule.
 
-    Course codes are stored on the rule for now because the legacy Course table
-    is globally keyed by code. This lets equivalencies be institution-aware
-    without a risky course-table migration.
+    Course codes stay on the rule because transfer equivalencies are directional
+    catalog assertions, while Course records are keyed naturally by campus and
+    code and use a numeric ID for relational stability.
     """
 
     __tablename__ = "course_equivalencies"
@@ -121,11 +121,9 @@ class Course(Base):
     __tablename__ = "courses"
 
     id = Column(Integer, primary_key=True, index=True)
-    # ``code`` remains the unique storage key for backwards compatibility.
-    # When two campuses use the same catalog code, the later row is stored as
-    # ``CAMPUS::CODE`` and ``catalog_code`` is the student-facing value.
     institution_id = Column(Integer, ForeignKey("institutions.id"), nullable=True, index=True)
-    code = Column(String, nullable=False, unique=True)
+    code = Column(String, nullable=False)
+    # Retained only to migrate databases created before campus-scoped codes.
     catalog_code = Column(String, nullable=True, index=True)
     title = Column(String, nullable=False)
     credits = Column(Integer, nullable=False)
@@ -139,7 +137,7 @@ class Course(Base):
         return self.catalog_code or self.code.split("::", 1)[-1]
 
     __table_args__ = (
-        UniqueConstraint("institution_id", "catalog_code", name="uq_course_institution_catalog_code"),
+        UniqueConstraint("institution_id", "code", name="uq_course_institution_code"),
     )
 
 
