@@ -1,0 +1,27 @@
+{
+  "program_code": "JJAY_CSIS_BS",
+  "program_name": "Computer Science and Information Security B.S.",
+  "catalog_year": "2024-2025",
+  "total_credits": 120,
+  "source_pdf": "/docs/degree_maps/jjay_csis_four_year_advisement_plan.pdf",
+  "source_pdfs": [
+    {"label": "CSIS Four-Year Advisement Plan", "url": "/docs/degree_maps/jjay_csis_four_year_advisement_plan.pdf"},
+    {"label": "CSIS Prerequisite Flowchart", "url": "/docs/degree_maps/jjay_csis_prerequisite_flowchart_fall_2023.pdf"}
+  ],
+  "faculty_override_note": "The official 2024-2025 bulletin controls. MAT 141 is placement-dependent, and 2022 course-number transitions can affect which legacy mathematics electives apply.",
+  "sequence_notes": [
+    "Complete ENG 101 before 200-level courses and ENG 201 before 300-level courses.",
+    "CSCI 271 begins the programming sequence; CSCI 400 follows CSCI 360, 373, 375, and 379; CSCI 401 follows CSCI 400.",
+    "CSCI 271 also satisfies the Flexible Core Scientific World area."
+  ],
+  "semesters": [
+    {"number": 1, "credits": 15, "courses": ["ENG 101", "MAT 105", "JJAY-CSIS-JUSTICE100", "JJAY-CSIS-US", "JJAY-CSIS-CREATIVE"]},
+    {"number": 2, "credits": 15, "courses": ["ENG 201", "JJAY-CSIS-WORLD", "CSCI 271", "JJAY-CSIS-PAST", "MAT 141"]},
+    {"number": 3, "credits": 16, "courses": ["JJAY-CSIS-LPS", "JJAY-CSIS-ADDITIONAL-FLEX", "CSCI 272", "CSCI 274", "MAT 151"]},
+    {"number": 4, "credits": 15, "courses": ["JJAY-CSIS-INDIVIDUAL", "JJAY-CSIS-COMM", "CSCI 373", "MAT 204", "MAT 301"]},
+    {"number": 5, "credits": 15, "courses": ["JJAY-CSIS-JUSTICE300", "CSCI 377", "CSCI 375", "JJAY-CSIS-MATH-ELECTIVE", "JJAY-CSIS-FREE-ELECTIVES"]},
+    {"number": 6, "credits": 15, "courses": ["CSCI 360", "CSCI 374", "CSCI 379", "JJAY-CSIS-CSCI-ELECTIVE", "JJAY-CSIS-FREE-ELECTIVES"]},
+    {"number": 7, "credits": 15, "courses": ["PHI 216", "CSCI 400", "CSCI 411", "JJAY-CSIS-FREE-ELECTIVES"]},
+    {"number": 8, "credits": 15, "courses": ["CSCI 401", "CSCI 412", "JJAY-CSIS-FREE-ELECTIVES"]}
+  ]
+}

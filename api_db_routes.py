@@ -501,13 +501,13 @@ def preview_curriculum_draft(
             if rule.get("course_id") == course_id:
                 prereq = course_cache.get(rule.get("prerequisite_course_id"))
                 if prereq:
-                    prereq_groups.setdefault(rule.get("group_id", 1), []).append(prereq.code)
+                    prereq_groups.setdefault(rule.get("group_id", 1), []).append(prereq.display_code)
         alternatives = []
         for rule in rules.get("alternatives") or []:
             if rule.get("course_id") == course_id:
                 alternative = course_cache.get(rule.get("alternative_course_id"))
                 if alternative:
-                    alternatives.append(alternative.code)
+                    alternatives.append(alternative.display_code)
         adjustment = next(
             (
                 item for item in rules.get("core_adjustments") or []
@@ -517,7 +517,7 @@ def preview_curriculum_draft(
             None,
         )
         return {
-            "code": course.code,
+            "code": course.display_code,
             "title": course.title,
             "credits": course.credits,
             "choice_group_code": adjustment.get("base_group_code") if adjustment else course.choice_group_code,
@@ -743,7 +743,7 @@ def publish_curriculum_draft(
                 if allowed_ids or allowed_subjects:
                     subject_ids = {
                         course.id for course in db.query(Course).filter(Course.id.in_(base_ids)).all()
-                        if course.code.split()[0].upper() in allowed_subjects
+                        if course.display_code.split()[0].upper() in allowed_subjects
                     }
                     selected_ids = base_ids & (allowed_ids | subject_ids)
                 else:
@@ -1058,7 +1058,7 @@ def get_programs(selector_only: bool = False, db: Session = Depends(get_db)):
 
 @router.get("/courses")
 def get_all_courses(db: Session = Depends(get_db)):
-    courses = db.query(Course).order_by(Course.code).all()
+    courses = db.query(Course).order_by(Course.catalog_code, Course.code).all()
 
     institution_codes: dict[int, set[str]] = {course.id: set() for course in courses}
     department_ids: dict[int, set[int]] = {course.id: set() for course in courses}
@@ -1092,7 +1092,7 @@ def get_all_courses(db: Session = Depends(get_db)):
     return [
         {
             "id": c.id,
-            "code": c.code,
+            "code": c.display_code,
             "title": c.title,
             "credits": c.credits,
             "choice_group_code": c.choice_group_code,
@@ -1199,7 +1199,7 @@ def get_choice_group_courses(
                     if link.course_id in allowed_ids
                     or (
                         link.course
-                        and link.course.code.split()[0].upper() in allowed_subjects
+                        and link.course.display_code.split()[0].upper() in allowed_subjects
                     )
                 ]
             links = [link for link in links if link.course_id not in excluded_ids]
@@ -1226,7 +1226,7 @@ def get_choice_group_courses(
             continue
 
         payload = build_course_payload(db, program.id, course) if program else {
-            "code": course.code,
+            "code": course.display_code,
             "title": course.title,
             "credits": course.credits,
             "choice_group_code": course.choice_group_code,
@@ -1278,7 +1278,7 @@ def build_course_payload(db: Session, program_id: int, course: Course):
     for row in prereq_rows:
         prereq_course = db.query(Course).filter_by(id=row.prereq_course_id).first()
         if prereq_course:
-            prereq_groups.setdefault(row.group_id, []).append(prereq_course.code)
+            prereq_groups.setdefault(row.group_id, []).append(prereq_course.display_code)
 
     prereqs = []
     for _, codes in sorted(prereq_groups.items()):
@@ -1288,7 +1288,7 @@ def build_course_payload(db: Session, program_id: int, course: Course):
     for row in alt_rows:
         alt_course = db.query(Course).filter_by(id=row.alternative_course_id).first()
         if alt_course:
-            alternatives.append(alt_course.code)
+            alternatives.append(alt_course.display_code)
 
     prerequisite_groups = []
     for row in group_prereq_rows:
@@ -1297,7 +1297,7 @@ def build_course_payload(db: Session, program_id: int, course: Course):
             prerequisite_groups.append(group.name)
 
     return {
-        "code": course.code,
+        "code": course.display_code,
         "title": course.title,
         "credits": course.credits,
         "choice_group_code": course.choice_group_code,
@@ -1328,7 +1328,7 @@ def get_program_courses(program_code: str, db: Session = Depends(get_db)):
         },
         "courses": [
             {
-                "code": link.course.code,
+                "code": link.course.display_code,
                 "title": link.course.title,
                 "credits": link.course.credits,
                 "choice_group_code": link.course.choice_group_code,
@@ -1350,7 +1350,7 @@ def get_program_graph(program_code: str, db: Session = Depends(get_db)):
 
     courses = {}
     for link in links:
-        courses[link.course.code] = build_course_payload(db, program.id, link.course)
+        courses[link.course.display_code] = build_course_payload(db, program.id, link.course)
 
     return {
         "program": {

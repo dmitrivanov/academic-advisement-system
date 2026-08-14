@@ -17,6 +17,7 @@ class Institution(Base):
 
     departments = relationship("Department", back_populates="institution")
     choice_groups = relationship("ChoiceGroup", back_populates="institution")
+    courses = relationship("Course", back_populates="institution")
     outgoing_equivalencies = relationship(
         "CourseEquivalency",
         foreign_keys="CourseEquivalency.source_institution_id",
@@ -120,12 +121,26 @@ class Course(Base):
     __tablename__ = "courses"
 
     id = Column(Integer, primary_key=True, index=True)
+    # ``code`` remains the unique storage key for backwards compatibility.
+    # When two campuses use the same catalog code, the later row is stored as
+    # ``CAMPUS::CODE`` and ``catalog_code`` is the student-facing value.
+    institution_id = Column(Integer, ForeignKey("institutions.id"), nullable=True, index=True)
     code = Column(String, nullable=False, unique=True)
+    catalog_code = Column(String, nullable=True, index=True)
     title = Column(String, nullable=False)
     credits = Column(Integer, nullable=False)
     choice_group_code = Column(String, nullable=True)
 
     program_links = relationship("ProgramCourse", back_populates="course")
+    institution = relationship("Institution", back_populates="courses")
+
+    @property
+    def display_code(self):
+        return self.catalog_code or self.code.split("::", 1)[-1]
+
+    __table_args__ = (
+        UniqueConstraint("institution_id", "catalog_code", name="uq_course_institution_catalog_code"),
+    )
 
 
 class ProgramCourse(Base):

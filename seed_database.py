@@ -64,9 +64,14 @@ def ensure_course_columns(db):
     inspector = inspect(engine)
     columns = {col["name"] for col in inspector.get_columns("courses")}
 
-    if "choice_group_code" not in columns:
-        db.execute(text("ALTER TABLE courses ADD COLUMN choice_group_code VARCHAR"))
-        db.commit()
+    for column_name, column_type in (
+        ("choice_group_code", "VARCHAR"),
+        ("institution_id", "INTEGER"),
+        ("catalog_code", "VARCHAR"),
+    ):
+        if column_name not in columns:
+            db.execute(text(f"ALTER TABLE courses ADD COLUMN {column_name} {column_type}"))
+    db.commit()
 
 
 def ensure_choice_group_columns(db):
@@ -137,6 +142,54 @@ def get_or_create(db, model, defaults=None, **kwargs):
     db.flush()
 
     return obj
+
+
+def get_or_create_course(db, institution, catalog_code, title, credits):
+    """Return a campus-scoped course without breaking legacy globally keyed DBs."""
+    catalog_code = " ".join(catalog_code.strip().upper().split())
+    course = db.query(Course).filter_by(
+        institution_id=institution.id,
+        catalog_code=catalog_code,
+    ).first()
+    if course:
+        return course
+
+    # Claim an unscoped legacy row only when its public code matches. Existing
+    # rows thereby keep their IDs and all historical program links.
+    course = db.query(Course).filter_by(code=catalog_code).first()
+    if course and course.institution_id is None:
+        course.institution_id = institution.id
+        course.catalog_code = catalog_code
+        return course
+
+    if course and course.institution_id == institution.id:
+        course.catalog_code = catalog_code
+        return course
+
+    storage_code = catalog_code if course is None else f"{institution.code}::{catalog_code}"
+    course = Course(
+        institution_id=institution.id,
+        code=storage_code,
+        catalog_code=catalog_code,
+        title=title,
+        credits=credits,
+    )
+    db.add(course)
+    db.flush()
+    return course
+
+
+def find_course(db, institution, catalog_code):
+    catalog_code = " ".join(catalog_code.strip().upper().split())
+    return (
+        db.query(Course)
+        .filter(
+            Course.institution_id == institution.id,
+            Course.catalog_code == catalog_code,
+        )
+        .first()
+        or db.query(Course).filter_by(code=catalog_code, institution_id=None).first()
+    )
 
 
 def seed_institutions(db):
@@ -343,11 +396,8 @@ def seed_old_format(db, program, csv_path):
             title = row["title"].strip()
             credits = int(row["credits"])
 
-            course = get_or_create(
-                db,
-                Course,
-                code=code,
-                defaults={"title": title, "credits": credits},
+            course = get_or_create_course(
+                db, program.department.institution, code, title, credits
             )
 
             course.title = title
@@ -429,11 +479,8 @@ def seed_new_format(db, program, csv_path):
             title = row["title"].strip()
             credits = int(row["credits"])
 
-            course = get_or_create(
-                db,
-                Course,
-                code=code,
-                defaults={"title": title, "credits": credits},
+            course = get_or_create_course(
+                db, program.department.institution, code, title, credits
             )
 
             course.title = title
@@ -461,9 +508,10 @@ def seed_new_format(db, program, csv_path):
 
 
 def add_relationships(db, program, rows, old_format):
+    institution = program.department.institution
     for row in rows:
         course_code = row["code"].strip() if old_format else row["course_code"].strip()
-        course = db.query(Course).filter_by(code=course_code).first()
+        course = find_course(db, institution, course_code)
 
         if not course:
             continue
@@ -472,14 +520,11 @@ def add_relationships(db, program, rows, old_format):
 
         for group_id, prereq_codes in prereq_groups:
             for prereq_code in prereq_codes:
-                prereq = db.query(Course).filter_by(code=prereq_code).first()
+                prereq = find_course(db, institution, prereq_code)
 
                 if not prereq:
-                    prereq = get_or_create(
-                        db,
-                        Course,
-                        code=prereq_code,
-                        defaults={"title": prereq_code, "credits": 0},
+                    prereq = get_or_create_course(
+                        db, institution, prereq_code, prereq_code, 0
                     )
 
                 get_or_create(
@@ -495,14 +540,11 @@ def add_relationships(db, program, rows, old_format):
 
         for _, alt_codes in alternative_groups:
             for alt_code in alt_codes:
-                alt = db.query(Course).filter_by(code=alt_code).first()
+                alt = find_course(db, institution, alt_code)
 
                 if not alt:
-                    alt = get_or_create(
-                        db,
-                        Course,
-                        code=alt_code,
-                        defaults={"title": alt_code, "credits": 0},
+                    alt = get_or_create_course(
+                        db, institution, alt_code, alt_code, 0
                     )
 
                 get_or_create(
@@ -608,11 +650,8 @@ def seed_choice_group_courses(db):
             if not group:
                 continue
 
-            course = get_or_create(
-                db,
-                Course,
-                code=course_code,
-                defaults={"title": title, "credits": credits},
+            course = get_or_create_course(
+                db, institution, course_code, title, credits
             )
 
             course.title = title
