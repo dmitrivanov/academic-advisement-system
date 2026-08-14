@@ -82,6 +82,15 @@ def normalize_course_code(value: str):
     return " ".join(value.strip().upper().split())
 
 
+def normalize_equivalency_source(value: str, equivalency_type: str):
+    codes = [normalize_course_code(code) for code in value.split("+") if code.strip()]
+    if equivalency_type == "direct" and len(codes) != 1:
+        raise HTTPException(status_code=400, detail="A direct equivalency requires one source course")
+    if equivalency_type == "combination" and len(codes) < 2:
+        raise HTTPException(status_code=400, detail="A combination equivalency requires at least two source courses")
+    return " + ".join(codes)
+
+
 def serialize_draft(draft: CurriculumDraft, include_document: bool = True):
     result = {
         "id": draft.id,
@@ -219,12 +228,16 @@ def curriculum_validation(draft: CurriculumDraft, db: Session):
 
 
 def serialize_equivalency(rule: CourseEquivalency):
+    source_course_codes = [
+        code.strip() for code in rule.source_course_code.split("+") if code.strip()
+    ]
     return {
         "id": rule.id,
         "source_institution_id": rule.source_institution_id,
         "source_institution": rule.source_institution.name,
         "source_institution_code": rule.source_institution.code,
         "source_course_code": rule.source_course_code,
+        "source_course_codes": source_course_codes,
         "source_course_title": rule.source_course_title,
         "source_credits": rule.source_credits,
         "target_institution_id": rule.target_institution_id,
@@ -257,9 +270,8 @@ def apply_equivalency_payload(
     if source.id == target.id:
         raise HTTPException(status_code=400, detail="Source and target institutions must be different")
 
-    source_code = normalize_course_code(payload.source_course_code)
     target_code = normalize_course_code(payload.target_course_code)
-    if not source_code or not target_code:
+    if not payload.source_course_code.strip() or not target_code:
         raise HTTPException(status_code=400, detail="Source and target course codes are required")
 
     status = payload.status.strip().lower()
@@ -267,11 +279,12 @@ def apply_equivalency_payload(
         raise HTTPException(status_code=400, detail="Status must be draft, approved, or inactive")
 
     equivalency_type = payload.equivalency_type.strip().lower()
-    if equivalency_type != "direct":
+    if equivalency_type not in {"direct", "combination"}:
         raise HTTPException(
             status_code=400,
-            detail="This version supports direct one-to-one equivalencies only",
+            detail="Equivalency type must be direct or combination",
         )
+    source_code = normalize_equivalency_source(payload.source_course_code, equivalency_type)
 
     duplicate_query = db.query(CourseEquivalency).filter_by(
         source_institution_id=source.id,

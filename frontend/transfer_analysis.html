@@ -583,24 +583,41 @@ async function loadApprovedEquivalencies(sourceInstitutionCode, targetInstitutio
   }
 }
 
+function equivalencySourceCodes(rule) {
+  if (Array.isArray(rule.source_course_codes) && rule.source_course_codes.length) {
+    return rule.source_course_codes;
+  }
+  return String(rule.source_course_code || "")
+    .split("+")
+    .map(code => code.trim())
+    .filter(Boolean);
+}
+
 async function analyzeTargetCourse(course, completedCodes, completedDetails, institutionCode, usedSourceCourses) {
   const approvedRule = APPROVED_EQUIVALENCIES.find(rule =>
     rule.target_course_code === course.code &&
-    completedCodes.has(rule.source_course_code) &&
-    !usedSourceCourses.has(rule.source_course_code)
+    equivalencySourceCodes(rule).every(code => completedCodes.has(code)) &&
+    equivalencySourceCodes(rule).every(code => !usedSourceCourses.has(code))
   );
 
   if (approvedRule) {
-    const match = completedDetails.find(c => c.code === approvedRule.source_course_code) || {
-      code: approvedRule.source_course_code,
-      title: approvedRule.source_course_title || approvedRule.source_course_code,
-      credits: approvedRule.source_credits || 0
+    const sourceCodes = equivalencySourceCodes(approvedRule);
+    const sourceMatches = sourceCodes.map(code => completedDetails.find(c => c.code === code) || {
+      code,
+      title: code,
+      credits: 0
+    });
+    const match = sourceMatches.length === 1 ? sourceMatches[0] : {
+      code: sourceCodes.join(" + "),
+      title: approvedRule.source_course_title || sourceMatches.map(item => item.title).join(" + "),
+      credits: sourceMatches.reduce((sum, item) => sum + Number(item.credits || 0), 0)
     };
     return {
       satisfied: true,
       method: `Approved equivalency (${approvedRule.source_institution_code} → ${approvedRule.target_institution_code})`,
       matched_course: match,
-      source_course_code: approvedRule.source_course_code,
+      source_course_code: sourceCodes.length === 1 ? sourceCodes[0] : null,
+      source_course_codes: sourceCodes,
       equivalency_id: approvedRule.id,
       credits: Number(approvedRule.target_credits || course.credits || match.credits || 0)
     };
@@ -695,7 +712,9 @@ async function runTransferAnalysis() {
 
       if (analysis.satisfied) {
         satisfied.push(record);
-        if (analysis.source_course_code) usedSourceCourses.add(analysis.source_course_code);
+        const matchedSourceCodes = analysis.source_course_codes ||
+          (analysis.source_course_code ? [analysis.source_course_code] : []);
+        matchedSourceCodes.forEach(code => usedSourceCourses.add(code));
         satisfiedCredits += Math.min(Number(analysis.credits || targetCredits || 0), targetCredits || Number(analysis.credits || 0));
       } else {
         remaining.push(record);

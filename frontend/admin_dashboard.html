@@ -462,7 +462,7 @@ tr:hover {
 
     <div id="equivalencyForm" class="form-card" style="display:none;">
       <h3 id="equivalencyFormTitle" style="margin-top:0;">Add Course Equivalency</h3>
-      <p class="subtitle">Directional rule: the source course transfers as the target course. Only approved rules affect student analysis.</p>
+      <p class="subtitle">Directional rule: one source course, or a required combination, transfers as the target course. Only approved rules affect student analysis.</p>
 
       <input type="hidden" id="equivalencyId">
 
@@ -472,8 +472,8 @@ tr:hover {
           <select id="equivalencySourceInstitution"></select>
         </div>
         <div class="form-field">
-          <label for="equivalencySourceCode">Source course code</label>
-          <input id="equivalencySourceCode" placeholder="MAT 301">
+          <label for="equivalencySourceCode">Source course code(s)</label>
+          <input id="equivalencySourceCode" placeholder="MAT 301 or CSC 111 + CSC 211">
         </div>
         <div class="form-field">
           <label for="equivalencySourceTitle">Source course title</label>
@@ -498,6 +498,13 @@ tr:hover {
         <div class="form-field">
           <label for="equivalencyTargetCredits">Target credits</label>
           <input id="equivalencyTargetCredits" type="number" min="0" max="20" placeholder="4">
+        </div>
+        <div class="form-field">
+          <label for="equivalencyType">Rule type</label>
+          <select id="equivalencyType">
+            <option value="direct">Direct — one source course</option>
+            <option value="combination">Combination — all source courses required</option>
+          </select>
         </div>
         <div class="form-field">
           <label for="equivalencyStatus">Status</label>
@@ -848,6 +855,7 @@ async function openEquivalencyForm(row = null) {
   document.getElementById("equivalencyTargetCode").value = row?.target_course_code || "";
   document.getElementById("equivalencyTargetTitle").value = row?.target_course_title || "";
   document.getElementById("equivalencyTargetCredits").value = row?.target_credits ?? "";
+  document.getElementById("equivalencyType").value = row?.equivalency_type || "direct";
   document.getElementById("equivalencyStatus").value = row?.status || "draft";
   document.getElementById("equivalencyMinimumGrade").value = row?.minimum_grade || "";
   document.getElementById("equivalencyCatalogStart").value = row?.catalog_year_start || "";
@@ -882,7 +890,7 @@ async function saveEquivalency() {
     target_course_code: document.getElementById("equivalencyTargetCode").value,
     target_course_title: document.getElementById("equivalencyTargetTitle").value || null,
     target_credits: nullableNumber("equivalencyTargetCredits"),
-    equivalency_type: "direct",
+    equivalency_type: document.getElementById("equivalencyType").value,
     status: document.getElementById("equivalencyStatus").value,
     minimum_grade: document.getElementById("equivalencyMinimumGrade").value || null,
     catalog_year_start: document.getElementById("equivalencyCatalogStart").value || null,
