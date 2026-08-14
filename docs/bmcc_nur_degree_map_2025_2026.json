@@ -1,0 +1,38 @@
+{
+  "institution_code": "BMCC", "program_code": "NUR_AAS",
+  "program_name": "Nursing", "degree_type": "AAS",
+  "catalog_year": "2025-2026", "default_semesters": 8, "total_credits": 65,
+  "source_pdf": "/docs/degree_maps/bmcc_nursing_fall_start_2025_2026.pdf",
+  "source_pdfs": [
+    {"label": "Nursing Fall Start Day & Evening/Weekend Degree Map", "url": "/docs/degree_maps/bmcc_nursing_fall_start_2025_2026.pdf"},
+    {"label": "Nursing Spring Start Day Degree Map", "url": "/docs/degree_maps/bmcc_nursing_spring_day_2025_2026.pdf"},
+    {"label": "Nursing Spring Start Evening/Weekend Degree Map", "url": "/docs/degree_maps/bmcc_nursing_spring_evening_2025_2026.pdf"}
+  ],
+  "faculty_override_note": "The official Fall Start Day & Evening/Weekend map (three years, includes two summer sessions) is the default. The official Spring Start Day map (three years) and Spring Start Evening/Weekend map (four years, no summer sessions) are official alternate pathways with different term-by-term sequencing of the same 15 required courses. Admission to the clinical phase (NUR 112 onward) is competitive and by application; DegreeWorks and Nursing Department advisement remain authoritative.",
+  "semesters": [
+    {"number": 1, "target_credits": 4, "course_codes": ["CHE 121"]},
+    {"number": 2, "target_credits": 13, "course_codes": ["MAT 104", "PSY 100", "BIO 425", "ENG 101"]},
+    {"number": 3, "target_credits": 10, "course_codes": ["ENG 201", "BIO 426", "SPE 100"]},
+    {"number": 4, "target_credits": 4, "course_codes": ["BIO 420"]},
+    {"number": 5, "target_credits": 8, "course_codes": ["NUR 112"]},
+    {"number": 6, "target_credits": 8, "course_codes": ["NUR 211"]},
+    {"number": 7, "target_credits": 8, "course_codes": ["NUR 313"]},
+    {"number": 8, "target_credits": 10, "course_codes": ["NUR 411", "NUR 415"]}
+  ],
+  "alternate_pathways": [
+    {"name": "Official Spring Start Day map", "semester_credit_targets": [13, 4, 10, 12, 8, 8, 10]},
+    {"name": "Official Spring Start Evening/Weekend map", "semester_credit_targets": [13, 4, 10, 4, 8, 8, 8, 10]}
+  ],
+  "sequence_notes": [
+    "This is a fixed, fully-prescribed AAS curriculum: every course is individually required and there are no elective choice groups, unlike the BMCC A.A. majors already in this system.",
+    "Chemistry-Biology prerequisite chain: CHE 121 -> BIO 425 -> BIO 426 -> BIO 420, each machine-enforced.",
+    "Nursing Process sequence: NUR 112 -> NUR 211 -> NUR 313 -> (NUR 411 and NUR 415), each machine-enforced.",
+    "NUR 112 requires CHE 121, ENG 101, BIO 425, MAT 104, and PSY 100 on every map variant. Evening/Weekend-track students additionally need BIO 426 and BIO 420 completed before NUR 112 per the official footnotes; this track-specific addition is not enforced by the system, since the schema has no concept of a student's Day vs Evening/Weekend track. A stricter universal encoding (requiring BIO 426/BIO 420 for all students) was considered and rejected, since it would incorrectly block Day-track students who do not need those two courses first.",
+    "Acceptance into the clinical phase also requires passing a competitive Nursing Admission Test and being accepted into a clinical rotation slot; this is an application/testing gate, not a course completion, and is not encoded as a prerequisite.",
+    "NUR 211's official course-listing prerequisite additionally lists PSY 240, a course that does not appear on any of the three official degree maps and is not part of this curriculum. It was not encoded (see source notes); flagged for maintainer review.",
+    "Other 'corequisite' pairings quoted in the official course-listings page (BIO 420 with NUR 211, SPE 100/ENG 201 with NUR 313) do not match the current degree maps' term-by-term sequencing and are not encoded; only NUR 411/NUR 415's same-semester corequisite (confirmed by all three degree maps) is documented.",
+    "NUR 411 and NUR 415 are corequisite courses that must be taken in the same semester; the current prerequisite grammar has no same-semester corequisite primitive, so both are encoded only with their shared true prerequisite, NUR 313.",
+    "SPE 102 is modeled as its own row, reciprocally alternate to SPE 100, so a student who took SPE 102 specifically can mark it directly.",
+    "A Writing Intensive course is required for graduation."
+  ]
+}
