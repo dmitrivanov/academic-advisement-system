@@ -88,6 +88,10 @@ class DigitalMarketingCurriculumTests(unittest.TestCase):
         self.assertEqual("ENG 101|MAR 100", by_code["MAR 220"]["prerequisites"])
         self.assertEqual("ENG 101|MAR 100", by_code["MAR 230"]["prerequisites"])
 
+    def test_com_245_course_prerequisite_is_enforced(self):
+        by_code = {row["course_code"]: row for row in self.rows}
+        self.assertEqual("SPE 100", by_code["COM 245"]["prerequisites"])
+
     def test_program_elective_pool_is_choose_three_of_seven(self):
         rows = [row for row in self.rows if row["group_name"] == "Program Elective"]
         codes = {row["course_code"] for row in rows}

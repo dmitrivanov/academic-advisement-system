@@ -144,6 +144,10 @@ overage from MAT 150; see "General Elective" below.
   Encoded as `CIS 180 or MMP 100`. Neither CIS 180 nor MMP 100 is part of
   this curriculum's own course list; the validator is expected to warn
   about both as external references.
+- **COM 245 (The Mass Media).** The official Digital Marketing curriculum
+  lists `SPE 100` or departmental permission as the prerequisite. Encoded
+  as `SPE 100`; the non-course departmental-permission alternate remains
+  an advising check, consistent with other permission-based exceptions.
 - **ENG 100.5 / MAT 150.5 (five-semester map only).** Placement-based
   alternates for ENG 101 and MAT 150 respectively, identical pattern to
   every other major. Not added as additional rows.
@@ -160,7 +164,10 @@ overage from MAT 150; see "General Elective" below.
 2. CIS 200's full official prerequisite (ACC/BUS course plus a computer
    competency test or CIS 100) is only partially encoded, matching an
    existing precedent from `bba_as_courses.csv`.
-3. `docs/programs.csv` listed DMK_AS's catalog year as `2026`; corrected
+3. COM 245 also permits enrollment with departmental permission. The
+   course-based `SPE 100` prerequisite is enforced; permission remains an
+   advising check because it cannot be represented as a course rule.
+4. `docs/programs.csv` listed DMK_AS's catalog year as `2026`; corrected
    to `2025-2026` (see "Program identity").
 
 ## Validator and local testing
