@@ -1,0 +1,26 @@
+{
+  "institution_code": "BMCC", "program_code": "CYB_CERT",
+  "program_name": "Cybersecurity Certificate", "degree_type": "CERT",
+  "catalog_year": "2025-2026", "default_semesters": 4, "total_credits": 30,
+  "source_pdf": "/docs/degree_maps/bmcc_cybersecurity_certificate_2_year_2025_2026.pdf",
+  "source_pdfs": [
+    {"label": "Cybersecurity Certificate 2-Year Degree Map", "url": "/docs/degree_maps/bmcc_cybersecurity_certificate_2_year_2025_2026.pdf"}
+  ],
+  "faculty_override_note": "Only one official degree map is published for this certificate (no alternate five-semester map). DegreeWorks and CIS Department advisement remain authoritative.",
+  "semesters": [
+    {"number": 1, "target_credits": 6, "course_codes": ["CSC 101", "CIS 115"]},
+    {"number": 2, "target_credits": 3, "course_codes": ["CIS 165"]},
+    {"number": 3, "target_credits": 9, "course_codes": ["CIS 345", "CIS 359", "CIS 440"]},
+    {"number": 4, "target_credits": 12, "course_codes": ["CIS 316", "CIS 362", "CIS 455", "CIS 459"]}
+  ],
+  "alternate_pathways": [],
+  "sequence_notes": [
+    "This is a fixed, fully-prescribed 10-course certificate: every course is individually required and there are no elective choice groups.",
+    "CSC 101 -> CIS 165 is machine-enforced.",
+    "CIS 165 or CSC 110 or CSC 111 is required (or departmental approval, not encoded) before CIS 345, CIS 359, CIS 440, CIS 316, and CIS 362; encoded identically for all five as `CIS 165 or CSC 110 or CSC 111`. CSC 110 and CSC 111 are not part of this certificate's own course list -- they are external prerequisites that exist in the Computer Information Systems A.A.S. curriculum (cis_courses.csv).",
+    "CIS 345 -> CIS 455 is machine-enforced.",
+    "CIS 345 and CIS 440 -> CIS 459 is machine-enforced.",
+    "\"Or Departmental approval\" alternates on every footnote are not course-based and are not encoded, matching the established practice for similar non-course alternates elsewhere in this repo.",
+    "CIS 459's official course-listing title is 'Ethical Hacking and System Defense', matching this degree map. The Computer Information Systems A.A.S. curriculum (cis_courses.csv) currently lists CIS 459 under a different title ('Security Penetration Testing') and without the CIS 165/CSC 110/CSC 111 prerequisite applied to CIS 359, CIS 362, and CIS 316 that this program's own map states -- flagged for maintainer review as a possible staleness in that other file, not something corrected here."
+  ]
+}
