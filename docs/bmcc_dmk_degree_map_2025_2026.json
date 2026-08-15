@@ -1,0 +1,30 @@
+{
+  "institution_code": "BMCC", "program_code": "DMK_AS",
+  "program_name": "Digital Marketing", "degree_type": "AS",
+  "catalog_year": "2025-2026", "default_semesters": 4, "total_credits": 60,
+  "source_pdf": "/docs/degree_maps/bmcc_digital_marketing_2_year_2025_2026.pdf",
+  "source_pdfs": [
+    {"label": "Digital Marketing 2-Year Degree Map", "url": "/docs/degree_maps/bmcc_digital_marketing_2_year_2025_2026.pdf"},
+    {"label": "Digital Marketing 5-Semester Degree Map", "url": "/docs/degree_maps/bmcc_digital_marketing_5_semester_2025_2026.pdf"}
+  ],
+  "faculty_override_note": "The official two-year, four-semester map is the default. The official five-semester map is an alternate lighter-load pathway. DegreeWorks and faculty advisement remain authoritative.",
+  "semesters": [
+    {"number": 1, "target_credits": 16, "course_codes": ["MAT 150", "ENG 101", "BUS 104", "DMK-AS-INDIVIDUAL", "DMK-AS-USEXP"]},
+    {"number": 2, "target_credits": 15, "course_codes": ["ENG 201", "MAR 100", "SPE 100", "DMK-AS-WORLDCULT", "DMK-AS-GENERAL"]},
+    {"number": 3, "target_credits": 15, "course_codes": ["MAR 330", "DMK-AS-SCIWORLD", "DMK-AS-LPS"], "program_elective_slots": 2},
+    {"number": 4, "target_credits": 14, "course_codes": ["MAR 340", "BUS 110.5", "DMK-AS-CREATIVE2"], "program_elective_slots": 1}
+  ],
+  "alternate_pathways": [{"name": "Official five-semester map", "semester_credit_targets": [10, 12, 12, 12, 14]}],
+  "sequence_notes": [
+    "MAR 100 is a prerequisite for all MAR courses, per the degree maps' own footnote; encoded on each individual MAR course rather than as a single program-wide rule.",
+    "MAR 330's official prerequisite is 'ENG 101 and MAT 150 and [MAR 100 or PSY 100]' (quoted exactly from the course-listings page) -- a mixed AND/OR expression. The prerequisite grammar splits on `|` into top-level AND groups first, and each group can independently contain an ` or ` OR-list, so this is fully and exactly expressible as `ENG 101|MAT 150|MAR 100 or PSY 100`.",
+    "MAR 340 requires MAR 330, machine-enforced.",
+    "MAR 220 and MAR 230 both require ENG 101 and MAR 100 (encoded as `ENG 101|MAR 100`); MAR 210 requires only MAR 100.",
+    "Program Elective is 9 credits (3 of 7 courses) from MAR 210, MAR 220, MAR 230, BUS 150, CIS 200, COM 245, or MMP 240.",
+    "CIS 200's full official prerequisite ('any ACC course or any BUS course, and pass a computer competency test, or CIS 100') is only partially expressible; encoded as `ACC 122 or BUS 104`, matching the identical partial-encoding precedent already established for CIS 200 in bba_as_courses.csv. The computer-competency-test alternative remains an advising check, not enforced.",
+    "General Elective is officially 6 credits ('Some of these credits may be satisfied by taking STEM variants in the Common Core'); the two-year map shows only 5 explicit credits (3 + 2 across two semesters) because MAT 150 (4 credits) is one credit above its nominal 3-credit Common Core slot. The data model cannot move credits between groups, so General Elective is modeled as a single flat 6-credit placeholder, matching the pattern already used in eco_aa_courses.csv, crj_aa_courses.csv, and vat_as_courses.csv.",
+    "Select any Creative Expression Pathways course other than SPE 100 or SPE 102 for the second Creative Expression requirement.",
+    "SPE 102 is modeled as its own row, reciprocally alternate to SPE 100.",
+    "A Writing Intensive course is required for graduation."
+  ]
+}
