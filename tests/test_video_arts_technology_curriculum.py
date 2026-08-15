@@ -96,9 +96,17 @@ class VideoArtsTechnologyCurriculumTests(unittest.TestCase):
         self.assertIn("VAT 301", by_code)
         self.assertIn("ANI 301", by_code)
         self.assertNotEqual(by_code["VAT 301"]["title"], by_code["ANI 301"]["title"])
-        # VAT 301's real AND-of-OR prerequisite can't be represented in the
-        # flat grammar and must not be guessed at.
-        self.assertEqual("", by_code["VAT 301"]["prerequisites"])
+
+    def test_vat_301_and_or_prerequisite_is_exactly_encoded(self):
+        by_code = {row["course_code"]: row for row in self.rows}
+        # Official text: "VAT 161 or VAT 171, and CIS 100". The `|`
+        # separator creates top-level AND groups; each group may
+        # independently contain an ` or ` OR-list, so this AND-of-OR
+        # expression is exactly representable, not an approximation.
+        self.assertEqual(
+            "VAT 161 or VAT 171|CIS 100",
+            by_code["VAT 301"]["prerequisites"],
+        )
 
     def test_unverified_courses_are_not_guessed_at(self):
         codes = {row["course_code"] for row in self.rows}

@@ -186,11 +186,22 @@ Course-level credits in `Required Common Core` sum to 14 (ENG 101 3 + ENG
   fully expressible; encoded as `VAT 161 or VAT 171 or MMA 100 or MMP 100`
   and `VAT 161 or VAT 171` respectively.
 - **VAT 301.** Official prerequisite: "VAT 161 or VAT 171, and CIS 100" —
-  a grouped AND-of-OR expression. The flat prerequisite grammar (`|` for
-  AND, ` or ` for OR, no parentheses/grouping) cannot represent this
-  without either dropping the OR-choice or dropping the CIS 100
-  requirement, so it is left blank rather than guessed at. **Flagged for
-  maintainer review.**
+  an AND-of-OR expression. **Correction from the initial draft:** this was
+  first left blank on the assumption the flat prerequisite grammar
+  couldn't represent grouping. That assumption was wrong: `parse_relationships()`
+  in `seed_database.py` splits the string on `|` into top-level AND groups
+  first, and each `|`-separated group can independently contain an ` or `
+  OR-list — so an AND-of-ORs (though not an OR-of-ANDs) is fully
+  expressible. Encoded as `VAT 161 or VAT 171|CIS 100`, confirmed via
+  `parse_relationships("VAT 161 or VAT 171|CIS 100")` returning
+  `[(1, ["VAT 161", "VAT 171"]), (2, ["CIS 100"])]` — exactly (VAT 161 OR
+  VAT 171) AND CIS 100. CIS 100 is external to this curriculum, so the
+  validator is expected to warn about it, and it also means CIS 100 can
+  never be checked off within VAT_AS's own progress view (it has no
+  course card there) — so VAT 301 will always render as `locked` in
+  practice for VAT majors, matching the same external-prerequisite
+  consequence already seen elsewhere in this repo (e.g. Sociology's
+  SOC 154 requiring the external ANT 100). This is expected, not a bug.
 - **ANI 401.** Official prerequisite: "MMP 100 or MMA 100" — pure OR,
   encoded as `MMP 100 or MMA 100`.
 - **MEA 211.** Official prerequisite: "MMA 100 and MMP 100" — encoded as
@@ -232,9 +243,11 @@ Course-level credits in `Required Common Core` sum to 14 (ENG 101 3 + ENG
    single cross-listed course, but the official catalog cross-lists VAT
    301 with MMP 301, not ANI 301 — both VAT 301 and ANI 301 were added as
    separate options rather than assuming which one was meant.
-6. VAT 301's and MEA 201's official prerequisites contain grouped
-   AND-of-OR or "any two of a pool" conditions that cannot be represented
-   in the current flat prerequisite grammar; both are left unencoded.
+6. MEA 201's official prerequisite contains an "any two of a pool"
+   condition that cannot be represented in the current flat prerequisite
+   grammar and is left unencoded. VAT 301's AND-of-OR prerequisite,
+   initially thought to have the same problem, was found to be fully
+   expressible and is now encoded (see "Prerequisite review" above).
 7. `docs/programs.csv` listed VAT_AS's catalog year as `2026`; corrected
    to `2025-2026` (see "Program identity").
 
@@ -242,21 +255,22 @@ Course-level credits in `Required Common Core` sum to 14 (ENG 101 3 + ENG
 
 - Validator command: `python scripts/validate_curriculum_csv.py docs/vat_as_courses.csv`
 - Validator command (strict): `python scripts/validate_curriculum_csv.py --strict docs/vat_as_courses.csv`
-- Validator result: `Validated 1 file(s): 0 error(s), 5 warning(s).`
-- Warnings explained (all 5):
+- Validator result: `Validated 1 file(s): 0 error(s), 6 warning(s).`
+- Warnings explained (all 6):
   1. `alternatives` references `PHY 400` — external, not part of VAT_AS;
      see "Choices and alternatives" above.
-  2. `Required Common Core` lists 14 credits but requires 12 — expected
+  2. `prerequisites` references `CIS 100` (VAT 301) — external, not part
+     of VAT_AS; see "Prerequisite review" above.
+  3. `Required Common Core` lists 14 credits but requires 12 — expected
      2-credit STEM-variant overage (MAT 160 + PHY 110).
-  3. `VAT Production Courses` lists 18 credits but requires 12 — expected
+  4. `VAT Production Courses` lists 18 credits but requires 12 — expected
      "choose 4 of 6" pool.
-  4. `VAT Advised Elective` lists 18 credits but requires 3 — expected
+  5. `VAT Advised Elective` lists 18 credits but requires 3 — expected
      "choose 1 of 6 verified" pool.
-  5. `VAT Program Elective` lists 12 credits but requires 3 — expected
+  6. `VAT Program Elective` lists 12 credits but requires 3 — expected
      "choose 1 of 4 verified" pool.
 - Local seed completed: `python seed_database.py` — `VAT_AS` seeded
-  cleanly with 30 courses; no stale placeholder needed cleanup since
-  `programs.csv` was corrected before the first seed on this branch.
+  cleanly with 30 courses.
 - Real-behavior browser verification (Playwright, logged in as `admin`,
   program selector -> onboarding -> `/db-progress`):
   1. Baseline: VAT 161 and COM 240 are both `locked`.
