@@ -1394,6 +1394,7 @@ def get_program_requirements(program_code: str, db: Session = Depends(get_db)):
     )
 
     result_groups = []
+    curriculum_course_ids = set()
 
     for group in groups:
         group_courses = (
@@ -1407,6 +1408,8 @@ def get_program_requirements(program_code: str, db: Session = Depends(get_db)):
             course = db.query(Course).filter_by(id=group_course.course_id).first()
             if not course:
                 continue
+
+            curriculum_course_ids.add(course.id)
 
             courses.append(build_course_payload(db, program.id, course))
 
@@ -1423,6 +1426,41 @@ def get_program_requirements(program_code: str, db: Session = Depends(get_db)):
             "courses": courses,
         })
 
+    prerequisite_target_ids = set(curriculum_course_ids)
+    choice_group_codes = {
+        course.choice_group_code
+        for course_id in curriculum_course_ids
+        for course in [db.query(Course).filter_by(id=course_id).first()]
+        if course and course.choice_group_code
+    }
+    if choice_group_codes:
+        choice_groups = db.query(ChoiceGroup).filter(
+            ChoiceGroup.institution_id == program.department.institution_id,
+            ChoiceGroup.code.in_(choice_group_codes),
+        ).all()
+        choice_group_ids = [group.id for group in choice_groups]
+        if choice_group_ids:
+            prerequisite_target_ids.update(
+                row.course_id
+                for row in db.query(ChoiceGroupCourse).filter(
+                    ChoiceGroupCourse.choice_group_id.in_(choice_group_ids)
+                ).all()
+            )
+
+    support_course_ids = {
+        row.prereq_course_id
+        for row in db.query(CoursePrerequisite).filter(
+            CoursePrerequisite.program_id == program.id,
+            CoursePrerequisite.course_id.in_(prerequisite_target_ids),
+        ).all()
+        if row.prereq_course_id not in curriculum_course_ids
+    } if prerequisite_target_ids else set()
+    prerequisite_support_courses = []
+    for course_id in sorted(support_course_ids):
+        course = db.query(Course).filter_by(id=course_id).first()
+        if course:
+            prerequisite_support_courses.append(build_course_payload(db, program.id, course))
+
     return {
         "program": {
             "code": program.code,
@@ -1434,4 +1472,5 @@ def get_program_requirements(program_code: str, db: Session = Depends(get_db)):
             "institution_code": program.department.institution.code,
         },
         "groups": result_groups,
+        "prerequisite_support_courses": prerequisite_support_courses,
     }

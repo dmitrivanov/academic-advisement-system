@@ -451,7 +451,8 @@ function createSmartState() {
     programCode: "",
     inputMethod: "",
     targetSemesters: "",
-    workloadPattern: "balanced"
+    workloadPattern: "balanced",
+    targetCredits: "15"
   };
 }
 
@@ -868,6 +869,7 @@ function renderSmartHistory(body) {
 
 function renderSmartIntent(body) {
   const options = smartIntentOptions();
+  const currentProgram = selectedProgram();
   body.innerHTML = `
     <div class="smart-step-label">Step 2 of ${SMART_TOTAL_STEPS}</div>
     <h3 class="smart-question">What would you like help with?</h3>
@@ -875,7 +877,7 @@ function renderSmartIntent(body) {
     <div class="smart-options">
       ${options.map(([value, title, help]) => `
         <button class="smart-option ${SMART_STATE.advisingIntent === value ? "selected" : ""}" onclick="smartSelect('advisingIntent', '${value}')">
-          <strong>${title}</strong><span>${help}</span>
+          <strong>${value === "continue_current" && currentProgram ? `${title}: ${escapeHtml(currentProgram.name)} (${escapeHtml(currentProgram.degree_type || "Degree")})` : title}</strong><span>${help}</span>
         </button>`).join("")}
     </div>`;
 }
@@ -971,6 +973,12 @@ function renderSmartPreferences(body) {
           <option value="heavy_first" ${SMART_STATE.workloadPattern === "heavy_first" ? "selected" : ""}>Heavier first, decreasing later</option>
         </select>
       </div>
+      <div>
+        <label for="smartTargetCredits">Target credits per regular semester</label>
+        <select id="smartTargetCredits" onchange="SMART_STATE.targetCredits = this.value">
+          ${[9, 12, 15, 18].map(credits => `<option value="${credits}" ${String(credits) === SMART_STATE.targetCredits ? "selected" : ""}>${credits} credits</option>`).join("")}
+        </select>
+      </div>
     </div>`;
 }
 
@@ -992,7 +1000,7 @@ function renderSmartSummary(body) {
       <div><strong>Advising goal:</strong><br>${escapeHtml(smartIntentLabel())}</div>
       <div><strong>Campus and program:</strong><br>${escapeHtml(institution?.name || SMART_STATE.institutionCode)} — ${escapeHtml(program?.code || "")} ${escapeHtml(program?.name || "")}</div>
       <div><strong>Course input:</strong><br>${escapeHtml(smartInputLabel())}</div>
-      <div><strong>Planning preference:</strong><br>${escapeHtml(SMART_STATE.targetSemesters)} semesters; ${escapeHtml(workload)}</div>
+      <div><strong>Planning preference:</strong><br>${escapeHtml(SMART_STATE.targetSemesters)} semesters; ${escapeHtml(SMART_STATE.targetCredits)} credits per regular semester; ${escapeHtml(workload)}</div>
       <div><strong>Next workspace:</strong><br>Academic Progress${["change_major", "transfer_college", "transfer_to_cuny"].includes(SMART_STATE.advisingIntent) ? ", followed by the requested comparison after coursework is recorded" : " and semester planning"}</div>
     </div>`;
 }
@@ -1001,7 +1009,7 @@ function smartStepIsValid() {
   if (SMART_STATE.step === 1) return Boolean(SMART_STATE.academicHistory);
   if (SMART_STATE.step === 2) return Boolean(SMART_STATE.advisingIntent);
   if (SMART_STATE.step === 3) return Boolean(SMART_STATE.institutionCode && SMART_STATE.programCode);
-  if (SMART_STATE.step === 4) return Boolean(SMART_STATE.inputMethod && SMART_STATE.targetSemesters && SMART_STATE.workloadPattern);
+  if (SMART_STATE.step === 4) return Boolean(SMART_STATE.inputMethod && SMART_STATE.targetSemesters && SMART_STATE.workloadPattern && SMART_STATE.targetCredits);
   return true;
 }
 
@@ -1044,6 +1052,7 @@ function finishSmartOnboarding() {
     requestedPlanningMode: SMART_STATE.inputMethod === "ai_assisted" ? "ai" : planningMode,
     targetSemesters: Number(SMART_STATE.targetSemesters),
     workloadPattern: SMART_STATE.workloadPattern,
+    targetCredits: Number(SMART_STATE.targetCredits),
     completedAt
   };
 

@@ -2,7 +2,7 @@ institution_code,department,department_code,program_code,program_name,degree_typ
 BMCC,Accounting,ACC,ACCT_AAS,Accounting,AAS,2025-2026,Required Common Core,common_core,14,10,ENG 101,English Composition,3,,,,https://www.bmcc.cuny.edu/academics/departments/accounting/accounting/
 BMCC,Accounting,ACC,ACCT_AAS,Accounting,AAS,2025-2026,Required Common Core,common_core,14,10,ENG 201,Introduction to Literature,3,ENG 101,,,https://www.bmcc.cuny.edu/academics/departments/accounting/accounting/
 BMCC,Accounting,ACC,ACCT_AAS,Accounting,AAS,2025-2026,Required Common Core,common_core,14,10,MAT 150,Introduction to Statistics,4,,MAT 206,,https://www.bmcc.cuny.edu/academics/departments/accounting/accounting/
-BMCC,Accounting,ACC,ACCT_AAS,Accounting,AAS,2025-2026,Required Common Core,common_core,14,10,MAT 206,Precalculus,4,,MAT 150,,https://www.bmcc.cuny.edu/academics/departments/accounting/accounting/
+BMCC,Accounting,ACC,ACCT_AAS,Accounting,AAS,2025-2026,Required Common Core,common_core,14,10,MAT 206,Precalculus,4,MAT 157 or MAT 157.5,MAT 150,,https://www.bmcc.cuny.edu/academics/departments/accounting/accounting/
 BMCC,Accounting,ACC,ACCT_AAS,Accounting,AAS,2025-2026,Required Common Core,common_core,14,10,AST 110,General Astronomy,4,,PHY 110,,https://www.bmcc.cuny.edu/academics/departments/accounting/accounting/
 BMCC,Accounting,ACC,ACCT_AAS,Accounting,AAS,2025-2026,Required Common Core,common_core,14,10,PHY 110,General Physics,4,,AST 110,,https://www.bmcc.cuny.edu/academics/departments/accounting/accounting/
 BMCC,Accounting,ACC,ACCT_AAS,Accounting,AAS,2025-2026,Flexible Core,flexible_core,6,20,SPE 100,Fundamentals of Public Speaking,3,,SPE 102,,https://www.bmcc.cuny.edu/academics/departments/accounting/accounting/

@@ -759,6 +759,11 @@ button:hover {
   color: #166534;
 }
 
+.graduation-check { display:flex; align-items:flex-start; justify-content:space-between; gap:18px; border-left:4px solid #f59e0b; }
+.graduation-check.satisfied { border-left-color:#22c55e; background:#f0fdf4; }
+.graduation-check label { display:flex; gap:10px; align-items:flex-start; cursor:pointer; font-weight:800; }
+.graduation-check input { margin-top:3px; }
+
 .choice-modal-header {
   display: flex;
   justify-content: space-between;
@@ -1608,6 +1613,14 @@ body { background: #f5f5f7; color: #1d1d1f; }
     <div id="studentWelcomeMessage" class="meta"></div>
   </div>
 
+  <div id="writingIntensiveCard" class="card graduation-check" style="display:none;">
+    <div>
+      <h3 style="margin:0 0 6px;">Writing Intensive graduation requirement</h3>
+      <p class="subtitle" style="margin:0;">BMCC requires one designated Writing Intensive section. A course counts only when the registered section carries the WI designation.</p>
+    </div>
+    <label><input id="writingIntensiveCheck" type="checkbox" onchange="setWritingIntensiveCompleted(this.checked)"> I completed a designated WI section</label>
+  </div>
+
   <div id="planningModeCard" class="card planning-mode-card">
     <div class="planning-card-header">
       <div>
@@ -1635,6 +1648,15 @@ body { background: #f5f5f7; color: #1d1d1f; }
               <option value="balanced">Approximately equal each semester</option>
               <option value="light_first">Lighter first, increasing later</option>
               <option value="heavy_first">Heavier first, decreasing later</option>
+            </select>
+          </div>
+          <div class="planner-field">
+            <label for="targetCreditLoad">Target credits per regular semester</label>
+            <select id="targetCreditLoad" onchange="renderDegreePlan()">
+              <option value="9">9 credits — lighter part-time</option>
+              <option value="12">12 credits — full-time minimum</option>
+              <option value="15" selected>15 credits — standard pace</option>
+              <option value="18">18 credits — intensive</option>
             </select>
           </div>
         </div>
@@ -1762,6 +1784,7 @@ let COMPLETED_COURSES = new Set();
 let DIRECT_COMPLETED_COURSES = new Set();
 let SHOW_NOT_NEEDED = false;
 let CHOICE_SELECTIONS = {};
+let WRITING_INTENSIVE_COMPLETED = false;
 let ALTERNATIVE_SELECTIONS = {};
 let ACTIVE_CHOICE_PLACEHOLDER = null;
 let ACTIVE_CHOICE_OPTIONS = [];
@@ -1801,7 +1824,7 @@ const EMPTY_GROUPS = [
 const DISPLAY_AREAS = [
   {
     title: "Program Requirements",
-    types: ["program_required"]
+    types: ["program_required", "prerequisite_support"]
   },
   {
     title: "Program Electives",
@@ -1899,7 +1922,12 @@ function applyOnboardingState() {
     document.getElementById("completedCoursesCard").classList.add("readonly");
     setPlanningMode("ai");
   } else {
-    title.textContent = smart ? "Continue your smart onboarding workflow" : "Add your completed college courses";
+    const currentProgramLabel = CURRENT_REQUIREMENTS?.program
+      ? `${CURRENT_REQUIREMENTS.program.name} (${CURRENT_REQUIREMENTS.program.degree_type || CURRENT_REQUIREMENTS.program.code})`
+      : "your selected program";
+    title.textContent = smart?.advisingIntent === "continue_current"
+      ? `Continue your current major: ${currentProgramLabel}`
+      : (smart ? "Continue your smart onboarding workflow" : "Add your completed college courses");
     if (smart?.advisingIntent === "change_major") {
       message.textContent = "Select your completed courses first, then choose Explore Major Change to compare another program at this campus.";
     } else if (["transfer_college", "transfer_to_cuny"].includes(smart?.advisingIntent)) {
@@ -1907,7 +1935,7 @@ function applyOnboardingState() {
     } else if (smart?.inputMethod === "ai_assisted") {
       message.textContent = "Select completed courses in Manual mode first. Then open AI Advisor Plan to build the requested future-semester sequence.";
     } else {
-      message.textContent = "Use Advanced / Manual mode to record completed classes, or AI Advisor Plan to build future semesters from those selections.";
+      message.textContent = `Current selection: ${currentProgramLabel}. Use Manual mode to record completed classes, or AI Advisor Plan to build future semesters from those selections.`;
     }
     setPlanningMode("manual");
   }
@@ -1919,6 +1947,7 @@ function applySmartPlannerPreferences() {
 
   const semesterSelect = document.getElementById("targetSemesterCount");
   const workloadSelect = document.getElementById("workloadPattern");
+  const creditLoadSelect = document.getElementById("targetCreditLoad");
   const requestedSemesters = String(smart.targetSemesters || "");
 
   if (
@@ -1930,6 +1959,36 @@ function applySmartPlannerPreferences() {
   if ([...workloadSelect.options].some(option => option.value === smart.workloadPattern)) {
     workloadSelect.value = smart.workloadPattern;
   }
+  if ([...creditLoadSelect.options].some(option => option.value === String(smart.targetCredits))) {
+    creditLoadSelect.value = String(smart.targetCredits);
+  }
+}
+
+function writingIntensiveStorageKey() {
+  const code = CURRENT_REQUIREMENTS?.program?.code || "unknown";
+  return `writingIntensiveCompleted:${code}`;
+}
+
+function configureWritingIntensiveRequirement() {
+  const card = document.getElementById("writingIntensiveCard");
+  const checkbox = document.getElementById("writingIntensiveCheck");
+  const applies = CURRENT_REQUIREMENTS?.program?.institution_code === "BMCC";
+  card.style.display = applies ? "flex" : "none";
+  if (!applies) {
+    WRITING_INTENSIVE_COMPLETED = false;
+    return;
+  }
+  WRITING_INTENSIVE_COMPLETED = sessionStorage.getItem(writingIntensiveStorageKey()) === "true";
+  checkbox.checked = WRITING_INTENSIVE_COMPLETED;
+  card.classList.toggle("satisfied", WRITING_INTENSIVE_COMPLETED);
+}
+
+function setWritingIntensiveCompleted(completed) {
+  WRITING_INTENSIVE_COMPLETED = Boolean(completed);
+  sessionStorage.setItem(writingIntensiveStorageKey(), String(WRITING_INTENSIVE_COMPLETED));
+  document.getElementById("writingIntensiveCard").classList.toggle("satisfied", WRITING_INTENSIVE_COMPLETED);
+  renderSummary();
+  updateProgressWidget();
 }
 
 function setPlanningMode(mode) {
@@ -1977,6 +2036,7 @@ function prospectusMetrics() {
   const completed = getCompletedCourses();
   const remaining = remainingRequiredCredits(completed);
   const totalRequired = CURRENT_REQUIREMENTS.groups.reduce((sum, group) => {
+    if (group.excluded_from_degree) return sum;
     if (group.required_credits) return sum + Number(group.required_credits);
     return sum + group.courses.reduce((courseSum, course) => courseSum + Number(course.credits || 0), 0);
   }, 0);
@@ -1996,10 +2056,10 @@ function prospectusCourseRows(courses, completed) {
     const unlocks = countUnlocks(course, completed);
     return `
       <div class="prospectus-course">
-        <div class="prospectus-course-code">${prospectusEscape(course.code)}</div>
+        <div class="prospectus-course-code">${prospectusEscape(course.is_elective_slot ? "Elective choice" : course.code)}</div>
         <div class="prospectus-course-title">
           ${prospectusEscape(course.title)}
-          <small>${prospectusEscape(area)} · Prerequisites: ${prospectusEscape(prerequisites)}${unlocks ? ` · Unlocks ${unlocks} future course${unlocks === 1 ? "" : "s"}` : ""}</small>
+          <small>${prospectusEscape(area)}${course.is_elective_slot ? " · Student selection required" : ` · Prerequisites: ${prospectusEscape(prerequisites)}${unlocks ? ` · Unlocks ${unlocks} future course${unlocks === 1 ? "" : "s"}` : ""}`}</small>
         </div>
         <strong>${Number(course.credits || 0)} cr</strong>
       </div>`;
@@ -2048,7 +2108,8 @@ function renderPlanProspectus(mode = "degree") {
     renderDegreePlan();
     const desiredSemesters = Number(document.getElementById("targetSemesterCount").value || 0);
     const plannedCredits = LAST_DEGREE_PLAN.reduce((sum, semester) => sum + semester.credits, 0);
-    planningSummary = `${metrics.remaining} required credits remain. The selected timeline contains ${desiredSemesters} remaining semester${desiredSemesters === 1 ? "" : "s"} and currently places ${plannedCredits} credits.`;
+    const targetLoad = Number(document.getElementById("targetCreditLoad").value || 15);
+    planningSummary = `${metrics.remaining} required credits remain. The selected timeline contains ${desiredSemesters} remaining semester${desiredSemesters === 1 ? "" : "s"}, targets ${targetLoad} credits per regular semester, and currently places ${plannedCredits} credits.`;
     scheduleHtml = LAST_DEGREE_PLAN.length
       ? LAST_DEGREE_PLAN.map((semester, index) => prospectusSemesterSection(
           semester.name,
@@ -2074,6 +2135,7 @@ function renderPlanProspectus(mode = "degree") {
       <div class="prospectus-meta"><span>Campus</span><strong>${prospectusEscape(program.institution || program.institution_code || "Not specified")}</strong></div>
       <div class="prospectus-meta"><span>Program</span><strong>${prospectusEscape(`${program.code} - ${program.name}`)}</strong></div>
       <div class="prospectus-meta"><span>Catalog</span><strong>${prospectusEscape(program.catalog_year || "Not specified")}</strong></div>
+      ${program.institution_code === "BMCC" ? `<div class="prospectus-meta"><span>Writing Intensive</span><strong>${WRITING_INTENSIVE_COMPLETED ? "Satisfied" : "Not confirmed"}</strong></div>` : ""}
     </div>
 
     <div class="prospectus-stat-grid">
@@ -2159,6 +2221,7 @@ function updateSelectedProgramHeader() {
     <span class="program-context-item"><strong>Catalog</strong> ${program.catalog_year || "Not specified"}</span>
     ${sourceLinks ? `<span class="program-context-item"><strong>Official maps</strong> ${sourceLinks}</span>` : ""}
   `;
+  configureWritingIntensiveRequirement();
 }
 
 async function loadInstitutions() {
@@ -2359,9 +2422,11 @@ async function loadProgramRequirements() {
 
   CURRENT_REQUIREMENTS = await fetchJson(`/api/db/programs/${code}/requirements`);
 
+  attachPrerequisiteSupportGroup();
   ensurePlaceholderGroups();
   await loadOfficialDegreeMap();
   updateSelectedProgramHeader();
+  applyOnboardingState();
   configurePlannerDefaults();
   applySmartPlannerPreferences();
   renderCompletedCourseGrid();
@@ -2370,6 +2435,21 @@ async function loadProgramRequirements() {
   renderRecommendations();
   updateProgressWidget();
   if (CURRENT_PLANNING_MODE === "ai") renderDegreePlan();
+}
+
+function attachPrerequisiteSupportGroup() {
+  const courses = CURRENT_REQUIREMENTS?.prerequisite_support_courses || [];
+  if (!courses.length) return;
+  CURRENT_REQUIREMENTS.groups.push({
+    id: `prerequisite-support-${CURRENT_REQUIREMENTS.program.code}`,
+    name: "Prerequisite preparation (does not count toward degree credits)",
+    group_type: "prerequisite_support",
+    required_credits: null,
+    required_course_count: null,
+    display_order: 5,
+    excluded_from_degree: true,
+    courses,
+  });
 }
 
 function ensurePlaceholderGroups() {
@@ -2475,6 +2555,44 @@ function allCoursesFromGroups() {
   });
 
   return map;
+}
+
+function electivePlanningSlots(completed) {
+  const slots = [];
+  CURRENT_REQUIREMENTS.groups
+    .filter(group => group.group_type === "program_elective")
+    .forEach(group => {
+      let unassigned = Math.max(
+        0,
+        Number(group.required_credits || 0) - groupCreditsCompleted(group, completed)
+      );
+      let index = 1;
+      while (unassigned > 0) {
+        const credits = Math.min(3, unassigned);
+        slots.push({
+          code: `ELECTIVE-${group.id}-${index}`,
+          title: `Choose an approved course for ${group.name}`,
+          credits,
+          prereqs: [],
+          alternatives: [],
+          prerequisite_groups: [],
+          group_type: "program_elective",
+          group_name: group.name,
+          requirement_group_id: group.id,
+          is_elective_slot: true,
+        });
+        unassigned -= credits;
+        index += 1;
+      }
+    });
+  return slots;
+}
+
+function planningCoursePool(completed) {
+  const requiredCourses = Object.values(allCoursesFromGroups()).filter(
+    course => !["program_elective", "prerequisite_support"].includes(course.group_type)
+  );
+  return [...requiredCourses, ...electivePlanningSlots(completed)];
 }
 
 function getGroupsByTypes(types) {
@@ -3146,7 +3264,8 @@ function createChoiceOption(course, selected, sequencePosition, sequenceLength) 
   const currentCourse = allCoursesFromGroups()[course.code] || course;
   const status = getCourseStatus(course.code, currentCourse, getCompletedCourses());
   const allocatedElsewhere = !applied && courseReservedForExplicitRequirement(course.code);
-  const unavailable = status === "locked" || status === "not_needed" || allocatedElsewhere;
+  const selectionLimitReached = choiceSelectionLimitReached(selected);
+  const unavailable = status === "locked" || status === "not_needed" || allocatedElsewhere || (!applied && selectionLimitReached);
   div.className = `choice-course-option ${applied ? "selected" : ""} ${completedElsewhere ? "completed-elsewhere" : ""} ${unavailable ? "locked" : ""}`;
   div.onclick = unavailable ? null : () => selectChoiceCourse(course);
   const sequenceLabel = sequenceLength > 1
@@ -3160,6 +3279,7 @@ function createChoiceOption(course, selected, sequencePosition, sequenceLength) 
     ${status === "not_needed" ? `<div class="course-detail"><strong>Unavailable:</strong> this course is not needed for the remaining requirement.</div>` : ""}
     ${completedElsewhere && !allocatedElsewhere ? `<div class="course-detail"><strong>Completed elsewhere.</strong> Select to apply it here.</div>` : ""}
     ${allocatedElsewhere ? `<div class="course-detail"><strong>Reserved for its listed Core or major requirement.</strong></div>` : ""}
+    ${!applied && selectionLimitReached ? `<div class="course-detail"><strong>Unavailable:</strong> this elective requirement is already satisfied. Deselect a current choice to replace it.</div>` : ""}
     ${applied ? `<div class="course-detail"><strong>Applied to this requirement.</strong></div>` : ""}
     ${sequenceLabel}
   `;
@@ -3179,6 +3299,16 @@ function updateChoiceSatisfaction() {
   status.textContent = satisfied
     ? `✓ Requirement satisfied · ${selectedCredits} selected credits / ${required} required`
     : `${selectedCredits} selected credits / ${required} required`;
+}
+
+function choiceSelectionLimitReached(selected = selectedChoiceCourses(ACTIVE_CHOICE_PLACEHOLDER)) {
+  const courses = allCoursesFromGroups();
+  const placeholder = courses[ACTIVE_CHOICE_PLACEHOLDER];
+  const requiredCredits = Number(ACTIVE_CHOICE_GROUP?.required_credits || placeholder?.credits || 0);
+  const requiredCount = Number(ACTIVE_CHOICE_GROUP?.required_course_count || 0);
+  const selectedCredits = selected.reduce((total, course) => total + Number(course.credits || 0), 0);
+  return (requiredCount > 0 && selected.length >= requiredCount) ||
+    (requiredCredits > 0 && selectedCredits >= requiredCredits);
 }
 
 function renderChoiceOptions() {
@@ -3223,6 +3353,7 @@ function selectChoiceCourse(course) {
 
   const selected = selectedChoiceCourses(ACTIVE_CHOICE_PLACEHOLDER);
   const alreadySelected = selected.some(item => item.code === course.code);
+  if (!alreadySelected && choiceSelectionLimitReached(selected)) return;
   CHOICE_SELECTIONS[ACTIVE_CHOICE_PLACEHOLDER] = alreadySelected
     ? selected.filter(item => item.code !== course.code)
     : [...selected, course];
@@ -3308,7 +3439,8 @@ function groupsForCurrentTab() {
   if (CURRENT_TAB === "program") {
     return groups.filter(g =>
       g.group_type === "program_required" ||
-      g.group_type === "program_elective"
+      g.group_type === "program_elective" ||
+      g.group_type === "prerequisite_support"
     );
   }
 
@@ -3454,6 +3586,7 @@ function renderSummary() {
   let completedCredits = 0;
 
   Object.entries(courses).forEach(([code, course]) => {
+    if (course.group_type === "prerequisite_support") return;
     completedCredits += courseCompletedCredits(code, course, completed);
   });
 
@@ -3465,7 +3598,8 @@ function renderSummary() {
     <strong>Total visible courses:</strong> ${Object.keys(courses).length}<br>
     <strong>Selected completed courses:</strong> ${completed.size}<br>
     <strong>Selected choice requirements:</strong> ${Object.keys(CHOICE_SELECTIONS).length}<br>
-    <strong>Selected completed credits:</strong> ${completedCredits}
+    <strong>Selected completed credits:</strong> ${completedCredits}<br>
+    ${program.institution_code === "BMCC" ? `<strong>Writing Intensive:</strong> ${WRITING_INTENSIVE_COMPLETED ? "Satisfied" : "Not yet confirmed"}` : ""}
   `;
 }
 
@@ -3577,7 +3711,7 @@ function recommendationScore(course, completed, selectedGroupTypes) {
 
 function getAvailableCoursesForRecommendation() {
   const completed = getCompletedCourses();
-  const courses = allCoursesFromGroups();
+  const courses = Object.fromEntries(planningCoursePool(completed).map(course => [course.code, course]));
 
   return Object.values(courses).filter(course => {
     if (isCourseCompleted(course.code, course, completed)) return false;
@@ -3696,6 +3830,7 @@ function nextRegularSemesterName(currentName) {
 
 function remainingRequiredCredits(completed) {
   return CURRENT_REQUIREMENTS.groups.reduce((total, group) => {
+    if (group.excluded_from_degree) return total;
     const completedCredits = groupCreditsCompleted(group, completed);
     if (group.required_credits) {
       return total + Math.max(0, Number(group.required_credits) - completedCredits);
@@ -3708,7 +3843,7 @@ function remainingRequiredCredits(completed) {
   }, 0);
 }
 
-function workloadTargets(totalCredits, semesterCount, pattern) {
+function workloadTargets(totalCredits, semesterCount, pattern, targetCreditLoad) {
   const officialTargets = (OFFICIAL_DEGREE_MAP?.semesters || []).map(
     semester => Number(semester.target_credits || 15)
   );
@@ -3716,6 +3851,7 @@ function workloadTargets(totalCredits, semesterCount, pattern) {
   if (
     officialTargets.length === semesterCount &&
     pattern === "balanced" &&
+    Number(targetCreditLoad || 15) === 15 &&
     totalCredits >= officialTotal - 2
   ) {
     return officialTargets;
@@ -3727,8 +3863,12 @@ function workloadTargets(totalCredits, semesterCount, pattern) {
     if (pattern === "heavy_first") return 1.28 - progress * .56;
     return 1;
   });
-  const weightTotal = weights.reduce((sum, value) => sum + value, 0);
-  return weights.map(weight => Math.max(6, Math.min(18, Math.round(totalCredits * weight / weightTotal))));
+  const preferred = Math.max(6, Math.min(18, Number(targetCreditLoad || 15)));
+  return weights.map((weight, index) => {
+    const weighted = preferred * weight;
+    const remainingForThisAndLater = Math.max(0, totalCredits - preferred * index);
+    return Math.max(1, Math.min(18, Math.round(Math.min(weighted, remainingForThisAndLater || weighted))));
+  });
 }
 
 function officialSemesterForCourse(course, desiredSemesters) {
@@ -3757,13 +3897,14 @@ function courseIncludedInOfficialMap(course) {
 function buildDegreePlan() {
   if (!CURRENT_REQUIREMENTS) return [];
 
-  const courses = allCoursesFromGroups();
   const simulatedCompleted = getCompletedCourses();
+  const courses = Object.fromEntries(planningCoursePool(simulatedCompleted).map(course => [course.code, course]));
   const plan = [];
   const desiredSemesters = Number(document.getElementById("targetSemesterCount").value || 0);
   if (!desiredSemesters) return [];
   const workloadPattern = document.getElementById("workloadPattern").value || "balanced";
-  const targets = workloadTargets(remainingRequiredCredits(simulatedCompleted), desiredSemesters, workloadPattern);
+  const targetCreditLoad = Number(document.getElementById("targetCreditLoad").value || 15);
+  const targets = workloadTargets(remainingRequiredCredits(simulatedCompleted), desiredSemesters, workloadPattern, targetCreditLoad);
   const maxSemesters = desiredSemesters;
   let semesterName = detectNextSemester().name;
 
@@ -3875,6 +4016,7 @@ function renderDegreePlan() {
 
   const totalCredits = LAST_DEGREE_PLAN.reduce((sum, semester) => sum + semester.credits, 0);
   const desiredSemesters = Number(document.getElementById("targetSemesterCount").value || 0);
+  const targetCreditLoad = Number(document.getElementById("targetCreditLoad").value || 15);
   const remainingCredits = remainingRequiredCredits(getCompletedCourses());
   const sourceNote = OFFICIAL_DEGREE_MAP
     ? ` Guidance is based on the <a href="${OFFICIAL_DEGREE_MAP.source_pdf}" target="_blank" rel="noopener">official ${OFFICIAL_DEGREE_MAP.program_name} ${OFFICIAL_DEGREE_MAP.catalog_year} degree map</a>.`
@@ -3883,7 +4025,7 @@ function renderDegreePlan() {
   const schedulingNote = unscheduledCredits
     ? ` <strong>${unscheduledCredits} remaining required credit(s) could not be placed in this timeline</strong>; try a longer option or review missing prerequisites.`
     : "";
-  summary.innerHTML = `Suggested sequence: <strong>${desiredSemesters} remaining semester(s)</strong> and <strong>${totalCredits} planned credits</strong>.${schedulingNote}${sourceNote} This is a planning aid, not an official registration schedule. Course availability and advising approval still apply.`;
+  summary.innerHTML = `Suggested sequence: <strong>${desiredSemesters} remaining semester(s)</strong>, a target of <strong>${targetCreditLoad} credits per regular semester</strong>, and <strong>${totalCredits} planned credits</strong>. Elective slots remain unassigned until you choose an approved course.${schedulingNote}${sourceNote} This is a planning aid, not an official registration schedule. Course availability and advising approval still apply.`;
 
   LAST_DEGREE_PLAN.forEach((semester, index) => {
     const details = document.createElement("details");
@@ -3894,7 +4036,7 @@ function renderDegreePlan() {
       <div class="semester-courses">
         ${semester.courses.map(course => `
           <div class="semester-course">
-            <span><strong>${course.code}</strong> — ${course.title}</span>
+            <span><strong>${course.is_elective_slot ? "Elective choice" : course.code}</strong> — ${course.title}</span>
             <span>${course.credits} cr</span>
           </div>
         `).join("")}
@@ -3925,6 +4067,8 @@ async function generateAIStudyPlan() {
           planning_mode: "ai_semester_plan",
           requested_semesters: Number(document.getElementById("targetSemesterCount").value || 0),
           workload_pattern: document.getElementById("workloadPattern").value,
+          target_credits_per_regular_semester: Number(document.getElementById("targetCreditLoad").value || 15),
+          writing_intensive_completed: WRITING_INTENSIVE_COMPLETED,
           official_degree_map_guidance: OFFICIAL_DEGREE_MAP ? {
             catalog_year: OFFICIAL_DEGREE_MAP.catalog_year,
             total_credits: OFFICIAL_DEGREE_MAP.total_credits,
@@ -4127,6 +4271,7 @@ function buildAdvisorPageContext() {
     onboarding_context: getSmartOnboardingContext(),
     completed_courses: completed,
     selected_choice_requirements: CHOICE_SELECTIONS,
+    writing_intensive_completed: WRITING_INTENSIVE_COMPLETED,
     show_not_needed_courses: SHOW_NOT_NEEDED,
     next_semester: recommendation.semester,
     recommended_courses: recommendation.selected.map(course => ({
@@ -4264,6 +4409,7 @@ async function initializeDraftPreview(draftId, concentrationIndex) {
   OFFICIAL_DEGREE_MAP = null;
   ensurePlaceholderGroups();
   updateSelectedProgramHeader();
+  applyOnboardingState();
   configurePlannerDefaults();
   renderCompletedCourseGrid();
   renderGraph();
@@ -4316,6 +4462,7 @@ function updateProgressWidget() {
   let totalCredits = 0;
 
   groups.forEach(group => {
+    if (group.excluded_from_degree) return;
     const groupProgress = calculateGroupProgress(group);
 
     completedCredits += groupProgress.completedCredits;
@@ -4331,18 +4478,22 @@ function updateProgressWidget() {
     ? Math.min(100, Math.round((completedCredits / totalCredits) * 100))
     : 0;
 
-  const degrees = overallPercent * 3.6;
+  const bmccWritingPending = CURRENT_REQUIREMENTS.program?.institution_code === "BMCC" && !WRITING_INTENSIVE_COMPLETED;
+  const displayedPercent = bmccWritingPending && overallPercent === 100 ? 99 : overallPercent;
+
+  const degrees = displayedPercent * 3.6;
 
   document.getElementById("overallProgressCircle").style.background =
     `conic-gradient(#2563eb ${degrees}deg, #e5e7eb ${degrees}deg)`;
 
   document.getElementById("overallProgressPercent").textContent =
-    `${overallPercent}%`;
+    `${displayedPercent}%`;
 
   const details = document.getElementById("progressDetailsContent");
   details.innerHTML = "";
 
   groups.forEach(group => {
+    if (group.excluded_from_degree) return;
     const p = calculateGroupProgress(group);
 
     const requiredText = group.required_credits
@@ -4364,6 +4515,21 @@ function updateProgressWidget() {
 
     details.appendChild(row);
   });
+
+  if (CURRENT_REQUIREMENTS.program?.institution_code === "BMCC") {
+    const row = document.createElement("div");
+    row.className = "progress-row";
+    row.innerHTML = `
+      <div class="progress-row-label">
+        <span>Writing Intensive section</span>
+        <span>${WRITING_INTENSIVE_COMPLETED ? "Satisfied" : "Not confirmed"}</span>
+      </div>
+      <div class="progress-bar">
+        <div class="progress-bar-fill" style="width:${WRITING_INTENSIVE_COMPLETED ? 100 : 0}%"></div>
+      </div>
+    `;
+    details.appendChild(row);
+  }
 }
 
 

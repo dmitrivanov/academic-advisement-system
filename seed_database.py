@@ -866,6 +866,82 @@ def seed_institutional_elective_groups(db):
     print("Seeded institutional elective choice groups")
 
 
+def seed_course_catalog(db):
+    """Seed campus courses needed for prerequisites even when they are not degree rows."""
+    path = DOCS_DIR / "course_catalog.csv"
+    if not path.exists():
+        return
+    with path.open(newline="", encoding="utf-8-sig") as handle:
+        for row in csv.DictReader(handle):
+            institution = db.query(Institution).filter_by(
+                code=(row.get("institution_code") or "").strip().upper()
+            ).first()
+            if not institution:
+                raise ValueError(f"Unknown institution in {path.name}: {row}")
+            course = get_or_create_course(
+                db,
+                institution,
+                (row.get("course_code") or "").strip().upper(),
+                (row.get("title") or "").strip(),
+                int(row.get("credits") or 0),
+            )
+            course.title = (row.get("title") or "").strip()
+            course.credits = int(row.get("credits") or 0)
+    db.flush()
+    print("Seeded course catalog")
+
+
+def seed_canonical_course_prerequisites(db):
+    """Apply campus-wide prerequisite facts consistently in every program context."""
+    path = DOCS_DIR / "course_prerequisites.csv"
+    if not path.exists():
+        return
+
+    with path.open(newline="", encoding="utf-8-sig") as handle:
+        for row in csv.DictReader(handle):
+            institution = db.query(Institution).filter_by(
+                code=(row.get("institution_code") or "").strip().upper()
+            ).first()
+            if not institution:
+                raise ValueError(f"Unknown institution in {path.name}: {row}")
+
+            course_code = (row.get("course_code") or "").strip().upper()
+            course = find_course(db, institution, course_code)
+            if not course:
+                raise ValueError(f"Unknown canonical course {course_code} in {path.name}")
+
+            programs = (
+                db.query(Program)
+                .join(Department, Program.department_id == Department.id)
+                .filter(Department.institution_id == institution.id)
+                .all()
+            )
+            prereq_groups = parse_relationships(row.get("prerequisites", ""))
+            for program in programs:
+                db.query(CoursePrerequisite).filter_by(
+                    program_id=program.id,
+                    course_id=course.id,
+                ).delete(synchronize_session=False)
+                for group_id, prereq_codes in prereq_groups:
+                    for prereq_code in prereq_codes:
+                        prereq = find_course(db, institution, prereq_code)
+                        if not prereq:
+                            prereq = get_or_create_course(
+                                db, institution, prereq_code, prereq_code, 0
+                            )
+                        get_or_create(
+                            db,
+                            CoursePrerequisite,
+                            program_id=program.id,
+                            course_id=course.id,
+                            prereq_course_id=prereq.id,
+                            group_id=group_id,
+                        )
+
+    db.flush()
+    print("Seeded canonical course prerequisites")
+
+
 def seed_ccny_elective_groups(db):
     institution = db.query(Institution).filter_by(code="CCNY").first()
     if not institution:
@@ -1140,6 +1216,7 @@ def seed():
         seed_departments(db)
         seed_programs(db)
         seed_course_equivalencies(db)
+        seed_course_catalog(db)
         seed_choice_groups(db)
         seed_choice_group_courses(db)
         major_files = discover_major_files()
@@ -1255,6 +1332,7 @@ def seed():
         seed_ccny_elective_groups(db)
         seed_brooklyn_elective_groups(db)
         seed_program_choice_group_adjustments(db)
+        seed_canonical_course_prerequisites(db)
 
         db.commit()
         print("Database seeding completed.")

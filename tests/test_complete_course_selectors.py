@@ -35,6 +35,9 @@ class CompleteCourseSelectorTests(unittest.TestCase):
         self.assertIn("function selectedChoiceCredits", source)
         self.assertIn("Choose approved courses totaling", source)
         self.assertIn("Math.min(selectedChoiceCredits(code)", source)
+        self.assertIn("function choiceSelectionLimitReached", source)
+        self.assertIn("this elective requirement is already satisfied", source)
+        self.assertIn("if (!alreadySelected && choiceSelectionLimitReached(selected)) return", source)
 
     def test_large_selectors_are_grouped_and_explain_adjustments(self):
         source = (ROOT / "frontend" / "db_progress_graph.html").read_text(encoding="utf-8")

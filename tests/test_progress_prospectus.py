@@ -72,6 +72,24 @@ class ProgressProspectusTests(unittest.TestCase):
         self.assertIn("function hasSelectedChoiceCourse(courseCode)", self.html)
         self.assertIn("completed.has(prereq) || hasSelectedChoiceCourse(prereq)", self.html)
 
+    def test_degree_plan_keeps_electives_unassigned(self):
+        self.assertIn("function electivePlanningSlots", self.html)
+        self.assertIn('["program_elective", "prerequisite_support"].includes(course.group_type)', self.html)
+        self.assertIn("Elective slots remain unassigned until you choose an approved course", self.html)
+        self.assertIn('course.is_elective_slot ? "Elective choice"', self.html)
+
+    def test_bmcc_writing_intensive_is_explicitly_confirmed(self):
+        self.assertIn('id="writingIntensiveCheck"', self.html)
+        self.assertIn("function setWritingIntensiveCompleted", self.html)
+        self.assertIn("A course counts only when the registered section carries the WI designation", self.html)
+        self.assertIn('writing_intensive_completed: WRITING_INTENSIVE_COMPLETED', self.html)
+
+    def test_planner_exposes_explicit_credit_load(self):
+        self.assertIn('id="targetCreditLoad"', self.html)
+        for credits in (9, 12, 15, 18):
+            self.assertIn(f'<option value="{credits}"', self.html)
+        self.assertIn("target_credits_per_regular_semester", self.html)
+
     def test_advisor_drawer_closed_state_is_not_focusable_or_exposed(self):
         self.assertRegex(
             self.html,
