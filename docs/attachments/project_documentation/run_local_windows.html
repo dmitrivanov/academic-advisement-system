@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Run the Academic Advisement System Locally on Windows</title>
+  <style>
+:root { color-scheme: light; }
+* { box-sizing: border-box; }
+body { margin: 0; background: #edf3fb; color: #17233c; font-family: Inter, Arial, sans-serif; line-height: 1.58; }
+main { max-width: 920px; margin: 36px auto; padding: 54px 64px; background: white; border: 1px solid #dbe5f2; border-radius: 18px; box-shadow: 0 14px 38px rgba(30, 62, 110, .10); }
+h1 { margin: 0 0 30px; color: #123f86; font-size: 2.15rem; line-height: 1.18; border-bottom: 4px solid #4d8fdd; padding-bottom: 18px; }
+h2 { margin: 34px 0 12px; color: #194f95; font-size: 1.42rem; }
+h3 { margin: 26px 0 9px; color: #315f93; font-size: 1.12rem; }
+p { margin: 10px 0; }
+ul, ol { padding-left: 1.55rem; }
+li { margin: 7px 0; }
+code { padding: 2px 6px; border-radius: 6px; background: #edf3fa; color: #173a67; font-family: "SFMono-Regular", Consolas, monospace; }
+pre { overflow-x: auto; margin: 14px 0 20px; padding: 18px; border-radius: 11px; background: #12213a; color: #f4f8ff; line-height: 1.45; }
+pre code { padding: 0; background: transparent; color: inherit; }
+a { color: #1768c4; }
+.document-note { color: #5a6a82; font-size: .92rem; }
+@media (max-width: 700px) { main { margin: 0; padding: 30px 22px; border: 0; border-radius: 0; } }
+@media print { body { background: white; } main { max-width: none; margin: 0; padding: 0; border: 0; box-shadow: none; } }
+</style>
+</head>
+<body>
+  <main>
+    <h1>Run the Academic Advisement System Locally on Windows</h1><p>These instructions use <strong>Windows PowerShell</strong> and begin with downloading the private GitHub repository.</p><h2>Prerequisites</h2><p>Install:</p><ul><li><a href="https://git-scm.com/download/win">Git for Windows</a></li><li>Python 3.10 or newer</li><li>A current web browser</li><li>Access to the private GitHub repository</li></ul><p>During Python installation, select <strong>Add Python to PATH</strong>.</p><p>Open <strong>PowerShell</strong> and confirm that Git and Python are available:</p><pre><code>git --version
+python --version</code></pre><h2>1. Download the repository</h2><p>In PowerShell, run:</p><pre><code>git clone https://github.com/dmitrivanov/academic-advisement-system.git
+cd academic-advisement-system</code></pre><p>Because the repository is private, GitHub may ask you to authenticate. Sign in through GitHub or use a GitHub personal access token instead of an account password.</p><h3>Download ZIP alternative</h3><p>If Git is unavailable:</p><ol><li>Open the repository on GitHub.</li><li>Select <strong>Code</strong> and then <strong>Download ZIP</strong>.</li><li>Extract the ZIP file.</li><li>Open the extracted <code>academic-advisement-system</code> folder in PowerShell.</li><li>Continue with the next step.</li></ol><h2>2. Create a virtual environment</h2><pre><code>python -m venv venv</code></pre><h2>3. Activate the virtual environment</h2><pre><code>.\venv\Scripts\Activate.ps1</code></pre><p>If PowerShell reports that script execution is disabled, run the following commands in the same window:</p><pre><code>Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
+.\venv\Scripts\Activate.ps1</code></pre><p>This policy change applies only to the current PowerShell process.</p><h2>4. Install the dependencies</h2><pre><code>python -m pip install --upgrade pip
+python -m pip install -r requirements.txt</code></pre><h2>5. Configure local accounts</h2><p>Run these commands in the same PowerShell window:</p><pre><code>$env:SESSION_SECRET=&quot;local-development-secret&quot;
+$env:APP_USERNAME=&quot;admin&quot;
+$env:APP_PASSWORD=&quot;admin&quot;
+$env:TESTER_USERNAME=&quot;tester&quot;
+$env:TESTER_PASSWORD=&quot;tester&quot;</code></pre><p>The application has two roles:</p><ul><li>Administrator: <code>admin</code> / <code>admin</code></li><li>Student tester: <code>tester</code> / <code>tester</code></li></ul><p>The tester can use student advising features but cannot open administrator pages or administrator APIs.</p><p>These are demonstration credentials. Use different passwords for a public or long-running deployment.</p><h3>Optional: enable AI features</h3><p>Manual advising features work without an AI key. To enable the Gemini-based advisor, add:</p><pre><code>$env:GEMINI_API_KEY=&quot;your-Gemini-key&quot;</code></pre><p>Never commit passwords, API keys, <code>.env</code> files, or production database URLs.</p><h2>6. Create and seed the database</h2><pre><code>python seed_database.py</code></pre><p>This creates or refreshes <code>advisor.db</code> from the curriculum CSV files under <code>docs/</code>.</p><h2>7. Start the application</h2><pre><code>python -m uvicorn faq_fallback_api:app --reload --port 8000</code></pre><p>Keep this PowerShell window open while using the application.</p><h2>8. Open the application</h2><p>Open the following address in a browser:</p><p><a href="http://127.0.0.1:8000">http://127.0.0.1:8000</a></p><p>Sign in with either the administrator or tester account listed above.</p><h2>9. Stop the application</h2><p>Return to PowerShell and press <code>Control+C</code>.</p><h2>Restart the application later</h2><pre><code>cd academic-advisement-system
+.\venv\Scripts\Activate.ps1
+python -m uvicorn faq_fallback_api:app --reload --port 8000</code></pre><h2>Troubleshooting</h2><h3><code>python</code> is not recognized</h3><p>Reinstall Python and select <strong>Add Python to PATH</strong>. On some Windows installations, the Python launcher can be used instead:</p><pre><code>py --version</code></pre><p>If <code>py</code> works, replace <code>python</code> with <code>py</code> in the commands above.</p><h3>Running scripts is disabled</h3><p>Use the process-scoped command from Step 3:</p><pre><code>Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass</code></pre><h3>Port 8000 is already in use</h3><p>Start the application on another port:</p><pre><code>python -m uvicorn faq_fallback_api:app --reload --port 8001</code></pre><p>Then open <a href="http://127.0.0.1:8001">http://127.0.0.1:8001</a>.</p><h3>Programs do not appear</h3><p>Rerun the database seed and restart the server:</p><pre><code>python seed_database.py</code></pre><h3>AI advisor reports that no API key is configured</h3><p>Manual degree-progress, planning, and transfer features remain available. Set <code>GEMINI_API_KEY</code> and restart the server only if AI features are required.</p>
+    <p class="document-note">Academic Advisement System project documentation</p>
+  </main>
+</body>
+</html>
