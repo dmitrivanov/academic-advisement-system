@@ -8,6 +8,7 @@ from sqlalchemy import func
 from sqlalchemy.orm import Session, joinedload
 
 from database import get_db
+from auth import require_admin
 from program_selector_logic import canonical_selector_programs
 from models import (
     Institution,
@@ -67,11 +68,6 @@ class CurriculumDraftPayload(BaseModel):
 class DraftStatusPayload(BaseModel):
     status: str
     note: Optional[str] = None
-
-
-def require_admin(request: Request):
-    if request.session.get("logged_in") is not True:
-        raise HTTPException(status_code=401, detail="Admin login required")
 
 
 def optional_text(value):

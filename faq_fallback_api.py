@@ -13,6 +13,7 @@ from pathlib import Path
 from typing import Optional, Dict, Any
 
 from api_db_routes import router as db_router
+from auth import authenticate, is_admin, is_logged_in, require_admin
 from database import Base, engine
 import models  # noqa: F401 - registers all SQLAlchemy tables
 
@@ -32,10 +33,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-
-def is_logged_in(request: Request):
-    return request.session.get("logged_in") is True
 
 
 DEFAULT_MODEL = "gemini-2.5-flash"
@@ -191,12 +188,10 @@ def login_page():
 
 @app.post("/login")
 def login_submit(request: Request, username: str = Form(...), password: str = Form(...)):
-    app_username = os.environ.get("APP_USERNAME", "admin")
-    app_password = os.environ.get("APP_PASSWORD", "admin")
-
-    if username == app_username and password == app_password:
+    account = authenticate(username, password)
+    if account:
         request.session["logged_in"] = True
-        request.session["username"] = username
+        request.session.update(account)
         return RedirectResponse("/program-selector", status_code=303)
 
     return RedirectResponse("/login?error=1", status_code=303)
@@ -206,6 +201,17 @@ def login_submit(request: Request, username: str = Form(...), password: str = Fo
 def logout(request: Request):
     request.session.clear()
     return RedirectResponse("/login", status_code=303)
+
+
+@app.get("/api/session")
+def session_info(request: Request):
+    if not is_logged_in(request):
+        raise HTTPException(status_code=401, detail="Not logged in")
+    return {
+        "username": request.session.get("username"),
+        "role": request.session.get("role", "tester"),
+        "is_admin": is_admin(request),
+    }
 
 
 @app.get("/")
@@ -248,21 +254,21 @@ def serve_transfer_analysis(request: Request):
 
 @app.get("/admin")
 def serve_admin(request: Request):
-    if not is_logged_in(request):
+    if not is_admin(request):
         return RedirectResponse("/login", status_code=303)
     return FileResponse("frontend/admin_dashboard.html")
 
 
 @app.get("/admin/ai-settings")
 def serve_ai_settings(request: Request):
-    if not is_logged_in(request):
+    if not is_admin(request):
         return RedirectResponse("/login", status_code=303)
     return FileResponse("frontend/ai_settings.html")
 
 
 @app.get("/admin/major-constructor")
 def serve_major_constructor(request: Request):
-    if not is_logged_in(request):
+    if not is_admin(request):
         return RedirectResponse("/login", status_code=303)
     return FileResponse("frontend/major_constructor.html")
 
@@ -273,15 +279,13 @@ app.mount("/docs", StaticFiles(directory="docs"), name="docs")
 
 @app.get("/api/admin/ai-settings")
 def get_ai_settings(request: Request):
-    if not is_logged_in(request):
-        raise HTTPException(status_code=401, detail="Not logged in")
+    require_admin(request)
     return public_ai_settings(load_ai_settings())
 
 
 @app.put("/api/admin/ai-settings")
 def update_ai_settings(request: Request, payload: AISettingsPayload):
-    if not is_logged_in(request):
-        raise HTTPException(status_code=401, detail="Not logged in")
+    require_admin(request)
 
     current = load_ai_settings()
     new_settings = payload.model_dump()
@@ -296,8 +300,7 @@ def update_ai_settings(request: Request, payload: AISettingsPayload):
 
 @app.get("/api/admin/ai-embed-snippet")
 def get_ai_embed_snippet(request: Request):
-    if not is_logged_in(request):
-        raise HTTPException(status_code=401, detail="Not logged in")
+    require_admin(request)
 
     settings = load_ai_settings()
     agent_id = settings.get("agent_id", "advisor_progress")

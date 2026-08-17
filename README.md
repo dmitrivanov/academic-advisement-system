@@ -102,6 +102,8 @@ macOS or Linux:
 export SESSION_SECRET="local-development-secret"
 export APP_USERNAME="admin"
 export APP_PASSWORD="admin"
+export TESTER_USERNAME="tester"
+export TESTER_PASSWORD="tester"
 # Optional:
 export GEMINI_API_KEY="your-key-here"
 ```
@@ -112,6 +114,8 @@ Windows PowerShell:
 $env:SESSION_SECRET="local-development-secret"
 $env:APP_USERNAME="admin"
 $env:APP_PASSWORD="admin"
+$env:TESTER_USERNAME="tester"
+$env:TESTER_PASSWORD="tester"
 # Optional:
 $env:GEMINI_API_KEY="your-key-here"
 ```
@@ -138,8 +142,11 @@ python3 -m uvicorn faq_fallback_api:app --reload --port 8000
 ```
 
 Open [http://127.0.0.1:8000](http://127.0.0.1:8000) and sign in with the values from
-`APP_USERNAME` and `APP_PASSWORD`. If those variables were not set, the local
-development defaults are `admin` / `admin`.
+`APP_USERNAME` and `APP_PASSWORD`. The administrator can open administrative
+pages and APIs. `TESTER_USERNAME` and `TESTER_PASSWORD` configure a student/tester
+account that can use advising features but cannot open administrative pages or
+APIs. If these variables are not set, the local development defaults are
+`admin` / `admin` and `tester` / `tester`. Override all production passwords.
 
 The API health endpoint is available at
 [http://127.0.0.1:8000/health](http://127.0.0.1:8000/health).
