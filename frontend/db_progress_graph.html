@@ -2703,8 +2703,11 @@ function alternativeComponentKey(group, courses) {
 function selectedAlternativeCode(group, courses, completed) {
   const key = alternativeComponentKey(group, courses);
   const selected = ALTERNATIVE_SELECTIONS[key];
-  if (selected && completed.has(selected)) return selected;
-  return courses.find(course => completed.has(course.code))?.code || null;
+  if (selected) {
+    const selectedCourse = courses.find(course => course.code === selected);
+    if (selectedCourse && isCourseCompleted(selected, selectedCourse, completed)) return selected;
+  }
+  return courses.find(course => isCourseCompleted(course.code, course, completed))?.code || null;
 }
 
 function requiredCourseAllocations(completed) {
@@ -2714,9 +2717,61 @@ function requiredCourseAllocations(completed) {
       const selected = selectedAlternativeCode(group, component, completed);
       const course = component.find(item => item.code === selected);
       if (selected && course && !isChoicePlaceholder(course)) allocated.add(selected);
+      component.filter(isChoicePlaceholder).forEach(placeholder => {
+        selectedChoiceCourses(placeholder.code).forEach(choice => allocated.add(choice.code));
+      });
     });
   });
   return allocated;
+}
+
+function programElectiveAllocations(completed) {
+  const allocations = new Map();
+  const used = requiredCourseAllocations(completed);
+  const groups = getGroupsByTypes(["program_elective"])
+    .slice()
+    .sort((a, b) => Number(a.display_order || 0) - Number(b.display_order || 0));
+
+  groups.forEach(group => {
+    const allocated = new Set();
+    let credits = 0;
+    const target = Number(group.required_credits || 0);
+    const addCourse = course => {
+      if (!course || used.has(course.code) || allocated.has(course.code)) return false;
+      if (!isCourseCompleted(course.code, course, completed)) return false;
+      allocated.add(course.code);
+      used.add(course.code);
+      credits += Number(course.credits || 0);
+      return true;
+    };
+
+    if (group.completion_options?.length) {
+      const option = group.completion_options.find(candidate =>
+        candidate.every(code => {
+          const course = group.courses.find(item => item.code === code);
+          return course && !used.has(code) && isCourseCompleted(code, course, completed);
+        })
+      );
+      (option || []).forEach(code => addCourse(group.courses.find(item => item.code === code)));
+    } else {
+      alternativeComponents(group.courses).some(component => {
+        if (target && credits >= target) return true;
+        const placeholder = component.find(isChoicePlaceholder);
+        if (placeholder) {
+          selectedChoiceCourses(placeholder.code).some(course => {
+            addCourse(course);
+            return target && credits >= target;
+          });
+        } else {
+          const selected = selectedAlternativeCode(group, component, completed);
+          addCourse(component.find(item => item.code === selected));
+        }
+        return false;
+      });
+    }
+    allocations.set(group.id || group.name, allocated);
+  });
+  return allocations;
 }
 
 function courseReservedForExplicitRequirement(code) {
@@ -2739,6 +2794,19 @@ function hasCompletedAlternative(code, completed) {
 }
 
 function groupCreditsCompleted(group, completed) {
+  if (group.group_type === "program_elective") {
+    const allocated = programElectiveAllocations(completed).get(group.id || group.name) || new Set();
+    return [...allocated].reduce((total, code) => {
+      const direct = group.courses.find(item => item.code === code);
+      if (direct) return total + Number(direct.credits || 0);
+      for (const placeholder of group.courses.filter(isChoicePlaceholder)) {
+        const selected = selectedChoiceCourses(placeholder.code).find(item => item.code === code);
+        if (selected) return total + Number(selected.credits || 0);
+      }
+      return total;
+    }, 0);
+  }
+
   if (group.completion_options?.length) {
     return Math.max(0, ...group.completion_options.map(option =>
       option.reduce((total, code) => {
@@ -2750,27 +2818,7 @@ function groupCreditsCompleted(group, completed) {
 
   let credits = 0;
 
-  const allocatedRequired = group.group_type === "program_elective"
-    ? requiredCourseAllocations(completed)
-    : new Set();
-
   alternativeComponents(group.courses).forEach(component => {
-    if (group.group_type === "program_elective") {
-      component.forEach(course => {
-        if (isChoicePlaceholder(course)) {
-          const unallocatedCredits = selectedChoiceCourses(course.code)
-            .filter(selected => !allocatedRequired.has(selected.code))
-            .reduce((total, selected) => total + Number(selected.credits || 0), 0);
-          credits += Math.min(unallocatedCredits, Number(course.credits || 0));
-          return;
-        }
-        if (!allocatedRequired.has(course.code)) {
-          credits += courseCompletedCredits(course.code, course, completed);
-        }
-      });
-      return;
-    }
-
     const selected = selectedAlternativeCode(group, component, completed);
     if (!selected) return;
     const course = component.find(item => item.code === selected);
@@ -4433,7 +4481,7 @@ function toggleProgressDetails() {
 function calculateGroupProgress(group) {
   const completed = getCompletedCourses();
 
-  let completedCredits = 0;
+  const completedCredits = groupCreditsCompleted(group, completed);
   let totalCredits = 0;
 
   group.courses.forEach(course => {
@@ -4441,7 +4489,6 @@ function calculateGroupProgress(group) {
 
     totalCredits += credits;
 
-    completedCredits += courseCompletedCredits(course.code, course, completed);
   });
 
   const denominator = group.required_credits || totalCredits || 1;

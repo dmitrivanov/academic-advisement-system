@@ -56,16 +56,21 @@ class CommunicationStudiesCurriculumTests(unittest.TestCase):
         self.assertEqual(12, group_credits["Required Common Core"])
         self.assertEqual(6, group_credits["Flexible Core"])
         self.assertEqual(24, group_credits["Program Requirements"])
-        self.assertEqual(12, group_credits["COM Advised Elective"])
+        self.assertEqual(9, group_credits["COM Advised Elective - Discipline Core"])
+        self.assertEqual(3, group_credits["COM Advised Elective - Additional Choice"])
         self.assertEqual(6, group_credits["COM Program Elective"])
 
     def test_advised_elective_is_modeled_as_four_courses_not_five(self):
         # Both official degree maps' footnotes say "5 courses / 15
         # credits", but both maps' own course tables only show 4 slots,
         # and the published 60-credit total only balances with 4.
-        adjustment = next(row for row in self.adjustments if row["derived_group_code"] == "COM_AA_ADVISED")
-        self.assertEqual("12", adjustment["required_credits"])
-        self.assertEqual("4", adjustment["required_course_count"])
+        core = next(row for row in self.adjustments if row["derived_group_code"] == "COM_AA_ADVISED")
+        additional = next(row for row in self.adjustments if row["derived_group_code"] == "COM_AA_ADDITIONAL")
+        self.assertEqual("9", core["required_credits"])
+        self.assertEqual("3", core["required_course_count"])
+        self.assertEqual("3", additional["required_credits"])
+        self.assertIn("ENG", additional["include_subject_codes"].split("|"))
+        self.assertIn("MAR 220", additional["include_course_codes"].split("|"))
 
     def test_speech_alternatives_are_reciprocal(self):
         by_code = {row["course_code"]: row for row in self.rows}
@@ -85,11 +90,12 @@ class CommunicationStudiesCurriculumTests(unittest.TestCase):
         self.assertEqual("SPE 100", by_code["COM 245"]["prerequisites"])
         self.assertEqual("SPE 100 or SPE 102", by_code["COM 255"]["prerequisites"])
 
-    def test_advised_elective_named_course_prerequisites(self):
+    def test_advised_elective_subrule_is_machine_enforced_by_split_groups(self):
         by_code = {row["course_code"]: row for row in self.rows}
-        self.assertEqual("ENG 101|MAR 100", by_code["MAR 220"]["prerequisites"])
-        self.assertEqual("ENG 101|MAR 100", by_code["MAR 230"]["prerequisites"])
-        self.assertEqual("ENG 101|ENG 201|BUS 104", by_code["BUS 150"]["prerequisites"])
+        self.assertEqual("COM_AA_ADVISED", by_code["COM-AA-ADVISED"]["choice_group_code"])
+        self.assertEqual("COM_AA_ADDITIONAL", by_code["COM-AA-ADDITIONAL"]["choice_group_code"])
+        page = (ROOT / "frontend" / "db_progress_graph.html").read_text(encoding="utf-8")
+        self.assertIn("function programElectiveAllocations(completed)", page)
 
     def test_program_elective_is_com_subject_wildcard(self):
         adjustment = next(row for row in self.adjustments if row["derived_group_code"] == "COM_AA_PROGRAM")

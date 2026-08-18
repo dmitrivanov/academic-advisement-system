@@ -56,10 +56,7 @@ other file in `docs/`.
    - Media Arts and Technology (MMP, MMA, ANI, MES, MEA courses): https://www.bmcc.cuny.edu/academics/departments/media-arts-and-technology/course-listings/
    - Mathematics (MAT 161): https://www.bmcc.cuny.edu/academics/departments/math/course-listings/
    - Science (PHY 110): https://www.bmcc.cuny.edu/academics/departments/science/science-program/
-   - Art & Design (ART 166, ART 269, ART 176): page returned repeated HTTP
-     503 errors; titles for ART 166/ART 269 sourced from the degree maps
-     only (both agree), and ART 176's title could not be verified at all
-     (see "Choices and alternatives" below).
+   - Music and Art (ART 166, ART 269, ART 176): https://www.bmcc.cuny.edu/academics/departments/music-and-art/course-listings/
 
 ## Credit reconciliation
 
@@ -124,11 +121,10 @@ Technology.
 - **U.S. Experience in Its Diversity (Flexible Core).** Footnote: "Please
   consult with an academic or faculty advisor" — advisory, not
   restrictive. Left as the standard, unrestricted `FC_US_EXPERIENCE` pool.
-- **ART 269 / ART 176 (Program Requirements, Life Drawing Studio I).**
-  Footnote: "ART 176 is an alternate option." ART 176's title and credits
-  could not be verified (Art & Design department page returned repeated
-  HTTP 503 errors), so it was **not added as a row** rather than guessed
-  at. **Flagged for maintainer review.**
+- **ART 269 / ART 176 (Program Requirements).** Footnote: "ART 176 is an
+  alternate option." Both reciprocal rows are included; ART 176's current
+  title, credits, and prerequisite were verified against BMCC's Music and
+  Art course listing.
 - **ANI 402 / ANI 360.** Footnote: "ANI 360 is an alternative option."
   Modeled as two reciprocal rows. Unlike SPE 100/SPE 102 or MEA 371/MEA
   201 (which share the same effective eligibility), ANI 360 has its own,
@@ -144,19 +140,10 @@ Technology.
   250 can be taken to satisfy the ANI elective requirement as it is the
   prerequisite course to ANI 301. Alternate ANI electives are MMA 215,
   MMA 225, MMA 235, MMP 210, ANI 301, COM 240, COM 245, MEA 211, MEA 371,
-  MEA 300, HED 250 or BUS 200." **Not modeled as a choice group or as
-  `alternatives` on MMP 250.** Two of the twelve listed alternates —
-  ANI 301 and MEA 371 — are already separately, independently required
-  elsewhere on this same map. `alternativeComponents()` in
-  `frontend/db_progress_graph.html` graph-walks `alternatives` links to
-  group interchangeable courses into one shared credit-counted slot;
-  linking MMP 250 to ANI 301 and MEA 371 as alternatives would merge
-  three genuinely distinct program requirements into one, which would be
-  wrong — a student needs all three, not any one of the group. MMP 250 is
-  modeled as the literal, fixed course shown on the map; the official
-  substitution flexibility (choosing a different course than MMP 250
-  itself) is documented here but not enforced. **Flagged for maintainer
-  review.**
+  MEA 300, HED 250 or BUS 200." Modeled as the `AMG_AS_ANI_ELECTIVE`
+  selector with all 13 approved choices. A choice group is used instead
+  of course-alternative links so ANI 301 and MEA 371 remain separate fixed
+  requirements and cannot collapse into the elective slot.
 
 ## Prerequisite review
 
@@ -249,13 +236,10 @@ Technology.
    a MAT-level course as corequisites, not MMP 250 at all). MMP 250 was
    included based on the map; the corequisites and vague MAT-level
    condition were not encoded.
-5. The "ANI Elective" substitution flexibility (MMP 250 interchangeable
-   with 12 other named courses) is documented but not modeled, since two
-   of the alternates are already separately required elsewhere on this
-   map — see "Choices and alternatives" above.
-6. ART 176's title and credits could not be verified due to repeated
-   HTTP 503 errors on the Art & Design department's course-listings page.
-7. `docs/programs.csv` listed AMG_AS's catalog year as `2026`; corrected
+5. The "ANI Elective" substitution flexibility is modeled with a derived
+   choice group so the two alternates that are also fixed requirements do
+   not collapse those separate requirements into one OR component.
+6. `docs/programs.csv` listed AMG_AS's catalog year as `2026`; corrected
    to `2025-2026` (see "Program identity").
 
 ## Validator and local testing
@@ -289,5 +273,4 @@ Technology.
      and ANI 360's separate OR-prerequisite took effect correctly.
   All group cards render with correct titles (including the corrected
   "Introduction to Motion Graphics and Visual Effects" for ANI 301, not
-  the map's incorrect "Introduction to Video Graphics"); ART 176 does not
-  appear anywhere on the page. No console errors.
+  the map's incorrect "Introduction to Video Graphics"). No console errors.

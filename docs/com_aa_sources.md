@@ -116,27 +116,17 @@ adjacent departments).
   eligibility list: "SPE xx, COM xxx, THE xxx, GWS xxx, MES 152, ENG xxx,
   MAR 100, MAR 220, MAR 230, BUS 150, or ANY social science course," with
   a sub-rule requiring "at least three from SPE, COM, THE, or GWS."
-  Modeled as a subject-wildcard placeholder (`include_subject_codes=SPE|COM|THE|GWS`)
-  plus four literal rows for the specific named courses (MAR 100, MAR
-  220, MAR 230, BUS 150) and MES 152 (already present as a fixed Program
-  Requirement course, not duplicated as a literal row here). **Not
-  modeled:** the open-ended "any ENG course" and "any social science
-  course" allowances (too broad/undefined to safely enumerate), and the
-  "at least three from SPE/COM/THE/GWS" sub-rule (no primitive in the
-  current schema for counting a minimum from a subset within one pool,
-  the same category of limitation as Sociology's Flexible Core
-  cross-group cap). **Flagged for maintainer review.**
+  Modeled as two ordered selectors: a 9-credit discipline-core group
+  restricted to SPE/COM/THE/GWS, followed by one 3-credit additional-choice
+  group containing those subjects, ENG and the social-science disciplines,
+  plus MES 152, MAR 100/220/230 and BUS 150. This split machine-enforces
+  the official "at least three" rule while preserving all published choices.
 - **COM Program Elective (6 credits, choose 2).** Footnote: "Choose 2
   courses from any Communication courses." Modeled as a subject-wildcard
   placeholder (`include_subject_codes=COM`).
-- **Cross-pool double-counting (flagged, not corrected).** The COM
-  Advised Elective wildcard (SPE/COM/THE/GWS) can include courses already
-  separately required elsewhere in this same curriculum — for example,
-  SPE 100 itself, or COM 240/245/255 — since the auto-populated
-  `BMCC_GENERAL_ELECTIVE` pool has no mechanism to exclude already-used
-  codes from a subject-prefix narrowing. The same category of limitation
-  already documented for Sociology's cross-listed AFN/LAT courses.
-  **Flagged for maintainer review.**
+- **Cross-pool double-counting.** The progress allocator reserves fixed
+  requirements first and then allocates electives by display order, so a
+  completed course cannot earn credit in two requirement groups.
 
 ## Prerequisite review
 

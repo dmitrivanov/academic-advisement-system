@@ -107,9 +107,16 @@ class AnimationMotionGraphicsCurriculumTests(unittest.TestCase):
         self.assertEqual("MMP 100 or MMA 100", by_code["ANI 260"]["prerequisites"])
         self.assertEqual("MMP 100 or MMA 100", by_code["ANI 401"]["prerequisites"])
 
-    def test_art_176_is_not_guessed_at(self):
-        codes = {row["course_code"] for row in self.rows}
-        self.assertNotIn("ART 176", codes)
+    def test_art_176_alternative_and_ani_elective_are_complete(self):
+        by_code = {row["course_code"]: row for row in self.rows}
+        self.assertEqual("ART 176", by_code["ART 269"]["alternatives"])
+        self.assertEqual("ART 269", by_code["ART 176"]["alternatives"])
+        self.assertEqual("AMG_AS_ANI_ELECTIVE", by_code["AMG-AS-ANI-ELECTIVE"]["choice_group_code"])
+
+        adjustment = next(row for row in self.adjustments if row["derived_group_code"] == "AMG_AS_ANI_ELECTIVE")
+        choices = adjustment["include_course_codes"].split("|")
+        self.assertEqual(13, len(choices))
+        self.assertIn("MMP 250", choices)
 
     def test_no_duplicate_rows(self):
         seen = set()

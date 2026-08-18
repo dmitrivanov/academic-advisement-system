@@ -113,12 +113,8 @@ instead satisfied by a specific required program course (MES 152, ART
   210/270/271; UX and Web Design: MMP 240/350/202; Graphic Design: MMA
   215/225/235), each itself a 3-course pool, with the student expected to
   pick 2 courses from a *single* sequence, not mix across sequences. The
-  schema's elective-group primitive only supports "choose N credits from
-  one flat pool" — there is no primitive for "choose one of several named
-  sub-pools, then choose within it" (a two-level choice). All 9 courses
-  are modeled as one flat pool (`required_credits=6`); the
-  "must stay within one sequence" constraint is **not enforced**.
-  **Flagged for maintainer review.**
+  nine valid two-course combinations are encoded in `completion_options`,
+  so mixing courses from different sequences cannot satisfy the group.
 - **Multimedia Program Elective (6 credits, choose 2 courses).** Footnote
   5's named list: MMP 202, 210, 240, 310, 270, 271, 350, MMA 215, 225,
   235, ANI 260, ANI 401, MEA 211, MEA 300, or "any 200-level or higher
@@ -126,25 +122,14 @@ instead satisfied by a specific required program course (MES 152, ART
   count both as MMD program elective and for another program
   requirement" — but 9 of these 14 named courses are *also* part of the
   Multimedia Discipline Sequence pool above. The schema has no
-  cross-group double-counting prevention, so a student could select the
-  same course toward both groups' credit totals even though the source
-  explicitly forbids it. This is the same category of limitation already
-  documented for Sociology's cross-listed AFN/LAT courses, but here the
-  conflict is named explicitly by the source itself, not inferred.
-  **Flagged for maintainer review.** The open-ended "any 200-level or
+  progress page allocates completed electives in display order and never
+  allocates one course to a second elective group, enforcing the source's
+  no-double-counting rule. The open-ended "any 200-level or
   higher MMA or MMP course" addition is not enumerated or enforced.
 - **Multimedia Advised Elective (3 credits, choose 1 of 20 named
-  courses).** Footnote 11 lists 20 courses across Art & Design, Business
-  Management, CIS, Communication Studies, and Music/Business Electives
-  departments. Only 10 could be independently verified: ART 106, ART 166,
-  BUS 110.5, BUS 200, CIS 165, CSC 101, CSC 110, CSC 111, COM 240, COM
-  245. The remaining 10 (ART 102, ART 104, ART 107, ART 133, ART 174, ART
-  176, ART 183, ART 233, MUS 123, SBE 100) could not be verified — the
-  Art & Design department's course-listings page returned repeated HTTP
-  503 errors (the same issue already encountered for AMG_AS's ART 176),
-  and MUS 123/SBE 100 could not be located on any accessible department
-  page. **Not added as rows** rather than guessed at. **Flagged for
-  maintainer review.**
+  courses).** All 20 courses in footnote 11 are selectable. The previously
+  missing Art, MUS 123, and SBE 100 records were verified against BMCC's
+  current Music and Art and Business Management course listings.
 - **MEA 371 / MEA 201 (Media Arts and Technology Internship).**
   Footnote: "MEA 201 is an alternate option." Modeled as two reciprocal
   rows, matching the identical pattern already used in `vat_as_courses.csv`
@@ -212,16 +197,7 @@ instead satisfied by a specific required program course (MES 152, ART
 1. The two official degree-map dropbox links are no longer linked from
    the live program page (which now serves a 2026-2027 map instead) and
    were recovered via the Wayback Machine.
-2. The Multimedia Discipline Sequence's "must stay within one sequence"
-   constraint is not enforced — modeled as one flat 9-course pool.
-3. The Multimedia Program Elective and Multimedia Discipline Sequence
-   pools overlap by 9 courses, and the source explicitly forbids
-   double-counting between them, but the schema has no mechanism to
-   enforce this.
-4. Ten of the twenty named Multimedia Advised Elective options could not
-   be independently verified (Art & Design department page inaccessible;
-   MUS 123 and SBE 100 not located) and are not represented as rows.
-5. `docs/programs.csv` listed MMP_AS's catalog year as `2026`; corrected
+2. `docs/programs.csv` listed MMP_AS's catalog year as `2026`; corrected
    to `2025-2026` (see "Program identity").
 
 ## Validator and local testing
@@ -239,11 +215,8 @@ instead satisfied by a specific required program course (MES 152, ART
   `Required Common Core` (13 vs 12, expected PHY 110 STEM overage),
   `Multimedia Discipline Sequence` (27 vs 6, expected "choose 2 of 9"),
   `Multimedia Program Elective` (42 vs 6, expected "choose 2 of 14
-  named" — the higher count versus an earlier draft reflects including
-  the full official list, accepting the documented double-counting
-  overlap with Discipline Sequence rather than under-representing the
-  source), and `Multimedia Advised Elective` (28 vs 3, expected "choose
-  1 of 10 verified").
+  named"), and `Multimedia Advised Elective` (58 vs 3, expected "choose
+  1 of 20").
 - Local seed completed: `python seed_database.py` — `MMP_AS` seeded
   cleanly with 50 course associations (41 distinct courses; some appear
   in two groups, see "Choices and alternatives" above); no stale
@@ -255,9 +228,7 @@ instead satisfied by a specific required program course (MES 152, ART
   2. After completing MMP 100 + MMA 100: MMP 200 becomes `available`.
   3. Before completing MMP 200: MMP 460 stays `locked`.
   4. After completing MMP 200: MMP 460 becomes `available`.
-  All group cards render with correct titles and credit targets. The
-  documented Discipline Sequence / Program Elective overlap is visible in
-  the UI as expected -- the 9 shared courses (MMP 210/240/270/271/350/202,
-  MMA 215/225/235) each appear as two separate cards, one per group,
-  correctly reflecting the source's real (double-counting-risky)
-  structure rather than hiding it. No console errors.
+  All group cards render with correct titles and credit targets. Shared
+  sequence/program-elective courses remain synchronized visually, while
+  the allocation logic prevents one completion from satisfying both
+  groups. No console errors.

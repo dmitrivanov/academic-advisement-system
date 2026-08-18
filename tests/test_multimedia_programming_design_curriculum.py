@@ -71,11 +71,23 @@ class MultimediaProgrammingDesignCurriculumTests(unittest.TestCase):
             codes,
         )
 
+        encoded = {row["completion_options"] for row in rows if row["completion_options"]}
+        self.assertEqual(1, len(encoded))
+        options = next(iter(encoded)).split("||")
+        self.assertEqual(9, len(options))
+        sequence_sets = [set(option.split("+")) for option in options]
+        self.assertTrue(all(len(option) == 2 for option in sequence_sets))
+        self.assertTrue(all(
+            option <= {"MMP 210", "MMP 270", "MMP 271"}
+            or option <= {"MMP 240", "MMP 350", "MMP 202"}
+            or option <= {"MMA 215", "MMA 225", "MMA 235"}
+            for option in sequence_sets
+        ))
+
     def test_program_elective_and_discipline_sequence_overlap_is_documented(self):
         # The source explicitly forbids double-counting between these two
-        # pools, but 9 courses appear in both -- confirm the overlap is
-        # real (not accidental) and documented, since the schema cannot
-        # enforce the no-double-counting rule itself.
+        # pools. Confirm the overlap is intentional; the progress allocator
+        # reserves each completed course for only one elective group.
         discipline_codes = {row["course_code"] for row in self.rows if row["group_name"] == "Multimedia Discipline Sequence"}
         elective_codes = {row["course_code"] for row in self.rows if row["group_name"] == "Multimedia Program Elective"}
         self.assertEqual(9, len(discipline_codes & elective_codes))
@@ -91,10 +103,11 @@ class MultimediaProgrammingDesignCurriculumTests(unittest.TestCase):
         self.assertEqual("MMP 100 or MMA 100", by_code["ANI 260"]["prerequisites"])
         self.assertEqual("MMP 100 or MMA 100", by_code["ANI 401"]["prerequisites"])
 
-    def test_unverified_advised_elective_courses_are_not_guessed_at(self):
-        codes = {row["course_code"] for row in self.rows}
-        for code in ("ART 102", "ART 104", "ART 107", "ART 133", "ART 174", "ART 176", "ART 183", "ART 233", "MUS 123", "SBE 100"):
-            self.assertNotIn(code, codes)
+    def test_all_twenty_named_advised_electives_are_selectable(self):
+        rows = [row for row in self.rows if row["group_name"] == "Multimedia Advised Elective"]
+        self.assertEqual(20, len(rows))
+        codes = {row["course_code"] for row in rows}
+        self.assertTrue({"ART 102", "ART 104", "ART 107", "ART 133", "ART 174", "ART 176", "ART 183", "ART 233", "MUS 123", "SBE 100"} <= codes)
 
     def test_speech_and_internship_alternatives_are_reciprocal(self):
         by_code = {row["course_code"]: row for row in self.rows}
@@ -140,6 +153,8 @@ class MultimediaProgrammingDesignCurriculumTests(unittest.TestCase):
         occurrences = page.count('MMP_AS: "/docs/bmcc_mmp_degree_map_2025_2026.json"')
         self.assertEqual(1, occurrences)
         self.assertIn("OFFICIAL_DEGREE_MAP?.source_pdfs", page)
+        self.assertIn("function programElectiveAllocations(completed)", page)
+        self.assertIn("selectedChoiceCourses(placeholder.code).forEach(choice => allocated.add(choice.code))", page)
 
 
 if __name__ == "__main__":
