@@ -1,0 +1,31 @@
+{
+  "institution_code": "BMCC", "program_code": "MMP_AS",
+  "program_name": "Multimedia Programming and Design", "degree_type": "AS",
+  "catalog_year": "2025-2026", "default_semesters": 4, "total_credits": 60,
+  "source_pdf": "/docs/degree_maps/bmcc_mmd_2_year_2025_2026.pdf",
+  "source_pdfs": [
+    {"label": "Multimedia Programming and Design 2-Year Degree Map", "url": "/docs/degree_maps/bmcc_mmd_2_year_2025_2026.pdf"},
+    {"label": "Multimedia Programming and Design 5-Semester Degree Map", "url": "/docs/degree_maps/bmcc_mmd_5_semester_2025_2026.pdf"}
+  ],
+  "faculty_override_note": "The official two-year, four-semester map is the default. The official five-semester map is an alternate lighter-load pathway. DegreeWorks and faculty advisement remain authoritative.",
+  "semesters": [
+    {"number": 1, "target_credits": 15, "course_codes": ["MAT 161", "ENG 101", "MMP 100", "MMA 100", "MMD-AS-USEXP"]},
+    {"number": 2, "target_credits": 15, "course_codes": ["ENG 201", "MES 152", "ART 113", "MMP 210", "MMP 310"]},
+    {"number": 3, "target_credits": 16, "course_codes": ["MMP 270", "ANI 260", "MMP 200", "SPE 100", "PHY 110"]},
+    {"number": 4, "target_credits": 14, "course_codes": ["MES 160", "MMP 460", "ART 106", "MEA 371", "MMD-AS-GENERAL"]}
+  ],
+  "alternate_pathways": [{"name": "Official five-semester map", "semester_credit_targets": [12, 12, 12, 12, 12]}],
+  "sequence_notes": [
+    "This program's own page describes the generic, boilerplate 12/18/30 Common-Core/Flexible-Core/Curriculum-Requirements split used across most BMCC AA/AS programs. It does not match this degree map, the same finding already documented for Video Arts and Technology and Animation and Motion Graphics (this program's siblings in the same department).",
+    "MES 152, ART 113, and MES 160 are each explicitly annotated on the map as satisfying a specific Pathways area (MES 152: Individual and Society; ART 113: one of the Creative Expression requirements; MES 160: World Cultures and Global Issues), but each is a single, specific, non-substitutable required course, not an open choice -- so all three are modeled as fixed Program Requirements rows rather than restricted Flexible Core placeholders, matching how VAT_AS and AMG_AS modeled their own program-specific Pathways substitutions.",
+    "Multimedia Discipline Sequence (6 credits): the official footnote requires choosing 6 credits *within one* of three named sequences (Game Design: MMP 210/270/271; UX and Web Design: MMP 240/350/202; Graphic Design: MMA 215/225/235), not simply any 2 courses from the combined 9-course pool. The 'must stay within one sequence' constraint is not enforced -- the schema's elective-group primitive only supports 'choose N credits from a flat pool', with no primitive for 'choose one of several sub-pools, then choose within it'. All 9 courses are modeled as one flat pool. Flagged for maintainer review.",
+    "Multimedia Program Elective (6 credits, choose 2 of a named list): the official footnote explicitly states 'Classes cannot count both as MMD program elective and for another program requirement' -- but 9 of the 14 named courses (MMP 202, 210, 240, 270, 271, 350, MMA 215, 225, 235) are also part of the Multimedia Discipline Sequence pool above. The schema has no cross-group double-counting prevention, so a student could select the same course for both groups even though the source explicitly forbids it. This is the same category of limitation already documented for Sociology's cross-listed AFN/LAT courses, but here the source names the conflict explicitly. Flagged for maintainer review.",
+    "Multimedia Program Elective also allows 'any 200-level or higher MMA or MMP course' as an open-ended addition to the 14 named options; not enumerated or enforced, since it is not a fixed, specific course list.",
+    "Multimedia Advised Elective (3 credits, choose 1 of 20 named courses across many departments): only 10 of the 20 could be independently verified (ART 106, ART 166, BUS 110.5, BUS 200, CIS 165, CSC 101, CSC 110, CSC 111, COM 240, COM 245). The remaining 10 (ART 102, ART 104, ART 107, ART 133, ART 174, ART 176, ART 183, ART 233, MUS 123, SBE 100) could not be verified -- the Art & Design department's course-listings page returned repeated HTTP 503 errors, and MUS 123/SBE 100 could not be located on any accessible page. Not added as rows rather than guessed at. Flagged for maintainer review.",
+    "MMP 460's official course-listing prerequisite is 'MMP 200 and [any 200-level MMP or MMA course]', matching this program's own footnote 10 exactly. Only the concrete part (MMP 200) is encoded; the 'any 200-level' portion has no specific course code and cannot be enumerated.",
+    "PHY 110 / PHY 400: 'PHY400 is an alternate option.' Modeled with `alternatives=PHY 400`; PHY 400 is not part of this curriculum's own course list, so the validator is expected to warn about it.",
+    "MEA 371 / MEA 201 (Media Arts and Technology Internship): modeled as two reciprocal rows, matching the identical pattern already used in vat_as_courses.csv and amg_as_courses.csv. MEA 201's own prerequisite ('ANI 401 or two 200-level-or-higher MMA/MMP courses, or two courses from the VAT Production Course pool') is not encoded -- the 'any two of a pool' condition has no primitive in the current prerequisite grammar, the same limitation already documented for VAT_AS and AMG_AS.",
+    "General Elective is officially 3 credits ('Some of these credits can be satisfied by taking STEM variants in the Common Core'); the two-year map shows only 2 explicit credits because PHY 110 is a 4-credit course filling a nominally 3-credit Common Core slot (+1 credit). The data model cannot move credits between groups, so General Elective is modeled as a single flat 3-credit placeholder, matching the pattern already used in eco_aa_courses.csv, crj_aa_courses.csv, vat_as_courses.csv, and dmk_as_courses.csv.",
+    "A Writing Intensive course is needed to graduate."
+  ]
+}
