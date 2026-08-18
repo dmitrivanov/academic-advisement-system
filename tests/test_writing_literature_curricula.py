@@ -111,7 +111,8 @@ class WritingLiteratureCurriculaTests(unittest.TestCase):
         page = (ROOT / "frontend" / "db_progress_graph.html").read_text(encoding="utf-8")
         self.assertIn("group.required_course_set_count", page)
         self.assertIn("completedSetCount < requiredSetCount", page)
-        self.assertIn(".filter(selected => !allocatedRequired.has(selected.code))", page)
+        self.assertIn("function programElectiveAllocations(completed)", page)
+        self.assertIn("used = requiredCourseAllocations(completed)", page)
 
 
 if __name__ == "__main__":

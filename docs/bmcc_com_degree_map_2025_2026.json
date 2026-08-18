@@ -1,0 +1,29 @@
+{
+  "institution_code": "BMCC", "program_code": "COM_AA",
+  "program_name": "Communication Studies", "degree_type": "AA",
+  "catalog_year": "2025-2026", "default_semesters": 4, "total_credits": 60,
+  "source_pdf": "/docs/degree_maps/bmcc_com_2_year_2025_2026.pdf",
+  "source_pdfs": [
+    {"label": "Communication Studies 2-Year Degree Map", "url": "/docs/degree_maps/bmcc_com_2_year_2025_2026.pdf"},
+    {"label": "Communication Studies 5-Semester Degree Map", "url": "/docs/degree_maps/bmcc_com_5_semester_2025_2026.pdf"}
+  ],
+  "faculty_override_note": "The official two-year, four-semester map is the default. The official five-semester map is an alternate lighter-load pathway. DegreeWorks and faculty advisement remain authoritative.",
+  "semesters": [
+    {"number": 1, "target_credits": 15, "course_codes": ["ENG 101", "SPE 100", "MAT 161", "MES 152", "COM 100"]},
+    {"number": 2, "target_credits": 15, "course_codes": ["ENG 201", "COM 240", "COM 245", "THE 100", "COM-AA-ADVISED"]},
+    {"number": 3, "target_credits": 15, "course_codes": ["COM 255", "LIN 150", "COM-AA-ADVISED", "COM-AA-PROGRAM", "COM-AA-PROGRAM"]},
+    {"number": 4, "target_credits": 15, "course_codes": ["MES 140", "COM-AA-LPS", "COM-AA-SCIWORLD", "COM-AA-ADVISED", "COM-AA-ADVISED"]}
+  ],
+  "alternate_pathways": [{"name": "Official five-semester map", "semester_credit_targets": [9, 12, 15, 12, 12]}],
+  "sequence_notes": [
+    "Both official degree maps' footnote 3 (2-year map) / footnote 6 (5-semester map) state: 'Choose 5 three-credit courses... for a total of 15 credits' for the COM Advised Elective area, but both maps' own course tables show only 4 such slots (12 credits) -- 1 in Semester 2, 1 in Semester 3, 2 in Semester 4 on the two-year map (and the same 4-slot pattern on the five-semester map). The published total of 60 credits only balances using 4 slots (12 credits), not 5 (15 credits); confirmed by reconciling every course and credit value on both maps. Modeled as a 12-credit, 4-course requirement, treating the footnote's '5 courses / 15 credits' text as the likely error. Flagged for maintainer review.",
+    "COM Advised Elective's full official eligibility list is broader than what is modeled: 'SPE xx, COM xxx, THE xxx, GWS xxx, MES 152, ENG xxx, MAR 100, MAR 220, MAR 230, BUS 150, or ANY social science course', with a sub-rule requiring at least three of the four chosen courses to come from SPE/COM/THE/GWS specifically. Modeled as a subject-wildcard pool restricted to SPE/COM/THE/GWS plus the specific named courses (MAR 100, MAR 220, MAR 230, BUS 150, MES 152); the open-ended 'any ENG course' and 'any social science course' allowances, and the at-least-three sub-rule, are not enforced -- the sub-rule has no primitive in the current schema (similar to the Sociology Flexible Core cross-group cap), and 'any social science course' has no fixed definition in this footnote to safely enumerate. Flagged for maintainer review.",
+    "COM Program Elective (2 courses, 6 credits): 'Choose 2 courses from any Communication courses.' Modeled as a subject-wildcard pool restricted to COM.",
+    "THE 100 has three alternates: MES 153, MUS 107, or ART 106. Modeled as a four-way alternative cluster (THE 100 as the hub, each alternate reciprocally linked back to it) using the same `alternativeComponents()` graph-traversal mechanism as every other reciprocal-alternatives pair in this repo.",
+    "COM 240 and COM 245 both officially require 'SPE 100 or permission of department'; encoded as `SPE 100` (the permission-of-department alternate is not course-based). COM 255 requires 'SPE 100 or SPE 102' exactly, and is encoded as such.",
+    "The subject-wildcard COM Advised Elective pool (SPE/COM/THE/GWS) can include courses already separately required elsewhere in this same curriculum (e.g. SPE 100 itself, or COM 240/245/255) -- the schema has no mechanism to exclude already-used codes from an auto-populated wildcard pool. This is the same category of limitation already documented for Sociology's cross-listed AFN/LAT courses. Flagged for maintainer review.",
+    "LIN 150's home department course-listing page could not be located (not found under Speech, Communications and Theatre Arts or English); its title and credits are sourced from both official degree maps, which agree exactly. No prerequisite was found or encoded.",
+    "Life and Physical Sciences and Scientific World are both footnoted only with advisory 'consult an advisor' language and are left as the standard, unrestricted shared pools.",
+    "A Writing Intensive course is needed to fulfill the graduation requirement."
+  ]
+}
