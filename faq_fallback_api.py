@@ -433,6 +433,13 @@ def serve_schedule_settings(request: Request):
     return FileResponse("frontend/schedule_settings.html")
 
 
+@app.get("/admin/cuny-beyond-governance")
+def serve_cuny_beyond_governance(request: Request):
+    if not is_admin(request):
+        return RedirectResponse("/login", status_code=303)
+    return FileResponse("frontend/governance_dashboard.html")
+
+
 app.mount("/frontend", StaticFiles(directory="frontend"), name="frontend")
 app.mount("/docs", StaticFiles(directory="docs"), name="docs")
 

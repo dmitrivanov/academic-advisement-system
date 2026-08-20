@@ -35,6 +35,9 @@ from models import (
     CplType,
     ProgramCplGuidance,
     AcademicTerm,
+    TransferOption,
+    GovernanceDraft,
+    GovernanceDraftVersion,
 )
 
 
@@ -103,6 +106,180 @@ class AcademicTermPayload(BaseModel):
     verified_at: datetime
     source_url: str = Field(min_length=10, max_length=500)
     active: bool
+
+
+class GovernanceDraftPayload(BaseModel):
+    entity_type: str
+    entity_id: Optional[int] = None
+    source_url: str = Field(min_length=10, max_length=500)
+    document: dict[str, Any] = Field(default_factory=dict)
+
+
+class GovernanceTransitionPayload(BaseModel):
+    action: str
+
+
+GOVERNED_ENTITY_TYPES = {"career", "skill", "program_career", "cpl_guidance", "transfer_option"}
+
+
+def governance_version(db, draft, changed_by):
+    number = (db.query(func.max(GovernanceDraftVersion.version_number)).filter_by(draft_id=draft.id).scalar() or 0) + 1
+    db.add(GovernanceDraftVersion(
+        draft_id=draft.id, version_number=number, document_json=draft.document_json,
+        status=draft.status, changed_by=changed_by,
+    ))
+
+
+def serialize_governance_draft(draft):
+    return {"id": draft.id, "entity_type": draft.entity_type, "entity_id": draft.entity_id,
+            "status": draft.status, "source_url": draft.source_url,
+            "document": json.loads(draft.document_json or "{}"),
+            "created_by": draft.created_by, "updated_at": draft.updated_at.isoformat()}
+
+
+def governed_program(db, document):
+    return (db.query(Program).join(Department).join(Institution).filter(
+        Institution.code == str(document.get("institution_code", "")).strip(),
+        Program.code == str(document.get("program_code", "")).strip(),
+    ).order_by(Program.catalog_year.desc()).first())
+
+
+def publish_governance_draft(db, draft):
+    document = json.loads(draft.document_json or "{}")
+    reviewed_at = reviewed = datetime.fromisoformat(str(document.get("reviewed_at") or datetime.now(timezone.utc).date()))
+    if reviewed.tzinfo is None:
+        reviewed_at = reviewed.replace(tzinfo=timezone.utc)
+    if not draft.source_url.startswith("https://"):
+        raise HTTPException(status_code=422, detail="Published records require an HTTPS source URL")
+    if draft.entity_type == "career":
+        slug, name = str(document.get("slug", "")).strip(), str(document.get("name", "")).strip()
+        if not slug or not name or not document.get("source_title"):
+            raise HTTPException(status_code=422, detail="Career slug, name, and source title are required")
+        entity = db.query(Career).filter_by(id=draft.entity_id).first() if draft.entity_id else db.query(Career).filter_by(slug=slug).first()
+        if not entity:
+            entity = Career(slug=slug); db.add(entity)
+        entity.slug, entity.name = slug, name
+        entity.aliases = str(document.get("aliases", "")).strip()
+        entity.pathway_type = str(document.get("pathway_type", "career"))
+        entity.source_title, entity.source_url = str(document["source_title"]), draft.source_url
+        entity.reviewed_at, entity.active = reviewed_at, bool(document.get("active", True)); db.flush()
+        db.query(CareerSkill).filter_by(career_id=entity.id).delete()
+        for slug_value in document.get("skill_slugs", [])[:5]:
+            skill = db.query(Skill).filter_by(slug=slug_value).first()
+            if not skill: raise HTTPException(status_code=422, detail=f"Unknown skill: {slug_value}")
+            db.add(CareerSkill(career_id=entity.id, skill_id=skill.id))
+    elif draft.entity_type == "skill":
+        slug, name = str(document.get("slug", "")).strip(), str(document.get("name", "")).strip()
+        if not slug or not name: raise HTTPException(status_code=422, detail="Skill slug and name are required")
+        entity = db.query(Skill).filter_by(id=draft.entity_id).first() if draft.entity_id else db.query(Skill).filter_by(slug=slug).first()
+        if not entity: entity = Skill(slug=slug); db.add(entity)
+        entity.slug, entity.name, entity.active = slug, name, bool(document.get("active", True))
+    elif draft.entity_type == "program_career":
+        program = governed_program(db, document); career = db.query(Career).filter_by(slug=document.get("career_slug")).first()
+        if not program or not career or not document.get("explanation") or not document.get("source_title"):
+            raise HTTPException(status_code=422, detail="Valid program, career, explanation, and source title are required")
+        entity = db.query(ProgramCareer).filter_by(id=draft.entity_id).first() if draft.entity_id else db.query(ProgramCareer).filter_by(program_id=program.id, career_id=career.id).first()
+        if not entity: entity = ProgramCareer(program_id=program.id, career_id=career.id); db.add(entity)
+        entity.career_points = int(document.get("career_points", 50)); entity.evidence_level = str(document.get("evidence_level", "strong"))
+        entity.explanation = str(document["explanation"]); entity.source_title = str(document["source_title"]); entity.source_url = draft.source_url
+        entity.official_program_url = str(document.get("official_program_url") or draft.source_url); entity.reviewed_at = reviewed_at; entity.active = bool(document.get("active", True))
+    elif draft.entity_type == "cpl_guidance":
+        program = governed_program(db, document); cpl = db.query(CplType).filter_by(code=document.get("cpl_type_code")).first()
+        if not program or not cpl or not document.get("guidance") or not document.get("evidence_requested"):
+            raise HTTPException(status_code=422, detail="Valid program, CPL type, guidance, and evidence are required")
+        entity = db.query(ProgramCplGuidance).filter_by(id=draft.entity_id).first() if draft.entity_id else db.query(ProgramCplGuidance).filter_by(program_id=program.id, cpl_type_id=cpl.id).first()
+        if not entity: entity = ProgramCplGuidance(program_id=program.id, cpl_type_id=cpl.id); db.add(entity)
+        entity.guidance = str(document["guidance"]); entity.evidence_requested = str(document["evidence_requested"])
+        entity.source_url = draft.source_url; entity.reviewed_at = reviewed_at; entity.status = "published"
+    else:
+        program = governed_program(db, document)
+        if not program or not document.get("target_institution") or not document.get("target_program") or not document.get("explanation"):
+            raise HTTPException(status_code=422, detail="Valid source program and target transfer details are required")
+        entity = db.query(TransferOption).filter_by(id=draft.entity_id).first() if draft.entity_id else None
+        if not entity: entity = TransferOption(source_program_id=program.id); db.add(entity)
+        entity.target_institution = str(document["target_institution"]); entity.target_program = str(document["target_program"])
+        entity.target_degree = str(document.get("target_degree", "")); entity.target_url = str(document.get("target_url") or draft.source_url)
+        entity.explanation = str(document["explanation"]); entity.source_url = draft.source_url; entity.reviewed_at = reviewed_at; entity.active = bool(document.get("active", True))
+    db.flush(); draft.entity_id = entity.id
+
+
+def archive_governed_entity(db, draft):
+    models_by_type = {"career": Career, "skill": Skill, "program_career": ProgramCareer,
+                      "cpl_guidance": ProgramCplGuidance, "transfer_option": TransferOption}
+    model = models_by_type.get(draft.entity_type)
+    entity = db.query(model).filter_by(id=draft.entity_id).first() if model and draft.entity_id else None
+    if not entity: raise HTTPException(status_code=404, detail="Published entity not found for archival")
+    if draft.entity_type == "cpl_guidance": entity.status = "archived"
+    else: entity.active = False
+
+
+@router.get("/admin/governance/dashboard")
+def governance_dashboard(_admin=Depends(require_admin), db: Session = Depends(get_db)):
+    active_careers = db.query(Career).filter_by(active=True).all()
+    unmapped = [career.name for career in active_careers if not any(link.active for link in career.program_links)]
+    stale_before = datetime.now(timezone.utc).replace(tzinfo=None).timestamp() - 365 * 86400
+    stale = [career.name for career in active_careers if career.reviewed_at.timestamp() < stale_before]
+    empty_programs = []
+    for link in db.query(ProgramCareer).filter_by(active=True).all():
+        count = db.query(func.count(RequirementGroup.id)).filter_by(program_id=link.program_id).scalar() or 0
+        if not count: empty_programs.append(link.program.code)
+    return {"counts": {"careers": len(active_careers), "skills": db.query(Skill).filter_by(active=True).count(),
+                       "program_mappings": db.query(ProgramCareer).filter_by(active=True).count(), "drafts": db.query(GovernanceDraft).filter(GovernanceDraft.status != "published").count()},
+            "issues": {"unmapped_careers": unmapped, "stale_careers": stale, "mapped_programs_without_curriculum": sorted(set(empty_programs)),
+                       "active_terms_without_code": [term.name for term in db.query(AcademicTerm).filter_by(active=True).all() if not term.provider_code]},
+            "stale_after_days": 365}
+
+
+@router.get("/admin/governance/catalog")
+def governance_catalog(_admin=Depends(require_admin), db: Session = Depends(get_db)):
+    return {"careers": [{"id": c.id, "slug": c.slug, "name": c.name, "active": c.active, "reviewed_at": c.reviewed_at.date().isoformat(), "source_url": c.source_url} for c in db.query(Career).order_by(Career.name)],
+            "skills": [{"id": s.id, "slug": s.slug, "name": s.name, "active": s.active} for s in db.query(Skill).order_by(Skill.name)],
+            "program_mappings": [{"id": m.id, "career": m.career.name, "program": m.program.code, "active": m.active, "reviewed_at": m.reviewed_at.date().isoformat()} for m in db.query(ProgramCareer).options(joinedload(ProgramCareer.career), joinedload(ProgramCareer.program)).all()]}
+
+
+@router.get("/admin/governance/drafts")
+def list_governance_drafts(_admin=Depends(require_admin), db: Session = Depends(get_db)):
+    return [serialize_governance_draft(item) for item in db.query(GovernanceDraft).order_by(GovernanceDraft.updated_at.desc()).all()]
+
+
+@router.post("/admin/governance/drafts")
+def create_governance_draft(payload: GovernanceDraftPayload, admin=Depends(require_admin), db: Session = Depends(get_db)):
+    if payload.entity_type not in GOVERNED_ENTITY_TYPES: raise HTTPException(status_code=422, detail="Unsupported governed entity type")
+    draft = GovernanceDraft(entity_type=payload.entity_type, entity_id=payload.entity_id, source_url=payload.source_url, document_json=json.dumps(payload.document), created_by=admin)
+    db.add(draft); db.flush(); governance_version(db, draft, admin); db.commit(); db.refresh(draft); return serialize_governance_draft(draft)
+
+
+@router.put("/admin/governance/drafts/{draft_id}")
+def update_governance_draft(draft_id: int, payload: GovernanceDraftPayload, admin=Depends(require_admin), db: Session = Depends(get_db)):
+    draft = db.query(GovernanceDraft).filter_by(id=draft_id).first()
+    if not draft or draft.status not in {"draft", "review"}: raise HTTPException(status_code=409, detail="Only draft or review records can be edited")
+    draft.entity_type, draft.entity_id, draft.source_url, draft.document_json = payload.entity_type, payload.entity_id, payload.source_url, json.dumps(payload.document)
+    draft.updated_at = datetime.now(timezone.utc); governance_version(db, draft, admin); db.commit(); db.refresh(draft); return serialize_governance_draft(draft)
+
+
+@router.post("/admin/governance/drafts/{draft_id}/transition")
+def transition_governance_draft(draft_id: int, payload: GovernanceTransitionPayload, admin=Depends(require_admin), db: Session = Depends(get_db)):
+    draft = db.query(GovernanceDraft).filter_by(id=draft_id).first()
+    if not draft: raise HTTPException(status_code=404, detail="Governance draft not found")
+    allowed = {"draft": {"review"}, "review": {"draft", "approved"}, "approved": {"published", "draft"}, "published": {"archived"}, "archived": {"draft"}}
+    if payload.action not in allowed.get(draft.status, set()): raise HTTPException(status_code=409, detail=f"Cannot move {draft.status} to {payload.action}")
+    if payload.action == "published": publish_governance_draft(db, draft)
+    if payload.action == "archived": archive_governed_entity(db, draft)
+    draft.status = payload.action; draft.updated_at = datetime.now(timezone.utc); governance_version(db, draft, admin); db.commit(); db.refresh(draft); return serialize_governance_draft(draft)
+
+
+@router.post("/admin/governance/drafts/{draft_id}/rollback/{version_number}")
+def rollback_governance_draft(draft_id: int, version_number: int, admin=Depends(require_admin), db: Session = Depends(get_db)):
+    draft = db.query(GovernanceDraft).filter_by(id=draft_id).first(); version = db.query(GovernanceDraftVersion).filter_by(draft_id=draft_id, version_number=version_number).first()
+    if not draft or not version: raise HTTPException(status_code=404, detail="Draft or version not found")
+    draft.document_json, draft.status = version.document_json, "draft"; draft.updated_at = datetime.now(timezone.utc); governance_version(db, draft, admin); db.commit(); db.refresh(draft); return serialize_governance_draft(draft)
+
+
+@router.get("/admin/governance/drafts/{draft_id}/versions")
+def list_governance_versions(draft_id: int, _admin=Depends(require_admin), db: Session = Depends(get_db)):
+    if not db.query(GovernanceDraft).filter_by(id=draft_id).first(): raise HTTPException(status_code=404, detail="Governance draft not found")
+    return [{"version_number": item.version_number, "status": item.status, "changed_by": item.changed_by,
+             "created_at": item.created_at.isoformat()} for item in db.query(GovernanceDraftVersion).filter_by(draft_id=draft_id).order_by(GovernanceDraftVersion.version_number.desc()).all()]
 
 
 def serialize_term(term):
@@ -253,6 +430,13 @@ def get_cuny_beyond_recommendations(
         })
 
     recommendations = rank_program_matches(mappings, payload.skills)
+    for recommendation in recommendations:
+        program = next((link.program for link in links if link.program.code == recommendation["program_code"]), None)
+        options = db.query(TransferOption).filter_by(source_program_id=program.id, active=True).all() if program else []
+        recommendation["transfer_options"] = [{"target_institution": option.target_institution, "target_program": option.target_program,
+                                                "target_degree": option.target_degree, "target_url": option.target_url,
+                                                "explanation": option.explanation, "source_url": option.source_url,
+                                                "reviewed_at": option.reviewed_at.date().isoformat()} for option in options]
     return {
         "matched_career": {
             "slug": career.slug,

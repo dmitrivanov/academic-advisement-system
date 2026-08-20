@@ -96,10 +96,8 @@ def seed_cuny_beyond_mappings(db):
     for row in skill_rows:
         skill = db.query(Skill).filter_by(slug=row["slug"].strip()).first()
         if not skill:
-            skill = Skill(slug=row["slug"].strip())
+            skill = Skill(slug=row["slug"].strip(), name=row["name"].strip(), active=csv_bool(row["active"]))
             db.add(skill)
-        skill.name = row["name"].strip()
-        skill.active = csv_bool(row["active"])
         db.flush()
         skills[skill.slug] = skill
 
@@ -109,30 +107,17 @@ def seed_cuny_beyond_mappings(db):
     for row in career_rows:
         career = db.query(Career).filter_by(slug=row["slug"].strip()).first()
         if not career:
-            career = Career(slug=row["slug"].strip())
+            career = Career(slug=row["slug"].strip(), name=row["name"].strip(), aliases=row["aliases"].strip(),
+                             pathway_type=row["pathway_type"].strip() or "career", source_title=row["source_title"].strip(),
+                             source_url=row["source_url"].strip(), reviewed_at=reviewed_datetime(row["reviewed_at"]),
+                             active=csv_bool(row["active"]))
             db.add(career)
-        career.name = row["name"].strip()
-        career.aliases = row["aliases"].strip()
-        career.pathway_type = row["pathway_type"].strip() or "career"
-        career.source_title = row["source_title"].strip()
-        career.source_url = row["source_url"].strip()
-        career.reviewed_at = reviewed_datetime(row["reviewed_at"])
-        career.active = csv_bool(row["active"])
-        db.flush()
+            db.flush()
+            for skill_slug in (part.strip() for part in row["skill_slugs"].split("|")):
+                skill = skills.get(skill_slug)
+                if not skill: raise ValueError(f"Unknown CUNY Beyond skill slug: {skill_slug}")
+                db.add(CareerSkill(career_id=career.id, skill_id=skill.id))
         careers[career.slug] = career
-
-        db.query(CareerSkill).filter_by(career_id=career.id).delete()
-        for skill_slug in (part.strip() for part in row["skill_slugs"].split("|")):
-            skill = skills.get(skill_slug)
-            if not skill:
-                raise ValueError(f"Unknown CUNY Beyond skill slug: {skill_slug}")
-            db.add(CareerSkill(career_id=career.id, skill_id=skill.id))
-
-    seeded_career_ids = [career.id for career in careers.values()]
-    if seeded_career_ids:
-        db.query(ProgramCareer).filter(ProgramCareer.career_id.in_(seeded_career_ids)).delete(
-            synchronize_session=False
-        )
 
     with CUNY_BEYOND_PROGRAM_CAREERS_FILE.open(newline="", encoding="utf-8-sig") as stream:
         mapping_rows = list(csv.DictReader(stream))
@@ -151,6 +136,9 @@ def seed_cuny_beyond_mappings(db):
         if not program or not career:
             missing = row["program_code"] if not program else row["career_slug"]
             raise ValueError(f"Unknown CUNY Beyond mapping reference: {missing}")
+        existing = db.query(ProgramCareer).filter_by(program_id=program.id, career_id=career.id).first()
+        if existing:
+            continue
         db.add(ProgramCareer(
             program_id=program.id,
             career_id=career.id,
@@ -179,25 +167,13 @@ def seed_cuny_beyond_cpl(db):
     for row in type_rows:
         cpl_type = db.query(CplType).filter_by(code=row["code"].strip()).first()
         if not cpl_type:
-            cpl_type = CplType(code=row["code"].strip())
+            cpl_type = CplType(code=row["code"].strip(), name=row["name"].strip(), description=row["description"].strip(),
+                               evidence_requested=row["evidence_requested"].strip(), next_step=row["next_step"].strip(),
+                               official_url=row["official_url"].strip(), source_title=row["source_title"].strip(),
+                               reviewed_at=reviewed_datetime(row["reviewed_at"]), status=row["status"].strip(), active=csv_bool(row["active"]))
             db.add(cpl_type)
-        cpl_type.name = row["name"].strip()
-        cpl_type.description = row["description"].strip()
-        cpl_type.evidence_requested = row["evidence_requested"].strip()
-        cpl_type.next_step = row["next_step"].strip()
-        cpl_type.official_url = row["official_url"].strip()
-        cpl_type.source_title = row["source_title"].strip()
-        cpl_type.reviewed_at = reviewed_datetime(row["reviewed_at"])
-        cpl_type.status = row["status"].strip()
-        cpl_type.active = csv_bool(row["active"])
         db.flush()
         cpl_types[cpl_type.code] = cpl_type
-
-    managed_type_ids = [item.id for item in cpl_types.values()]
-    if managed_type_ids:
-        db.query(ProgramCplGuidance).filter(
-            ProgramCplGuidance.cpl_type_id.in_(managed_type_ids)
-        ).delete(synchronize_session=False)
 
     with CUNY_BEYOND_PROGRAM_CPL_FILE.open(newline="", encoding="utf-8-sig") as stream:
         guidance_rows = list(csv.DictReader(stream))
@@ -216,6 +192,9 @@ def seed_cuny_beyond_cpl(db):
         if not program or not cpl_type:
             missing = row["program_code"] if not program else row["cpl_type_code"]
             raise ValueError(f"Unknown CUNY Beyond CPL guidance reference: {missing}")
+        existing = db.query(ProgramCplGuidance).filter_by(program_id=program.id, cpl_type_id=cpl_type.id).first()
+        if existing:
+            continue
         db.add(ProgramCplGuidance(
             program_id=program.id,
             cpl_type_id=cpl_type.id,

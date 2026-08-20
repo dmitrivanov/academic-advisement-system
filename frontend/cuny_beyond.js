@@ -206,7 +206,9 @@
       })),
       cpl_possibilities: (latestCplScreening?.opportunities || []).map(item => ({ name: item.name, status: item.status_label, next_step: item.next_step, official_url: item.official_url })),
       completed_courses: transferSnapshot?.completed_course_details || [],
-      transfer_options: latestRecommendations.slice(0, 3).map(item => ({ program: item.program_name, next_step: 'Review this BMCC program in CUNY Transfer Explorer with an advisor.' })),
+      transfer_options: latestRecommendations.slice(0, 3).flatMap(item => item.transfer_options?.length
+        ? item.transfer_options.map(option => ({ program: item.program_name, next_step: `${option.target_institution} - ${option.target_program}: ${option.explanation}` }))
+        : [{ program: item.program_name, next_step: 'No reviewed destination is published yet; use CUNY Transfer Explorer with an advisor.' }]),
       schedule_checklist: scheduleChecklist,
       sources: [
         ...latestRecommendations.map(item => ({ title: item.source_title, url: item.source_url })),
@@ -301,7 +303,7 @@
   });
 
   function renderSupportedCareers() {
-    const featuredNames = ['Data Analyst', 'Software Developer', 'Computer Systems Analyst', 'Information Security Analyst', 'Business Intelligence Analyst'];
+    const featuredNames = ['Registered Nurse', 'Data Analyst', 'Software Developer', 'Computer Systems Analyst', 'Information Security Analyst', 'Business Intelligence Analyst'];
     const featured = featuredNames.map(name => supportedCareers.find(item => item.name === name)).filter(Boolean);
     document.getElementById('career-options').innerHTML = supportedCareers.map(item => `<option value="${escapeHtml(item.name)}"></option>`).join('');
     document.getElementById('career-suggestions').innerHTML = featured.map(item => `<button class="career-chip" type="button" data-career-name="${escapeHtml(item.name)}">${escapeHtml(item.name)}</button>`).join('');

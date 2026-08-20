@@ -233,6 +233,54 @@ class AcademicTerm(Base):
     active = Column(Boolean, nullable=False, default=False, index=True)
 
 
+class TransferOption(Base):
+    __tablename__ = "transfer_options"
+
+    id = Column(Integer, primary_key=True, index=True)
+    source_program_id = Column(Integer, ForeignKey("programs.id"), nullable=False, index=True)
+    target_institution = Column(String, nullable=False)
+    target_program = Column(String, nullable=False)
+    target_degree = Column(String, nullable=True)
+    target_url = Column(String, nullable=False)
+    explanation = Column(Text, nullable=False)
+    source_url = Column(String, nullable=False)
+    reviewed_at = Column(DateTime, nullable=False)
+    active = Column(Boolean, nullable=False, default=True, index=True)
+
+    __table_args__ = (UniqueConstraint("source_program_id", "target_institution", "target_program", name="uq_transfer_option"),)
+
+
+class GovernanceDraft(Base):
+    __tablename__ = "governance_drafts"
+
+    id = Column(Integer, primary_key=True, index=True)
+    entity_type = Column(String, nullable=False, index=True)
+    entity_id = Column(Integer, nullable=True, index=True)
+    status = Column(String, nullable=False, default="draft", index=True)
+    document_json = Column(Text, nullable=False, default="{}")
+    source_url = Column(String, nullable=False)
+    created_by = Column(String, nullable=True)
+    created_at = Column(DateTime, nullable=False, default=lambda: datetime.now(timezone.utc))
+    updated_at = Column(DateTime, nullable=False, default=lambda: datetime.now(timezone.utc))
+
+    versions = relationship("GovernanceDraftVersion", back_populates="draft", cascade="all, delete-orphan")
+
+
+class GovernanceDraftVersion(Base):
+    __tablename__ = "governance_draft_versions"
+
+    id = Column(Integer, primary_key=True, index=True)
+    draft_id = Column(Integer, ForeignKey("governance_drafts.id"), nullable=False, index=True)
+    version_number = Column(Integer, nullable=False)
+    document_json = Column(Text, nullable=False)
+    status = Column(String, nullable=False)
+    changed_by = Column(String, nullable=True)
+    created_at = Column(DateTime, nullable=False, default=lambda: datetime.now(timezone.utc))
+
+    draft = relationship("GovernanceDraft", back_populates="versions")
+    __table_args__ = (UniqueConstraint("draft_id", "version_number", name="uq_governance_draft_version"),)
+
+
 class Course(Base):
     __tablename__ = "courses"
 
