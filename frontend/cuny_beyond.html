@@ -77,6 +77,24 @@
         </section>
 
         <section class="step" data-step="4" hidden>
+          <h2 tabindex="-1">Could any previous learning be relevant?</h2>
+          <p class="step-copy">Choose everything that may apply. This prepares questions and documents for an official review; it does not estimate or award credit.</p>
+          <fieldset id="cpl-choices" class="choice-grid cpl-grid">
+            <legend class="visually-hidden">Select possible prior-learning categories</legend>
+            <label><input type="checkbox" name="cpl" value="previous-college-credit"> <span><strong>Previous college courses</strong><small>Courses completed at another college</small></span></label>
+            <label><input type="checkbox" name="cpl" value="standardized-exams"> <span><strong>AP or recognized exams</strong><small>AP, CLEP, IB, AICE, DSST, or DLPT</small></span></label>
+            <label><input type="checkbox" name="cpl" value="ace-reviewed-learning"> <span><strong>ACE or NCCRS learning</strong><small>Reviewed non-collegiate courses or training</small></span></label>
+            <label><input type="checkbox" name="cpl" value="employer-training"> <span><strong>Employer or industry training</strong><small>Workplace, union, or continuing education</small></span></label>
+            <label><input type="checkbox" name="cpl" value="military-learning"> <span><strong>Military learning</strong><small>Service education, training, or examinations</small></span></label>
+            <label><input type="checkbox" name="cpl" value="licenses-certifications"> <span><strong>Licenses or certifications</strong><small>Professional or industry credentials</small></span></label>
+            <label><input type="checkbox" name="cpl" value="biliteracy-language"> <span><strong>Biliteracy or language proficiency</strong><small>Language exams or documented proficiency</small></span></label>
+            <label><input type="checkbox" name="cpl" value="portfolio-experiential"> <span><strong>Portfolio or substantial experience</strong><small>Work, creative, volunteer, or life learning</small></span></label>
+            <label><input type="checkbox" name="cpl" value="not-sure"> <span><strong>Not sure</strong><small>Help me prepare a CPL conversation</small></span></label>
+            <label><input type="checkbox" name="cpl" value="none"> <span><strong>None of these</strong><small>Continue without CPL preparation</small></span></label>
+          </fieldset>
+        </section>
+
+        <section class="step" data-step="5" hidden>
           <h2 tabindex="-1">Your starting profile is ready.</h2>
           <div id="summary" class="summary"></div>
           <div class="next-stage">
@@ -86,6 +104,12 @@
           <button id="match-button" class="match-button" type="button">Find my BMCC program matches</button>
           <div id="match-status" class="match-status" role="status" aria-live="polite"></div>
           <div id="recommendation-results" class="recommendation-results" aria-live="polite"></div>
+          <section id="cpl-results-section" class="cpl-results-section" aria-labelledby="cpl-results-title" hidden>
+            <h3 id="cpl-results-title">Prior-learning preparation</h3>
+            <div id="cpl-disclaimer" class="cpl-disclaimer"></div>
+            <div id="cpl-results" class="cpl-results"></div>
+            <div id="cpl-checklist" class="cpl-checklist"></div>
+          </section>
           <p class="advisor-note">This prototype supports exploration; it does not replace an academic, career, transfer, or CPL advisor.</p>
         </section>
 

@@ -31,6 +31,8 @@ from models import (
     CareerSkill,
     Skill,
     ProgramCareer,
+    CplType,
+    ProgramCplGuidance,
 )
 
 
@@ -78,6 +80,11 @@ class DraftStatusPayload(BaseModel):
 class CunyBeyondRecommendationPayload(BaseModel):
     career_goal: str = Field(min_length=2, max_length=240)
     skills: list[str] = Field(default_factory=list, max_length=5)
+
+
+class CunyBeyondCplPayload(BaseModel):
+    selections: list[str] = Field(default_factory=list, max_length=9)
+    program_codes: list[str] = Field(default_factory=list, max_length=3)
 
 
 def optional_text(value):
@@ -176,6 +183,95 @@ def get_cuny_beyond_recommendations(
         },
         "recommendations": recommendations,
         "message": None if recommendations else "No populated BMCC curriculum currently meets the evidence threshold for this career.",
+    }
+
+
+@router.post("/cuny-beyond/cpl-screening")
+def get_cuny_beyond_cpl_screening(
+    payload: CunyBeyondCplPayload,
+    db: Session = Depends(get_db),
+):
+    selected_codes = list(dict.fromkeys(code.strip() for code in payload.selections if code.strip()))
+    if "none" in selected_codes:
+        return {
+            "opportunities": [],
+            "document_checklist": [],
+            "message": "No possible prior-learning pathway was selected. You can still ask BMCC CPL staff if your circumstances change.",
+            "disclaimer": "This screening does not evaluate or award credit and does not change any degree total.",
+        }
+
+    published_types = db.query(CplType).filter(
+        CplType.active.is_(True), CplType.status == "published"
+    ).all()
+    types_by_code = {item.code: item for item in published_types}
+    recognized_codes = set(types_by_code) | {"not-sure"}
+    unknown_codes = sorted(set(selected_codes) - recognized_codes)
+    if unknown_codes:
+        raise HTTPException(status_code=400, detail=f"Unknown CPL selection: {unknown_codes[0]}")
+
+    requested_types = [types_by_code[code] for code in selected_codes if code in types_by_code]
+    program_codes = list(dict.fromkeys(code.strip() for code in payload.program_codes if code.strip()))
+    guidance_rows = []
+    if requested_types and program_codes:
+        guidance_rows = (
+            db.query(ProgramCplGuidance)
+            .options(joinedload(ProgramCplGuidance.program))
+            .join(Program, ProgramCplGuidance.program_id == Program.id)
+            .filter(
+                Program.code.in_(program_codes),
+                ProgramCplGuidance.cpl_type_id.in_([item.id for item in requested_types]),
+                ProgramCplGuidance.status == "published",
+            )
+            .all()
+        )
+    guidance_by_type = {}
+    for row in guidance_rows:
+        guidance_by_type.setdefault(row.cpl_type_id, []).append({
+            "program_code": row.program.code,
+            "program_name": row.program.name,
+            "guidance": row.guidance,
+            "evidence_requested": row.evidence_requested,
+            "source_url": row.source_url,
+            "reviewed_at": row.reviewed_at.date().isoformat(),
+        })
+
+    opportunities = []
+    checklist = []
+    for item in requested_types:
+        checklist.append(item.evidence_requested)
+        opportunities.append({
+            "code": item.code,
+            "name": item.name,
+            "status_label": "Possible CPL opportunity - evaluation required",
+            "description": item.description,
+            "evidence_requested": item.evidence_requested,
+            "next_step": item.next_step,
+            "official_url": item.official_url,
+            "source_title": item.source_title,
+            "reviewed_at": item.reviewed_at.date().isoformat(),
+            "program_guidance": guidance_by_type.get(item.id, []),
+        })
+
+    if "not-sure" in selected_codes:
+        opportunities.append({
+            "code": "not-sure",
+            "name": "Prior learning review conversation",
+            "status_label": "Possible CPL opportunity - evaluation required",
+            "description": "You do not need to identify the correct CPL mechanism before contacting BMCC. CPL staff can help determine whether documentation or an official evaluation route exists.",
+            "evidence_requested": "A short list of previous education, examinations, credentials, training, military learning, languages, or substantial work-based learning.",
+            "next_step": "Review the official BMCC CPL page and contact CPL staff with a concise description of the learning you want evaluated.",
+            "official_url": "https://www.bmcc.cuny.edu/admissions/apply-now/credit-for-prior-learning-cpl/",
+            "source_title": "BMCC Credit for Prior Learning",
+            "reviewed_at": "2026-08-21",
+            "program_guidance": [],
+        })
+        checklist.append("A short list of prior education, examinations, credentials, training, military learning, languages, or substantial work-based learning.")
+
+    return {
+        "opportunities": opportunities,
+        "document_checklist": list(dict.fromkeys(checklist)),
+        "message": None if opportunities else "Choose at least one prior-learning response to receive preparation guidance.",
+        "disclaimer": "These are possible CPL opportunities only. BMCC must evaluate official evidence, determine course equivalency and degree applicability, and award any credit. Nothing here changes remaining credits or degree totals.",
     }
 
 

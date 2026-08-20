@@ -112,6 +112,7 @@ class Program(Base):
     department = relationship("Department", back_populates="programs")
     courses = relationship("ProgramCourse", back_populates="program")
     career_links = relationship("ProgramCareer", back_populates="program")
+    cpl_guidance = relationship("ProgramCplGuidance", back_populates="program")
 
     __table_args__ = (
         UniqueConstraint("department_id", "code", "catalog_year", name="uq_program_code_year"),
@@ -179,6 +180,44 @@ class ProgramCareer(Base):
 
     __table_args__ = (
         UniqueConstraint("program_id", "career_id", name="uq_program_career"),
+    )
+
+
+class CplType(Base):
+    __tablename__ = "cpl_types"
+
+    id = Column(Integer, primary_key=True, index=True)
+    code = Column(String, nullable=False, unique=True, index=True)
+    name = Column(String, nullable=False)
+    description = Column(Text, nullable=False)
+    evidence_requested = Column(Text, nullable=False)
+    next_step = Column(Text, nullable=False)
+    official_url = Column(String, nullable=False)
+    source_title = Column(String, nullable=False)
+    reviewed_at = Column(DateTime, nullable=False)
+    status = Column(String, nullable=False, default="published", index=True)
+    active = Column(Boolean, nullable=False, default=True, index=True)
+
+    program_guidance = relationship("ProgramCplGuidance", back_populates="cpl_type")
+
+
+class ProgramCplGuidance(Base):
+    __tablename__ = "program_cpl_guidance"
+
+    id = Column(Integer, primary_key=True)
+    program_id = Column(Integer, ForeignKey("programs.id"), nullable=False, index=True)
+    cpl_type_id = Column(Integer, ForeignKey("cpl_types.id"), nullable=False, index=True)
+    guidance = Column(Text, nullable=False)
+    evidence_requested = Column(Text, nullable=False)
+    source_url = Column(String, nullable=False)
+    reviewed_at = Column(DateTime, nullable=False)
+    status = Column(String, nullable=False, default="published", index=True)
+
+    program = relationship("Program", back_populates="cpl_guidance")
+    cpl_type = relationship("CplType", back_populates="program_guidance")
+
+    __table_args__ = (
+        UniqueConstraint("program_id", "cpl_type_id", name="uq_program_cpl_guidance"),
     )
 
 

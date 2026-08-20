@@ -26,6 +26,8 @@ from models import (
     Skill,
     CareerSkill,
     ProgramCareer,
+    CplType,
+    ProgramCplGuidance,
 )
 
 
@@ -33,6 +35,8 @@ DOCS_DIR = Path("docs")
 CUNY_BEYOND_SKILLS_FILE = DOCS_DIR / "cuny_beyond_skills.csv"
 CUNY_BEYOND_CAREERS_FILE = DOCS_DIR / "cuny_beyond_careers.csv"
 CUNY_BEYOND_PROGRAM_CAREERS_FILE = DOCS_DIR / "cuny_beyond_program_careers.csv"
+CUNY_BEYOND_CPL_TYPES_FILE = DOCS_DIR / "cuny_beyond_cpl_types.csv"
+CUNY_BEYOND_PROGRAM_CPL_FILE = DOCS_DIR / "cuny_beyond_program_cpl_guidance.csv"
 
 DEFAULT_INSTITUTION = "Borough of Manhattan Community College"
 DEFAULT_INSTITUTION_CODE = "BMCC"
@@ -143,6 +147,68 @@ def seed_cuny_beyond_mappings(db):
         ))
     db.flush()
     print(f"Seeded CUNY Beyond: {len(careers)} careers and {len(mapping_rows)} program mappings")
+
+
+def seed_cuny_beyond_cpl(db):
+    """Seed published, nonbinding CPL screening content and program notes."""
+    if not CUNY_BEYOND_CPL_TYPES_FILE.exists() or not CUNY_BEYOND_PROGRAM_CPL_FILE.exists():
+        print("Skipping CUNY Beyond CPL: one or more CSV files are missing")
+        return
+
+    with CUNY_BEYOND_CPL_TYPES_FILE.open(newline="", encoding="utf-8-sig") as stream:
+        type_rows = list(csv.DictReader(stream))
+    cpl_types = {}
+    for row in type_rows:
+        cpl_type = db.query(CplType).filter_by(code=row["code"].strip()).first()
+        if not cpl_type:
+            cpl_type = CplType(code=row["code"].strip())
+            db.add(cpl_type)
+        cpl_type.name = row["name"].strip()
+        cpl_type.description = row["description"].strip()
+        cpl_type.evidence_requested = row["evidence_requested"].strip()
+        cpl_type.next_step = row["next_step"].strip()
+        cpl_type.official_url = row["official_url"].strip()
+        cpl_type.source_title = row["source_title"].strip()
+        cpl_type.reviewed_at = reviewed_datetime(row["reviewed_at"])
+        cpl_type.status = row["status"].strip()
+        cpl_type.active = csv_bool(row["active"])
+        db.flush()
+        cpl_types[cpl_type.code] = cpl_type
+
+    managed_type_ids = [item.id for item in cpl_types.values()]
+    if managed_type_ids:
+        db.query(ProgramCplGuidance).filter(
+            ProgramCplGuidance.cpl_type_id.in_(managed_type_ids)
+        ).delete(synchronize_session=False)
+
+    with CUNY_BEYOND_PROGRAM_CPL_FILE.open(newline="", encoding="utf-8-sig") as stream:
+        guidance_rows = list(csv.DictReader(stream))
+    for row in guidance_rows:
+        program = (
+            db.query(Program)
+            .join(Department, Program.department_id == Department.id)
+            .join(Institution, Department.institution_id == Institution.id)
+            .filter(
+                Institution.code == row["institution_code"].strip(),
+                Program.code == row["program_code"].strip(),
+            )
+            .first()
+        )
+        cpl_type = cpl_types.get(row["cpl_type_code"].strip())
+        if not program or not cpl_type:
+            missing = row["program_code"] if not program else row["cpl_type_code"]
+            raise ValueError(f"Unknown CUNY Beyond CPL guidance reference: {missing}")
+        db.add(ProgramCplGuidance(
+            program_id=program.id,
+            cpl_type_id=cpl_type.id,
+            guidance=row["guidance"].strip(),
+            evidence_requested=row["evidence_requested"].strip(),
+            source_url=row["source_url"].strip(),
+            reviewed_at=reviewed_datetime(row["reviewed_at"]),
+            status=row["status"].strip(),
+        ))
+    db.flush()
+    print(f"Seeded CUNY Beyond CPL: {len(cpl_types)} types and {len(guidance_rows)} program guidance records")
 
 
 def ensure_institution_columns(db):
@@ -1439,6 +1505,7 @@ def seed():
         seed_program_choice_group_adjustments(db)
         seed_canonical_course_prerequisites(db)
         seed_cuny_beyond_mappings(db)
+        seed_cuny_beyond_cpl(db)
 
         db.commit()
         print("Database seeding completed.")

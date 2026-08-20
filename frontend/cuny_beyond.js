@@ -14,7 +14,7 @@
     some_college: 'Adult with some college', transfer: 'Transfer student',
     returning: 'Returning student', degree_holder: 'Adult with a degree'
   };
-  const state = { step: 0, profile: '', careerGoal: '', employment: '', skills: [], expiresAt: 0 };
+  const state = { step: 0, profile: '', careerGoal: '', employment: '', skills: [], cplSelections: [], expiresAt: 0 };
   const form = document.getElementById('intake-form');
   const steps = Array.from(document.querySelectorAll('.step'));
   const nextButton = document.getElementById('next-button');
@@ -38,6 +38,7 @@
       Object.assign(state, draft);
       state.step = Math.min(Math.max(Number(state.step) || 0, 0), steps.length - 1);
       state.skills = Array.isArray(state.skills) ? state.skills.slice(0, MAX_SKILLS) : [];
+      state.cplSelections = Array.isArray(state.cplSelections) ? state.cplSelections.slice(0, 9) : [];
       document.getElementById('save-status').textContent = 'Your saved draft was restored on this device.';
     } catch (_) { localStorage.removeItem(STORAGE_KEY); }
   }
@@ -66,6 +67,10 @@
       const input = Array.from(form.querySelectorAll('input[name="skills"]')).find(item => item.value === skill);
       if (input) input.checked = true;
     });
+    state.cplSelections.forEach(code => {
+      const input = form.querySelector(`input[name="cpl"][value="${code}"]`);
+      if (input) input.checked = true;
+    });
     updateCounts();
   }
 
@@ -81,6 +86,7 @@
     if (state.step === 1 && document.getElementById('career-goal').value.trim().length < 2) return 'Enter a short career or life goal.';
     if (state.step === 2 && !selectedValue('employment')) return 'Choose an employment answer.';
     if (state.step === 3 && form.querySelectorAll('input[name="skills"]:checked').length === 0) return 'Choose at least one skill.';
+    if (state.step === 4 && form.querySelectorAll('input[name="cpl"]:checked').length === 0) return 'Choose at least one answer, Not sure, or None of these.';
     return '';
   }
 
@@ -89,6 +95,7 @@
     state.careerGoal = document.getElementById('career-goal').value.trim();
     state.employment = selectedValue('employment') || state.employment;
     state.skills = Array.from(form.querySelectorAll('input[name="skills"]:checked')).map(input => input.value).slice(0, MAX_SKILLS);
+    state.cplSelections = Array.from(form.querySelectorAll('input[name="cpl"]:checked')).map(input => input.value).slice(0, 9);
   }
 
   function renderSummary() {
@@ -97,7 +104,8 @@
       <div class="summary-row"><strong>Your path</strong>${PROFILE_LABELS[state.profile] || 'Not provided'}</div>
       <div class="summary-row"><strong>Your goal</strong>${escapeHtml(state.careerGoal)}</div>
       <div class="summary-row"><strong>Employment</strong>${employment}</div>
-      <div class="summary-row"><strong>Skills</strong>${state.skills.map(escapeHtml).join(', ')}</div>`;
+      <div class="summary-row"><strong>Skills</strong>${state.skills.map(escapeHtml).join(', ')}</div>
+      <div class="summary-row"><strong>Prior-learning screen</strong>${state.cplSelections.includes('none') ? 'None selected' : `${state.cplSelections.length} possible path${state.cplSelections.length === 1 ? '' : 's'} to review`}</div>`;
   }
 
   function escapeHtml(value) {
@@ -148,12 +156,42 @@
     }).join('');
   }
 
+  function renderCplResults(data) {
+    const section = document.getElementById('cpl-results-section');
+    const container = document.getElementById('cpl-results');
+    const checklist = document.getElementById('cpl-checklist');
+    section.hidden = false;
+    document.getElementById('cpl-disclaimer').textContent = data.disclaimer || 'Possible opportunities require official evaluation.';
+    const opportunities = data.opportunities || [];
+    if (!opportunities.length) {
+      container.innerHTML = `<div class="summary-row">${escapeHtml(data.message || 'No CPL preparation path selected.')}</div>`;
+      checklist.innerHTML = '';
+      return;
+    }
+    container.innerHTML = opportunities.map(item => {
+      const programNotes = (item.program_guidance || []).map(note => `<div class="program-cpl-note"><strong>${escapeHtml(note.program_name)}:</strong> ${escapeHtml(note.guidance)}<br><small>Prepare: ${escapeHtml(note.evidence_requested)}</small></div>`).join('');
+      return `<article class="cpl-card"><span class="cpl-status">${escapeHtml(item.status_label)}</span><h4>${escapeHtml(item.name)}</h4><p>${escapeHtml(item.description)}</p><p><strong>What to gather:</strong> ${escapeHtml(item.evidence_requested)}</p><p><strong>Official next step:</strong> ${escapeHtml(item.next_step)}</p>${programNotes}<p class="source-note">Reviewed ${escapeHtml(item.reviewed_at)}. <a href="${safeUrl(item.official_url)}" target="_blank" rel="noopener">${escapeHtml(item.source_title)}</a></p></article>`;
+    }).join('');
+    const documents = data.document_checklist || [];
+    checklist.innerHTML = documents.length ? `<h4>Document checklist for an advisor or CPL conversation</h4><ul>${documents.map(item => `<li>${escapeHtml(item)}</li>`).join('')}</ul>` : '';
+  }
+
+  async function requestCplScreening(programCodes) {
+    const response = await fetch('/api/db/cuny-beyond/cpl-screening', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ selections: state.cplSelections, program_codes: programCodes })
+    });
+    if (!response.ok) throw new Error('CPL screening unavailable');
+    renderCplResults(await response.json());
+  }
+
   async function requestRecommendations() {
     captureState();
     const button = document.getElementById('match-button');
     const status = document.getElementById('match-status');
     button.disabled = true;
     status.textContent = 'Checking reviewed BMCC mappings…';
+    let programCodes = [];
     try {
       const response = await fetch('/api/db/cuny-beyond/recommendations', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -162,9 +200,16 @@
       if (!response.ok) throw new Error('Recommendation service unavailable');
       const data = await response.json();
       renderRecommendations(data);
+      programCodes = (data.recommendations || []).map(item => item.program_code);
       status.textContent = data.matched_career ? `Matched to the reviewed ${data.matched_career.name} career profile.` : 'No career profile matched yet.';
     } catch (_) {
       status.textContent = 'We could not load program matches. Your browser draft is still saved; please try again.';
+    }
+    try {
+      await requestCplScreening(programCodes);
+    } catch (_) {
+      document.getElementById('cpl-results-section').hidden = false;
+      document.getElementById('cpl-disclaimer').textContent = 'Prior-learning guidance could not be loaded. No degree totals were changed; please use the official BMCC CPL page.';
     } finally { button.disabled = false; }
   }
 
@@ -192,12 +237,22 @@
     if (!window.confirm('Clear this browser draft and start again?')) return;
     localStorage.removeItem(STORAGE_KEY);
     form.reset();
-    Object.assign(state, { step: 0, profile: '', careerGoal: '', employment: '', skills: [], expiresAt: 0 });
+    Object.assign(state, { step: 0, profile: '', careerGoal: '', employment: '', skills: [], cplSelections: [], expiresAt: 0 });
     document.getElementById('save-status').textContent = 'Draft cleared.';
     updateCounts(); showStep(true);
   });
   document.getElementById('career-goal').addEventListener('input', updateCounts);
   document.getElementById('skill-choices').addEventListener('change', updateCounts);
+  document.getElementById('cpl-choices').addEventListener('change', event => {
+    const changed = event.target;
+    if (!changed.matches('input[name="cpl"]') || !changed.checked) return;
+    const all = Array.from(form.querySelectorAll('input[name="cpl"]'));
+    if (changed.value === 'none') all.forEach(input => { if (input !== changed) input.checked = false; });
+    else {
+      const none = form.querySelector('input[name="cpl"][value="none"]');
+      if (none) none.checked = false;
+    }
+  });
   document.getElementById('match-button').addEventListener('click', requestRecommendations);
   document.getElementById('recommendation-results').addEventListener('click', event => {
     const button = event.target.closest('[data-open-program]');
