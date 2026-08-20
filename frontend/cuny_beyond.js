@@ -23,6 +23,8 @@
   let ttlHours = 24;
   let latestRecommendations = [];
   let supportedCareers = [];
+  let latestCplScreening = null;
+  let latestMatchedCareer = null;
 
   function selectedValue(name) {
     const selected = form.querySelector(`input[name="${name}"]:checked`);
@@ -159,6 +161,7 @@
   }
 
   function renderCplResults(data) {
+    latestCplScreening = data;
     const section = document.getElementById('cpl-results-section');
     const container = document.getElementById('cpl-results');
     const checklist = document.getElementById('cpl-checklist');
@@ -187,6 +190,34 @@
     renderCplResults(await response.json());
   }
 
+  function saveReferralSummary(matchedCareer) {
+    if (matchedCareer) latestMatchedCareer = matchedCareer;
+    const transferSnapshot = (() => { try { return JSON.parse(sessionStorage.getItem('transferSnapshot') || 'null'); } catch (_) { return null; } })();
+    const scheduleChecklist = (() => { try { return JSON.parse(sessionStorage.getItem('cunyBeyondScheduleChecklistV1') || 'null'); } catch (_) { return null; } })();
+    const summary = {
+      pathway: PROFILE_LABELS[state.profile] || state.profile,
+      career_goal: state.careerGoal,
+      matched_career: latestMatchedCareer?.name || null,
+      skills: state.skills.slice(0, MAX_SKILLS),
+      recommended_programs: latestRecommendations.slice(0, 3).map(item => ({
+        code: item.program_code, name: item.program_name, degree_type: item.degree_type,
+        score: item.score, explanation: item.explanation, official_url: item.official_program_url,
+        source_title: item.source_title, source_url: item.source_url,
+      })),
+      cpl_possibilities: (latestCplScreening?.opportunities || []).map(item => ({ name: item.name, status: item.status_label, next_step: item.next_step, official_url: item.official_url })),
+      completed_courses: transferSnapshot?.completed_course_details || [],
+      transfer_options: latestRecommendations.slice(0, 3).map(item => ({ program: item.program_name, next_step: 'Review this BMCC program in CUNY Transfer Explorer with an advisor.' })),
+      schedule_checklist: scheduleChecklist,
+      sources: [
+        ...latestRecommendations.map(item => ({ title: item.source_title, url: item.source_url })),
+        { title: 'BMCC Academic Advisement', url: 'https://www.bmcc.cuny.edu/academics/advisement/advisement/' },
+      ],
+      expires_at: Date.now() + ttlHours * 60 * 60 * 1000,
+    };
+    sessionStorage.setItem('cunyBeyondReferralSummaryV1', JSON.stringify(summary));
+    document.getElementById('referral-action').hidden = false;
+  }
+
   async function requestRecommendations() {
     captureState();
     const button = document.getElementById('match-button');
@@ -204,11 +235,13 @@
       renderRecommendations(data);
       programCodes = (data.recommendations || []).map(item => item.program_code);
       status.textContent = data.matched_career ? `Matched to the reviewed ${data.matched_career.name} career profile.` : 'No career profile matched yet.';
+      saveReferralSummary(data.matched_career);
     } catch (_) {
       status.textContent = 'We could not load program matches. Your browser draft is still saved; please try again.';
     }
     try {
       await requestCplScreening(programCodes);
+      saveReferralSummary(null);
     } catch (_) {
       document.getElementById('cpl-results-section').hidden = false;
       document.getElementById('cpl-disclaimer').textContent = 'Prior-learning guidance could not be loaded. No degree totals were changed; please use the official BMCC CPL page.';

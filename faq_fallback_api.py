@@ -8,7 +8,11 @@ from google import genai
 import os
 import json
 import time
+import smtplib
+import re
+import uuid
 from datetime import datetime, timezone
+from email.message import EmailMessage
 from pathlib import Path
 from typing import Optional, Dict, Any
 
@@ -51,6 +55,8 @@ CONFIG_DIR = Path(os.environ.get("AI_CONFIG_DIR", "config"))
 AI_SETTINGS_FILE = CONFIG_DIR / "ai_settings.json"
 LOG_DIR = Path(os.environ.get("ADVISOR_LOG_DIR", "logs"))
 LOG_FILE = LOG_DIR / "advisor_chat_logs.jsonl"
+REFERRAL_LOG_FILE = LOG_DIR / "cuny_beyond_referral_delivery.jsonl"
+EMAIL_PATTERN = re.compile(r"^[^\s@]+@[^\s@]+\.[^\s@]+$")
 
 
 def default_ai_settings():
@@ -182,6 +188,15 @@ class AISettingsPayload(BaseModel):
     api_key: Optional[str] = ""
 
 
+class AdvisingReferralPayload(BaseModel):
+    name: str
+    email: str
+    id_last_four: Optional[str] = ""
+    consent: bool
+    website: Optional[str] = ""  # Honeypot; real users never see or fill it.
+    summary: Dict[str, Any]
+
+
 @app.get("/login")
 def login_page():
     return FileResponse("frontend/login.html")
@@ -194,11 +209,127 @@ def serve_cuny_beyond():
     return FileResponse("frontend/cuny_beyond.html")
 
 
+@app.get("/cuny-beyond/referral")
+def serve_cuny_beyond_referral():
+    if not is_cuny_beyond_enabled():
+        raise HTTPException(status_code=404, detail="CUNY Beyond is not enabled")
+    return FileResponse("frontend/cuny_beyond_referral.html")
+
+
 @app.get("/api/cuny-beyond/config")
 def get_cuny_beyond_config():
     if not is_cuny_beyond_enabled():
         raise HTTPException(status_code=404, detail="CUNY Beyond is not enabled")
     return public_config()
+
+
+def clean_referral_summary(raw):
+    """Keep only expected planning fields and bound every public-input collection."""
+    def text_value(value, limit=500):
+        return str(value or "").strip()[:limit]
+
+    schedule = raw.get("schedule_checklist") or {}
+    if not isinstance(schedule, dict):
+        schedule = {}
+    return {
+        "pathway": text_value(raw.get("pathway"), 100),
+        "career_goal": text_value(raw.get("career_goal"), 240),
+        "matched_career": text_value(raw.get("matched_career"), 120),
+        "skills": [text_value(item, 100) for item in (raw.get("skills") or [])[:5]],
+        "recommended_programs": [
+            {"code": text_value(item.get("code"), 30), "name": text_value(item.get("name"), 160), "explanation": text_value(item.get("explanation"), 700)}
+            for item in (raw.get("recommended_programs") or [])[:3] if isinstance(item, dict)
+        ],
+        "cpl_possibilities": [
+            {"name": text_value(item.get("name"), 160), "next_step": text_value(item.get("next_step"), 500)}
+            for item in (raw.get("cpl_possibilities") or [])[:9] if isinstance(item, dict)
+        ],
+        "completed_courses": [text_value(item.get("code") if isinstance(item, dict) else item, 30) for item in (raw.get("completed_courses") or [])[:80]],
+        "transfer_options": [text_value(item.get("next_step") if isinstance(item, dict) else item, 300) for item in (raw.get("transfer_options") or [])[:3]],
+        "schedule_checklist": [text_value(item, 200) for item in (schedule.get("instructions") or [])[:8]],
+    }
+
+
+def referral_email_body(name, last_four, summary):
+    programs = "; ".join(f"{item['name']} ({item['code']})" for item in summary["recommended_programs"]) or "None recorded"
+    cpl = "; ".join(item["name"] for item in summary["cpl_possibilities"]) or "None recorded"
+    completed = ", ".join(summary["completed_courses"]) or "None supplied"
+    schedule = "\n".join(f"- {item}" for item in summary["schedule_checklist"]) or "- No schedule checklist saved"
+    return f"""Pre-advisement request from {name}
+
+Student-entered last four ID digits: {last_four or 'Not provided'}
+Pathway: {summary['pathway'] or 'Not provided'}
+Career goal: {summary['career_goal'] or 'Not provided'}
+Matched career: {summary['matched_career'] or 'Not available'}
+Skills: {', '.join(summary['skills']) or 'None supplied'}
+Recommended BMCC programs: {programs}
+Possible CPL topics requiring evaluation: {cpl}
+Completed coursework summary: {completed}
+
+Schedule-search checklist:
+{schedule}
+
+Requested next step: Please review this planning summary with the student. This automated package is not an official degree audit, CPL award, transfer-credit evaluation, registration action, or major-change approval.
+""".strip()
+
+
+def log_referral_delivery(event_id, status, delivery_mode):
+    LOG_DIR.mkdir(parents=True, exist_ok=True)
+    with REFERRAL_LOG_FILE.open("a", encoding="utf-8") as stream:
+        stream.write(json.dumps({"event_id": event_id, "timestamp": datetime.now(timezone.utc).isoformat(), "status": status, "delivery_mode": delivery_mode}) + "\n")
+
+
+@app.post("/api/cuny-beyond/referral")
+def submit_cuny_beyond_referral(payload: AdvisingReferralPayload):
+    event_id = str(uuid.uuid4())
+    if payload.website:
+        log_referral_delivery(event_id, "rejected", "honeypot")
+        raise HTTPException(status_code=400, detail="Referral could not be submitted")
+    name = payload.name.strip()[:120]
+    email = payload.email.strip()[:254]
+    last_four = (payload.id_last_four or "").strip()
+    if len(name) < 2 or not EMAIL_PATTERN.fullmatch(email):
+        raise HTTPException(status_code=422, detail="Enter a valid name and email")
+    if last_four and not re.fullmatch(r"\d{4}", last_four):
+        raise HTTPException(status_code=422, detail="Last four ID digits must be four numbers or blank")
+    if not payload.consent:
+        raise HTTPException(status_code=422, detail="Consent is required before sending")
+
+    summary = clean_referral_summary(payload.summary)
+    subject = f"CUNY Beyond pre-advisement request - {summary['career_goal'] or 'program exploration'}"[:160]
+    body = referral_email_body(name, last_four, summary)
+    recipient = os.environ.get("BMCC_ADVISING_REFERRAL_EMAIL", "").strip()
+    enabled = os.environ.get("BMCC_ADVISING_REFERRAL_ENABLED", "false").lower() == "true"
+    host = os.environ.get("SMTP_HOST", "").strip()
+
+    if enabled and recipient and host:
+        try:
+            message = EmailMessage()
+            message["Subject"] = subject
+            message["From"] = os.environ.get("SMTP_FROM", recipient)
+            message["To"] = recipient
+            message["Cc"] = email
+            message.set_content(body)
+            port = int(os.environ.get("SMTP_PORT", "587"))
+            with smtplib.SMTP(host, port, timeout=20) as client:
+                client.starttls()
+                username = os.environ.get("SMTP_USERNAME", "")
+                if username:
+                    client.login(username, os.environ.get("SMTP_PASSWORD", ""))
+                client.send_message(message)
+            log_referral_delivery(event_id, "sent", "smtp")
+            return {"sent": True, "event_id": event_id, "message": "Referral sent to advising and copied to the student."}
+        except Exception:
+            log_referral_delivery(event_id, "failed", "smtp")
+    else:
+        log_referral_delivery(event_id, "prepared", "manual_fallback")
+
+    return {
+        "sent": False, "event_id": event_id,
+        "message": "Automatic delivery is unavailable. Download the summary or copy the prepared email below.",
+        "subject": subject, "body": body,
+        "advisor_contact_url": "https://www.bmcc.cuny.edu/academics/advisement/advisement/",
+    }
 
 
 @app.post("/login")
