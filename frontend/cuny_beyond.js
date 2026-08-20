@@ -21,6 +21,7 @@
   const backButton = document.getElementById('back-button');
   const errorBox = document.getElementById('form-error');
   let ttlHours = 24;
+  let latestRecommendations = [];
 
   function selectedValue(name) {
     const selected = form.querySelector(`input[name="${name}"]:checked`);
@@ -105,6 +106,68 @@
     return node.innerHTML;
   }
 
+  function safeUrl(value) {
+    try {
+      const parsed = new URL(value, window.location.origin);
+      return ['http:', 'https:'].includes(parsed.protocol) ? parsed.href : '#';
+    } catch (_) { return '#'; }
+  }
+
+  function openDegreePlanner(index) {
+    const result = latestRecommendations[index];
+    if (!result) return;
+    sessionStorage.setItem('selectedProgramContext', JSON.stringify({
+      institutionCode: result.institution_code,
+      institutionName: result.institution_name,
+      programCode: result.program_code,
+      programName: result.program_name,
+      catalogYear: result.catalog_year || '',
+      selectedAt: new Date().toISOString(),
+      source: 'cuny-beyond'
+    }));
+    window.location.href = '/db-progress';
+  }
+
+  function renderRecommendations(data) {
+    const container = document.getElementById('recommendation-results');
+    latestRecommendations = data.recommendations || [];
+    if (!latestRecommendations.length) {
+      container.innerHTML = `<div class="next-stage"><strong>No reviewed match yet</strong><p>${escapeHtml(data.message || 'Try a different career title or speak with an advisor.')}</p></div>`;
+      return;
+    }
+    const careerName = data.matched_career ? data.matched_career.name : state.careerGoal;
+    container.innerHTML = `<h3>Top starting points for ${escapeHtml(careerName)}</h3>` + latestRecommendations.map((item, index) => {
+      const tags = [item.advising_label, item.evidence_level + ' evidence', ...item.matched_skills].map(tag => `<span class="match-tag">${escapeHtml(tag)}</span>`).join('');
+      return `<article class="recommendation-card">
+        <div class="recommendation-heading"><div><h3>${escapeHtml(item.program_name)} (${escapeHtml(item.degree_type || 'Degree')})</h3><p>${escapeHtml(item.department_name)} · ${escapeHtml(item.catalog_year || 'Current catalog')}</p></div><span class="match-score">${item.score} fit points</span></div>
+        <p class="match-explanation">${escapeHtml(item.explanation)}</p>
+        <div class="match-details">${tags}</div>
+        <p class="source-note">Career evidence: ${item.score_components.career} points; selected-skill evidence: ${item.score_components.skills} points. Reviewed ${escapeHtml(item.reviewed_at)} from <a href="${safeUrl(item.source_url)}" target="_blank" rel="noopener">${escapeHtml(item.source_title)}</a>.</p>
+        <div class="recommendation-actions"><button type="button" data-open-program="${index}">Open interactive degree planner</button><a href="${safeUrl(item.official_program_url)}" target="_blank" rel="noopener">Official BMCC program page</a></div>
+      </article>`;
+    }).join('');
+  }
+
+  async function requestRecommendations() {
+    captureState();
+    const button = document.getElementById('match-button');
+    const status = document.getElementById('match-status');
+    button.disabled = true;
+    status.textContent = 'Checking reviewed BMCC mappings…';
+    try {
+      const response = await fetch('/api/db/cuny-beyond/recommendations', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ career_goal: state.careerGoal, skills: state.skills })
+      });
+      if (!response.ok) throw new Error('Recommendation service unavailable');
+      const data = await response.json();
+      renderRecommendations(data);
+      status.textContent = data.matched_career ? `Matched to the reviewed ${data.matched_career.name} career profile.` : 'No career profile matched yet.';
+    } catch (_) {
+      status.textContent = 'We could not load program matches. Your browser draft is still saved; please try again.';
+    } finally { button.disabled = false; }
+  }
+
   function showStep(focusHeading) {
     steps.forEach((step, index) => { step.hidden = index !== state.step; });
     document.getElementById('step-count').textContent = `Step ${state.step + 1} of ${steps.length}`;
@@ -135,6 +198,11 @@
   });
   document.getElementById('career-goal').addEventListener('input', updateCounts);
   document.getElementById('skill-choices').addEventListener('change', updateCounts);
+  document.getElementById('match-button').addEventListener('click', requestRecommendations);
+  document.getElementById('recommendation-results').addEventListener('click', event => {
+    const button = event.target.closest('[data-open-program]');
+    if (button) openDegreePlanner(Number(button.dataset.openProgram));
+  });
 
   async function initialize() {
     renderSkills();

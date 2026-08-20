@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
 
-from sqlalchemy import Column, DateTime, Integer, String, Text, ForeignKey, UniqueConstraint
+from sqlalchemy import Boolean, Column, DateTime, Integer, String, Text, ForeignKey, UniqueConstraint
 from sqlalchemy.orm import relationship
 from database import Base
 
@@ -111,9 +111,74 @@ class Program(Base):
 
     department = relationship("Department", back_populates="programs")
     courses = relationship("ProgramCourse", back_populates="program")
+    career_links = relationship("ProgramCareer", back_populates="program")
 
     __table_args__ = (
         UniqueConstraint("department_id", "code", "catalog_year", name="uq_program_code_year"),
+    )
+
+
+class Career(Base):
+    __tablename__ = "careers"
+
+    id = Column(Integer, primary_key=True, index=True)
+    slug = Column(String, nullable=False, unique=True, index=True)
+    name = Column(String, nullable=False)
+    aliases = Column(Text, nullable=True)
+    pathway_type = Column(String, nullable=False, default="career")
+    source_title = Column(String, nullable=False)
+    source_url = Column(String, nullable=False)
+    reviewed_at = Column(DateTime, nullable=False)
+    active = Column(Boolean, nullable=False, default=True, index=True)
+
+    skills = relationship("CareerSkill", back_populates="career", cascade="all, delete-orphan")
+    program_links = relationship("ProgramCareer", back_populates="career", cascade="all, delete-orphan")
+
+
+class Skill(Base):
+    __tablename__ = "skills"
+
+    id = Column(Integer, primary_key=True, index=True)
+    slug = Column(String, nullable=False, unique=True, index=True)
+    name = Column(String, nullable=False)
+    active = Column(Boolean, nullable=False, default=True, index=True)
+
+    careers = relationship("CareerSkill", back_populates="skill", cascade="all, delete-orphan")
+
+
+class CareerSkill(Base):
+    __tablename__ = "career_skills"
+
+    id = Column(Integer, primary_key=True)
+    career_id = Column(Integer, ForeignKey("careers.id"), nullable=False, index=True)
+    skill_id = Column(Integer, ForeignKey("skills.id"), nullable=False, index=True)
+
+    career = relationship("Career", back_populates="skills")
+    skill = relationship("Skill", back_populates="careers")
+
+    __table_args__ = (UniqueConstraint("career_id", "skill_id", name="uq_career_skill"),)
+
+
+class ProgramCareer(Base):
+    __tablename__ = "program_careers"
+
+    id = Column(Integer, primary_key=True)
+    program_id = Column(Integer, ForeignKey("programs.id"), nullable=False, index=True)
+    career_id = Column(Integer, ForeignKey("careers.id"), nullable=False, index=True)
+    career_points = Column(Integer, nullable=False, default=50)
+    evidence_level = Column(String, nullable=False, default="strong")
+    explanation = Column(Text, nullable=False)
+    source_title = Column(String, nullable=False)
+    source_url = Column(String, nullable=False)
+    official_program_url = Column(String, nullable=False)
+    reviewed_at = Column(DateTime, nullable=False)
+    active = Column(Boolean, nullable=False, default=True, index=True)
+
+    program = relationship("Program", back_populates="career_links")
+    career = relationship("Career", back_populates="program_links")
+
+    __table_args__ = (
+        UniqueConstraint("program_id", "career_id", name="uq_program_career"),
     )
 
 

@@ -10,6 +10,7 @@ from sqlalchemy.orm import Session, joinedload
 from database import get_db
 from auth import require_admin
 from program_selector_logic import canonical_selector_programs
+from cuny_beyond_matching import rank_program_matches, resolve_career
 from models import (
     Institution,
     Department,
@@ -26,6 +27,10 @@ from models import (
     CourseEquivalency,
     CurriculumDraft,
     CurriculumDraftVersion,
+    Career,
+    CareerSkill,
+    Skill,
+    ProgramCareer,
 )
 
 
@@ -70,6 +75,11 @@ class DraftStatusPayload(BaseModel):
     note: Optional[str] = None
 
 
+class CunyBeyondRecommendationPayload(BaseModel):
+    career_goal: str = Field(min_length=2, max_length=240)
+    skills: list[str] = Field(default_factory=list, max_length=5)
+
+
 def optional_text(value):
     return value.strip() if value and value.strip() else None
 
@@ -85,6 +95,88 @@ def normalize_equivalency_source(value: str, equivalency_type: str):
     if equivalency_type == "combination" and len(codes) < 2:
         raise HTTPException(status_code=400, detail="A combination equivalency requires at least two source courses")
     return " + ".join(codes)
+
+
+@router.post("/cuny-beyond/recommendations")
+def get_cuny_beyond_recommendations(
+    payload: CunyBeyondRecommendationPayload,
+    db: Session = Depends(get_db),
+):
+    careers = db.query(Career).filter(Career.active.is_(True)).order_by(Career.name).all()
+    career_records = [
+        {
+            "id": career.id,
+            "slug": career.slug,
+            "name": career.name,
+            "aliases": [part.strip() for part in (career.aliases or "").split("|") if part.strip()],
+        }
+        for career in careers
+    ]
+    matched = resolve_career(payload.career_goal, career_records)
+    if not matched:
+        return {
+            "matched_career": None,
+            "recommendations": [],
+            "message": "This starter taxonomy does not recognize that goal yet. Try Data Analyst, Software Developer, or Computer Systems Analyst, or explore it with an advisor.",
+        }
+
+    career = next(item for item in careers if item.id == matched["id"])
+    career_skills = [link.skill.name for link in career.skills if link.skill.active]
+    links = (
+        db.query(ProgramCareer)
+        .options(
+            joinedload(ProgramCareer.program)
+            .joinedload(Program.department)
+            .joinedload(Department.institution),
+        )
+        .filter(
+            ProgramCareer.career_id == career.id,
+            ProgramCareer.active.is_(True),
+        )
+        .all()
+    )
+
+    mappings = []
+    for link in links:
+        program = link.program
+        curriculum_count = (
+            db.query(func.count(RequirementGroupCourse.id))
+            .join(RequirementGroup, RequirementGroupCourse.requirement_group_id == RequirementGroup.id)
+            .filter(RequirementGroup.program_id == program.id)
+            .scalar()
+        ) or db.query(func.count(ProgramCourse.id)).filter(ProgramCourse.program_id == program.id).scalar()
+        mappings.append({
+            "program_id": program.id,
+            "program_code": program.code,
+            "program_name": program.name,
+            "degree_type": program.degree_type,
+            "catalog_year": program.catalog_year,
+            "institution_code": program.department.institution.code,
+            "institution_name": program.department.institution.name,
+            "department_name": program.department.name,
+            "career_points": link.career_points,
+            "career_skills": career_skills,
+            "evidence_level": link.evidence_level,
+            "explanation": link.explanation,
+            "source_title": link.source_title,
+            "source_url": link.source_url,
+            "official_program_url": link.official_program_url,
+            "reviewed_at": link.reviewed_at.date().isoformat(),
+            "has_curriculum": int(curriculum_count or 0) > 0,
+        })
+
+    recommendations = rank_program_matches(mappings, payload.skills)
+    return {
+        "matched_career": {
+            "slug": career.slug,
+            "name": career.name,
+            "source_title": career.source_title,
+            "source_url": career.source_url,
+            "reviewed_at": career.reviewed_at.date().isoformat(),
+        },
+        "recommendations": recommendations,
+        "message": None if recommendations else "No populated BMCC curriculum currently meets the evidence threshold for this career.",
+    }
 
 
 def serialize_draft(draft: CurriculumDraft, include_document: bool = True):

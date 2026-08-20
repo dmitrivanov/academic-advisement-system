@@ -1,5 +1,6 @@
 import csv
 import json
+from datetime import datetime, timezone
 from functools import lru_cache
 from pathlib import Path
 
@@ -21,10 +22,17 @@ from models import (
     ChoiceGroup,
     ChoiceGroupCourse,
     CourseEquivalency,
+    Career,
+    Skill,
+    CareerSkill,
+    ProgramCareer,
 )
 
 
 DOCS_DIR = Path("docs")
+CUNY_BEYOND_SKILLS_FILE = DOCS_DIR / "cuny_beyond_skills.csv"
+CUNY_BEYOND_CAREERS_FILE = DOCS_DIR / "cuny_beyond_careers.csv"
+CUNY_BEYOND_PROGRAM_CAREERS_FILE = DOCS_DIR / "cuny_beyond_program_careers.csv"
 
 DEFAULT_INSTITUTION = "Borough of Manhattan Community College"
 DEFAULT_INSTITUTION_CODE = "BMCC"
@@ -38,6 +46,103 @@ PROGRAM_NAME_MAP = {
     "CIS": "Computer Information Systems",
     "CNT": "Computer Network Technology",
 }
+
+
+def csv_bool(value):
+    return str(value or "").strip().lower() in {"1", "true", "yes", "active"}
+
+
+def reviewed_datetime(value):
+    parsed = datetime.fromisoformat(value.strip())
+    return parsed.replace(tzinfo=timezone.utc) if parsed.tzinfo is None else parsed
+
+
+def seed_cuny_beyond_mappings(db):
+    """Seed reviewed career data after programs exist, preserving relational IDs."""
+    required_files = (
+        CUNY_BEYOND_SKILLS_FILE,
+        CUNY_BEYOND_CAREERS_FILE,
+        CUNY_BEYOND_PROGRAM_CAREERS_FILE,
+    )
+    if not all(path.exists() for path in required_files):
+        print("Skipping CUNY Beyond mappings: one or more CSV files are missing")
+        return
+
+    with CUNY_BEYOND_SKILLS_FILE.open(newline="", encoding="utf-8-sig") as stream:
+        skill_rows = list(csv.DictReader(stream))
+    skills = {}
+    for row in skill_rows:
+        skill = db.query(Skill).filter_by(slug=row["slug"].strip()).first()
+        if not skill:
+            skill = Skill(slug=row["slug"].strip())
+            db.add(skill)
+        skill.name = row["name"].strip()
+        skill.active = csv_bool(row["active"])
+        db.flush()
+        skills[skill.slug] = skill
+
+    with CUNY_BEYOND_CAREERS_FILE.open(newline="", encoding="utf-8-sig") as stream:
+        career_rows = list(csv.DictReader(stream))
+    careers = {}
+    for row in career_rows:
+        career = db.query(Career).filter_by(slug=row["slug"].strip()).first()
+        if not career:
+            career = Career(slug=row["slug"].strip())
+            db.add(career)
+        career.name = row["name"].strip()
+        career.aliases = row["aliases"].strip()
+        career.pathway_type = row["pathway_type"].strip() or "career"
+        career.source_title = row["source_title"].strip()
+        career.source_url = row["source_url"].strip()
+        career.reviewed_at = reviewed_datetime(row["reviewed_at"])
+        career.active = csv_bool(row["active"])
+        db.flush()
+        careers[career.slug] = career
+
+        db.query(CareerSkill).filter_by(career_id=career.id).delete()
+        for skill_slug in (part.strip() for part in row["skill_slugs"].split("|")):
+            skill = skills.get(skill_slug)
+            if not skill:
+                raise ValueError(f"Unknown CUNY Beyond skill slug: {skill_slug}")
+            db.add(CareerSkill(career_id=career.id, skill_id=skill.id))
+
+    seeded_career_ids = [career.id for career in careers.values()]
+    if seeded_career_ids:
+        db.query(ProgramCareer).filter(ProgramCareer.career_id.in_(seeded_career_ids)).delete(
+            synchronize_session=False
+        )
+
+    with CUNY_BEYOND_PROGRAM_CAREERS_FILE.open(newline="", encoding="utf-8-sig") as stream:
+        mapping_rows = list(csv.DictReader(stream))
+    for row in mapping_rows:
+        program = (
+            db.query(Program)
+            .join(Department, Program.department_id == Department.id)
+            .join(Institution, Department.institution_id == Institution.id)
+            .filter(
+                Institution.code == row["institution_code"].strip(),
+                Program.code == row["program_code"].strip(),
+            )
+            .first()
+        )
+        career = careers.get(row["career_slug"].strip())
+        if not program or not career:
+            missing = row["program_code"] if not program else row["career_slug"]
+            raise ValueError(f"Unknown CUNY Beyond mapping reference: {missing}")
+        db.add(ProgramCareer(
+            program_id=program.id,
+            career_id=career.id,
+            career_points=int(row["career_points"]),
+            evidence_level=row["evidence_level"].strip(),
+            explanation=row["explanation"].strip(),
+            source_title=row["source_title"].strip(),
+            source_url=row["source_url"].strip(),
+            official_program_url=row["official_program_url"].strip(),
+            reviewed_at=reviewed_datetime(row["reviewed_at"]),
+            active=csv_bool(row["active"]),
+        ))
+    db.flush()
+    print(f"Seeded CUNY Beyond: {len(careers)} careers and {len(mapping_rows)} program mappings")
 
 
 def ensure_institution_columns(db):
@@ -1333,6 +1438,7 @@ def seed():
         seed_brooklyn_elective_groups(db)
         seed_program_choice_group_adjustments(db)
         seed_canonical_course_prerequisites(db)
+        seed_cuny_beyond_mappings(db)
 
         db.commit()
         print("Database seeding completed.")
