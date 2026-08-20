@@ -1,0 +1,4 @@
+name,provider,provider_code,verified_at,source_url,active
+2026 Spring Term,cuny_global_search,1262,2026-08-21,https://globalsearch.cuny.edu/CFGlobalSearchTool/CFSearchToolController,false
+2026 Summer Term,cuny_global_search,1266,2026-08-21,https://globalsearch.cuny.edu/CFGlobalSearchTool/CFSearchToolController,false
+2026 Fall Term,cuny_global_search,1269,2026-08-21,https://globalsearch.cuny.edu/CFGlobalSearchTool/CFSearchToolController,true

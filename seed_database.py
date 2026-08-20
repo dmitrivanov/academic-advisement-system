@@ -28,6 +28,7 @@ from models import (
     ProgramCareer,
     CplType,
     ProgramCplGuidance,
+    AcademicTerm,
 )
 
 
@@ -37,6 +38,7 @@ CUNY_BEYOND_CAREERS_FILE = DOCS_DIR / "cuny_beyond_careers.csv"
 CUNY_BEYOND_PROGRAM_CAREERS_FILE = DOCS_DIR / "cuny_beyond_program_careers.csv"
 CUNY_BEYOND_CPL_TYPES_FILE = DOCS_DIR / "cuny_beyond_cpl_types.csv"
 CUNY_BEYOND_PROGRAM_CPL_FILE = DOCS_DIR / "cuny_beyond_program_cpl_guidance.csv"
+CUNY_BEYOND_TERMS_FILE = DOCS_DIR / "cuny_beyond_academic_terms.csv"
 
 DEFAULT_INSTITUTION = "Borough of Manhattan Community College"
 DEFAULT_INSTITUTION_CODE = "BMCC"
@@ -59,6 +61,22 @@ def csv_bool(value):
 def reviewed_datetime(value):
     parsed = datetime.fromisoformat(value.strip())
     return parsed.replace(tzinfo=timezone.utc) if parsed.tzinfo is None else parsed
+
+
+def seed_cuny_beyond_terms(db):
+    """Insert verified provider term codes without overwriting later admin decisions."""
+    if not CUNY_BEYOND_TERMS_FILE.exists():
+        return
+    with CUNY_BEYOND_TERMS_FILE.open(newline="", encoding="utf-8-sig") as stream:
+        for row in csv.DictReader(stream):
+            code = row["provider_code"].strip()
+            if db.query(AcademicTerm).filter_by(provider_code=code).first():
+                continue
+            db.add(AcademicTerm(
+                name=row["name"].strip(), provider=row["provider"].strip(), provider_code=code,
+                verified_at=reviewed_datetime(row["verified_at"]), source_url=row["source_url"].strip(),
+                active=csv_bool(row["active"]),
+            ))
 
 
 def seed_cuny_beyond_mappings(db):
@@ -1506,6 +1524,7 @@ def seed():
         seed_canonical_course_prerequisites(db)
         seed_cuny_beyond_mappings(db)
         seed_cuny_beyond_cpl(db)
+        seed_cuny_beyond_terms(db)
 
         db.commit()
         print("Database seeding completed.")

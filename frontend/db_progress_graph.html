@@ -4088,7 +4088,7 @@ function renderDegreePlan() {
         ${semester.courses.map(course => `
           <div class="semester-course">
             <span><strong>${course.is_elective_slot ? "Elective choice" : course.code}</strong> — ${course.title}</span>
-            <span>${course.credits} cr</span>
+            <span>${course.credits} cr ${course.is_elective_slot ? "" : `· <a href="/schedule-handoff?institution_code=${encodeURIComponent(CURRENT_REQUIREMENTS.program.institution_code || "BMCC")}&courses=${encodeURIComponent(course.code)}">Find Sections</a>`}</span>
           </div>
         `).join("")}
       </div>

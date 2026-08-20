@@ -11,6 +11,7 @@ from database import get_db
 from auth import require_admin
 from program_selector_logic import canonical_selector_programs
 from cuny_beyond_matching import rank_program_matches, resolve_career
+from schedule_link_service import build_global_search_handoff
 from models import (
     Institution,
     Department,
@@ -33,6 +34,7 @@ from models import (
     ProgramCareer,
     CplType,
     ProgramCplGuidance,
+    AcademicTerm,
 )
 
 
@@ -85,6 +87,69 @@ class CunyBeyondRecommendationPayload(BaseModel):
 class CunyBeyondCplPayload(BaseModel):
     selections: list[str] = Field(default_factory=list, max_length=9)
     program_codes: list[str] = Field(default_factory=list, max_length=3)
+
+
+class ScheduleHandoffPayload(BaseModel):
+    institution_code: str = Field(min_length=2, max_length=12)
+    term_code: str = Field(min_length=1, max_length=20)
+    course_code: str = Field(min_length=3, max_length=30)
+    modality: Optional[str] = Field(default=None, max_length=80)
+    time_preference: Optional[str] = Field(default=None, max_length=80)
+
+
+class AcademicTermPayload(BaseModel):
+    name: str = Field(min_length=3, max_length=80)
+    provider_code: str = Field(min_length=1, max_length=20)
+    verified_at: datetime
+    source_url: str = Field(min_length=10, max_length=500)
+    active: bool
+
+
+def serialize_term(term):
+    return {
+        "id": term.id, "name": term.name, "provider": term.provider,
+        "provider_code": term.provider_code, "verified_at": term.verified_at.isoformat(),
+        "source_url": term.source_url, "active": term.active,
+    }
+
+
+@router.get("/cuny-beyond/schedule/terms")
+def get_active_schedule_terms(db: Session = Depends(get_db)):
+    return [serialize_term(term) for term in db.query(AcademicTerm).filter_by(active=True).order_by(AcademicTerm.provider_code.desc()).all()]
+
+
+@router.post("/cuny-beyond/schedule/handoff")
+def get_schedule_handoff(payload: ScheduleHandoffPayload, db: Session = Depends(get_db)):
+    term = db.query(AcademicTerm).filter_by(provider_code=payload.term_code, active=True).first()
+    if not term:
+        raise HTTPException(status_code=400, detail="Select an active, administrator-verified term")
+    try:
+        return build_global_search_handoff(
+            payload.institution_code, term, payload.course_code,
+            modality=payload.modality, time_preference=payload.time_preference,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+
+
+@router.get("/admin/schedule/terms")
+def get_admin_schedule_terms(_admin=Depends(require_admin), db: Session = Depends(get_db)):
+    return [serialize_term(term) for term in db.query(AcademicTerm).order_by(AcademicTerm.provider_code.desc()).all()]
+
+
+@router.put("/admin/schedule/terms/{term_id}")
+def update_admin_schedule_term(term_id: int, payload: AcademicTermPayload, _admin=Depends(require_admin), db: Session = Depends(get_db)):
+    term = db.query(AcademicTerm).filter_by(id=term_id).first()
+    if not term:
+        raise HTTPException(status_code=404, detail="Academic term not found")
+    term.name = payload.name.strip()
+    term.provider_code = payload.provider_code.strip()
+    term.verified_at = payload.verified_at
+    term.source_url = payload.source_url.strip()
+    term.active = payload.active
+    db.commit()
+    db.refresh(term)
+    return serialize_term(term)
 
 
 @router.get("/cuny-beyond/careers")

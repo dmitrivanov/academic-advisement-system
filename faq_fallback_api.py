@@ -267,6 +267,13 @@ def serve_transfer_analysis(request: Request):
     return FileResponse("frontend/transfer_analysis.html")
 
 
+@app.get("/schedule-handoff")
+def serve_schedule_handoff(request: Request):
+    if not is_logged_in(request):
+        return RedirectResponse("/login", status_code=303)
+    return FileResponse("frontend/schedule_handoff.html")
+
+
 @app.get("/admin")
 def serve_admin(request: Request):
     if not is_admin(request):
@@ -286,6 +293,13 @@ def serve_major_constructor(request: Request):
     if not is_admin(request):
         return RedirectResponse("/login", status_code=303)
     return FileResponse("frontend/major_constructor.html")
+
+
+@app.get("/admin/schedule-settings")
+def serve_schedule_settings(request: Request):
+    if not is_admin(request):
+        return RedirectResponse("/login", status_code=303)
+    return FileResponse("frontend/schedule_settings.html")
 
 
 app.mount("/frontend", StaticFiles(directory="frontend"), name="frontend")

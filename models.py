@@ -221,6 +221,18 @@ class ProgramCplGuidance(Base):
     )
 
 
+class AcademicTerm(Base):
+    __tablename__ = "academic_terms"
+
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String, nullable=False)
+    provider = Column(String, nullable=False, default="cuny_global_search")
+    provider_code = Column(String, nullable=False, unique=True, index=True)
+    verified_at = Column(DateTime, nullable=False)
+    source_url = Column(String, nullable=False)
+    active = Column(Boolean, nullable=False, default=False, index=True)
+
+
 class Course(Base):
     __tablename__ = "courses"
 
