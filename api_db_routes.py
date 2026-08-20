@@ -403,6 +403,7 @@ def get_cuny_beyond_careers(db: Session = Depends(get_db)):
             "name": career.name,
             "aliases": [part.strip() for part in (career.aliases or "").split("|") if part.strip()],
             "reviewed_at": career.reviewed_at.date().isoformat(),
+            "program_count": sum(1 for link in career.program_links if link.active),
         }
         for career in careers
     ]
@@ -445,7 +446,7 @@ def get_cuny_beyond_recommendations(
         return {
             "matched_career": None,
             "recommendations": [],
-            "message": "This starter taxonomy does not recognize that goal yet. Try Data Analyst, Software Developer, or Computer Systems Analyst, or explore it with an advisor.",
+            "message": "That wording does not match a reviewed career yet. Browse the supported careers below or explore your goal with an advisor.",
             "supported_careers": [item["name"] for item in career_records[:12]],
         }
 

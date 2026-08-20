@@ -739,6 +739,32 @@ Requirements:
 
 **Acceptance criteria:** embedded schedule results remain attributable, fresh, accessible, and safely degradable to Global Search links.
 
+## Phase 9 - Reviewed career discovery and catalog expansion
+
+**Outcome:** visitors can discover supported career language and receive reviewed matches across a broader set of populated BMCC programs.
+
+### Task 9.1 - Career browser
+
+- Add a searchable, keyboard-accessible browser to the career-goal step.
+- Show the number of reviewed program relationships for each career.
+- Keep free-text aliases available for common job-title variations.
+- Provide a no-match recovery path without inventing a recommendation.
+
+### Task 9.2 - Reviewed catalog expansion
+
+- Add sourced careers for Accounting, Human Services, Psychology, Criminal Justice, Public and Nonprofit Administration, Urban Studies, Political Science, and Gerontology.
+- Map careers only to populated curricula.
+- Distinguish direct career evidence from related preparation that requires transfer, licensure, certification, or graduate education.
+
+### Task 9.3 - Data quality
+
+- Require a published mapping for every active career.
+- Test representative aliases and multi-program careers.
+- Preserve the earlier Computer Science, Data Science, and Nursing catalog.
+- Verify all new sources and explanations.
+
+**Acceptance criteria:** a visitor can browse or type a reviewed title such as Accounting Clerk, Case Manager, Police Officer, or Urban Planner and receive a sourced, explainable BMCC starting point without an unsupported professional-eligibility claim.
+
 ## 11. Testing strategy
 
 ### Unit tests

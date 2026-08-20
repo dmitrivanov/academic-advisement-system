@@ -56,6 +56,13 @@
           <datalist id="career-options"></datalist>
           <p class="field-help"><span id="goal-count">0</span>/240 characters. Do not include private information.</p>
           <div id="career-suggestions" class="career-suggestions" aria-label="Supported career examples"></div>
+          <details class="career-browser">
+            <summary>Browse all reviewed careers</summary>
+            <label class="field-label" for="career-filter">Filter careers</label>
+            <input id="career-filter" class="career-input" type="search" placeholder="Type nursing, accounting, counseling, technology…" autocomplete="off">
+            <p id="career-browser-count" class="field-help" role="status" aria-live="polite"></p>
+            <div id="career-browser-results" class="career-browser-results" aria-label="Reviewed career choices"></div>
+          </details>
         </section>
 
         <section class="step" data-step="2" hidden>

@@ -303,19 +303,30 @@
   });
 
   function renderSupportedCareers() {
-    const featuredNames = ['Registered Nurse', 'Data Analyst', 'Software Developer', 'Computer Systems Analyst', 'Information Security Analyst', 'Business Intelligence Analyst'];
+    const featuredNames = ['Registered Nurse', 'Data Analyst', 'Accounting Clerk', 'Case Manager', 'Police Officer', 'Urban Planner'];
     const featured = featuredNames.map(name => supportedCareers.find(item => item.name === name)).filter(Boolean);
     document.getElementById('career-options').innerHTML = supportedCareers.map(item => `<option value="${escapeHtml(item.name)}"></option>`).join('');
     document.getElementById('career-suggestions').innerHTML = featured.map(item => `<button class="career-chip" type="button" data-career-name="${escapeHtml(item.name)}">${escapeHtml(item.name)}</button>`).join('');
+    renderCareerBrowser('');
   }
 
-  document.getElementById('career-suggestions').addEventListener('click', event => {
+  function renderCareerBrowser(query) {
+    const normalized = (query || '').trim().toLowerCase();
+    const matches = supportedCareers.filter(item => [item.name, ...(item.aliases || [])].some(value => value.toLowerCase().includes(normalized)));
+    document.getElementById('career-browser-count').textContent = `${matches.length} reviewed career${matches.length === 1 ? '' : 's'} shown`;
+    document.getElementById('career-browser-results').innerHTML = matches.map(item => `<button type="button" data-career-name="${escapeHtml(item.name)}"><strong>${escapeHtml(item.name)}</strong><small>${item.program_count} reviewed BMCC program match${item.program_count === 1 ? '' : 'es'}</small></button>`).join('') || '<p class="field-help">No reviewed title matches that filter.</p>';
+  }
+
+  function chooseCareer(event) {
     const button = event.target.closest('[data-career-name]');
     if (!button) return;
     document.getElementById('career-goal').value = button.dataset.careerName;
     updateCounts();
     document.getElementById('career-goal').focus();
-  });
+  }
+  document.getElementById('career-suggestions').addEventListener('click', chooseCareer);
+  document.getElementById('career-browser-results').addEventListener('click', chooseCareer);
+  document.getElementById('career-filter').addEventListener('input', event => renderCareerBrowser(event.target.value));
 
   async function initialize() {
     renderSkills();
