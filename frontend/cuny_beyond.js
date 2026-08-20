@@ -22,6 +22,7 @@
   const errorBox = document.getElementById('form-error');
   let ttlHours = 24;
   let latestRecommendations = [];
+  let supportedCareers = [];
 
   function selectedValue(name) {
     const selected = form.querySelector(`input[name="${name}"]:checked`);
@@ -140,7 +141,8 @@
     const container = document.getElementById('recommendation-results');
     latestRecommendations = data.recommendations || [];
     if (!latestRecommendations.length) {
-      container.innerHTML = `<div class="next-stage"><strong>No reviewed match yet</strong><p>${escapeHtml(data.message || 'Try a different career title or speak with an advisor.')}</p></div>`;
+      const choices = (data.supported_careers || supportedCareers.slice(0, 8).map(item => item.name));
+      container.innerHTML = `<div class="next-stage"><strong>No reviewed match yet</strong><p>${escapeHtml(data.message || 'Choose a supported career title or speak with an advisor.')}</p><div class="career-suggestions">${choices.map(name => `<button class="career-chip" type="button" data-retry-career="${escapeHtml(name)}">${escapeHtml(name)}</button>`).join('')}</div></div>`;
       return;
     }
     const careerName = data.matched_career ? data.matched_career.name : state.careerGoal;
@@ -257,6 +259,27 @@
   document.getElementById('recommendation-results').addEventListener('click', event => {
     const button = event.target.closest('[data-open-program]');
     if (button) openDegreePlanner(Number(button.dataset.openProgram));
+    const retry = event.target.closest('[data-retry-career]');
+    if (retry) {
+      document.getElementById('career-goal').value = retry.dataset.retryCareer;
+      state.careerGoal = retry.dataset.retryCareer;
+      saveDraft(); updateCounts(); requestRecommendations();
+    }
+  });
+
+  function renderSupportedCareers() {
+    const featuredNames = ['Data Analyst', 'Software Developer', 'Computer Systems Analyst', 'Information Security Analyst', 'Business Intelligence Analyst'];
+    const featured = featuredNames.map(name => supportedCareers.find(item => item.name === name)).filter(Boolean);
+    document.getElementById('career-options').innerHTML = supportedCareers.map(item => `<option value="${escapeHtml(item.name)}"></option>`).join('');
+    document.getElementById('career-suggestions').innerHTML = featured.map(item => `<button class="career-chip" type="button" data-career-name="${escapeHtml(item.name)}">${escapeHtml(item.name)}</button>`).join('');
+  }
+
+  document.getElementById('career-suggestions').addEventListener('click', event => {
+    const button = event.target.closest('[data-career-name]');
+    if (!button) return;
+    document.getElementById('career-goal').value = button.dataset.careerName;
+    updateCounts();
+    document.getElementById('career-goal').focus();
   });
 
   async function initialize() {
@@ -265,6 +288,10 @@
       const response = await fetch('/api/cuny-beyond/config');
       if (response.ok) ttlHours = (await response.json()).session_ttl_hours || ttlHours;
     } catch (_) { /* Static defaults keep the public intake usable. */ }
+    try {
+      const response = await fetch('/api/db/cuny-beyond/careers');
+      if (response.ok) { supportedCareers = await response.json(); renderSupportedCareers(); }
+    } catch (_) { /* Typed aliases continue to work if discovery is temporarily unavailable. */ }
     loadDraft(); restoreInputs(); showStep(false);
   }
   initialize();

@@ -217,6 +217,8 @@ button:hover, .button-link:hover { background: #1d4ed8; }
   font-weight: bold;
   margin-top: 6px;
 }
+.major-context { border-color:#a8c7ee; background:#f6faff; }.major-context-grid { display:grid; grid-template-columns:1fr 2fr; gap:18px; }.shortlist { display:flex; flex-wrap:wrap; gap:8px; margin-top:8px; }.shortlist button { margin:0; background:#e5effc; color:#164f9d; border:1px solid #9dbce3; }.shortlist button.active { background:#164f9d; color:#fff; }.outcome-list { display:grid; gap:9px; }.outcome-item { padding:11px; border:1px solid #d7deea; border-radius:11px; background:#fff; line-height:1.4; }.action-plan { border-left:5px solid #2563eb; }.action-plan li { margin:9px 0; line-height:1.45; }.action-plan a { color:#1d4ed8; font-weight:bold; }
+@media (max-width:700px) { .major-context-grid { grid-template-columns:1fr; } }
 </style>
 <link rel="stylesheet" href="/frontend/app_shell.css">
 <script src="/frontend/app_shell.js" defer></script>
@@ -244,6 +246,9 @@ button:hover, .button-link:hover { background: #1d4ed8; }
   </div>
 
   <div id="mainContent" style="display:none;">
+    <div id="majorChangeContextCard" class="card major-context" style="display:none;">
+      <div class="major-context-grid"><div><h3>Current major</h3><div id="currentMajorRestatement"></div></div><div><h3>Proposed majors (up to 3)</h3><div id="proposedMajorRestatement" class="shortlist"></div></div></div>
+    </div>
     <div class="card">
       <h3>Source Student Record</h3>
       <div id="sourceSummary" class="subtitle">Loading...</div>
@@ -255,6 +260,7 @@ button:hover, .button-link:hover { background: #1d4ed8; }
       <div class="top-actions">
         <select id="targetInstitutionSelect" onchange="handleTargetInstitutionChange()"></select>
         <select id="targetProgramSelect" onchange="loadTargetProgramRequirements()"></select>
+        <button id="addProposedMajorButton" class="gray-button" type="button" onclick="addSelectedProposedMajor()" style="display:none;">Add proposed major</button>
         <button id="runAnalysisButton" class="secondary-button" onclick="runTransferAnalysis()">Run Analysis</button>
       </div>
       <div id="targetNote" class="small-note"></div>
@@ -286,6 +292,13 @@ button:hover, .button-link:hover { background: #1d4ed8; }
         <div id="remainingRequirements"></div>
       </div>
     </div>
+    <div id="majorChangeAdditionalResults" style="display:none;">
+      <div class="analysis-grid">
+        <div class="card"><h3>Completed Courses Not Automatically Applied</h3><div id="unmatchedCompletedCourses" class="outcome-list"></div></div>
+        <div class="card"><h3>Advisor Review Recommended</h3><div id="reviewRequiredCourses" class="outcome-list"></div></div>
+      </div>
+      <div class="card action-plan"><h3>Official next steps</h3><ol><li>Review this estimate with a BMCC academic advisor and compare it with DegreeWorks.</li><li>Ask specifically about unmatched courses, electives, substitutions, financial-aid impact, and the best catalog year.</li><li>When you are ready, use the official <a href="https://www.bmcc.cuny.edu/registrar/student-resources-forms/student-forms/" target="_blank" rel="noopener">BMCC Change of Major form and instructions</a>.</li><li>Meet with <a href="https://www.bmcc.cuny.edu/academics/advisement/advisement/" target="_blank" rel="noopener">Academic Advisement</a> before making the official change.</li></ol><p class="small-note">This analysis prepares an advising conversation. It does not submit or approve a major change.</p></div>
+    </div>
   </div>
 </div>
 
@@ -298,6 +311,7 @@ let PROGRAM_AVAILABILITY = {};
 let TARGET_REQUIREMENTS = null;
 let LAST_ANALYSIS = null;
 let APPROVED_EQUIVALENCIES = [];
+let MAJOR_CHANGE_SHORTLIST = [];
 const ANALYSIS_MODE = new URLSearchParams(window.location.search).get("mode") || "transfer";
 
 function configureAnalysisMode() {
@@ -320,6 +334,58 @@ function configureAnalysisMode() {
   document.getElementById("analysisSummaryHeading").textContent = isMajorChange
     ? "Major Change Summary"
     : "Transfer Summary";
+  document.getElementById("majorChangeContextCard").style.display = isMajorChange ? "block" : "none";
+  document.getElementById("addProposedMajorButton").style.display = isMajorChange ? "inline-block" : "none";
+  document.getElementById("majorChangeAdditionalResults").style.display = isMajorChange ? "block" : "none";
+}
+
+function loadMajorChangeShortlist() {
+  if (ANALYSIS_MODE !== "major-change") return;
+  try {
+    const saved = JSON.parse(sessionStorage.getItem("majorChangeShortlist") || "[]");
+    MAJOR_CHANGE_SHORTLIST = Array.isArray(saved) ? saved.slice(0, 3) : [];
+  } catch (error) {
+    MAJOR_CHANGE_SHORTLIST = [];
+  }
+  renderMajorChangeContext();
+}
+
+function saveMajorChangeShortlist() {
+  sessionStorage.setItem("majorChangeShortlist", JSON.stringify(MAJOR_CHANGE_SHORTLIST));
+}
+
+function renderMajorChangeContext() {
+  if (ANALYSIS_MODE !== "major-change") return;
+  const source = TRANSFER_SNAPSHOT?.source_program || {};
+  document.getElementById("currentMajorRestatement").innerHTML = `<strong>${source.name || source.code || "Not selected"}</strong><div class="small-note">${source.institution || "Current campus"}</div>`;
+  const container = document.getElementById("proposedMajorRestatement");
+  if (!MAJOR_CHANGE_SHORTLIST.length) {
+    container.innerHTML = `<span class="small-note">Select a program below, then choose “Add proposed major.” Your completed courses stay loaded.</span>`;
+    return;
+  }
+  const selected = document.getElementById("targetProgramSelect")?.value;
+  container.innerHTML = MAJOR_CHANGE_SHORTLIST.map(code => {
+    const program = PROGRAMS.find(item => item.code === code) || { code, name: code };
+    return `<button type="button" class="${selected === code ? "active" : ""}" data-major-code="${code}">${program.name} (${code})</button>`;
+  }).join("");
+  container.querySelectorAll("[data-major-code]").forEach(button => button.addEventListener("click", async () => {
+    document.getElementById("targetProgramSelect").value = button.dataset.majorCode;
+    await loadTargetProgramRequirements();
+    renderMajorChangeContext();
+  }));
+}
+
+async function addSelectedProposedMajor() {
+  const code = document.getElementById("targetProgramSelect").value;
+  if (!code || MAJOR_CHANGE_SHORTLIST.includes(code)) return;
+  if (MAJOR_CHANGE_SHORTLIST.length >= 3) {
+    document.getElementById("targetNote").textContent = "You can compare up to three proposed majors. Select a saved major above to review it.";
+    return;
+  }
+  MAJOR_CHANGE_SHORTLIST.push(code);
+  saveMajorChangeShortlist();
+  renderMajorChangeContext();
+  await runTransferAnalysis();
 }
 
 async function fetchJson(url) {
@@ -380,6 +446,7 @@ function loadSnapshot() {
 
   document.getElementById("mainContent").style.display = "block";
   renderSourceSummary();
+  loadMajorChangeShortlist();
   return true;
 }
 
@@ -546,6 +613,9 @@ async function populateProgramSelect() {
   note.textContent = "";
   programSelect.disabled = false;
   programSelect.value = firstAvailableProgramCode;
+  if (ANALYSIS_MODE === "major-change" && MAJOR_CHANGE_SHORTLIST.includes(firstAvailableProgramCode)) {
+    renderMajorChangeContext();
+  }
   await loadTargetProgramRequirements();
 }
 
@@ -556,6 +626,7 @@ async function loadTargetProgramRequirements() {
 
   TARGET_REQUIREMENTS = await fetchJson(`/api/db/programs/${programCode}/requirements`);
   await runTransferAnalysis();
+  renderMajorChangeContext();
 }
 
 async function getChoiceGroupCourseCodes(choiceGroupCode, institutionCode) {
@@ -725,6 +796,8 @@ async function runTransferAnalysis() {
   const denominatorCredits = estimateTargetCredits(TARGET_REQUIREMENTS);
   const remainingCredits = Math.max(0, denominatorCredits - satisfiedCredits);
   const estimatedSemesters = remainingCredits > 0 ? Math.ceil(remainingCredits / 15) : 0;
+  const unmatchedCompleted = completedDetails.filter(course => !usedSourceCourses.has(course.code));
+  const reviewRequired = remaining.filter(record => record.choice_group_code || String(record.code || "").includes("-") || String(record.code || "").startsWith("XXX"));
 
   LAST_ANALYSIS = {
     source_program: TRANSFER_SNAPSHOT.source_program,
@@ -732,6 +805,8 @@ async function runTransferAnalysis() {
     completed_courses: completedDetails,
     satisfied_requirements: satisfied,
     remaining_requirements: remaining,
+    unmatched_completed_courses: unmatchedCompleted,
+    review_required_requirements: reviewRequired,
     likely_transferable_credits: satisfiedCredits,
     estimated_total_target_credits: denominatorCredits,
     remaining_credits: remainingCredits,
@@ -759,6 +834,10 @@ function renderEmptyAnalysis() {
   document.getElementById("transferSummary").innerHTML = `<div class="empty-message">Select an available target program.</div>`;
   document.getElementById("satisfiedRequirements").innerHTML = `<div class="empty-message">No analysis yet.</div>`;
   document.getElementById("remainingRequirements").innerHTML = `<div class="empty-message">No analysis yet.</div>`;
+  if (ANALYSIS_MODE === "major-change") {
+    document.getElementById("unmatchedCompletedCourses").innerHTML = `<div class="empty-message">No analysis yet.</div>`;
+    document.getElementById("reviewRequiredCourses").innerHTML = `<div class="empty-message">No analysis yet.</div>`;
+  }
 }
 
 function renderAnalysis() {
@@ -770,7 +849,7 @@ function renderAnalysis() {
   document.getElementById("transferSummary").innerHTML = `
     <div class="summary-card">
       <div class="summary-number">${LAST_ANALYSIS.likely_transferable_credits}</div>
-      <div class="summary-label">Likely transferable credits</div>
+      <div class="summary-label">${ANALYSIS_MODE === "major-change" ? "Completed credits applied" : "Likely transferable credits"}</div>
     </div>
     <div class="summary-card">
       <div class="summary-number">${LAST_ANALYSIS.satisfied_requirements.length}</div>
@@ -788,6 +867,18 @@ function renderAnalysis() {
 
   renderRequirementList("satisfiedRequirements", LAST_ANALYSIS.satisfied_requirements, true);
   renderRequirementList("remainingRequirements", LAST_ANALYSIS.remaining_requirements, false);
+  if (ANALYSIS_MODE === "major-change") renderMajorChangeOutcomes();
+}
+
+function renderMajorChangeOutcomes() {
+  const unmatched = LAST_ANALYSIS.unmatched_completed_courses || [];
+  document.getElementById("unmatchedCompletedCourses").innerHTML = unmatched.length
+    ? unmatched.map(course => `<div class="outcome-item"><strong>${course.code}</strong> — ${course.title || course.code}<br><span class="small-note">Not automatically applied to this proposed major. Ask whether it can count as an elective or substitution.</span></div>`).join("")
+    : `<div class="empty-message">Every selected completed course was automatically applied.</div>`;
+  const review = LAST_ANALYSIS.review_required_requirements || [];
+  document.getElementById("reviewRequiredCourses").innerHTML = review.length
+    ? review.map(record => `<div class="outcome-item"><strong>${record.title || record.code}</strong><br><span class="small-note">Choice or placeholder requirement${record.choice_group_code ? ` (${record.choice_group_code})` : ""}; confirm the exact course with an advisor.</span></div>`).join("")
+    : `<div class="empty-message">No choice-group or placeholder requirements need special review in this estimate.</div>`;
 }
 
 function renderRequirementList(containerId, records, satisfied) {
@@ -825,6 +916,7 @@ function renderRequirementCard(record, satisfied) {
       <div class="requirement-code">${satisfied ? "✓" : "○"} ${record.code}</div>
       <div class="requirement-title">${record.title}</div>
       <div class="requirement-meta">Credits: ${record.credits || 0} · Area: ${record.group_type || "N/A"}</div>
+      ${record.prerequisites ? `<div class="requirement-meta"><strong>Prerequisite sequence:</strong> ${record.prerequisites}</div>` : ""}
       ${matchText}
     </div>
   `;

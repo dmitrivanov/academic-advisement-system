@@ -52,8 +52,10 @@
           <h2 tabindex="-1">What do you want to do in your life or career?</h2>
           <p class="step-copy">A role, field, or problem you want to work on is enough. Example: Data Analyst.</p>
           <label class="field-label" for="career-goal">Career or life goal</label>
-          <textarea id="career-goal" name="career_goal" maxlength="240" rows="5" placeholder="For example: analyze health data to help communities"></textarea>
+          <input id="career-goal" class="career-input" name="career_goal" type="text" maxlength="240" list="career-options" placeholder="For example: Data Analyst">
+          <datalist id="career-options"></datalist>
           <p class="field-help"><span id="goal-count">0</span>/240 characters. Do not include private information.</p>
+          <div id="career-suggestions" class="career-suggestions" aria-label="Supported career examples"></div>
         </section>
 
         <section class="step" data-step="2" hidden>

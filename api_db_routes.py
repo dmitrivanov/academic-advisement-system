@@ -87,6 +87,20 @@ class CunyBeyondCplPayload(BaseModel):
     program_codes: list[str] = Field(default_factory=list, max_length=3)
 
 
+@router.get("/cuny-beyond/careers")
+def get_cuny_beyond_careers(db: Session = Depends(get_db)):
+    careers = db.query(Career).filter(Career.active.is_(True)).order_by(Career.name).all()
+    return [
+        {
+            "slug": career.slug,
+            "name": career.name,
+            "aliases": [part.strip() for part in (career.aliases or "").split("|") if part.strip()],
+            "reviewed_at": career.reviewed_at.date().isoformat(),
+        }
+        for career in careers
+    ]
+
+
 def optional_text(value):
     return value.strip() if value and value.strip() else None
 
@@ -125,6 +139,7 @@ def get_cuny_beyond_recommendations(
             "matched_career": None,
             "recommendations": [],
             "message": "This starter taxonomy does not recognize that goal yet. Try Data Analyst, Software Developer, or Computer Systems Analyst, or explore it with an advisor.",
+            "supported_careers": [item["name"] for item in career_records[:12]],
         }
 
     career = next(item for item in careers if item.id == matched["id"])
