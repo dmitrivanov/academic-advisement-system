@@ -84,6 +84,26 @@ button:focus-visible {
   color: #667085;
   font-size: 13px;
 }
+
+.public-entry {
+  margin-top: 18px;
+  padding-top: 18px;
+  border-top: 1px solid #e6eaf2;
+  text-align: center;
+}
+
+.public-entry a {
+  display: block;
+  padding: 12px 18px;
+  border: 2px solid #2563eb;
+  border-radius: 12px;
+  color: #1d4ed8;
+  font-weight: bold;
+  text-decoration: none;
+}
+
+.public-entry a:hover { background: #eff6ff; }
+.public-entry p { color: #667085; font-size: 13px; line-height: 1.4; }
 </style>
 </head>
 
@@ -103,6 +123,11 @@ button:focus-visible {
 
       <button type="submit">Log In</button>
     </form>
+
+    <div class="public-entry">
+      <a href="/cuny-beyond">Explore careers and BMCC majors</a>
+      <p>No account required. Start with what you want to do.</p>
+    </div>
 
     <div id="error" class="error" role="alert" aria-live="assertive"></div>
 

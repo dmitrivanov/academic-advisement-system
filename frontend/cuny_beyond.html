@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CUNY Beyond | Career-first major exploration</title>
+  <link rel="stylesheet" href="/frontend/cuny_beyond.css">
+  <script src="/frontend/cuny_beyond.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#main-content">Skip to main content</a>
+  <header class="public-header">
+    <a class="brand" href="/cuny-beyond" aria-label="CUNY Beyond home">
+      <span class="brand-mark" aria-hidden="true">CB</span>
+      <span><strong>CUNY Beyond</strong><small>Career-first academic exploration</small></span>
+    </a>
+    <a class="login-link" href="/login">Student and staff login</a>
+  </header>
+
+  <main id="main-content" class="page-shell">
+    <section class="hero" aria-labelledby="page-title">
+      <p class="eyebrow">BMCC pre-advisement prototype</p>
+      <h1 id="page-title">Start with where you want to go.</h1>
+      <p>Tell us about your goal and strengths. Future stages will connect them to reviewed BMCC programs, transfer options, prior-learning opportunities, and current class search.</p>
+      <p class="privacy-note">No login is required. This first-stage draft stays in this browser and expires automatically. Do not enter your name, email, CUNY ID, or other private information.</p>
+    </section>
+
+    <section id="intake-card" class="intake-card" aria-labelledby="step-title">
+      <div class="progress-row">
+        <span id="step-count">Step 1 of 5</span>
+        <button id="restart-button" class="text-button" type="button">Restart</button>
+      </div>
+      <div class="progress-track" aria-hidden="true"><span id="progress-fill"></span></div>
+      <div id="save-status" class="save-status" role="status" aria-live="polite"></div>
+
+      <form id="intake-form" novalidate>
+        <section class="step" data-step="0">
+          <h2 id="step-title" tabindex="-1">Which path best describes you?</h2>
+          <p class="step-copy">This helps us shape the questions that follow.</p>
+          <fieldset class="choice-grid">
+            <legend class="visually-hidden">Select your student profile</legend>
+            <label><input type="radio" name="profile" value="high_school"> <span><strong>High-school student</strong><small>Planning your first college program</small></span></label>
+            <label><input type="radio" name="profile" value="working_adult"> <span><strong>Working adult</strong><small>Building on current employment</small></span></label>
+            <label><input type="radio" name="profile" value="some_college"> <span><strong>Adult with some college</strong><small>Returning with prior coursework</small></span></label>
+            <label><input type="radio" name="profile" value="transfer"> <span><strong>Transfer student</strong><small>Bringing credit from another college</small></span></label>
+            <label><input type="radio" name="profile" value="returning"> <span><strong>Returning student</strong><small>Resuming a previous college journey</small></span></label>
+            <label><input type="radio" name="profile" value="degree_holder"> <span><strong>Adult with a degree</strong><small>Exploring a new direction</small></span></label>
+          </fieldset>
+        </section>
+
+        <section class="step" data-step="1" hidden>
+          <h2 tabindex="-1">What do you want to do in your life or career?</h2>
+          <p class="step-copy">A role, field, or problem you want to work on is enough. Example: Data Analyst.</p>
+          <label class="field-label" for="career-goal">Career or life goal</label>
+          <textarea id="career-goal" name="career_goal" maxlength="240" rows="5" placeholder="For example: analyze health data to help communities"></textarea>
+          <p class="field-help"><span id="goal-count">0</span>/240 characters. Do not include private information.</p>
+        </section>
+
+        <section class="step" data-step="2" hidden>
+          <h2 tabindex="-1">Are you currently working?</h2>
+          <p class="step-copy">Later, this can help identify experience and possible prior-learning pathways.</p>
+          <fieldset class="choice-grid compact">
+            <legend class="visually-hidden">Current employment</legend>
+            <label><input type="radio" name="employment" value="yes"> <span><strong>Yes</strong><small>I currently have a job</small></span></label>
+            <label><input type="radio" name="employment" value="no"> <span><strong>No</strong><small>I am not currently working</small></span></label>
+            <label><input type="radio" name="employment" value="prefer_not"> <span><strong>Prefer not to say</strong><small>Continue without this answer</small></span></label>
+          </fieldset>
+        </section>
+
+        <section class="step" data-step="3" hidden>
+          <h2 tabindex="-1">Choose up to five skills you use or want to build.</h2>
+          <p class="step-copy">These are broad starting points, not a test of your ability.</p>
+          <fieldset id="skill-choices" class="skill-grid">
+            <legend class="visually-hidden">Select up to five skills</legend>
+          </fieldset>
+          <p id="skill-count" class="field-help" role="status" aria-live="polite">0 of 5 selected</p>
+        </section>
+
+        <section class="step" data-step="4" hidden>
+          <h2 tabindex="-1">Your starting profile is ready.</h2>
+          <div id="summary" class="summary"></div>
+          <div class="next-stage">
+            <strong>Coming in the next implementation stage</strong>
+            <p>Reviewed BMCC program matches, career explanations, degree-map links, transfer options, and prior-learning screening.</p>
+          </div>
+          <p class="advisor-note">This prototype supports exploration; it does not replace an academic, career, transfer, or CPL advisor.</p>
+        </section>
+
+        <div id="form-error" class="form-error" role="alert" aria-live="assertive"></div>
+        <div class="actions">
+          <button id="back-button" class="secondary" type="button" hidden>Back</button>
+          <button id="next-button" type="button">Continue</button>
+        </div>
+      </form>
+    </section>
+
+    <section class="current-student-card" aria-labelledby="current-student-title">
+      <div>
+        <p class="eyebrow">Already enrolled?</p>
+        <h2 id="current-student-title">Explore a major change with your completed courses.</h2>
+        <p>The current-student workflow continues in the authenticated degree-planning tool while the dedicated what-if pathway is built.</p>
+      </div>
+      <a class="button-link" href="/program-selector?intent=major-change">Continue as a current student</a>
+    </section>
+  </main>
+
+  <footer>Planning estimates must be confirmed with BMCC advisors and official college sources.</footer>
+</body>
+</html>

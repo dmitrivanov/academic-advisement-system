@@ -14,6 +14,7 @@ from typing import Optional, Dict, Any
 
 from api_db_routes import router as db_router
 from auth import authenticate, is_admin, is_logged_in, require_admin
+from cuny_beyond import is_cuny_beyond_enabled, public_config
 from database import Base, engine
 import models  # noqa: F401 - registers all SQLAlchemy tables
 
@@ -184,6 +185,20 @@ class AISettingsPayload(BaseModel):
 @app.get("/login")
 def login_page():
     return FileResponse("frontend/login.html")
+
+
+@app.get("/cuny-beyond")
+def serve_cuny_beyond():
+    if not is_cuny_beyond_enabled():
+        raise HTTPException(status_code=404, detail="CUNY Beyond is not enabled")
+    return FileResponse("frontend/cuny_beyond.html")
+
+
+@app.get("/api/cuny-beyond/config")
+def get_cuny_beyond_config():
+    if not is_cuny_beyond_enabled():
+        raise HTTPException(status_code=404, detail="CUNY Beyond is not enabled")
+    return public_config()
 
 
 @app.post("/login")
