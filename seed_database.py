@@ -29,6 +29,7 @@ from models import (
     CplType,
     ProgramCplGuidance,
     AcademicTerm,
+    ScheduleProviderConfig,
 )
 
 
@@ -77,6 +78,12 @@ def seed_cuny_beyond_terms(db):
                 verified_at=reviewed_datetime(row["verified_at"]), source_url=row["source_url"].strip(),
                 active=csv_bool(row["active"]),
             ))
+    if not db.query(ScheduleProviderConfig).filter_by(code="cuny_official_sections").first():
+        db.add(ScheduleProviderConfig(
+            code="cuny_official_sections", name="CUNY official live sections",
+            enabled=False, approval_status="not_approved", refresh_seconds=300,
+            retention_seconds=900,
+        ))
 
 
 def seed_cuny_beyond_mappings(db):

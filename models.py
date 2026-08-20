@@ -233,6 +233,27 @@ class AcademicTerm(Base):
     active = Column(Boolean, nullable=False, default=False, index=True)
 
 
+class ScheduleProviderConfig(Base):
+    """Governance record for an optional official live-section provider."""
+    __tablename__ = "schedule_provider_configs"
+
+    id = Column(Integer, primary_key=True, index=True)
+    code = Column(String, nullable=False, unique=True, index=True)
+    name = Column(String, nullable=False)
+    enabled = Column(Boolean, nullable=False, default=False)
+    approval_status = Column(String, nullable=False, default="not_approved", index=True)
+    api_base_url = Column(String, nullable=True)
+    data_owner = Column(String, nullable=True)
+    permission_reference = Column(String, nullable=True)
+    attribution = Column(String, nullable=True)
+    support_contact = Column(String, nullable=True)
+    refresh_seconds = Column(Integer, nullable=False, default=300)
+    retention_seconds = Column(Integer, nullable=False, default=900)
+    last_verified_at = Column(DateTime, nullable=True)
+    updated_by = Column(String, nullable=True)
+    updated_at = Column(DateTime, nullable=False, default=lambda: datetime.now(timezone.utc))
+
+
 class TransferOption(Base):
     __tablename__ = "transfer_options"
 

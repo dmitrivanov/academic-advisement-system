@@ -12,6 +12,7 @@ from auth import require_admin
 from program_selector_logic import canonical_selector_programs
 from cuny_beyond_matching import rank_program_matches, resolve_career
 from schedule_link_service import build_global_search_handoff
+from schedule_provider_service import build_section_fallback, validate_provider_config, provider_readiness
 from models import (
     Institution,
     Department,
@@ -35,6 +36,7 @@ from models import (
     CplType,
     ProgramCplGuidance,
     AcademicTerm,
+    ScheduleProviderConfig,
     TransferOption,
     GovernanceDraft,
     GovernanceDraftVersion,
@@ -106,6 +108,20 @@ class AcademicTermPayload(BaseModel):
     verified_at: datetime
     source_url: str = Field(min_length=10, max_length=500)
     active: bool
+
+
+class ScheduleProviderPayload(BaseModel):
+    name: str = Field(min_length=3, max_length=120)
+    enabled: bool = False
+    approval_status: str
+    api_base_url: Optional[str] = Field(default=None, max_length=500)
+    data_owner: Optional[str] = Field(default=None, max_length=200)
+    permission_reference: Optional[str] = Field(default=None, max_length=500)
+    attribution: Optional[str] = Field(default=None, max_length=500)
+    support_contact: Optional[str] = Field(default=None, max_length=200)
+    refresh_seconds: int = 300
+    retention_seconds: int = 900
+    last_verified_at: Optional[datetime] = None
 
 
 class GovernanceDraftPayload(BaseModel):
@@ -309,6 +325,20 @@ def get_schedule_handoff(payload: ScheduleHandoffPayload, db: Session = Depends(
         raise HTTPException(status_code=422, detail=str(exc)) from exc
 
 
+@router.post("/cuny-beyond/schedule/sections")
+def get_schedule_sections(payload: ScheduleHandoffPayload, db: Session = Depends(get_db)):
+    term = db.query(AcademicTerm).filter_by(provider_code=payload.term_code, active=True).first()
+    if not term:
+        raise HTTPException(status_code=400, detail="Select an active, administrator-verified term")
+    try:
+        handoff = build_global_search_handoff(payload.institution_code, term, payload.course_code,
+            modality=payload.modality, time_preference=payload.time_preference)
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    config = db.query(ScheduleProviderConfig).filter_by(code="cuny_official_sections").first()
+    return build_section_fallback(config, handoff)
+
+
 @router.get("/admin/schedule/terms")
 def get_admin_schedule_terms(_admin=Depends(require_admin), db: Session = Depends(get_db)):
     return [serialize_term(term) for term in db.query(AcademicTerm).order_by(AcademicTerm.provider_code.desc()).all()]
@@ -327,6 +357,41 @@ def update_admin_schedule_term(term_id: int, payload: AcademicTermPayload, _admi
     db.commit()
     db.refresh(term)
     return serialize_term(term)
+
+
+def serialize_schedule_provider(config):
+    return {"id": config.id, "code": config.code, "name": config.name, "enabled": config.enabled,
+        "approval_status": config.approval_status, "api_base_url": config.api_base_url,
+        "data_owner": config.data_owner, "permission_reference": config.permission_reference,
+        "attribution": config.attribution, "support_contact": config.support_contact,
+        "refresh_seconds": config.refresh_seconds, "retention_seconds": config.retention_seconds,
+        "last_verified_at": config.last_verified_at.isoformat() if config.last_verified_at else None,
+        "updated_at": config.updated_at.isoformat(), "readiness": provider_readiness(config)}
+
+
+@router.get("/admin/schedule/provider")
+def get_admin_schedule_provider(_admin=Depends(require_admin), db: Session = Depends(get_db)):
+    config = db.query(ScheduleProviderConfig).filter_by(code="cuny_official_sections").first()
+    if not config:
+        config = ScheduleProviderConfig(code="cuny_official_sections", name="CUNY official live sections")
+        db.add(config); db.commit(); db.refresh(config)
+    return serialize_schedule_provider(config)
+
+
+@router.put("/admin/schedule/provider")
+def update_admin_schedule_provider(payload: ScheduleProviderPayload, admin=Depends(require_admin), db: Session = Depends(get_db)):
+    config = db.query(ScheduleProviderConfig).filter_by(code="cuny_official_sections").first()
+    if not config:
+        config = ScheduleProviderConfig(code="cuny_official_sections"); db.add(config)
+    for field, value in payload.model_dump().items():
+        if isinstance(value, str): value = value.strip() or None
+        setattr(config, field, value)
+    config.updated_by = str(admin); config.updated_at = datetime.now(timezone.utc)
+    errors = validate_provider_config(config)
+    if errors:
+        raise HTTPException(status_code=422, detail={"message": "Provider configuration is not safe to enable", "errors": errors})
+    db.commit(); db.refresh(config)
+    return serialize_schedule_provider(config)
 
 
 @router.get("/cuny-beyond/careers")
