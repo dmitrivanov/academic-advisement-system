@@ -25,15 +25,23 @@
       <p class="privacy-note">No login is required. This first-stage draft stays in this browser and expires automatically. Do not enter your name, email, CUNY ID, or other private information.</p>
     </section>
 
-    <section id="intake-card" class="intake-card" aria-labelledby="step-title">
-      <div class="progress-row">
-        <span id="step-count">Step 1 of 5</span>
-        <button id="restart-button" class="text-button" type="button">Restart</button>
+    <section id="intake-card" class="intake-card chat-window" aria-labelledby="chat-title">
+      <div class="chat-window-header">
+        <span class="advisor-avatar" aria-hidden="true">CB</span>
+        <div><strong id="chat-title">CUNY Beyond guide</strong><small><span class="online-dot" aria-hidden="true"></span>Ready to help you explore</small></div>
+        <button id="restart-button" class="text-button" type="button">Start over</button>
       </div>
-      <div class="progress-track" aria-hidden="true"><span id="progress-fill"></span></div>
+      <div class="chat-progress">
+        <div class="progress-row">
+          <span id="step-count">Question 1 of 5</span>
+          <span>Private browser draft</span>
+        </div>
+        <div class="progress-track" aria-hidden="true"><span id="progress-fill"></span></div>
+      </div>
       <div id="save-status" class="save-status" role="status" aria-live="polite"></div>
 
-      <form id="intake-form" novalidate>
+      <form id="intake-form" class="chat-conversation" novalidate>
+        <div id="chat-history" class="chat-history" aria-label="Your previous answers"></div>
         <section class="step" data-step="0">
           <h2 id="step-title" tabindex="-1">Which path best describes you?</h2>
           <p class="step-copy">This helps us shape the questions that follow.</p>
@@ -128,9 +136,9 @@
         </section>
 
         <div id="form-error" class="form-error" role="alert" aria-live="assertive"></div>
-        <div class="actions">
+        <div class="actions chat-actions">
           <button id="back-button" class="secondary" type="button" hidden>Back</button>
-          <button id="next-button" type="button">Continue</button>
+          <button id="next-button" type="button">Send answer <span aria-hidden="true">→</span></button>
         </div>
       </form>
     </section>

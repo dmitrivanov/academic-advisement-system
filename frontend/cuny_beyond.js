@@ -14,6 +14,19 @@
     some_college: 'Adult with some college', transfer: 'Transfer student',
     returning: 'Returning student', degree_holder: 'Adult with a degree'
   };
+  const EMPLOYMENT_LABELS = { yes: 'Yes, I currently work', no: 'No, I am not currently working', prefer_not: 'Prefer not to say' };
+  const CPL_LABELS = {
+    'previous-college-credit': 'Previous college courses', 'standardized-exams': 'AP or recognized exams',
+    'ace-reviewed-learning': 'ACE or NCCRS learning', 'employer-training': 'Employer or industry training',
+    'military-learning': 'Military learning', 'licenses-certifications': 'Licenses or certifications',
+    'biliteracy-language': 'Biliteracy or language proficiency', 'portfolio-experiential': 'Portfolio or substantial experience',
+    'not-sure': 'Not sure', none: 'None of these'
+  };
+  const CHAT_QUESTIONS = [
+    'Which path best describes you?', 'What do you want to do in your life or career?',
+    'Are you currently working?', 'Which skills do you use or want to build?',
+    'Could any previous learning be relevant?'
+  ];
   const state = { step: 0, profile: '', careerGoal: '', employment: '', skills: [], cplSelections: [], expiresAt: 0 };
   const form = document.getElementById('intake-form');
   const steps = Array.from(document.querySelectorAll('.step'));
@@ -109,6 +122,23 @@
       <div class="summary-row"><strong>Employment</strong>${employment}</div>
       <div class="summary-row"><strong>Skills</strong>${state.skills.map(escapeHtml).join(', ')}</div>
       <div class="summary-row"><strong>Prior-learning screen</strong>${state.cplSelections.includes('none') ? 'None selected' : `${state.cplSelections.length} possible path${state.cplSelections.length === 1 ? '' : 's'} to review`}</div>`;
+  }
+
+  function chatAnswers() {
+    return [
+      PROFILE_LABELS[state.profile] || '', state.careerGoal || '', EMPLOYMENT_LABELS[state.employment] || '',
+      state.skills.join(', '), state.cplSelections.map(code => CPL_LABELS[code] || code).join(', ')
+    ];
+  }
+
+  function renderChatHistory() {
+    const answers = chatAnswers();
+    const completed = Math.min(state.step, CHAT_QUESTIONS.length);
+    document.getElementById('chat-history').innerHTML = CHAT_QUESTIONS.slice(0, completed).map((question, index) => `
+      <div class="chat-turn">
+        <div class="chat-bubble assistant"><small>CUNY Beyond</small>${escapeHtml(question)}</div>
+        <div class="chat-bubble user"><small>You</small>${escapeHtml(answers[index] || 'Skipped')}</div>
+      </div>`).join('');
   }
 
   function escapeHtml(value) {
@@ -252,13 +282,17 @@
 
   function showStep(focusHeading) {
     steps.forEach((step, index) => { step.hidden = index !== state.step; });
-    document.getElementById('step-count').textContent = `Step ${state.step + 1} of ${steps.length}`;
+    renderChatHistory();
+    document.getElementById('step-count').textContent = state.step === steps.length - 1 ? 'Your results' : `Question ${state.step + 1} of ${steps.length - 1}`;
     document.getElementById('progress-fill').style.width = `${((state.step + 1) / steps.length) * 100}%`;
     backButton.hidden = state.step === 0;
     nextButton.hidden = state.step === steps.length - 1;
     errorBox.textContent = '';
     if (state.step === steps.length - 1) renderSummary();
-    if (focusHeading) steps[state.step].querySelector('h2').focus();
+    if (focusHeading) {
+      steps[state.step].querySelector('h2').focus();
+      document.getElementById('intake-form').scrollTo({ top: document.getElementById('intake-form').scrollHeight, behavior: 'smooth' });
+    }
   }
 
   nextButton.addEventListener('click', () => {
