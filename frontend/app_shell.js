@@ -3,6 +3,7 @@
   const items = [
     { href: '/program-selector', label: 'Programs', paths: ['/program-selector'] },
     { href: '/db-progress', label: 'My Progress', paths: ['/db-progress'] },
+    { href: '/careers', label: 'Careers', paths: ['/careers'] },
     { href: '/transfer-analysis', label: 'Compare', paths: ['/transfer-analysis'] },
     { href: '/admin', label: 'Admin', paths: ['/admin'] }
   ];
