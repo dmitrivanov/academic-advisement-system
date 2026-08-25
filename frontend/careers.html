@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Career Pathways</title>
+
+<style>
+body {
+  font-family: Arial, sans-serif;
+  background: #f5f7fb;
+  margin: 0;
+  color: #172033;
+}
+
+.container {
+  max-width: 1150px;
+  margin: 40px auto;
+  padding: 20px;
+}
+
+.card {
+  background: white;
+  border-radius: 16px;
+  padding: 22px;
+  margin-bottom: 20px;
+  box-shadow: 0 10px 25px rgba(0,0,0,.07);
+  border: 1px solid #e6eaf2;
+}
+
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+
+.nav a {
+  margin-left: 12px;
+  color: #2563eb;
+  text-decoration: none;
+  font-weight: bold;
+}
+
+h1 { margin-bottom: 6px; }
+
+.subtitle {
+  color: #667085;
+  margin-top: 0;
+  line-height: 1.5;
+}
+
+.small-note {
+  color: #667085;
+  font-size: 13px;
+}
+
+.notice {
+  background: #fff7e6;
+  border: 1px solid #f0c36d;
+  border-radius: 12px;
+  padding: 14px 16px;
+  margin-bottom: 20px;
+  color: #7a5200;
+}
+
+.warning {
+  background: #fdecec;
+  border: 1px solid #f3b4b4;
+  border-radius: 12px;
+  padding: 14px 16px;
+  margin-bottom: 20px;
+  color: #8a1f1f;
+}
+
+.careers-layout {
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  gap: 20px;
+  align-items: start;
+}
+
+@media (max-width: 800px) {
+  .careers-layout { grid-template-columns: 1fr; }
+}
+
+.careers-list-card { padding: 12px; }
+
+.careers-list-title {
+  font-size: 14px;
+  font-weight: bold;
+  color: #344054;
+  padding: 8px 10px 4px;
+}
+
+.careers-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 620px;
+  overflow-y: auto;
+}
+
+.careers-list li { margin: 0; }
+
+.career-option {
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: none;
+  padding: 10px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 14px;
+  color: #2563eb;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.career-option:hover { background: #f0f4ff; }
+
+.career-option.is-selected {
+  background: #2563eb;
+  color: white;
+  font-weight: bold;
+}
+
+.bright-badge {
+  font-size: 11px;
+  background: #ecfdf3;
+  color: #027a48;
+  border: 1px solid #a6f4c5;
+  border-radius: 999px;
+  padding: 1px 8px;
+  white-space: nowrap;
+}
+
+.career-option.is-selected .bright-badge {
+  background: rgba(255,255,255,.2);
+  color: white;
+  border-color: rgba(255,255,255,.4);
+}
+
+.detail-title { margin-bottom: 4px; }
+
+.wage-block { margin: 18px 0; }
+
+.wage-figure {
+  font-size: 30px;
+  font-weight: bold;
+  color: #172033;
+}
+
+.wage-caption {
+  color: #667085;
+  font-size: 13px;
+  margin-bottom: 10px;
+}
+
+.wage-bar-track {
+  position: relative;
+  height: 8px;
+  border-radius: 999px;
+  background: #e6eaf2;
+  margin: 14px 0 6px;
+}
+
+.wage-bar-marker {
+  position: absolute;
+  top: -5px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #2563eb;
+  border: 3px solid white;
+  box-shadow: 0 0 0 1px #2563eb;
+  transform: translateX(-50%);
+}
+
+.wage-bar-labels {
+  display: flex;
+  justify-content: space-between;
+  color: #667085;
+  font-size: 13px;
+}
+
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 14px;
+  margin: 16px 0;
+}
+
+.stat-card {
+  background: #f8fbff;
+  border: 1px solid #e6eaf2;
+  border-radius: 14px;
+  padding: 14px;
+}
+
+.stat-card .stat-label {
+  font-size: 12px;
+  color: #667085;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+}
+
+.stat-card .stat-value {
+  font-size: 16px;
+  font-weight: bold;
+  margin-top: 4px;
+}
+
+.skills-tabs {
+  display: flex;
+  gap: 8px;
+  margin: 18px 0 10px;
+}
+
+.skills-tab {
+  border: 1px solid #d7deea;
+  background: white;
+  border-radius: 10px;
+  padding: 8px 14px;
+  cursor: pointer;
+  font-weight: bold;
+  color: #344054;
+}
+
+.skills-tab.is-active {
+  background: #2563eb;
+  color: white;
+  border-color: #2563eb;
+}
+
+.skills-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.skills-list li {
+  padding: 8px 0;
+  border-bottom: 1px solid #eef1f6;
+  color: #344054;
+}
+
+.skills-list li:last-child { border-bottom: none; }
+
+.what-they-do {
+  line-height: 1.6;
+  color: #344054;
+}
+
+.empty-state {
+  color: #667085;
+  padding: 30px 10px;
+  text-align: center;
+}
+</style>
+<link rel="stylesheet" href="/frontend/app_shell.css">
+<script src="/frontend/app_shell.js" defer></script>
+</head>
+
+<body>
+<div class="container">
+  <div class="topbar">
+    <div>
+      <h1>Career Pathways</h1>
+      <p id="pageSubtitle" class="subtitle">Loading your selected program...</p>
+    </div>
+    <div class="nav">
+      <a href="/db-progress">Back to Progress</a>
+      <a href="/logout">Logout</a>
+    </div>
+  </div>
+
+  <div id="noProgramCard" class="card" style="display:none;">
+    <div class="warning">
+      No program is selected yet. Go to Programs and choose a campus and major first.
+    </div>
+    <a class="button-link" href="/program-selector" style="color:#2563eb; font-weight:bold;">Go to Program Selector</a>
+  </div>
+
+  <div id="noKeyNotice" class="notice" style="display:none;">
+    The O*NET API key is not configured on this server yet (set the <code>ONET_API_KEY</code> environment variable). The list of careers below is real, but wage, outlook, and skills details cannot load until a key is set.
+  </div>
+
+  <div id="mainContent" style="display:none;">
+    <div class="careers-layout">
+      <div class="card careers-list-card">
+        <div id="careersListTitle" class="careers-list-title"></div>
+        <ul id="careersList" class="careers-list"></ul>
+      </div>
+
+      <div class="card">
+        <div id="detailEmptyState" class="empty-state">Select a career on the left to see details.</div>
+        <div id="detailContent" style="display:none;">
+          <h2 id="detailTitle" class="detail-title"></h2>
+          <p id="detailWhatTheyDo" class="what-they-do"></p>
+
+          <div class="wage-block">
+            <div id="wageFigure" class="wage-figure"></div>
+            <div id="wageCaption" class="wage-caption"></div>
+            <div class="wage-bar-track">
+              <div id="wageBarMarker" class="wage-bar-marker" style="left:50%;"></div>
+            </div>
+            <div class="wage-bar-labels">
+              <span id="wageLow"></span>
+              <span id="wageHigh"></span>
+            </div>
+          </div>
+
+          <div class="stat-grid">
+            <div class="stat-card">
+              <div class="stat-label">Job Outlook</div>
+              <div id="outlookCategory" class="stat-value"></div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-label">Typical Education</div>
+              <div id="educationNeeded" class="stat-value"></div>
+            </div>
+          </div>
+          <p id="outlookDescription" class="small-note"></p>
+
+          <div class="skills-tabs">
+            <button id="hardSkillsTab" class="skills-tab is-active" onclick="showSkillsTab('hard')">Hard Skills</button>
+            <button id="softSkillsTab" class="skills-tab" onclick="showSkillsTab('soft')">Soft Skills</button>
+          </div>
+          <ul id="skillsList" class="skills-list"></ul>
+
+          <p class="small-note" style="margin-top:18px;">
+            Wage, outlook, and skills data from the U.S. Department of Labor's O*NET database (onetonline.org). Career planning estimates should be confirmed with an academic or career advisor.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+let SELECTED_PROGRAM = null;
+let CAREERS = [];
+let SELECTED_SOC_CODE = null;
+let CURRENT_DETAIL = null;
+let ACTIVE_SKILLS_TAB = "hard";
+
+function selectedProgramContext() {
+  try {
+    return JSON.parse(sessionStorage.getItem("selectedProgramContext") || "null");
+  } catch (err) {
+    return null;
+  }
+}
+
+function formatCurrency(value) {
+  if (typeof value !== "number") return null;
+  return `$${value.toLocaleString()}`;
+}
+
+async function init() {
+  SELECTED_PROGRAM = selectedProgramContext();
+  if (!SELECTED_PROGRAM || !SELECTED_PROGRAM.institutionCode || !SELECTED_PROGRAM.programCode) {
+    document.getElementById("noProgramCard").style.display = "block";
+    document.getElementById("pageSubtitle").textContent = "No program selected.";
+    return;
+  }
+
+  document.getElementById("pageSubtitle").textContent =
+    `Careers connected to ${SELECTED_PROGRAM.programName || SELECTED_PROGRAM.programCode}`;
+  document.getElementById("careersListTitle").textContent =
+    `Where ${SELECTED_PROGRAM.programName || "this major"} students can go`;
+
+  let data;
+  try {
+    const response = await fetch(
+      `/api/careers/${encodeURIComponent(SELECTED_PROGRAM.institutionCode)}/${encodeURIComponent(SELECTED_PROGRAM.programCode)}`
+    );
+    if (!response.ok) throw new Error(`Career list request failed (${response.status})`);
+    data = await response.json();
+  } catch (error) {
+    document.getElementById("pageSubtitle").textContent = "Career information is temporarily unavailable.";
+    document.getElementById("mainContent").style.display = "block";
+    document.getElementById("careersList").innerHTML =
+      `<li class="empty-state">Could not load career information. Please try again later.</li>`;
+    return;
+  }
+  CAREERS = Array.isArray(data.careers) ? data.careers : [];
+
+  if (!data.onet_api_key_configured) {
+    document.getElementById("noKeyNotice").style.display = "block";
+  }
+
+  document.getElementById("mainContent").style.display = "block";
+  renderCareersList();
+}
+
+function renderCareersList() {
+  const list = document.getElementById("careersList");
+  list.replaceChildren();
+  if (CAREERS.length === 0) {
+    const empty = document.createElement("li");
+    empty.className = "empty-state";
+    empty.textContent = "Career data isn't available for this program yet.";
+    list.appendChild(empty);
+    return;
+  }
+  CAREERS.forEach(career => {
+    const item = document.createElement("li");
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = `career-option${career.onet_soc_code === SELECTED_SOC_CODE ? " is-selected" : ""}`;
+    button.setAttribute("aria-pressed", career.onet_soc_code === SELECTED_SOC_CODE ? "true" : "false");
+    button.addEventListener("click", () => selectCareer(career.onet_soc_code));
+    const title = document.createElement("span");
+    title.textContent = career.title || career.onet_soc_code;
+    button.appendChild(title);
+    item.appendChild(button);
+    list.appendChild(item);
+  });
+}
+
+async function selectCareer(socCode) {
+  SELECTED_SOC_CODE = socCode;
+  renderCareersList();
+
+  document.getElementById("detailEmptyState").textContent = "Loading career details...";
+  document.getElementById("detailEmptyState").style.display = "block";
+  document.getElementById("detailContent").style.display = "none";
+
+  let response;
+  try {
+    response = await fetch(
+      `/api/careers/${encodeURIComponent(SELECTED_PROGRAM.institutionCode)}/${encodeURIComponent(SELECTED_PROGRAM.programCode)}/${encodeURIComponent(socCode)}`
+    );
+  } catch (error) {
+    document.getElementById("detailEmptyState").textContent = "Could not reach the career service. Please try again.";
+    return;
+  }
+
+  if (!response.ok) {
+    const body = await response.json().catch(() => ({}));
+    document.getElementById("detailEmptyState").textContent =
+      body.detail || "Could not load career details right now.";
+    document.getElementById("detailEmptyState").style.display = "block";
+    document.getElementById("detailContent").style.display = "none";
+    return;
+  }
+
+  CURRENT_DETAIL = await response.json();
+  renderDetail();
+}
+
+function renderDetail() {
+  const detail = CURRENT_DETAIL;
+  document.getElementById("detailEmptyState").style.display = "none";
+  document.getElementById("detailContent").style.display = "block";
+
+  document.getElementById("detailTitle").textContent = detail.title || "";
+  document.getElementById("detailWhatTheyDo").textContent = detail.what_they_do || "";
+
+  const salary = detail.salary || {};
+  const hasHourly = typeof salary.hourly_median === "number";
+  if (hasHourly || typeof salary.annual_median === "number") {
+    const figure = hasHourly
+      ? `$${salary.hourly_median}/hr`
+      : formatCurrency(salary.annual_median);
+    document.getElementById("wageFigure").textContent = figure || "Wage data unavailable";
+    document.getElementById("wageCaption").textContent = hasHourly
+      ? "Median Hourly Wage"
+      : "Median Annual Wage";
+
+    const low = hasHourly ? salary.hourly_10th_percentile : salary.annual_10th_percentile;
+    const high = hasHourly ? salary.hourly_90th_percentile : salary.annual_90th_percentile;
+    const median = hasHourly ? salary.hourly_median : salary.annual_median;
+    if (typeof low === "number" && typeof high === "number" && high > low) {
+      const pct = Math.max(0, Math.min(100, ((median - low) / (high - low)) * 100));
+      document.getElementById("wageBarMarker").style.left = `${pct}%`;
+    }
+    document.getElementById("wageLow").textContent = hasHourly ? `$${low}/hr` : formatCurrency(low) || "";
+    document.getElementById("wageHigh").textContent = hasHourly ? `$${high}/hr` : formatCurrency(high) || "";
+  } else {
+    document.getElementById("wageFigure").textContent = "Wage data unavailable";
+    document.getElementById("wageCaption").textContent = "";
+    document.getElementById("wageLow").textContent = "";
+    document.getElementById("wageHigh").textContent = "";
+    document.getElementById("wageBarMarker").style.left = "50%";
+  }
+
+  const outlook = detail.outlook || {};
+  document.getElementById("outlookCategory").textContent = outlook.category || "Not available";
+  document.getElementById("outlookDescription").textContent = outlook.description || "";
+
+  const jobZone = detail.job_zone || {};
+  document.getElementById("educationNeeded").textContent =
+    (detail.education_usually_needed || []).join(", ") || jobZone.education || "Not available";
+
+  ACTIVE_SKILLS_TAB = "hard";
+  updateSkillsTabState();
+  renderSkillsList();
+}
+
+function showSkillsTab(tab) {
+  ACTIVE_SKILLS_TAB = tab;
+  updateSkillsTabState();
+  renderSkillsList();
+}
+
+function updateSkillsTabState() {
+  document.getElementById("hardSkillsTab").classList.toggle("is-active", ACTIVE_SKILLS_TAB === "hard");
+  document.getElementById("softSkillsTab").classList.toggle("is-active", ACTIVE_SKILLS_TAB === "soft");
+}
+
+function renderSkillsList() {
+  const skills = CURRENT_DETAIL
+    ? (ACTIVE_SKILLS_TAB === "hard" ? CURRENT_DETAIL.hard_skills : CURRENT_DETAIL.soft_skills) || []
+    : [];
+  const list = document.getElementById("skillsList");
+  list.replaceChildren();
+  const values = skills.length ? skills : ["No skills data available."];
+  values.forEach(skill => {
+    const item = document.createElement("li");
+    item.textContent = skill;
+    if (!skills.length) item.className = "empty-state";
+    list.appendChild(item);
+  });
+}
+
+init();
+</script>
+</body>
+</html>

@@ -17,6 +17,7 @@ from pathlib import Path
 from typing import Optional, Dict, Any
 
 from api_db_routes import router as db_router
+from career_routes import router as career_router
 from auth import authenticate, is_admin, is_logged_in, require_admin
 from cuny_beyond import is_cuny_beyond_enabled, public_config
 from database import Base, engine
@@ -26,6 +27,7 @@ import models  # noqa: F401 - registers all SQLAlchemy tables
 app = FastAPI()
 Base.metadata.create_all(bind=engine)
 app.include_router(db_router)
+app.include_router(career_router)
 
 SESSION_SECRET = os.environ.get("SESSION_SECRET", "dev-secret-change-this")
 
@@ -403,6 +405,13 @@ def serve_schedule_handoff(request: Request):
     if not is_logged_in(request):
         return RedirectResponse("/login", status_code=303)
     return FileResponse("frontend/schedule_handoff.html")
+
+
+@app.get("/careers")
+def serve_careers(request: Request):
+    if not is_logged_in(request):
+        return RedirectResponse("/login", status_code=303)
+    return FileResponse("frontend/careers.html")
 
 
 @app.get("/admin")

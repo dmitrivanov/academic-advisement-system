@@ -1,0 +1,17 @@
+institution_code,program_code,onet_soc_code,occupation_title,display_order,source
+BMCC,CS,11-3021.00,Computer and Information Systems Managers,10,https://www.onetonline.org/link/summary/11-3021.00
+BMCC,CS,15-1211.00,Computer Systems Analysts,20,https://www.onetonline.org/link/summary/15-1211.00
+BMCC,CS,15-1212.00,Information Security Analysts,30,https://www.onetonline.org/link/summary/15-1212.00
+BMCC,CS,15-1251.00,Computer Programmers,40,https://www.onetonline.org/link/summary/15-1251.00
+BMCC,CS,15-1252.00,Software Developers,50,https://www.onetonline.org/link/summary/15-1252.00
+BMCC,CS,15-1253.00,Software Quality Assurance Analysts and Testers,60,https://www.onetonline.org/link/summary/15-1253.00
+BMCC,CS,15-1254.00,Web Developers,70,https://www.onetonline.org/link/summary/15-1254.00
+BMCC,CS,15-1242.00,Database Administrators,80,https://www.onetonline.org/link/summary/15-1242.00
+BMCC,CS,15-1244.00,Network and Computer Systems Administrators,90,https://www.onetonline.org/link/summary/15-1244.00
+BMCC,CS,15-1241.00,Computer Network Architects,100,https://www.onetonline.org/link/summary/15-1241.00
+BMCC,CS,15-1232.00,Computer User Support Specialists,110,https://www.onetonline.org/link/summary/15-1232.00
+BMCC,CS,15-1231.00,Computer Network Support Specialists,120,https://www.onetonline.org/link/summary/15-1231.00
+BMCC,CS,15-1255.00,Web and Digital Interface Designers,130,https://www.onetonline.org/link/summary/15-1255.00
+BMCC,CS,15-1299.08,Computer Systems Engineers/Architects,140,https://www.onetonline.org/link/summary/15-1299.08
+BMCC,CS,15-1299.01,Web Administrators,150,https://www.onetonline.org/link/summary/15-1299.01
+BMCC,CS,15-1243.01,Data Warehousing Specialists,160,https://www.onetonline.org/link/summary/15-1243.01
