@@ -46,6 +46,13 @@ class CareerPathwaysDataTests(unittest.TestCase):
         for row in read_career_pathways():
             self.assertRegex(row["onet_soc_code"], pattern, row["onet_soc_code"])
 
+    def test_career_page_renders_api_text_without_html_interpolation(self):
+        page = (ROOT / "frontend" / "careers.html").read_text(encoding="utf-8")
+        self.assertIn("title.textContent = career.title", page)
+        self.assertIn("item.textContent = skill", page)
+        self.assertNotIn("<span>${career.title}</span>", page)
+        self.assertNotIn("skills.map(skill => `<li>${skill}</li>`)", page)
+
 
 class ListCareersTests(unittest.TestCase):
     def test_list_careers_for_known_program(self):

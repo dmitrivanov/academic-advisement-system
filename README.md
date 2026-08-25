@@ -93,8 +93,9 @@ On Windows, use `python` in place of `python3` if necessary.
 
 ### 5. Configure local environment variables
 
-The application works without an AI key, but AI-advisor requests require a Google
-Gemini API key. Environment variables can be exported in the current terminal.
+The application works without external API keys. AI-advisor requests require a Google
+Gemini API key, and live details on the Career Pathways page require an O*NET Web
+Services API key. Environment variables can be exported in the current terminal.
 
 macOS or Linux:
 
@@ -106,6 +107,7 @@ export TESTER_USERNAME="tester"
 export TESTER_PASSWORD="tester"
 # Optional:
 export GEMINI_API_KEY="your-key-here"
+export ONET_API_KEY="your-key-here"
 ```
 
 Windows PowerShell:
@@ -118,6 +120,7 @@ $env:TESTER_USERNAME="tester"
 $env:TESTER_PASSWORD="tester"
 # Optional:
 $env:GEMINI_API_KEY="your-key-here"
+$env:ONET_API_KEY="your-key-here"
 ```
 
 Never commit API keys, passwords, `.env` files, or production database URLs.
@@ -201,6 +204,12 @@ Then restart the application.
 
 This does not prevent manual degree-progress and transfer features from working.
 Set `GEMINI_API_KEY` and restart the server to enable AI requests.
+
+### Career Pathways says that the O*NET API key is not configured
+
+The curated career list remains available, but live wage, outlook, education, and
+skills details require `ONET_API_KEY`. Set it in the server environment and restart
+the application. Never place the key in source code or a committed `.env` file.
 
 ## Curriculum data
 
