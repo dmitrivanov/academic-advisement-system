@@ -19,6 +19,9 @@ def test_branding_is_inside_chat_header_and_old_public_bar_is_removed():
     assert "chat-brand-logos" in page
     assert "advisor-avatar" not in page
     assert '<header class="public-header"' not in page
+    assert 'href="https://www.bmcc.cuny.edu/"' in page
+    assert 'href="https://aichallenge.aitechhub.tech/web/generic/index.php"' in page
+    assert page.count('target="_blank" rel="noopener"') >= 2
 
 
 def test_ap_reference_is_complete_and_source_backed():
