@@ -1,8 +1,11 @@
 import csv
 import os
+import threading
+import time
 import unittest
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 from fastapi import HTTPException
 
@@ -52,6 +55,7 @@ class CareerPathwaysDataTests(unittest.TestCase):
         self.assertIn("item.textContent = skill", page)
         self.assertNotIn("<span>${career.title}</span>", page)
         self.assertNotIn("skills.map(skill => `<li>${skill}</li>`)", page)
+        self.assertIn('href="https://services.onetcenter.org/"', page)
 
 
 class ListCareersTests(unittest.TestCase):
@@ -93,7 +97,6 @@ class CareerDetailTests(unittest.TestCase):
 
     def test_detail_payload_shape_with_mocked_onet_responses(self):
         career_routes._detail_cache.clear()
-
         responses_by_path = {
             "/mnm/careers/15-1252.00/": {
                 "title": "Software Developers",
@@ -153,6 +156,44 @@ class CareerDetailTests(unittest.TestCase):
                 mocked.assert_not_called()
 
         career_routes._detail_cache.clear()
+
+    def test_simultaneous_cold_requests_share_one_fetch(self):
+        career_routes._detail_cache.clear()
+        calls = 0
+        calls_lock = threading.Lock()
+
+        def fake_fetch(soc_code):
+            nonlocal calls
+            with calls_lock:
+                calls += 1
+            time.sleep(0.05)
+            return {"onet_soc_code": soc_code, "title": "Software Developers"}
+
+        with patch.object(career_routes, "_fetch_career_payload", side_effect=fake_fetch):
+            with ThreadPoolExecutor(max_workers=2) as pool:
+                results = list(pool.map(career_routes._get_or_fetch_payload, ["15-1252.00"] * 2))
+
+        self.assertEqual(1, calls)
+        self.assertEqual(results[0], results[1])
+        career_routes._detail_cache.clear()
+
+    def test_onet_rate_limit_retries_after_documented_delay(self):
+        limited = Mock(status_code=429, ok=False)
+        success = Mock(status_code=200, ok=True)
+        success.json.return_value = {"title": "Software Developers"}
+        with patch.dict(os.environ, {"ONET_API_KEY": "test-key"}):
+            with patch.object(career_routes.requests, "get", side_effect=[limited, success]) as get:
+                with patch.object(career_routes.time, "sleep") as sleep:
+                    result = career_routes._onet_get("/mnm/careers/15-1252.00/")
+        self.assertEqual("Software Developers", result["title"])
+        self.assertEqual(2, get.call_count)
+        sleep.assert_called_once_with(0.25)
+
+    def test_cache_warmup_is_disabled_without_an_api_key(self):
+        with patch.dict(os.environ, {}, clear=True):
+            with patch.object(career_routes, "_get_or_fetch_payload") as fetch:
+                career_routes.warm_cache()
+        fetch.assert_not_called()
 
 
 class ExtractHardSkillsTests(unittest.TestCase):
