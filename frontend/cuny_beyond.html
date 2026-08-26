@@ -3,32 +3,26 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>CUNY Beyond | Career-first major exploration</title>
+  <title>AI Academic Advisement Chatbot | BMCC</title>
   <link rel="stylesheet" href="/frontend/cuny_beyond.css">
   <script src="/frontend/cuny_beyond.js" defer></script>
 </head>
 <body>
   <a class="skip-link" href="#main-content">Skip to main content</a>
-  <header class="public-header">
-    <a class="brand" href="/cuny-beyond" aria-label="CUNY Beyond home">
-      <span class="brand-mark" aria-hidden="true">CB</span>
-      <span><strong>CUNY Beyond</strong><small>Career-first academic exploration</small></span>
+  <header class="public-header" aria-label="BMCC and AI Tech Innovation Hub">
+    <a class="institution-brand" href="/" aria-label="AI Academic Advisement Chatbot home">
+      <img class="bmcc-logo" src="/frontend/assets/branding/bmcc-logo.png" alt="Borough of Manhattan Community College">
+      <span class="brand-divider" aria-hidden="true"></span>
+      <img class="hub-logo" src="/frontend/assets/branding/ai-hub-logo.png" alt="AI Tech Innovation Hub">
     </a>
-    <a class="login-link" href="/login">Student and staff login</a>
+    <a class="login-link" href="/login">Log in</a>
   </header>
 
   <main id="main-content" class="page-shell">
-    <section class="hero" aria-labelledby="page-title">
-      <p class="eyebrow">BMCC pre-advisement prototype</p>
-      <h1 id="page-title">Start with where you want to go.</h1>
-      <p>Tell us about your goal and strengths. Future stages will connect them to reviewed BMCC programs, transfer options, prior-learning opportunities, and current class search.</p>
-      <p class="privacy-note">No login is required. This first-stage draft stays in this browser and expires automatically. Do not enter your name, email, CUNY ID, or other private information.</p>
-    </section>
-
     <section id="intake-card" class="intake-card chat-window" aria-labelledby="chat-title">
       <div class="chat-window-header">
-        <span class="advisor-avatar" aria-hidden="true">CB</span>
-        <div><strong id="chat-title">CUNY Beyond guide</strong><small><span class="online-dot" aria-hidden="true"></span>Ready to help you explore</small></div>
+        <span class="advisor-avatar" aria-hidden="true">AI</span>
+        <div><strong id="chat-title">AI Academic Advisement Chatbot</strong><small><span class="online-dot" aria-hidden="true"></span>Online · No login required</small></div>
         <button id="restart-button" class="text-button" type="button">Start over</button>
       </div>
       <div class="chat-progress">
@@ -40,20 +34,34 @@
       </div>
       <div id="save-status" class="save-status" role="status" aria-live="polite"></div>
 
-      <form id="intake-form" class="chat-conversation" novalidate>
+      <form id="intake-form" class="chat-conversation" aria-describedby="chat-privacy-note" novalidate>
+        <p id="chat-privacy-note" class="visually-hidden">Do not enter your name, email, CUNY ID, or other private information in the chatbot.</p>
         <div id="chat-history" class="chat-history" aria-label="Your previous answers"></div>
         <section class="step" data-step="0">
-          <h2 id="step-title" tabindex="-1">Which path best describes you?</h2>
-          <p class="step-copy">This helps us shape the questions that follow.</p>
-          <fieldset class="choice-grid">
-            <legend class="visually-hidden">Select your student profile</legend>
-            <label><input type="radio" name="profile" value="high_school"> <span><strong>High-school student</strong><small>Planning your first college program</small></span></label>
-            <label><input type="radio" name="profile" value="working_adult"> <span><strong>Working adult</strong><small>Building on current employment</small></span></label>
-            <label><input type="radio" name="profile" value="some_college"> <span><strong>Adult with some college</strong><small>Returning with prior coursework</small></span></label>
-            <label><input type="radio" name="profile" value="transfer"> <span><strong>Transfer student</strong><small>Bringing credit from another college</small></span></label>
-            <label><input type="radio" name="profile" value="returning"> <span><strong>Returning student</strong><small>Resuming a previous college journey</small></span></label>
-            <label><input type="radio" name="profile" value="degree_holder"> <span><strong>Adult with a degree</strong><small>Exploring a new direction</small></span></label>
-          </fieldset>
+          <h2 id="step-title" tabindex="-1">What best describes you?</h2>
+          <p class="step-copy">Are you a new student or a current CUNY/BMCC student?</p>
+          <div class="profile-groups">
+            <fieldset class="profile-group profile-group-new">
+              <legend>New students</legend>
+              <p>Starting or entering a BMCC program</p>
+              <div class="choice-grid profile-tags">
+                <label><input type="radio" name="profile" value="high_school"> <span><strong>High-school student</strong><small>Planning your first college program</small></span></label>
+                <label><input type="radio" name="profile" value="working_adult"> <span><strong>Working adult</strong><small>Starting college while employed</small></span></label>
+                <label><input type="radio" name="profile" value="some_college"> <span><strong>Adult with some college</strong><small>Entering with prior coursework</small></span></label>
+                <label><input type="radio" name="profile" value="transfer"> <span><strong>Transfer to BMCC</strong><small>Coming from another college</small></span></label>
+                <label><input type="radio" name="profile" value="degree_holder"> <span><strong>Adult with a degree</strong><small>Exploring a new direction</small></span></label>
+              </div>
+            </fieldset>
+            <fieldset class="profile-group profile-group-current">
+              <legend>Current CUNY / BMCC students</legend>
+              <p>Already enrolled or returning</p>
+              <div class="choice-grid profile-tags">
+                <label><input type="radio" name="profile" value="current_bmcc"> <span><strong>Current BMCC student</strong><small>Exploring options or a major change</small></span></label>
+                <label><input type="radio" name="profile" value="current_cuny"> <span><strong>Current CUNY student</strong><small>Considering BMCC or another program</small></span></label>
+                <label><input type="radio" name="profile" value="returning"> <span><strong>Returning BMCC student</strong><small>Resuming a previous college journey</small></span></label>
+              </div>
+            </fieldset>
+          </div>
         </section>
 
         <section class="step" data-step="1" hidden>
@@ -138,21 +146,10 @@
         <div id="form-error" class="form-error" role="alert" aria-live="assertive"></div>
         <div class="actions chat-actions">
           <button id="back-button" class="secondary" type="button" hidden>Back</button>
-          <button id="next-button" type="button">Send answer <span aria-hidden="true">→</span></button>
+          <button id="next-button" type="button">Submit</button>
         </div>
       </form>
     </section>
-
-    <section class="current-student-card" aria-labelledby="current-student-title">
-      <div>
-        <p class="eyebrow">Already enrolled?</p>
-        <h2 id="current-student-title">Explore a major change with your completed courses.</h2>
-        <p>The current-student workflow continues in the authenticated degree-planning tool while the dedicated what-if pathway is built.</p>
-      </div>
-      <a class="button-link" href="/program-selector?intent=major-change">Continue as a current student</a>
-    </section>
   </main>
-
-  <footer>Planning estimates must be confirmed with BMCC advisors and official college sources.</footer>
 </body>
 </html>

@@ -5,7 +5,7 @@
 - Hosted application: `https://academic-advisement-system.onrender.com`
 - Local application: `http://127.0.0.1:8000`
 
-Append a page path from this guide to either base address. For example, the local CUNY Beyond address is `http://127.0.0.1:8000/cuny-beyond`.
+The root address is now the primary public chatbot entry point. The direct local CUNY Beyond address `http://127.0.0.1:8000/cuny-beyond` remains available.
 
 ## Access model
 
@@ -30,6 +30,7 @@ Environment variables:
 
 ## Public CUNY Beyond pages
 
+- `/` - primary no-login AI Academic Advisement Chatbot entry point
 - `/cuny-beyond` - chatbot-style anonymous career and prior-learning onboarding
 - `/cuny-beyond/referral` - downloadable pre-advisement summary and consented referral preparation
 - `/health` - basic service health check
@@ -43,7 +44,7 @@ Environment variables:
 - `/transfer-analysis` - transfer and equivalency comparison
 - `/schedule-handoff` - verified guided handoff to CUNY Global Search
 
-The root `/` redirects authenticated users to the program selector and unauthenticated users to login.
+The root `/` always opens the public chatbot when CUNY Beyond is enabled. Its small **Log in** link opens the existing authenticated application.
 
 ## Administrator pages
 
@@ -68,7 +69,7 @@ Administrator governance APIs are protected even when their addresses are known.
 
 ## Suggested demonstration sequence
 
-1. Open `/cuny-beyond` without logging in.
+1. Open `/` without logging in. (`/cuny-beyond` reaches the same chatbot.)
 2. Complete the chatbot onboarding using `Data Analyst`, `Registered Nurse`, `Accounting Clerk`, or another reviewed career.
 3. Open a recommended official source or degree planner.
 4. Sign in as `tester` to demonstrate student-only access.

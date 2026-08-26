@@ -363,10 +363,11 @@ def session_info(request: Request):
 
 
 @app.get("/")
-def serve_home(request: Request):
-    if not is_logged_in(request):
+def serve_home():
+    """Use the public chatbot as the application's primary entry point."""
+    if not is_cuny_beyond_enabled():
         return RedirectResponse("/login", status_code=303)
-    return RedirectResponse("/program-selector", status_code=303)
+    return FileResponse("frontend/cuny_beyond.html")
 
 
 @app.get("/progress")

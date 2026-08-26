@@ -11,8 +11,9 @@
   ];
   const PROFILE_LABELS = {
     high_school: 'High-school student', working_adult: 'Working adult',
-    some_college: 'Adult with some college', transfer: 'Transfer student',
-    returning: 'Returning student', degree_holder: 'Adult with a degree'
+    some_college: 'Adult with some college', transfer: 'Transfer to BMCC',
+    returning: 'Returning BMCC student', degree_holder: 'Adult with a degree',
+    current_bmcc: 'Current BMCC student', current_cuny: 'Current CUNY student'
   };
   const EMPLOYMENT_LABELS = { yes: 'Yes, I currently work', no: 'No, I am not currently working', prefer_not: 'Prefer not to say' };
   const CPL_LABELS = {
@@ -23,7 +24,7 @@
     'not-sure': 'Not sure', none: 'None of these'
   };
   const CHAT_QUESTIONS = [
-    'Which path best describes you?', 'What do you want to do in your life or career?',
+    'What best describes you?', 'What do you want to do in your life or career?',
     'Are you currently working?', 'Which skills do you use or want to build?',
     'Could any previous learning be relevant?'
   ];
@@ -98,7 +99,7 @@
   }
 
   function validateStep() {
-    if (state.step === 0 && !selectedValue('profile')) return 'Choose the path that best describes you.';
+    if (state.step === 0 && !selectedValue('profile')) return 'Choose what best describes you.';
     if (state.step === 1 && document.getElementById('career-goal').value.trim().length < 2) return 'Enter a short career or life goal.';
     if (state.step === 2 && !selectedValue('employment')) return 'Choose an employment answer.';
     if (state.step === 3 && form.querySelectorAll('input[name="skills"]:checked').length === 0) return 'Choose at least one skill.';
@@ -117,7 +118,7 @@
   function renderSummary() {
     const employment = state.employment === 'yes' ? 'Currently working' : state.employment === 'no' ? 'Not currently working' : 'Prefer not to say';
     document.getElementById('summary').innerHTML = `
-      <div class="summary-row"><strong>Your path</strong>${PROFILE_LABELS[state.profile] || 'Not provided'}</div>
+      <div class="summary-row"><strong>Student status</strong>${PROFILE_LABELS[state.profile] || 'Not provided'}</div>
       <div class="summary-row"><strong>Your goal</strong>${escapeHtml(state.careerGoal)}</div>
       <div class="summary-row"><strong>Employment</strong>${employment}</div>
       <div class="summary-row"><strong>Skills</strong>${state.skills.map(escapeHtml).join(', ')}</div>
@@ -136,7 +137,7 @@
     const completed = Math.min(state.step, CHAT_QUESTIONS.length);
     document.getElementById('chat-history').innerHTML = CHAT_QUESTIONS.slice(0, completed).map((question, index) => `
       <div class="chat-turn">
-        <div class="chat-bubble assistant"><small>CUNY Beyond</small>${escapeHtml(question)}</div>
+        <div class="chat-bubble assistant"><small>AI Academic Advisement Chatbot</small>${escapeHtml(question)}</div>
         <div class="chat-bubble user"><small>You</small>${escapeHtml(answers[index] || 'Skipped')}</div>
       </div>`).join('');
   }

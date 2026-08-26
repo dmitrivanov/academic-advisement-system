@@ -77,7 +77,7 @@ Keep PowerShell open while testing.
 
 ## 7. Open CUNY Beyond
 
-Open `http://127.0.0.1:8000/cuny-beyond`.
+Open `http://127.0.0.1:8000`. This is the primary no-login chatbot entry point. The direct `http://127.0.0.1:8000/cuny-beyond` address also works.
 
 For authenticated pages, use `http://127.0.0.1:8000/login` with `admin` / `admin` or `tester` / `tester` unless you changed the environment variables.
 

@@ -9,11 +9,29 @@ def test_onboarding_uses_chat_window_history_and_quick_choices():
     css = (ROOT / "frontend/cuny_beyond.css").read_text(encoding="utf-8")
     js = (ROOT / "frontend/cuny_beyond.js").read_text(encoding="utf-8")
     assert "chat-window-header" in page and 'id="chat-history"' in page
-    assert "CUNY Beyond guide" in page and "Send answer" in page
+    assert "AI Academic Advisement Chatbot" in page and ">Submit</button>" in page
     assert ".chat-bubble.assistant" in css and ".chat-bubble.user" in css
     assert ".choice-grid label" in css and "border-radius:999px" in css
     assert "renderChatHistory" in js and "CHAT_QUESTIONS" in js
     assert "chatAnswers" in js and "Private browser draft" in page
+
+
+def test_public_landing_is_branded_grouped_and_login_optional():
+    page = (ROOT / "frontend/cuny_beyond.html").read_text(encoding="utf-8")
+    css = (ROOT / "frontend/cuny_beyond.css").read_text(encoding="utf-8")
+    server = (ROOT / "faq_fallback_api.py").read_text(encoding="utf-8")
+    assert "/frontend/assets/branding/bmcc-logo.png" in page
+    assert "/frontend/assets/branding/ai-hub-logo.png" in page
+    assert (ROOT / "frontend/assets/branding/bmcc-logo.png").is_file()
+    assert (ROOT / "frontend/assets/branding/ai-hub-logo.png").is_file()
+    assert "What best describes you?" in page and "Which path best describes you?" not in page
+    assert "New students" in page and "Current CUNY / BMCC students" in page
+    assert 'value="current_bmcc"' in page and 'value="current_cuny"' in page
+    assert 'class="login-link" href="/login">Log in</a>' in page
+    assert ".profile-groups" in css and ".profile-group-current" in css
+    root_route = server.split('@app.get("/")', 1)[1].split('@app.get("/progress")', 1)[0]
+    assert 'FileResponse("frontend/cuny_beyond.html")' in root_route
+    assert 'is_logged_in' not in root_route
 
 
 def test_chat_preserves_free_text_browse_back_restart_and_accessibility():

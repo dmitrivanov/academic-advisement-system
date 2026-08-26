@@ -44,5 +44,7 @@ def test_intake_has_accessibility_and_privacy_controls():
     assert "Date.now() >= draft.expiresAt" in JS
 
 
-def test_current_student_handoff_preserves_major_change_intent():
-    assert 'href="/program-selector?intent=major-change"' in HTML
+def test_current_student_handoff_uses_login_and_current_student_tag():
+    assert 'class="login-link" href="/login">Log in</a>' in HTML
+    assert 'value="current_bmcc"' in HTML
+    assert "Current BMCC student" in HTML
