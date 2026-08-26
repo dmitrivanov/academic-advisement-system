@@ -59,6 +59,13 @@ class CareerPathwaysDataTests(unittest.TestCase):
 
 
 class ListCareersTests(unittest.TestCase):
+    def test_available_programs_are_unique_and_backed_by_rows(self):
+        result = career_routes.list_available_career_programs()["programs"]
+        keys = [(item["institution_code"], item["program_code"]) for item in result]
+        self.assertEqual(len(keys), len(set(keys)))
+        expected = {(row["institution_code"], row["program_code"]) for row in read_career_pathways()}
+        self.assertEqual(expected, set(keys))
+
     def test_list_careers_for_known_program(self):
         result = career_routes.list_careers("BMCC", "CS")
         self.assertEqual("BMCC", result["institution_code"])
@@ -194,6 +201,13 @@ class CareerDetailTests(unittest.TestCase):
             with patch.object(career_routes, "_get_or_fetch_payload") as fetch:
                 career_routes.warm_cache()
         fetch.assert_not_called()
+
+    def test_cache_warmup_is_bounded_for_large_catalog(self):
+        with patch.dict(os.environ, {"ONET_API_KEY": "test-key"}, clear=True):
+            with patch.object(career_routes, "_get_or_fetch_payload") as fetch:
+                career_routes._detail_cache.clear()
+                career_routes.warm_cache()
+        self.assertLessEqual(fetch.call_count, 12)
 
 
 class ExtractHardSkillsTests(unittest.TestCase):

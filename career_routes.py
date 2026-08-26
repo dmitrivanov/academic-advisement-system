@@ -42,6 +42,20 @@ def careers_for_program(institution_code: str, program_code: str):
     return rows
 
 
+@router.get("/available/programs")
+def list_available_career_programs():
+    """Return only campus/program pairs that have reviewed career rows."""
+    seen = set()
+    programs = []
+    for row in load_career_pathways():
+        key = (row["institution_code"].upper(), row["program_code"].upper())
+        if key in seen:
+            continue
+        seen.add(key)
+        programs.append({"institution_code": key[0], "program_code": key[1]})
+    return {"programs": programs}
+
+
 @router.get("/{institution_code}/{program_code}")
 def list_careers(institution_code: str, program_code: str):
     rows = careers_for_program(institution_code, program_code)
@@ -209,11 +223,20 @@ def warm_cache():
     if not get_onet_api_key():
         return
 
+    # A small configurable warm set keeps startup useful without turning the
+    # expanded catalog into thousands of O*NET calls on every deployment.
+    try:
+        limit = max(0, min(50, int(os.environ.get("ONET_WARM_CACHE_LIMIT", "12"))))
+    except ValueError:
+        limit = 12
+    if limit == 0:
+        return
     now = time.time()
+    ordered_codes = list(dict.fromkeys(row["onet_soc_code"] for row in load_career_pathways()))
     stale_codes = [
-        code for code in {row["onet_soc_code"] for row in load_career_pathways()}
+        code for code in ordered_codes
         if code not in _detail_cache or (now - _detail_cache[code][0]) >= _CACHE_TTL_SECONDS
-    ]
+    ][:limit]
     for code in stale_codes:
         try:
             _get_or_fetch_payload(code)
