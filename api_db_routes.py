@@ -1,5 +1,8 @@
+import csv
 import json
 from datetime import datetime, timezone
+from functools import lru_cache
+from pathlib import Path
 from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Request
@@ -92,6 +95,35 @@ class CunyBeyondRecommendationPayload(BaseModel):
 class CunyBeyondCplPayload(BaseModel):
     selections: list[str] = Field(default_factory=list, max_length=9)
     program_codes: list[str] = Field(default_factory=list, max_length=3)
+
+
+class CunyBeyondApPayload(BaseModel):
+    exams: list[dict[str, Any]] = Field(default_factory=list, max_length=20)
+
+
+@lru_cache(maxsize=1)
+def load_ap_equivalencies():
+    path = Path("docs/bmcc_ap_equivalencies.csv")
+    with path.open(encoding="utf-8", newline="") as stream:
+        return list(csv.DictReader(stream))
+
+
+@lru_cache(maxsize=1)
+def load_degree_map_sources():
+    sources = {}
+    for path in Path("docs").glob("*.json"):
+        try:
+            document = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            continue
+        code = document.get("program_code")
+        if code and (document.get("source_pdf") or document.get("source_pdfs")):
+            sources[code] = {
+                "source_pdf": document.get("source_pdf"),
+                "source_pdfs": document.get("source_pdfs") or [],
+                "catalog_year": document.get("catalog_year"),
+            }
+    return sources
 
 
 class ScheduleHandoffPayload(BaseModel):
@@ -409,6 +441,42 @@ def get_cuny_beyond_careers(db: Session = Depends(get_db)):
     ]
 
 
+@router.get("/cuny-beyond/ap-equivalencies")
+def get_cuny_beyond_ap_equivalencies():
+    return [{"exam": row["exam"]} for row in load_ap_equivalencies()]
+
+
+@router.post("/cuny-beyond/ap-equivalencies")
+def calculate_cuny_beyond_ap_equivalencies(payload: CunyBeyondApPayload, db: Session = Depends(get_db)):
+    rows = {row["exam"]: row for row in load_ap_equivalencies()}
+    bmcc = db.query(Institution).filter(Institution.code == "BMCC").first()
+    results = []
+    total = 0
+    for selected in payload.exams:
+        exam = str(selected.get("exam") or "").strip()
+        try:
+            score = int(selected.get("score"))
+        except (TypeError, ValueError):
+            raise HTTPException(status_code=422, detail="AP scores must be 3, 4, or 5")
+        if exam not in rows or score not in {3, 4, 5}:
+            raise HTTPException(status_code=422, detail="Unknown AP exam or score")
+        equivalency = rows[exam][f"score_{score}"]
+        alternatives = [item.strip() for item in equivalency.split(" or ")]
+        course = None
+        if bmcc:
+            course = db.query(Course).filter(
+                Course.institution_id == bmcc.id,
+                func.upper(Course.catalog_code) == alternatives[0].upper(),
+            ).first()
+        credits = int(course.credits) if course else None
+        if credits is not None:
+            total += credits
+        results.append({"exam": exam, "score": score, "bmcc_equivalency": equivalency,
+                        "estimated_credits": credits, "source_url": rows[exam]["source_url"]})
+    return {"results": results, "estimated_total_credits": total,
+            "disclaimer": "Planning estimate only. BMCC awards credit after receiving and evaluating an official score report; degree applicability can vary."}
+
+
 def optional_text(value):
     return value.strip() if value and value.strip() else None
 
@@ -503,6 +571,7 @@ def get_cuny_beyond_recommendations(
                                                 "target_degree": option.target_degree, "target_url": option.target_url,
                                                 "explanation": option.explanation, "source_url": option.source_url,
                                                 "reviewed_at": option.reviewed_at.date().isoformat()} for option in options]
+        recommendation["degree_map"] = load_degree_map_sources().get(recommendation["program_code"])
     return {
         "matched_career": {
             "slug": career.slug,

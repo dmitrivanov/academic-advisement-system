@@ -2432,12 +2432,32 @@ async function loadProgramRequirements() {
   applyOnboardingState();
   configurePlannerDefaults();
   applySmartPlannerPreferences();
+  applyCunyBeyondImportedCourses();
   renderCompletedCourseGrid();
   renderGraph();
   renderSummary();
   renderRecommendations();
   updateProgressWidget();
   if (CURRENT_PLANNING_MODE === "ai") renderDegreePlan();
+}
+
+function applyCunyBeyondImportedCourses() {
+  let imported = [];
+  try { imported = JSON.parse(sessionStorage.getItem("cunyBeyondImportedCoursesV1") || "[]"); }
+  catch (_) { imported = []; }
+  if (!Array.isArray(imported) || !imported.length) return;
+  const availableCodes = new Set(
+    (CURRENT_REQUIREMENTS.groups || []).flatMap(group => group.courses || []).map(course => course.code)
+  );
+  imported.forEach(item => {
+    const institution = String(item?.institution || "").toLowerCase();
+    const isBmccRecord = institution.includes("bmcc") || institution.includes("borough of manhattan");
+    const hasPublishedBmccEquivalency = Boolean(item?.bmcc_equivalency);
+    if (!isBmccRecord && !hasPublishedBmccEquivalency) return;
+    const code = String(item?.bmcc_equivalency || item?.code || "").trim().toUpperCase();
+    if (availableCodes.has(code)) DIRECT_COMPLETED_COURSES.add(code);
+  });
+  COMPLETED_COURSES = new Set(DIRECT_COMPLETED_COURSES);
 }
 
 function attachPrerequisiteSupportGroup() {

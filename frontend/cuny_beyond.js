@@ -28,7 +28,7 @@
     'Are you currently working?', 'Which skills do you use or want to build?',
     'Could any previous learning be relevant?'
   ];
-  const state = { step: 0, profile: '', careerGoal: '', employment: '', skills: [], cplSelections: [], expiresAt: 0 };
+  const state = { step: 0, profile: '', careerGoal: '', employment: '', skills: [], cplSelections: [], freeAnswers: {}, apExams: [], transcriptCourses: [], expiresAt: 0 };
   const form = document.getElementById('intake-form');
   const steps = Array.from(document.querySelectorAll('.step'));
   const nextButton = document.getElementById('next-button');
@@ -56,6 +56,9 @@
       state.step = Math.min(Math.max(Number(state.step) || 0, 0), steps.length - 1);
       state.skills = Array.isArray(state.skills) ? state.skills.slice(0, MAX_SKILLS) : [];
       state.cplSelections = Array.isArray(state.cplSelections) ? state.cplSelections.slice(0, 9) : [];
+      state.freeAnswers = state.freeAnswers && typeof state.freeAnswers === 'object' ? state.freeAnswers : {};
+      state.apExams = Array.isArray(state.apExams) ? state.apExams.slice(0, 20) : [];
+      state.transcriptCourses = Array.isArray(state.transcriptCourses) ? state.transcriptCourses.slice(0, 80) : [];
       document.getElementById('save-status').textContent = 'Your saved draft was restored on this device.';
     } catch (_) { localStorage.removeItem(STORAGE_KEY); }
   }
@@ -66,9 +69,10 @@
     document.getElementById('save-status').textContent = `Draft saved in this browser for ${ttlHours} hour${ttlHours === 1 ? '' : 's'}.`;
   }
 
-  function renderSkills() {
+  function renderSkills(skills = SKILLS) {
     const fieldset = document.getElementById('skill-choices');
-    fieldset.innerHTML = SKILLS.map(skill => `<label><input type="checkbox" name="skills" value="${skill}"><span>${skill}</span></label>`).join('');
+    const choices = [...new Set([...state.skills, ...skills])].slice(0, 20);
+    fieldset.innerHTML = choices.map(skill => `<label><input type="checkbox" name="skills" value="${escapeHtml(skill)}"${state.skills.includes(skill) ? ' checked' : ''}><span>${escapeHtml(skill)}</span></label>`).join('');
   }
 
   function restoreInputs() {
@@ -80,6 +84,10 @@
       }
     });
     document.getElementById('career-goal').value = state.careerGoal || '';
+    document.getElementById('profile-free').value = state.freeAnswers.profile || '';
+    document.getElementById('employment-free').value = state.freeAnswers.employment || '';
+    document.getElementById('skills-free').value = state.freeAnswers.skills || '';
+    document.getElementById('cpl-free').value = state.freeAnswers.cpl || '';
     state.skills.forEach(skill => {
       const input = Array.from(form.querySelectorAll('input[name="skills"]')).find(item => item.value === skill);
       if (input) input.checked = true;
@@ -89,6 +97,7 @@
       if (input) input.checked = true;
     });
     updateCounts();
+    renderApResults();
   }
 
   function updateCounts() {
@@ -99,11 +108,11 @@
   }
 
   function validateStep() {
-    if (state.step === 0 && !selectedValue('profile')) return 'Choose what best describes you.';
+    if (state.step === 0 && !selectedValue('profile') && document.getElementById('profile-free').value.trim().length < 2) return 'Choose a tag or describe what best describes you.';
     if (state.step === 1 && document.getElementById('career-goal').value.trim().length < 2) return 'Enter a short career or life goal.';
-    if (state.step === 2 && !selectedValue('employment')) return 'Choose an employment answer.';
-    if (state.step === 3 && form.querySelectorAll('input[name="skills"]:checked').length === 0) return 'Choose at least one skill.';
-    if (state.step === 4 && form.querySelectorAll('input[name="cpl"]:checked').length === 0) return 'Choose at least one answer, Not sure, or None of these.';
+    if (state.step === 2 && !selectedValue('employment') && document.getElementById('employment-free').value.trim().length < 2) return 'Choose a tag or describe your work situation.';
+    if (state.step === 3 && form.querySelectorAll('input[name="skills"]:checked').length === 0 && document.getElementById('skills-free').value.trim().length < 2) return 'Choose or enter at least one skill.';
+    if (state.step === 4 && form.querySelectorAll('input[name="cpl"]:checked').length === 0 && document.getElementById('cpl-free').value.trim().length < 2) return 'Choose a tag or describe previous learning.';
     return '';
   }
 
@@ -113,22 +122,26 @@
     state.employment = selectedValue('employment') || state.employment;
     state.skills = Array.from(form.querySelectorAll('input[name="skills"]:checked')).map(input => input.value).slice(0, MAX_SKILLS);
     state.cplSelections = Array.from(form.querySelectorAll('input[name="cpl"]:checked')).map(input => input.value).slice(0, 9);
+    state.freeAnswers = {
+      profile: document.getElementById('profile-free').value.trim(), employment: document.getElementById('employment-free').value.trim(),
+      skills: document.getElementById('skills-free').value.trim(), cpl: document.getElementById('cpl-free').value.trim()
+    };
   }
 
   function renderSummary() {
     const employment = state.employment === 'yes' ? 'Currently working' : state.employment === 'no' ? 'Not currently working' : 'Prefer not to say';
     document.getElementById('summary').innerHTML = `
-      <div class="summary-row"><strong>Student status</strong>${PROFILE_LABELS[state.profile] || 'Not provided'}</div>
+      <div class="summary-row"><strong>Student status</strong>${escapeHtml(PROFILE_LABELS[state.profile] || state.freeAnswers.profile || 'Not provided')}</div>
       <div class="summary-row"><strong>Your goal</strong>${escapeHtml(state.careerGoal)}</div>
-      <div class="summary-row"><strong>Employment</strong>${employment}</div>
+      <div class="summary-row"><strong>Employment</strong>${escapeHtml(state.employment ? employment : state.freeAnswers.employment || 'Not provided')}</div>
       <div class="summary-row"><strong>Skills</strong>${state.skills.map(escapeHtml).join(', ')}</div>
       <div class="summary-row"><strong>Prior-learning screen</strong>${state.cplSelections.includes('none') ? 'None selected' : `${state.cplSelections.length} possible path${state.cplSelections.length === 1 ? '' : 's'} to review`}</div>`;
   }
 
   function chatAnswers() {
     return [
-      PROFILE_LABELS[state.profile] || '', state.careerGoal || '', EMPLOYMENT_LABELS[state.employment] || '',
-      state.skills.join(', '), state.cplSelections.map(code => CPL_LABELS[code] || code).join(', ')
+      PROFILE_LABELS[state.profile] || state.freeAnswers.profile || '', state.careerGoal || '', EMPLOYMENT_LABELS[state.employment] || state.freeAnswers.employment || '',
+      state.skills.join(', ') || state.freeAnswers.skills, state.cplSelections.map(code => CPL_LABELS[code] || code).join(', ') || state.freeAnswers.cpl
     ];
   }
 
@@ -181,12 +194,14 @@
     const careerName = data.matched_career ? data.matched_career.name : state.careerGoal;
     container.innerHTML = `<h3>Top starting points for ${escapeHtml(careerName)}</h3>` + latestRecommendations.map((item, index) => {
       const tags = [item.advising_label, item.evidence_level + ' evidence', ...item.matched_skills].map(tag => `<span class="match-tag">${escapeHtml(tag)}</span>`).join('');
+      const mapUrl = item.degree_map?.source_pdf || item.degree_map?.source_pdfs?.[0]?.url;
+      const degreeMap = mapUrl ? `<details class="degree-map-preview"><summary>View degree map now</summary><iframe src="${safeUrl(mapUrl)}#view=FitH" title="${escapeHtml(item.program_name)} degree map" loading="lazy"></iframe><p class="source-note"><a href="${safeUrl(mapUrl)}" target="_blank" rel="noopener">Open or download the degree-map PDF</a></p></details>` : '';
       return `<article class="recommendation-card">
         <div class="recommendation-heading"><div><h3>${escapeHtml(item.program_name)} (${escapeHtml(item.degree_type || 'Degree')})</h3><p>${escapeHtml(item.department_name)} · ${escapeHtml(item.catalog_year || 'Current catalog')}</p></div><span class="match-score">${item.score} fit points</span></div>
         <p class="match-explanation">${escapeHtml(item.explanation)}</p>
         <div class="match-details">${tags}</div>
         <p class="source-note">Career evidence: ${item.score_components.career} points; selected-skill evidence: ${item.score_components.skills} points. Reviewed ${escapeHtml(item.reviewed_at)} from <a href="${safeUrl(item.source_url)}" target="_blank" rel="noopener">${escapeHtml(item.source_title)}</a>.</p>
-        <div class="recommendation-actions"><button type="button" data-open-program="${index}">Open interactive degree planner</button><a href="${safeUrl(item.official_program_url)}" target="_blank" rel="noopener">Official BMCC program page</a></div>
+        <div class="recommendation-actions"><button type="button" data-open-program="${index}">Open interactive degree planner</button><a href="${safeUrl(item.official_program_url)}" target="_blank" rel="noopener">Official BMCC program page</a></div>${degreeMap}
       </article>`;
     }).join('');
   }
@@ -281,6 +296,45 @@
     } finally { button.disabled = false; }
   }
 
+  async function interpretFreeAnswer(step, answer, allowedValues) {
+    if (!answer || !document.getElementById('ai-assisted').checked) return [];
+    const response = await fetch('/api/cuny-beyond/interpret', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ step, answer, career_goal: document.getElementById('career-goal').value.trim(), allowed_values: allowedValues })
+    });
+    if (!response.ok) throw new Error('AI interpretation is temporarily unavailable');
+    return response.json();
+  }
+
+  async function applyFreeAnswerForStep() {
+    captureState();
+    if (state.step === 0 && !selectedValue('profile') && state.freeAnswers.profile) {
+      const result = await interpretFreeAnswer('profile', state.freeAnswers.profile, Object.keys(PROFILE_LABELS));
+      const input = form.querySelector(`input[name="profile"][value="${result.selected_values?.[0] || ''}"]`);
+      if (input) input.checked = true;
+    } else if (state.step === 2 && !selectedValue('employment') && state.freeAnswers.employment) {
+      const result = await interpretFreeAnswer('employment', state.freeAnswers.employment, Object.keys(EMPLOYMENT_LABELS));
+      const input = form.querySelector(`input[name="employment"][value="${result.selected_values?.[0] || ''}"]`);
+      if (input) input.checked = true;
+    } else if (state.step === 3 && state.freeAnswers.skills) {
+      addCustomSkill(state.freeAnswers.skills);
+    } else if (state.step === 4 && !state.cplSelections.length && state.freeAnswers.cpl) {
+      const result = await interpretFreeAnswer('cpl', state.freeAnswers.cpl, Object.keys(CPL_LABELS));
+      (result.selected_values || []).forEach(value => { const input = form.querySelector(`input[name="cpl"][value="${value}"]`); if (input) input.checked = true; });
+    }
+    captureState();
+  }
+
+  async function refreshContextualSkills() {
+    const goal = state.careerGoal || document.getElementById('career-goal').value.trim();
+    if (!goal || !document.getElementById('ai-assisted').checked) { renderSkills(); updateCounts(); return; }
+    try {
+      const result = await interpretFreeAnswer('skills', `Suggest skills for ${goal}`, []);
+      if (result.skills?.length) renderSkills(result.skills);
+    } catch (_) { renderSkills(); }
+    updateCounts();
+  }
+
   function showStep(focusHeading) {
     steps.forEach((step, index) => { step.hidden = index !== state.step; });
     renderChatHistory();
@@ -292,24 +346,32 @@
     if (state.step === steps.length - 1) renderSummary();
     if (focusHeading) {
       steps[state.step].querySelector('h2').focus();
-      document.getElementById('intake-form').scrollTo({ top: document.getElementById('intake-form').scrollHeight, behavior: 'smooth' });
+      const conversation = document.getElementById('intake-form');
+      const current = steps[state.step];
+      const centeredTop = Math.max(0, current.offsetTop - (conversation.clientHeight - Math.min(current.offsetHeight, conversation.clientHeight)) / 2);
+      conversation.scrollTo({ top: centeredTop, behavior: 'smooth' });
     }
   }
 
-  nextButton.addEventListener('click', () => {
+  nextButton.addEventListener('click', async () => {
     const error = validateStep();
     if (error) { errorBox.textContent = error; return; }
-    captureState();
+    nextButton.disabled = true;
+    errorBox.textContent = '';
+    try { await applyFreeAnswerForStep(); }
+    catch (err) { errorBox.textContent = `${err.message}. Choose a quick tag or turn off AI assist to continue.`; nextButton.disabled = false; return; }
+    if (state.step === 1) { captureState(); await refreshContextualSkills(); }
     state.step += 1;
     saveDraft();
     showStep(true);
+    nextButton.disabled = false;
   });
   backButton.addEventListener('click', () => { captureState(); state.step -= 1; saveDraft(); showStep(true); });
   document.getElementById('restart-button').addEventListener('click', () => {
     if (!window.confirm('Clear this browser draft and start again?')) return;
     localStorage.removeItem(STORAGE_KEY);
     form.reset();
-    Object.assign(state, { step: 0, profile: '', careerGoal: '', employment: '', skills: [], cplSelections: [], expiresAt: 0 });
+    Object.assign(state, { step: 0, profile: '', careerGoal: '', employment: '', skills: [], cplSelections: [], freeAnswers: {}, apExams: [], transcriptCourses: [], expiresAt: 0 });
     document.getElementById('save-status').textContent = 'Draft cleared.';
     updateCounts(); showStep(true);
   });
@@ -324,6 +386,7 @@
       const none = form.querySelector('input[name="cpl"][value="none"]');
       if (none) none.checked = false;
     }
+    document.getElementById('ap-details').hidden = !form.querySelector('input[name="cpl"][value="standardized-exams"]')?.checked;
   });
   document.getElementById('match-button').addEventListener('click', requestRecommendations);
   document.getElementById('recommendation-results').addEventListener('click', event => {
@@ -363,6 +426,78 @@
   document.getElementById('career-browser-results').addEventListener('click', chooseCareer);
   document.getElementById('career-filter').addEventListener('input', event => renderCareerBrowser(event.target.value));
 
+  function addCustomSkill(value) {
+    const skill = (value || '').trim().slice(0, 100);
+    if (!skill || state.skills.includes(skill) || state.skills.length >= MAX_SKILLS) return;
+    state.skills.push(skill);
+    renderSkills();
+    document.getElementById('skills-free').value = '';
+    updateCounts();
+  }
+  document.getElementById('add-skill').addEventListener('click', () => addCustomSkill(document.getElementById('skills-free').value));
+
+  async function calculateApCredits() {
+    if (!state.apExams.length) { document.getElementById('ap-results').innerHTML = ''; return; }
+    const response = await fetch('/api/db/cuny-beyond/ap-equivalencies', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ exams: state.apExams })
+    });
+    if (!response.ok) throw new Error('AP equivalencies could not be loaded');
+    const data = await response.json();
+    state.apCredits = data.results;
+    const apImports = data.results.filter(item => !item.bmcc_equivalency.includes(' or ')).map(item => ({ code: item.bmcc_equivalency, bmcc_equivalency: item.bmcc_equivalency, title: `${item.exam} score ${item.score}`, credits: item.estimated_credits, source: 'AP planning estimate' }));
+    const existing = state.transcriptCourses.filter(item => item.include !== false && item.code);
+    sessionStorage.setItem('cunyBeyondImportedCoursesV1', JSON.stringify([...existing, ...apImports]));
+    document.getElementById('ap-results').innerHTML = data.results.map((item, index) => `<div class="ap-result"><span><strong>${escapeHtml(item.exam)} · score ${item.score}</strong><br>BMCC: ${escapeHtml(item.bmcc_equivalency)} · ${item.estimated_credits ?? 'credit amount requires review'}${item.estimated_credits != null ? ' estimated credits' : ''}</span><button type="button" data-remove-ap="${index}">Remove</button></div>`).join('') + `<p class="transcript-notice"><strong>Estimated total with known catalog credits: ${data.estimated_total_credits}</strong><br>${escapeHtml(data.disclaimer)} <a href="https://www.bmcc.cuny.edu/admissions/apply-now/credit-for-prior-learning-cpl/" target="_blank" rel="noopener">BMCC CPL source</a></p>`;
+  }
+  function renderApResults() {
+    document.getElementById('ap-details').hidden = !state.cplSelections.includes('standardized-exams');
+    calculateApCredits().catch(err => { document.getElementById('ap-results').textContent = err.message; });
+  }
+  document.getElementById('add-ap').addEventListener('click', () => {
+    const exam = document.getElementById('ap-exam').value;
+    const score = Number(document.getElementById('ap-score').value);
+    if (exam && !state.apExams.some(item => item.exam === exam)) state.apExams.push({ exam, score });
+    saveDraft(); renderApResults();
+  });
+  document.getElementById('ap-results').addEventListener('click', event => {
+    const button = event.target.closest('[data-remove-ap]');
+    if (!button) return;
+    state.apExams.splice(Number(button.dataset.removeAp), 1); saveDraft(); renderApResults();
+  });
+
+  function renderTranscriptReview(courses, warnings = []) {
+    state.transcriptCourses = courses;
+    const container = document.getElementById('transcript-review');
+    if (!courses.length) { container.innerHTML = '<p class="transcript-notice">No clearly completed college courses were found. Review the source document manually.</p>'; return; }
+    container.innerHTML = `<table class="transcript-table"><thead><tr><th>Use</th><th>Institution</th><th>Course</th><th>Title</th><th>Credits</th><th>Grade</th></tr></thead><tbody>${courses.map((item, index) => `<tr><td><input type="checkbox" data-transcript-include="${index}"${item.include !== false ? ' checked' : ''}></td><td>${escapeHtml(item.institution || 'Not identified')}</td><td><input data-transcript-field="code" data-index="${index}" value="${escapeHtml(item.code)}"></td><td>${escapeHtml(item.title)}</td><td>${item.credits ?? '—'}</td><td>${escapeHtml(item.grade)}</td></tr>`).join('')}</tbody></table>${warnings.map(item => `<p class="transcript-notice">${escapeHtml(item)}</p>`).join('')}<button type="button" id="apply-transcript">Use reviewed courses in degree planner</button><p class="field-help">BMCC courses and published BMCC AP equivalencies can be checked automatically when they appear in the selected program. Courses from another college remain in the transfer-review snapshot until an official equivalency is confirmed.</p>`;
+    document.getElementById('apply-transcript').addEventListener('click', applyTranscriptCourses);
+  }
+  function applyTranscriptCourses() {
+    document.querySelectorAll('[data-transcript-include]').forEach(input => { state.transcriptCourses[Number(input.dataset.transcriptInclude)].include = input.checked; });
+    document.querySelectorAll('[data-transcript-field="code"]').forEach(input => { state.transcriptCourses[Number(input.dataset.index)].code = input.value.trim().toUpperCase(); });
+    const selected = state.transcriptCourses.filter(item => item.include && item.code);
+    const apCourses = (state.apCredits || []).filter(item => !item.bmcc_equivalency.includes(' or ')).map(item => ({ code: item.bmcc_equivalency, bmcc_equivalency: item.bmcc_equivalency, title: `${item.exam} score ${item.score}`, credits: item.estimated_credits, source: 'AP planning estimate' }));
+    const imported = [...selected, ...apCourses];
+    sessionStorage.setItem('cunyBeyondImportedCoursesV1', JSON.stringify(imported));
+    sessionStorage.setItem('transferSnapshot', JSON.stringify({ completed_courses: imported.map(item => item.code), completed_course_details: imported, source: 'cuny-beyond-import', timestamp: new Date().toISOString() }));
+    saveDraft();
+    document.getElementById('transcript-status').textContent = `${imported.length} reviewed course or AP equivalenc${imported.length === 1 ? 'y' : 'ies'} will be carried into the interactive degree planner.`;
+  }
+  document.getElementById('analyze-transcript').addEventListener('click', async () => {
+    const file = document.getElementById('transcript-file').files[0];
+    const status = document.getElementById('transcript-status');
+    if (!file) { status.textContent = 'Choose a PDF, JPG, or PNG first.'; return; }
+    status.textContent = 'Reading the document securely…';
+    const body = new FormData(); body.append('document', file);
+    try {
+      const response = await fetch('/api/cuny-beyond/transcript-extract', { method: 'POST', body });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.detail || 'Document analysis failed');
+      status.textContent = data.disclaimer;
+      renderTranscriptReview(data.courses || [], data.warnings || []);
+    } catch (err) { status.textContent = err.message; }
+  });
+
   async function initialize() {
     renderSkills();
     try {
@@ -373,6 +508,10 @@
       const response = await fetch('/api/db/cuny-beyond/careers');
       if (response.ok) { supportedCareers = await response.json(); renderSupportedCareers(); }
     } catch (_) { /* Typed aliases continue to work if discovery is temporarily unavailable. */ }
+    try {
+      const response = await fetch('/api/db/cuny-beyond/ap-equivalencies');
+      if (response.ok) document.getElementById('ap-exam').innerHTML = (await response.json()).map(item => `<option value="${escapeHtml(item.exam)}">${escapeHtml(item.exam)}</option>`).join('');
+    } catch (_) { document.getElementById('ap-details').hidden = true; }
     loadDraft(); restoreInputs(); showStep(false);
   }
   initialize();

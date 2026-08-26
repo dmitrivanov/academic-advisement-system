@@ -1,13 +1,14 @@
 from contextlib import asynccontextmanager
 import threading
 
-from fastapi import FastAPI, Request, Form, HTTPException
+from fastapi import FastAPI, Request, Form, HTTPException, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from starlette.middleware.sessions import SessionMiddleware
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from google import genai
+from google.genai import types
 import os
 import json
 import time
@@ -211,6 +212,85 @@ class AdvisingReferralPayload(BaseModel):
     consent: bool
     website: Optional[str] = ""  # Honeypot; real users never see or fill it.
     summary: Dict[str, Any]
+
+
+class BeyondInterpretPayload(BaseModel):
+    step: str
+    answer: str
+    career_goal: Optional[str] = ""
+    allowed_values: list[str] = Field(default_factory=list)
+
+
+def parse_model_json(text: str):
+    cleaned = (text or "").strip()
+    cleaned = re.sub(r"^```(?:json)?\s*|\s*```$", "", cleaned, flags=re.IGNORECASE)
+    try:
+        return json.loads(cleaned)
+    except json.JSONDecodeError as exc:
+        raise HTTPException(status_code=502, detail="The AI response could not be safely interpreted") from exc
+
+
+@app.post("/api/cuny-beyond/interpret")
+def interpret_cuny_beyond_answer(payload: BeyondInterpretPayload):
+    """Interpret public free text into reviewed UI values without creating policy."""
+    if payload.step not in {"profile", "employment", "skills", "cpl"}:
+        raise HTTPException(status_code=400, detail="Unknown intake step")
+    prompt = f"""You interpret one answer for a college intake form. Return JSON only.
+Step: {payload.step}
+Career goal context: {payload.career_goal or 'not supplied'}
+Allowed values: {json.dumps(payload.allowed_values)}
+Student answer: {payload.answer[:800]}
+
+For profile or employment return {{"selected_values":[one allowed value]}}.
+For cpl return {{"selected_values":[zero or more allowed values]}}.
+For skills return {{"skills":[exactly five short, concrete skills relevant to the career goal and answer]}}.
+Never infer official credit, eligibility, or admission status. Use only allowed values except skill text."""
+    client = make_gemini_client()
+    response = client.models.generate_content(model=load_ai_settings().get("model", DEFAULT_MODEL), contents=prompt)
+    result = parse_model_json(response.text or "")
+    if payload.step == "skills":
+        skills = [str(item).strip()[:80] for item in result.get("skills", []) if str(item).strip()][:5]
+        return {"skills": skills}
+    allowed = set(payload.allowed_values)
+    selected = [item for item in result.get("selected_values", []) if item in allowed]
+    return {"selected_values": selected[:9]}
+
+
+@app.post("/api/cuny-beyond/transcript-extract")
+async def extract_cuny_beyond_transcript(document: UploadFile = File(...)):
+    """Extract a reviewable draft; never persist the uploaded document or award credit."""
+    allowed_types = {"application/pdf", "image/jpeg", "image/png"}
+    if document.content_type not in allowed_types:
+        raise HTTPException(status_code=415, detail="Upload a PDF, JPG, or PNG document")
+    content = await document.read(8 * 1024 * 1024 + 1)
+    if not content or len(content) > 8 * 1024 * 1024:
+        raise HTTPException(status_code=413, detail="The document must be between 1 byte and 8 MB")
+    prompt = """Extract completed college courses and AP exams visible in this document.
+Return JSON only: {"courses":[{"institution":"","code":"ABC 123","title":"","credits":3,"grade":"","status":"completed"}],"ap_exams":[{"exam":"AP Biology","score":4}],"warnings":[]}.
+Include only clearly visible records. Exclude courses marked in progress, withdrawn, failed, or planned. Never infer equivalency or official credit. Use null for unreadable credits and explain uncertainty in warnings."""
+    client = make_gemini_client()
+    part = types.Part.from_bytes(data=content, mime_type=document.content_type)
+    response = client.models.generate_content(
+        model=load_ai_settings().get("model", DEFAULT_MODEL),
+        contents=[prompt, part],
+    )
+    result = parse_model_json(response.text or "")
+    courses = []
+    for item in (result.get("courses") or [])[:80]:
+        if not isinstance(item, dict):
+            continue
+        code = " ".join(str(item.get("code") or "").upper().split())[:30]
+        if not code:
+            continue
+        courses.append({
+            "institution": str(item.get("institution") or "")[:120], "code": code,
+            "title": str(item.get("title") or "")[:180], "credits": item.get("credits"),
+            "grade": str(item.get("grade") or "")[:20], "include": True,
+        })
+    ap_exams = [item for item in (result.get("ap_exams") or [])[:20] if isinstance(item, dict)]
+    warnings = [str(item)[:300] for item in (result.get("warnings") or [])[:10]]
+    return {"courses": courses, "ap_exams": ap_exams, "warnings": warnings,
+            "disclaimer": "Draft extraction only. Review every row; BMCC must evaluate official records and award applicable credit."}
 
 
 @app.get("/login")

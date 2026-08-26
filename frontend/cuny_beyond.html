@@ -9,20 +9,17 @@
 </head>
 <body>
   <a class="skip-link" href="#main-content">Skip to main content</a>
-  <header class="public-header" aria-label="BMCC and AI Tech Innovation Hub">
-    <a class="institution-brand" href="/" aria-label="AI Academic Advisement Chatbot home">
-      <img class="bmcc-logo" src="/frontend/assets/branding/bmcc-logo.png" alt="Borough of Manhattan Community College">
-      <span class="brand-divider" aria-hidden="true"></span>
-      <img class="hub-logo" src="/frontend/assets/branding/ai-hub-logo.png" alt="AI Tech Innovation Hub">
-    </a>
-    <a class="login-link" href="/login">Log in</a>
-  </header>
-
   <main id="main-content" class="page-shell">
     <section id="intake-card" class="intake-card chat-window" aria-labelledby="chat-title">
       <div class="chat-window-header">
-        <span class="advisor-avatar" aria-hidden="true">AI</span>
-        <div><strong id="chat-title">AI Academic Advisement Chatbot</strong><small><span class="online-dot" aria-hidden="true"></span>Online · No login required</small></div>
+        <div class="chat-brand-logos" aria-label="BMCC and AI Tech Innovation Hub">
+          <img src="/frontend/assets/branding/bmcc-logo.png" alt="Borough of Manhattan Community College">
+          <span aria-hidden="true"></span>
+          <img src="/frontend/assets/branding/ai-hub-logo.png" alt="AI Tech Innovation Hub">
+        </div>
+        <div class="chat-brand-copy"><strong id="chat-title">AI Academic Advisement Chatbot</strong><small><span class="online-dot" aria-hidden="true"></span>Online · No login required</small></div>
+        <label class="ai-toggle"><input id="ai-assisted" type="checkbox" checked><span>AI assist</span></label>
+        <a class="login-link" href="/login">Log in</a>
         <button id="restart-button" class="text-button" type="button">Start over</button>
       </div>
       <div class="chat-progress">
@@ -62,6 +59,8 @@
               </div>
             </fieldset>
           </div>
+          <label class="field-label free-answer-label" for="profile-free">Or describe yourself in your own words</label>
+          <input id="profile-free" class="career-input free-answer" type="text" maxlength="240" placeholder="For example: I graduated high school and work part-time">
         </section>
 
         <section class="step" data-step="1" hidden>
@@ -90,6 +89,8 @@
             <label><input type="radio" name="employment" value="no"> <span><strong>No</strong><small>I am not currently working</small></span></label>
             <label><input type="radio" name="employment" value="prefer_not"> <span><strong>Prefer not to say</strong><small>Continue without this answer</small></span></label>
           </fieldset>
+          <label class="field-label free-answer-label" for="employment-free">Or tell us about your work situation</label>
+          <input id="employment-free" class="career-input free-answer" type="text" maxlength="240" placeholder="For example: I work weekends in a hospital">
         </section>
 
         <section class="step" data-step="3" hidden>
@@ -98,6 +99,8 @@
           <fieldset id="skill-choices" class="skill-grid">
             <legend class="visually-hidden">Select up to five skills</legend>
           </fieldset>
+          <label class="field-label free-answer-label" for="skills-free">Add a skill in your own words</label>
+          <div class="inline-entry"><input id="skills-free" class="career-input free-answer" type="text" maxlength="100" placeholder="For example: explaining medical information"><button id="add-skill" type="button">Add</button></div>
           <p id="skill-count" class="field-help" role="status" aria-live="polite">0 of 5 selected</p>
         </section>
 
@@ -117,6 +120,14 @@
             <label><input type="checkbox" name="cpl" value="not-sure"> <span><strong>Not sure</strong><small>Help me prepare a CPL conversation</small></span></label>
             <label><input type="checkbox" name="cpl" value="none"> <span><strong>None of these</strong><small>Continue without CPL preparation</small></span></label>
           </fieldset>
+          <label class="field-label free-answer-label" for="cpl-free">Or describe prior courses, exams, training, or experience</label>
+          <textarea id="cpl-free" class="career-input free-answer" maxlength="800" rows="3" placeholder="For example: AP Biology score 4 and two college courses"></textarea>
+          <section id="ap-details" class="ap-details" hidden aria-labelledby="ap-details-title">
+            <h3 id="ap-details-title">Which AP exams did you take?</h3>
+            <p class="field-help">Add each exam and score. BMCC requires at least 3. Results are planning estimates pending official evaluation.</p>
+            <div class="ap-entry"><select id="ap-exam" class="career-input" aria-label="AP exam"></select><select id="ap-score" class="career-input" aria-label="AP score"><option value="3">Score 3</option><option value="4">Score 4</option><option value="5">Score 5</option></select><button id="add-ap" type="button">Add exam</button></div>
+            <div id="ap-results" class="ap-results" aria-live="polite"></div>
+          </section>
         </section>
 
         <section class="step" data-step="5" hidden>
@@ -134,6 +145,14 @@
             <div id="cpl-disclaimer" class="cpl-disclaimer"></div>
             <div id="cpl-results" class="cpl-results"></div>
             <div id="cpl-checklist" class="cpl-checklist"></div>
+          </section>
+          <section class="transcript-section" aria-labelledby="transcript-title">
+            <h3 id="transcript-title">Import previous coursework</h3>
+            <p>Upload a PDF, JPG, or PNG transcript or score report. AI extracts a draft table for your review; nothing becomes official credit.</p>
+            <input id="transcript-file" type="file" accept="application/pdf,image/jpeg,image/png">
+            <button id="analyze-transcript" type="button">Analyze document</button>
+            <div id="transcript-status" role="status" aria-live="polite"></div>
+            <div id="transcript-review"></div>
           </section>
           <div id="referral-action" class="next-stage" hidden>
             <strong>Ready to talk with an advisor?</strong>
