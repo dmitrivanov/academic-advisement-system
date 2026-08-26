@@ -171,6 +171,11 @@
   function openDegreePlanner(index) {
     const result = latestRecommendations[index];
     if (!result) return;
+    saveProgramContext(result);
+    window.location.href = '/db-progress';
+  }
+
+  function saveProgramContext(result) {
     sessionStorage.setItem('selectedProgramContext', JSON.stringify({
       institutionCode: result.institution_code,
       institutionName: result.institution_name,
@@ -180,7 +185,31 @@
       selectedAt: new Date().toISOString(),
       source: 'cuny-beyond'
     }));
-    window.location.href = '/db-progress';
+  }
+
+  function openPlannerModal() {
+    const result = latestRecommendations[0];
+    const status = document.getElementById('transcript-status');
+    if (!result) {
+      status.textContent = 'Find your BMCC program matches first so the completed-course page knows which curriculum to display.';
+      document.getElementById('match-button').focus();
+      return;
+    }
+    saveProgramContext(result);
+    const modal = document.getElementById('planner-modal');
+    document.getElementById('planner-modal-title').textContent = `Review recognized courses for ${result.program_name}`;
+    document.getElementById('planner-modal-frame').src = `/db-progress?embedded=transcript&v=${Date.now()}`;
+    modal.hidden = false;
+    document.body.style.overflow = 'hidden';
+    document.getElementById('close-planner-modal').focus();
+  }
+
+  function closePlannerModal() {
+    const modal = document.getElementById('planner-modal');
+    modal.hidden = true;
+    document.getElementById('planner-modal-frame').src = 'about:blank';
+    document.body.style.overflow = '';
+    document.getElementById('apply-transcript')?.focus();
   }
 
   function renderRecommendations(data) {
@@ -482,6 +511,7 @@
     sessionStorage.setItem('transferSnapshot', JSON.stringify({ completed_courses: imported.map(item => item.code), completed_course_details: imported, source: 'cuny-beyond-import', timestamp: new Date().toISOString() }));
     saveDraft();
     document.getElementById('transcript-status').textContent = `${imported.length} reviewed course or AP equivalenc${imported.length === 1 ? 'y' : 'ies'} will be carried into the interactive degree planner.`;
+    openPlannerModal();
   }
   document.getElementById('analyze-transcript').addEventListener('click', async () => {
     const file = document.getElementById('transcript-file').files[0];
@@ -497,6 +527,9 @@
       renderTranscriptReview(data.courses || [], data.warnings || []);
     } catch (err) { status.textContent = err.message; }
   });
+  document.getElementById('close-planner-modal').addEventListener('click', closePlannerModal);
+  document.querySelector('[data-close-planner]').addEventListener('click', closePlannerModal);
+  document.addEventListener('keydown', event => { if (event.key === 'Escape' && !document.getElementById('planner-modal').hidden) closePlannerModal(); });
 
   async function initialize() {
     renderSkills();

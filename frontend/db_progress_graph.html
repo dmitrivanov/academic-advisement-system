@@ -88,6 +88,8 @@ select {
   background: #dcfce7;
   border-color: #22c55e;
 }
+.course-card.auto-recognized,.alternative-card.auto-recognized { background:#f3e8ff; border-color:#9333ea; box-shadow:0 0 0 3px rgba(147,51,234,.09); }
+.auto-recognized-badge { display:inline-flex; margin-top:8px; padding:4px 8px; border-radius:999px; color:#6b21a8; background:#fff; border:1px solid #d8b4fe; font-size:11px; font-weight:800; }
 
 .course-card.available {
   background: #dbeafe;
@@ -1473,6 +1475,7 @@ button:hover {
 
 /* Compact advising workspace */
 body { background: #f5f5f7; color: #1d1d1f; }
+.embedded-transcript { background:#eef2f8; }.embedded-transcript .container { max-width:1100px; margin:0 auto; padding:16px; }.embedded-transcript .action-dock,.embedded-transcript #studentWelcomeCard,.embedded-transcript #writingIntensiveCard,.embedded-transcript #planningModeCard { display:none!important; }.embedded-transcript .program-card { margin-bottom:14px; }.embedded-transcript #completedCoursesCard { margin-bottom:0; }
 .container { max-width: 1180px; margin: 24px auto; }
 .workspace-nav { display: flex; align-items: center; justify-content: space-between; gap: 24px; margin-bottom: 14px; padding: 6px 4px; }
 .workspace-title h1 { margin: 0; color: #1d1d1f; font-size: 30px; letter-spacing: -.035em; }
@@ -1550,7 +1553,7 @@ body { background: #f5f5f7; color: #1d1d1f; }
 
 </style>
 <link rel="stylesheet" href="/frontend/app_shell.css">
-<script src="/frontend/app_shell.js" defer></script>
+<script src="/frontend/app_shell.js?v=20260826-2" defer></script>
 </head>
 
 <body>
@@ -1793,6 +1796,9 @@ let STUDENT_STATUS = "returning";
 let CURRENT_PLANNING_MODE = "manual";
 let LAST_DEGREE_PLAN = [];
 let OFFICIAL_DEGREE_MAP = null;
+let AUTO_IMPORTED_COURSES = new Set();
+
+if (new URLSearchParams(window.location.search).has("embedded")) document.body.classList.add("embedded-transcript");
 
 const EMPTY_GROUPS = [
   {
@@ -2445,6 +2451,7 @@ function applyCunyBeyondImportedCourses() {
   let imported = [];
   try { imported = JSON.parse(sessionStorage.getItem("cunyBeyondImportedCoursesV1") || "[]"); }
   catch (_) { imported = []; }
+  AUTO_IMPORTED_COURSES = new Set();
   if (!Array.isArray(imported) || !imported.length) return;
   const availableCodes = new Set(
     (CURRENT_REQUIREMENTS.groups || []).flatMap(group => group.courses || []).map(course => course.code)
@@ -2455,7 +2462,10 @@ function applyCunyBeyondImportedCourses() {
     const hasPublishedBmccEquivalency = Boolean(item?.bmcc_equivalency);
     if (!isBmccRecord && !hasPublishedBmccEquivalency) return;
     const code = String(item?.bmcc_equivalency || item?.code || "").trim().toUpperCase();
-    if (availableCodes.has(code)) DIRECT_COMPLETED_COURSES.add(code);
+    if (availableCodes.has(code)) {
+      DIRECT_COMPLETED_COURSES.add(code);
+      AUTO_IMPORTED_COURSES.add(code);
+    }
   });
   COMPLETED_COURSES = new Set(DIRECT_COMPLETED_COURSES);
 }
@@ -3100,7 +3110,8 @@ function createSelectableCourseCard(course) {
   const choiceCredits = selectedChoiceCredits(course.code);
 
   const label = document.createElement("label");
-  label.className = `course-card ${status}`;
+  const autoRecognized = AUTO_IMPORTED_COURSES.has(course.code);
+  label.className = `course-card ${status}${autoRecognized ? " auto-recognized" : ""}`;
 
   const checked = completed.has(course.code) ? "checked" : "";
   const disabled = status === "not_needed" || status === "locked" ? "disabled" : "";
@@ -3157,6 +3168,7 @@ function createSelectableCourseCard(course) {
       <div>Area: ${course.group_name}</div>
     </details>
 
+    ${autoRecognized ? '<span class="auto-recognized-badge">AI recognized — review this selection</span>' : ''}
     ${statusText}
   `;
 
@@ -3170,7 +3182,8 @@ function createAlternativeCourseCard(courses, group) {
   const selectedCourse = courses.find(course => course.code === selectedCode);
   const visibleCourses = selectedCourse ? [selectedCourse] : courses;
   const card = document.createElement("div");
-  card.className = `alternative-card ${selectedCourse ? "completed" : ""}`;
+  const autoRecognized = Boolean(selectedCourse && AUTO_IMPORTED_COURSES.has(selectedCourse.code));
+  card.className = `alternative-card ${selectedCourse ? "completed" : ""}${autoRecognized ? " auto-recognized" : ""}`;
 
   const options = visibleCourses.map(course => {
     const status = getCourseStatus(course.code, course, completed, group);
@@ -3198,6 +3211,7 @@ function createAlternativeCourseCard(courses, group) {
       <span class="alternative-badge">Choose one</span>
     </div>
     <div class="alternative-options">${options}</div>
+    ${autoRecognized ? '<span class="auto-recognized-badge">AI recognized — review this selection</span>' : ''}
     ${selectedCourse ? `<button type="button" class="toggle-button" onclick='clearAlternativeSelection(${JSON.stringify(key)}, ${JSON.stringify(selectedCourse.code)})'>Change selection</button>` : ""}
   `;
   return card;

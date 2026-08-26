@@ -170,5 +170,12 @@
       </form>
     </section>
   </main>
+  <div id="planner-modal" class="planner-modal" hidden>
+    <div class="planner-modal-backdrop" data-close-planner></div>
+    <section class="planner-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="planner-modal-title">
+      <header><div><strong id="planner-modal-title">Review recognized completed courses</strong><small>AI-recognized selections are highlighted in purple. Review and change them before planning.</small></div><button id="close-planner-modal" type="button">Close</button></header>
+      <iframe id="planner-modal-frame" title="Completed courses degree planner"></iframe>
+    </section>
+  </div>
 </body>
 </html>

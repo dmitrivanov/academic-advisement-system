@@ -14,6 +14,7 @@
   }
 
   function render() {
+    if (new URLSearchParams(window.location.search).has('embedded')) return;
     if (!document.body || document.querySelector('.aas-header')) return;
     document.body.classList.add('has-app-shell');
 

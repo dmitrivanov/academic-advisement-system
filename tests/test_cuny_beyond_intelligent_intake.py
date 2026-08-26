@@ -49,3 +49,12 @@ def test_degree_map_and_import_handoffs_are_wired():
     assert "cunyBeyondImportedCoursesV1" in chat
     assert "applyCunyBeyondImportedCourses" in planner
     assert "isBmccRecord" in planner and "hasPublishedBmccEquivalency" in planner
+    assert "openPlannerModal" in chat and "planner-modal-frame" in chat
+    assert "AUTO_IMPORTED_COURSES" in planner and "auto-recognized-badge" in planner
+
+
+def test_embedded_transcript_planner_suppresses_full_app_shell():
+    shell = (ROOT / "frontend/app_shell.js").read_text(encoding="utf-8")
+    planner = (ROOT / "frontend/db_progress_graph.html").read_text(encoding="utf-8")
+    assert "has('embedded')" in shell
+    assert "embedded-transcript" in planner
