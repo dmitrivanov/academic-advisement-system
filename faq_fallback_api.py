@@ -1,3 +1,6 @@
+from contextlib import asynccontextmanager
+import threading
+
 from fastapi import FastAPI, Request, Form, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, RedirectResponse
@@ -17,6 +20,7 @@ from pathlib import Path
 from typing import Optional, Dict, Any
 
 from api_db_routes import router as db_router
+import career_routes
 from career_routes import router as career_router
 from auth import authenticate, is_admin, is_logged_in, require_admin
 from cuny_beyond import is_cuny_beyond_enabled, public_config
@@ -24,7 +28,17 @@ from database import Base, engine
 import models  # noqa: F401 - registers all SQLAlchemy tables
 
 
-app = FastAPI()
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Pre-fetch O*NET details for the curated career list in the background
+    # so the first real user click doesn't pay the cold-cache latency.
+    # Runs only when the ASGI app actually starts (not on a bare import),
+    # so it never fires during tests.
+    threading.Thread(target=career_routes.warm_cache, daemon=True, name="onet-cache-warmup").start()
+    yield
+
+
+app = FastAPI(lifespan=lifespan)
 Base.metadata.create_all(bind=engine)
 app.include_router(db_router)
 app.include_router(career_router)

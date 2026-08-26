@@ -1,6 +1,7 @@
 import csv
 import os
 import time
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 import requests
@@ -103,6 +104,40 @@ def _extract_soft_skills(skill_categories):
     ]
 
 
+def _fetch_career_payload(soc_code: str):
+    """Assemble one occupation's detail payload from O*NET.
+
+    The five sub-resources are independent, so they are requested
+    concurrently instead of one after another; a cold lookup was taking
+    roughly the sum of five ~1.3s round trips (~6-7s) run sequentially.
+    """
+    with ThreadPoolExecutor(max_workers=5) as pool:
+        summary_future = pool.submit(_onet_get, f"/mnm/careers/{soc_code}/")
+        job_outlook_future = pool.submit(_onet_get, f"/mnm/careers/{soc_code}/job_outlook")
+        education_future = pool.submit(_onet_get, f"/mnm/careers/{soc_code}/education")
+        technology_future = pool.submit(_onet_get, f"/mnm/careers/{soc_code}/technology")
+        skills_future = pool.submit(_onet_get, f"/mnm/careers/{soc_code}/skills")
+
+        summary = summary_future.result()
+        job_outlook = job_outlook_future.result()
+        education = education_future.result()
+        technology = technology_future.result()
+        skills = skills_future.result()
+
+    return {
+        "onet_soc_code": soc_code,
+        "title": summary.get("title"),
+        "what_they_do": summary.get("what_they_do"),
+        "bright_outlook": summary.get("tags", {}).get("bright_outlook", False),
+        "salary": job_outlook.get("salary"),
+        "outlook": job_outlook.get("outlook"),
+        "job_zone": education.get("job_zone"),
+        "education_usually_needed": education.get("education_usually_needed", []),
+        "hard_skills": _extract_hard_skills(technology)[:8],
+        "soft_skills": _extract_soft_skills(skills)[:8],
+    }
+
+
 @router.get("/{institution_code}/{program_code}/{soc_code}")
 def get_career_detail(institution_code: str, program_code: str, soc_code: str):
     valid_codes = {row["onet_soc_code"] for row in careers_for_program(institution_code, program_code)}
@@ -116,23 +151,35 @@ def get_career_detail(institution_code: str, program_code: str, soc_code: str):
     if cached and (time.time() - cached[0]) < _CACHE_TTL_SECONDS:
         return cached[1]
 
-    summary = _onet_get(f"/mnm/careers/{soc_code}/")
-    job_outlook = _onet_get(f"/mnm/careers/{soc_code}/job_outlook")
-    education = _onet_get(f"/mnm/careers/{soc_code}/education")
-    technology = _onet_get(f"/mnm/careers/{soc_code}/technology")
-    skills = _onet_get(f"/mnm/careers/{soc_code}/skills")
-
-    payload = {
-        "onet_soc_code": soc_code,
-        "title": summary.get("title"),
-        "what_they_do": summary.get("what_they_do"),
-        "bright_outlook": summary.get("tags", {}).get("bright_outlook", False),
-        "salary": job_outlook.get("salary"),
-        "outlook": job_outlook.get("outlook"),
-        "job_zone": education.get("job_zone"),
-        "education_usually_needed": education.get("education_usually_needed", []),
-        "hard_skills": _extract_hard_skills(technology)[:8],
-        "soft_skills": _extract_soft_skills(skills)[:8],
-    }
+    payload = _fetch_career_payload(soc_code)
     _detail_cache[soc_code] = (time.time(), payload)
     return payload
+
+
+def warm_cache():
+    """Pre-fetch every curated occupation so the first real click during a
+    session doesn't pay the cold-cache O*NET latency. Safe to call from a
+    background thread at app startup: skips silently without a key, and
+    only refetches codes that are missing or stale.
+
+    Careers are warmed one at a time (each internally fetching its five
+    sub-resources concurrently via `_fetch_career_payload`) rather than all
+    at once. O*NET rate-limits bursts of concurrent connections; warming
+    every curated career at once (16 careers x 5 requests) was observed to
+    trigger throttling that also affected concurrent live requests. Running
+    this in the background means the extra time from going one-at-a-time
+    costs nothing real users wait on.
+    """
+    if not get_onet_api_key():
+        return
+
+    now = time.time()
+    stale_codes = [
+        code for code in {row["onet_soc_code"] for row in load_career_pathways()}
+        if code not in _detail_cache or (now - _detail_cache[code][0]) >= _CACHE_TTL_SECONDS
+    ]
+    for code in stale_codes:
+        try:
+            _detail_cache[code] = (time.time(), _fetch_career_payload(code))
+        except HTTPException:
+            continue
