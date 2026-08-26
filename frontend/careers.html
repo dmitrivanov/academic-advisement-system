@@ -260,6 +260,39 @@ h1 { margin-bottom: 6px; }
   padding: 30px 10px;
   text-align: center;
 }
+
+.picker-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+@media (max-width: 600px) {
+  .picker-grid { grid-template-columns: 1fr; }
+}
+
+.picker-grid label {
+  display: block;
+  font-weight: bold;
+  margin-bottom: 7px;
+  font-size: 13px;
+  color: #344054;
+}
+
+.picker-grid select {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid #d7deea;
+  font-size: 14px;
+  box-sizing: border-box;
+  background: white;
+}
+
+.picker-grid select:disabled {
+  background: #f1f5f9;
+  color: #667085;
+}
 </style>
 <link rel="stylesheet" href="/frontend/app_shell.css">
 <script src="/frontend/app_shell.js" defer></script>
@@ -278,11 +311,24 @@ h1 { margin-bottom: 6px; }
     </div>
   </div>
 
+  <div class="card">
+    <div class="picker-grid">
+      <div>
+        <label for="institutionSelect">Campus</label>
+        <select id="institutionSelect"></select>
+      </div>
+      <div>
+        <label for="majorSelect">Major</label>
+        <select id="majorSelect"></select>
+      </div>
+    </div>
+    <p id="pickerNote" class="small-note" style="margin-top:10px; margin-bottom:0;"></p>
+  </div>
+
   <div id="noProgramCard" class="card" style="display:none;">
     <div class="warning">
-      No program is selected yet. Go to Programs and choose a campus and major first.
+      No majors with career data are available yet.
     </div>
-    <a class="button-link" href="/program-selector" style="color:#2563eb; font-weight:bold;">Go to Program Selector</a>
   </div>
 
   <div id="noKeyNotice" class="notice" style="display:none;">
@@ -347,6 +393,8 @@ let CAREERS = [];
 let SELECTED_SOC_CODE = null;
 let CURRENT_DETAIL = null;
 let ACTIVE_SKILLS_TAB = "hard";
+let INSTITUTIONS = [];
+let PROGRAMS = [];
 
 function selectedProgramContext() {
   try {
@@ -361,18 +409,125 @@ function formatCurrency(value) {
   return `$${value.toLocaleString()}`;
 }
 
+async function fetchJson(url) {
+  const response = await fetch(url);
+  if (!response.ok) throw new Error(`Request failed: ${url} (${response.status})`);
+  return await response.json();
+}
+
+function programsForInstitution(institutionCode) {
+  return PROGRAMS.filter(program => program.institution_code === institutionCode && program.has_curriculum);
+}
+
+function institutionHasCareerMajors(institution) {
+  return programsForInstitution(institution.code).length > 0;
+}
+
+function populateInstitutionSelect() {
+  const select = document.getElementById("institutionSelect");
+  select.innerHTML = "";
+
+  const available = INSTITUTIONS.filter(institutionHasCareerMajors);
+  available.forEach(institution => {
+    const option = document.createElement("option");
+    option.value = institution.code;
+    option.textContent = `${institution.code} — ${institution.name}`;
+    select.appendChild(option);
+  });
+
+  const preferred = SELECTED_PROGRAM && available.some(inst => inst.code === SELECTED_PROGRAM.institutionCode)
+    ? SELECTED_PROGRAM.institutionCode
+    : available[0]?.code;
+  if (preferred) select.value = preferred;
+
+  return available;
+}
+
+function populateMajorSelect() {
+  const institutionSelect = document.getElementById("institutionSelect");
+  const majorSelect = document.getElementById("majorSelect");
+  majorSelect.innerHTML = "";
+
+  const matching = programsForInstitution(institutionSelect.value);
+  matching.forEach(program => {
+    const option = document.createElement("option");
+    option.value = program.code;
+    option.textContent = program.name;
+    majorSelect.appendChild(option);
+  });
+
+  const preferred = SELECTED_PROGRAM && SELECTED_PROGRAM.institutionCode === institutionSelect.value
+    && matching.some(program => program.code === SELECTED_PROGRAM.programCode)
+    ? SELECTED_PROGRAM.programCode
+    : matching[0]?.code;
+  if (preferred) majorSelect.value = preferred;
+
+  return matching;
+}
+
+function currentPickerSelection() {
+  const institutionSelect = document.getElementById("institutionSelect");
+  const majorSelect = document.getElementById("majorSelect");
+  const program = PROGRAMS.find(
+    p => p.institution_code === institutionSelect.value && p.code === majorSelect.value
+  );
+  if (!program) return null;
+  return {
+    institutionCode: program.institution_code,
+    programCode: program.code,
+    programName: program.name,
+  };
+}
+
 async function init() {
-  SELECTED_PROGRAM = selectedProgramContext();
-  if (!SELECTED_PROGRAM || !SELECTED_PROGRAM.institutionCode || !SELECTED_PROGRAM.programCode) {
-    document.getElementById("noProgramCard").style.display = "block";
-    document.getElementById("pageSubtitle").textContent = "No program selected.";
+  document.getElementById("pageSubtitle").textContent = "Loading available majors...";
+
+  try {
+    [INSTITUTIONS, PROGRAMS] = await Promise.all([
+      fetchJson("/api/db/institutions"),
+      fetchJson("/api/db/programs?selector_only=true"),
+    ]);
+  } catch (error) {
+    document.getElementById("pageSubtitle").textContent = "Could not load the list of majors. Please try again later.";
     return;
   }
 
+  SELECTED_PROGRAM = selectedProgramContext();
+
+  const availableInstitutions = populateInstitutionSelect();
+  if (!availableInstitutions.length) {
+    document.getElementById("noProgramCard").style.display = "block";
+    document.getElementById("pageSubtitle").textContent = "No majors with career data are available yet.";
+    return;
+  }
+  populateMajorSelect();
+
+  document.getElementById("institutionSelect").addEventListener("change", () => {
+    populateMajorSelect();
+    loadCareersForSelection();
+  });
+  document.getElementById("majorSelect").addEventListener("change", loadCareersForSelection);
+
+  await loadCareersForSelection();
+}
+
+async function loadCareersForSelection() {
+  const selection = currentPickerSelection();
+  if (!selection) return;
+  SELECTED_PROGRAM = selection;
+  SELECTED_SOC_CODE = null;
+  CURRENT_DETAIL = null;
+
+  document.getElementById("pickerNote").textContent =
+    `Showing careers for ${selection.programName} at ${selection.institutionCode}.`;
   document.getElementById("pageSubtitle").textContent =
     `Careers connected to ${SELECTED_PROGRAM.programName || SELECTED_PROGRAM.programCode}`;
   document.getElementById("careersListTitle").textContent =
     `Where ${SELECTED_PROGRAM.programName || "this major"} students can go`;
+  document.getElementById("detailEmptyState").textContent = "Select a career on the left to see details.";
+  document.getElementById("detailEmptyState").style.display = "block";
+  document.getElementById("detailContent").style.display = "none";
+  document.getElementById("noKeyNotice").style.display = "none";
 
   let data;
   try {
