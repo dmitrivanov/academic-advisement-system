@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>BMCC Research Navigator</title><link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+  <main class="shell">
+    <header class="hero">
+      <div class="mark" aria-hidden="true">R</div>
+      <div><p class="eyebrow">BMCC Office of Research</p><h1>Research Navigator</h1><p class="status"><span></span> Reviewed answers, available now</p></div>
+      <a class="admin-link" href="/admin">Staff</a>
+    </header>
+    <section class="chat" aria-label="Research Office FAQ chat">
+      <div id="messages" class="messages" aria-live="polite">
+        <article class="message bot"><div class="avatar">R</div><div class="bubble"><strong>Research Navigator</strong><p>Hi! Ask me about BMCC undergraduate research programs, eligibility, faculty mentors, applications, stipends, or presentations.</p><p class="note">My answers come from material reviewed for this prototype. Please confirm changing deadlines on the official program page.</p></div></article>
+      </div>
+      <div id="suggestions" class="suggestions" aria-label="Suggested questions"></div>
+      <form id="chat-form" class="composer">
+        <label class="sr-only" for="message">Ask a research question</label>
+        <textarea id="message" rows="1" placeholder="Ask a question about research at BMCC..." required></textarea>
+        <button type="submit">Send <span aria-hidden="true">➜</span></button>
+      </form>
+      <div class="controls"><label><input id="ai-toggle" type="checkbox" checked> AI-assisted wording</label><span>AI is restricted to approved FAQ evidence.</span></div>
+    </section>
+    <footer>Prototype · Answers are informational and do not replace current program instructions.</footer>
+  </main>
+  <script src="/static/chat.js"></script>
+</body></html>
+

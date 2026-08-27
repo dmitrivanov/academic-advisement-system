@@ -1,0 +1,5 @@
+.env
+.venv/
+__pycache__/
+*.pyc
+data/research_faq.db

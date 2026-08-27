@@ -4,8 +4,23 @@ services:
     runtime: python
 
     buildCommand: |
-  	pip install -r requirements.txt
-  	python3 seed_database.py
+      pip install -r requirements.txt
+      python3 seed_database.py
 
     startCommand: |
       uvicorn faq_fallback_api:app --host 0.0.0.0 --port $PORT
+
+  - type: web
+    name: bmcc-research-office-faq
+    runtime: python
+    rootDir: research_office_faq_module
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    envVars:
+      - key: ADMIN_PASSWORD
+        generateValue: true
+      - key: GEMINI_MODEL
+        value: gemini-2.5-flash-lite
+      - key: GEMINI_API_KEY
+        sync: false
