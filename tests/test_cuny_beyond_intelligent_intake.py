@@ -16,7 +16,7 @@ def test_public_chat_has_universal_text_ai_and_import_controls():
 
 def test_branding_is_inside_chat_header_and_old_public_bar_is_removed():
     page = (ROOT / "frontend/cuny_beyond.html").read_text(encoding="utf-8")
-    assert "chat-brand-logos" in page
+    assert "chat-header-logo-bmcc" in page and "chat-header-logo-hub" in page
     assert "advisor-avatar" not in page
     assert '<header class="public-header"' not in page
     assert 'href="https://www.bmcc.cuny.edu/"' in page

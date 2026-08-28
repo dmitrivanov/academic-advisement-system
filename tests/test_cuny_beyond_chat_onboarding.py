@@ -16,7 +16,7 @@ def test_onboarding_uses_chat_window_history_and_quick_choices():
     assert "chatAnswers" in js and "Private browser draft" in page
 
 
-def test_public_landing_is_branded_grouped_and_login_optional():
+def test_public_landing_is_branded_grouped_and_login_hidden():
     page = (ROOT / "frontend/cuny_beyond.html").read_text(encoding="utf-8")
     css = (ROOT / "frontend/cuny_beyond.css").read_text(encoding="utf-8")
     server = (ROOT / "faq_fallback_api.py").read_text(encoding="utf-8")
@@ -27,7 +27,9 @@ def test_public_landing_is_branded_grouped_and_login_optional():
     assert "What best describes you?" in page and "Which path best describes you?" not in page
     assert "New students" in page and "Current CUNY / BMCC students" in page
     assert 'value="current_bmcc"' in page and 'value="current_cuny"' in page
-    assert 'class="login-link" href="/login">Log in</a>' in page
+    assert 'href="/login">Log in</a>' not in page
+    assert "chat-header-logo-bmcc" in page and "chat-header-logo-hub" in page
+    assert 'id="ai-assisted" type="checkbox" checked hidden' in page
     assert ".profile-groups" in css and ".profile-group-current" in css
     root_route = server.split('@app.get("/")', 1)[1].split('@app.get("/progress")', 1)[0]
     assert 'FileResponse("frontend/cuny_beyond.html")' in root_route
