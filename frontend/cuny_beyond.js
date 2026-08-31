@@ -230,7 +230,7 @@
         <p class="match-explanation">${escapeHtml(item.explanation)}</p>
         <div class="match-details">${tags}</div>
         <p class="source-note">Career evidence: ${item.score_components.career} points; selected-skill evidence: ${item.score_components.skills} points. Reviewed ${escapeHtml(item.reviewed_at)} from <a href="${safeUrl(item.source_url)}" target="_blank" rel="noopener">${escapeHtml(item.source_title)}</a>.</p>
-        <div class="recommendation-actions"><button type="button" data-open-program="${index}">Open interactive degree planner</button><a href="${safeUrl(item.official_program_url)}" target="_blank" rel="noopener">Official BMCC program page</a></div>${degreeMap}
+        <div class="recommendation-actions"><button type="button" data-open-program="${index}">Open interactive degree planner</button>${window.CurriculumGraph?.isSupported(item.program_code) ? `<button type="button" data-open-graph="${escapeHtml(item.program_code)}">View course dependency map</button>` : ''}<a href="${safeUrl(item.official_program_url)}" target="_blank" rel="noopener">Official BMCC program page</a></div>${degreeMap}
       </article>`;
     }).join('');
   }
@@ -421,6 +421,8 @@
   document.getElementById('recommendation-results').addEventListener('click', event => {
     const button = event.target.closest('[data-open-program]');
     if (button) openDegreePlanner(Number(button.dataset.openProgram));
+    const graphButton = event.target.closest('[data-open-graph]');
+    if (graphButton) CurriculumGraph.open(graphButton.dataset.openGraph);
     const retry = event.target.closest('[data-retry-career]');
     if (retry) {
       document.getElementById('career-goal').value = retry.dataset.retryCareer;

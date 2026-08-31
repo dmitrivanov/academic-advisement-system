@@ -1553,6 +1553,7 @@ body { background: #f5f5f7; color: #1d1d1f; }
 
 </style>
 <link rel="stylesheet" href="/frontend/app_shell.css">
+<link rel="stylesheet" href="/frontend/curriculum_graph.css?v=1">
 <script src="/frontend/app_shell.js?v=20260826-2" defer></script>
 </head>
 
@@ -1584,6 +1585,10 @@ body { background: #f5f5f7; color: #1d1d1f; }
       <button class="action-item" onclick="changeProgram()" title="Choose another campus or program">
         <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h11M4 17h16M17 4l3 3-3 3M7 14l-3 3 3 3"/></svg>
         <span class="action-copy"><strong>Change Program</strong><small>Campus or curriculum</small></span>
+      </button>
+      <button id="dependencyGraphButton" class="action-item" onclick="openDependencyGraph()" style="display:none;" title="View course prerequisite tree">
+        <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v5M6 20v-5h12v5M6 15v-3h12v3M12 9v3"/><circle cx="12" cy="3" r="2"/><circle cx="6" cy="21" r="2"/><circle cx="18" cy="21" r="2"/></svg>
+        <span class="action-copy"><strong>Dependency Map</strong><small>Prerequisite course tree</small></span>
       </button>
       <div class="action-spacer"></div>
       <div id="progressWidget" class="progress-widget" onclick="toggleProgressDetails()" onkeydown="if(event.key === 'Enter' || event.key === ' '){ event.preventDefault(); toggleProgressDetails(); }" role="button" tabindex="0" aria-label="Show detailed degree progress">
@@ -2230,7 +2235,15 @@ function updateSelectedProgramHeader() {
     <span class="program-context-item"><strong>Catalog</strong> ${program.catalog_year || "Not specified"}</span>
     ${sourceLinks ? `<span class="program-context-item"><strong>Official maps</strong> ${sourceLinks}</span>` : ""}
   `;
+  const graphButton = document.getElementById("dependencyGraphButton");
+  if (graphButton) graphButton.style.display = window.CurriculumGraph?.isSupported(program.code) ? "flex" : "none";
   configureWritingIntensiveRequirement();
+}
+
+function openDependencyGraph() {
+  const programCode = CURRENT_REQUIREMENTS?.program?.code;
+  if (!programCode || !window.CurriculumGraph?.isSupported(programCode)) return;
+  window.CurriculumGraph.open(programCode, { completedCourseCodes: [...getCompletedCourses()] });
 }
 
 async function loadInstitutions() {
@@ -4620,6 +4633,7 @@ function updateProgressWidget() {
 
 </script>
 
+<script src="/frontend/curriculum_graph.js?v=1"></script>
 <script src="/frontend/session_access.js"></script>
 </body>
 </html>

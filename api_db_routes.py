@@ -43,6 +43,14 @@ from models import (
     TransferOption,
     GovernanceDraft,
     GovernanceDraftVersion,
+    CurriculumGraphEdgeOverride,
+)
+from curriculum_graph_service import (
+    ALLOWED_OVERRIDE_ACTIONS,
+    ALLOWED_RELATION_TYPES,
+    CS_GRAPH_PROGRAM_CODES,
+    build_curriculum_graph,
+    is_cs_graph_program,
 )
 
 
@@ -85,6 +93,15 @@ class CurriculumDraftPayload(BaseModel):
 class DraftStatusPayload(BaseModel):
     status: str
     note: Optional[str] = None
+
+
+class CurriculumGraphEdgePayload(BaseModel):
+    source_course_id: int
+    target_course_id: int
+    relation_type: str = "prerequisite"
+    action: str = "add"
+    group_id: int = Field(default=1, ge=1, le=99)
+    note: Optional[str] = Field(default=None, max_length=500)
 
 
 class CunyBeyondRecommendationPayload(BaseModel):
@@ -1940,26 +1957,98 @@ def get_program_graph(program_code: str, db: Session = Depends(get_db)):
     program = db.query(Program).filter_by(code=program_code).first()
 
     if not program:
-        return {"error": "Program not found"}
+        raise HTTPException(status_code=404, detail="Program not found")
+    if not is_cs_graph_program(program):
+        raise HTTPException(status_code=404, detail="Dependency graph is currently available only for CS majors")
+    return build_curriculum_graph(db, program)
 
-    links = db.query(ProgramCourse).filter_by(program_id=program.id).all()
 
-    courses = {}
-    for link in links:
-        courses[link.course.display_code] = build_course_payload(db, program.id, link.course)
+@router.get("/admin/curriculum-graphs/programs")
+def get_curriculum_graph_programs(_admin=Depends(require_admin), db: Session = Depends(get_db)):
+    programs = (
+        db.query(Program)
+        .options(joinedload(Program.department).joinedload(Department.institution))
+        .filter(Program.code.in_(CS_GRAPH_PROGRAM_CODES))
+        .order_by(Program.name, Program.catalog_year)
+        .all()
+    )
+    return [{
+        "id": program.id,
+        "code": program.code,
+        "name": program.name,
+        "degree_type": program.degree_type,
+        "catalog_year": program.catalog_year,
+        "institution": program.department.institution.name,
+        "institution_code": program.department.institution.code,
+    } for program in programs]
 
-    return {
-        "program": {
-            "code": program.code,
-            "name": program.name,
-            "catalog_year": program.catalog_year,
-            "degree_type": program.degree_type,
-            "department": program.department.name,
-            "institution": program.department.institution.name,
-            "institution_code": program.department.institution.code,
-        },
-        "courses": courses,
-    }
+
+@router.put("/admin/curriculum-graphs/{program_code}/edges")
+def set_curriculum_graph_edge(
+    program_code: str,
+    payload: CurriculumGraphEdgePayload,
+    admin=Depends(require_admin),
+    db: Session = Depends(get_db),
+):
+    program = db.query(Program).filter_by(code=program_code).first()
+    if not program or not is_cs_graph_program(program):
+        raise HTTPException(status_code=404, detail="CS graph program not found")
+    relation_type = payload.relation_type.strip().lower()
+    action = payload.action.strip().lower()
+    if relation_type not in ALLOWED_RELATION_TYPES:
+        raise HTTPException(status_code=400, detail="Unsupported relationship type")
+    if action not in ALLOWED_OVERRIDE_ACTIONS:
+        raise HTTPException(status_code=400, detail="Action must be add or remove")
+    if payload.source_course_id == payload.target_course_id:
+        raise HTTPException(status_code=400, detail="A course cannot depend on itself")
+
+    institution_id = program.department.institution_id
+    source = db.query(Course).filter_by(id=payload.source_course_id, institution_id=institution_id).first()
+    target = db.query(Course).filter_by(id=payload.target_course_id, institution_id=institution_id).first()
+    if not source or not target:
+        raise HTTPException(status_code=400, detail="Both courses must belong to the program campus")
+
+    row = db.query(CurriculumGraphEdgeOverride).filter_by(
+        program_id=program.id,
+        source_course_id=source.id,
+        target_course_id=target.id,
+        relation_type=relation_type,
+        group_id=payload.group_id,
+    ).first()
+    if not row:
+        row = CurriculumGraphEdgeOverride(
+            program_id=program.id,
+            source_course_id=source.id,
+            target_course_id=target.id,
+            relation_type=relation_type,
+            group_id=payload.group_id,
+        )
+        db.add(row)
+    row.action = action
+    row.note = payload.note.strip() if payload.note else None
+    row.updated_by = str(admin)
+    row.updated_at = datetime.now(timezone.utc)
+    db.commit()
+    db.refresh(row)
+    return {"status": "saved", "override_id": row.id, "graph": build_curriculum_graph(db, program)}
+
+
+@router.delete("/admin/curriculum-graphs/{program_code}/overrides/{override_id}")
+def delete_curriculum_graph_override(
+    program_code: str,
+    override_id: int,
+    _admin=Depends(require_admin),
+    db: Session = Depends(get_db),
+):
+    program = db.query(Program).filter_by(code=program_code).first()
+    if not program or not is_cs_graph_program(program):
+        raise HTTPException(status_code=404, detail="CS graph program not found")
+    row = db.query(CurriculumGraphEdgeOverride).filter_by(id=override_id, program_id=program.id).first()
+    if not row:
+        raise HTTPException(status_code=404, detail="Graph override not found")
+    db.delete(row)
+    db.commit()
+    return {"status": "deleted", "graph": build_curriculum_graph(db, program)}
 
 
 @router.get("/programs/{program_code}/requirements")

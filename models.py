@@ -365,6 +365,35 @@ class CoursePrerequisite(Base):
     )
 
 
+class CurriculumGraphEdgeOverride(Base):
+    """Reversible admin edits layered over canonical curriculum relationships."""
+
+    __tablename__ = "curriculum_graph_edge_overrides"
+
+    id = Column(Integer, primary_key=True, index=True)
+    program_id = Column(Integer, ForeignKey("programs.id"), nullable=False, index=True)
+    source_course_id = Column(Integer, ForeignKey("courses.id"), nullable=False)
+    target_course_id = Column(Integer, ForeignKey("courses.id"), nullable=False)
+    relation_type = Column(String, nullable=False, default="prerequisite")
+    action = Column(String, nullable=False, default="add")
+    group_id = Column(Integer, nullable=False, default=1)
+    note = Column(String, nullable=True)
+    updated_by = Column(String, nullable=True)
+    created_at = Column(DateTime, nullable=False, default=lambda: datetime.now(timezone.utc))
+    updated_at = Column(DateTime, nullable=False, default=lambda: datetime.now(timezone.utc))
+
+    __table_args__ = (
+        UniqueConstraint(
+            "program_id",
+            "source_course_id",
+            "target_course_id",
+            "relation_type",
+            "group_id",
+            name="uq_curriculum_graph_override",
+        ),
+    )
+
+
 class CourseRequirementGroupPrerequisite(Base):
     __tablename__ = "course_requirement_group_prerequisites"
 

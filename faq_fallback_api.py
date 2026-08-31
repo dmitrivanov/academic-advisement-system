@@ -544,6 +544,13 @@ def serve_cuny_beyond_governance(request: Request):
     return FileResponse("frontend/governance_dashboard.html")
 
 
+@app.get("/admin/curriculum-graph")
+def serve_curriculum_graph_admin(request: Request):
+    if not is_admin(request):
+        return RedirectResponse("/login", status_code=303)
+    return FileResponse("frontend/curriculum_graph_admin.html")
+
+
 app.mount("/frontend", StaticFiles(directory="frontend"), name="frontend")
 app.mount("/docs", StaticFiles(directory="docs"), name="docs")
 

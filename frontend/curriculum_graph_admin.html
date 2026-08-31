@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Curriculum Graph Editor | Academic Advisement</title>
+  <link rel="stylesheet" href="/frontend/app_shell.css">
+  <link rel="stylesheet" href="/frontend/curriculum_graph.css?v=1">
+  <style>
+    body { margin: 0; color: #172033; background: #f3f6fb; font-family: Arial, sans-serif; }
+    main { max-width: 1240px; margin: 30px auto; padding: 0 20px 50px; }
+    .hero, .editor-card { padding: 22px; margin-bottom: 18px; border: 1px solid #dbe4f0; border-radius: 18px; background: white; box-shadow: 0 8px 24px rgba(15,23,42,.06); }
+    .hero { display: flex; align-items: center; justify-content: space-between; gap: 20px; }
+    h1, h2 { margin: 0 0 7px; } p { color: #64748b; }
+    .back { padding: 10px 14px; border-radius: 10px; color: white; background: #1d4ed8; text-decoration: none; font-weight: 800; }
+    .form-grid { display: grid; grid-template-columns: 1.2fr 1.2fr .8fr .65fr; gap: 12px; }
+    label { display: block; margin-bottom: 5px; color: #475569; font-size: 12px; font-weight: 800; }
+    select, input, textarea { width: 100%; box-sizing: border-box; padding: 10px; border: 1px solid #cbd5e1; border-radius: 10px; background: white; }
+    textarea { min-height: 72px; resize: vertical; }
+    button { padding: 10px 14px; border: 0; border-radius: 10px; color: white; background: #1d4ed8; font-weight: 800; cursor: pointer; }
+    button.secondary { color: #1e3a8a; background: #dbeafe; }
+    button.danger { color: #991b1b; background: #fee2e2; }
+    .actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 12px; }
+    .message { min-height: 20px; margin-top: 10px; color: #166534; font-weight: 700; }
+    .table-wrap { overflow-x: auto; } table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th, td { padding: 9px; text-align: left; border-bottom: 1px solid #e2e8f0; } th { background: #eff6ff; }
+    #graphPreview .curriculum-tree-panel, #graphPreview .curriculum-cluster { box-shadow: none; }
+    @media (max-width: 800px) { .form-grid { grid-template-columns: 1fr; } .hero { align-items: flex-start; flex-direction: column; } }
+  </style>
+  <script src="/frontend/app_shell.js" defer></script>
+</head>
+<body>
+<main>
+  <section class="hero"><div><h1>Curriculum Dependency Graph Editor</h1><p>CS majors only. Canonical CSV prerequisites remain unchanged; edits are stored as reversible graph overrides.</p></div><a class="back" href="/admin">Admin dashboard</a></section>
+  <section class="editor-card">
+    <label for="programSelect">Computer Science program</label>
+    <select id="programSelect"></select>
+  </section>
+  <section class="editor-card">
+    <h2>Add or hide a relationship</h2>
+    <p>Choose the earlier course first, then the course it unlocks. OR alternatives share the same group number.</p>
+    <div class="form-grid">
+      <div><label for="sourceCourse">Earlier / prerequisite course</label><select id="sourceCourse"></select></div>
+      <div><label for="targetCourse">Later / dependent course</label><select id="targetCourse"></select></div>
+      <div><label for="relationType">Relationship</label><select id="relationType"><option value="prerequisite">Prerequisite</option><option value="corequisite">Corequisite</option><option value="recommended">Recommended sequence</option></select></div>
+      <div><label for="groupId">AND/OR group</label><input id="groupId" type="number" min="1" max="99" value="1"></div>
+    </div>
+    <label for="edgeNote" style="margin-top:12px;">Administrative note (optional)</label><textarea id="edgeNote" placeholder="Source, rationale, or review note"></textarea>
+    <div class="actions"><button type="button" onclick="saveEdge('add')">Add relationship</button><button class="danger" type="button" onclick="saveEdge('remove')">Hide canonical relationship</button></div>
+    <div id="message" class="message" aria-live="polite"></div>
+  </section>
+  <section class="editor-card"><h2>Administrator overrides</h2><p>Reset removes the override and restores the canonical CSV relationship.</p><div class="table-wrap"><table><thead><tr><th>From</th><th>To</th><th>Type</th><th>Action</th><th>Group</th><th>Note</th><th></th></tr></thead><tbody id="overrideRows"></tbody></table></div></section>
+  <section class="editor-card"><h2>Live preview</h2><div id="graphPreview"></div></section>
+</main>
+<script src="/frontend/curriculum_graph.js?v=1"></script>
+<script>
+let currentGraph = null;
+const programSelect = document.getElementById('programSelect');
+const message = document.getElementById('message');
+
+async function fetchJson(url, options) { const response = await fetch(url, options); const data = await response.json().catch(() => ({})); if (!response.ok) throw new Error(data.detail || 'Request failed'); return data; }
+function fillCourses() { const options = currentGraph.nodes.map(node => `<option value="${node.id}">${node.code} — ${node.title}</option>`).join(''); document.getElementById('sourceCourse').innerHTML = options; document.getElementById('targetCourse').innerHTML = options; }
+function renderOverrides() { document.getElementById('overrideRows').innerHTML = currentGraph.overrides.length ? currentGraph.overrides.map(row => `<tr><td>${row.source_code || row.source_course_id}</td><td>${row.target_code || row.target_course_id}</td><td>${row.relation_type}</td><td>${row.action}</td><td>${row.group_id}</td><td>${row.note || ''}</td><td><button class="secondary" onclick="resetOverride(${row.id})">Reset</button></td></tr>`).join('') : '<tr><td colspan="7">No administrator overrides. The graph uses canonical prerequisite data.</td></tr>'; }
+async function loadGraph() { currentGraph = await CurriculumGraph.load(programSelect.value, document.getElementById('graphPreview')); fillCourses(); renderOverrides(); }
+async function saveEdge(action) { try { message.textContent = 'Saving…'; const payload = { source_course_id: Number(document.getElementById('sourceCourse').value), target_course_id: Number(document.getElementById('targetCourse').value), relation_type: document.getElementById('relationType').value, action, group_id: Number(document.getElementById('groupId').value), note: document.getElementById('edgeNote').value }; const data = await fetchJson(`/api/db/admin/curriculum-graphs/${encodeURIComponent(programSelect.value)}/edges`, {method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload)}); currentGraph = data.graph; CurriculumGraph.render(currentGraph, document.getElementById('graphPreview')); renderOverrides(); message.textContent = action === 'add' ? 'Relationship added.' : 'Canonical relationship hidden.'; } catch (error) { message.textContent = error.message; } }
+async function resetOverride(id) { try { const data = await fetchJson(`/api/db/admin/curriculum-graphs/${encodeURIComponent(programSelect.value)}/overrides/${id}`, {method:'DELETE'}); currentGraph = data.graph; CurriculumGraph.render(currentGraph, document.getElementById('graphPreview')); renderOverrides(); message.textContent = 'Override reset; canonical graph restored.'; } catch (error) { message.textContent = error.message; } }
+async function init() { try { const programs = await fetchJson('/api/db/admin/curriculum-graphs/programs'); programs.sort((a, b) => (a.institution_code === 'BMCC' ? -1 : b.institution_code === 'BMCC' ? 1 : a.institution_code.localeCompare(b.institution_code))); programSelect.innerHTML = programs.map(program => `<option value="${program.code}">${program.institution_code} · ${program.name} (${program.catalog_year || 'current'})</option>`).join(''); programSelect.addEventListener('change', loadGraph); await loadGraph(); } catch (error) { message.textContent = error.message; } }
+init();
+</script>
+</body>
+</html>
