@@ -48,13 +48,22 @@ class CurriculumGraphModuleTests(unittest.TestCase):
     def test_group_branches_are_compact_sequenced_and_course_cards_expand(self):
         component = (ROOT / "frontend" / "curriculum_graph.js").read_text(encoding="utf-8")
         styles = (ROOT / "frontend" / "curriculum_graph.css").read_text(encoding="utf-8")
-        self.assertIn('<details class="curriculum-cluster', component)
+        self.assertIn('<details class="curriculum-group-tree', component)
         self.assertIn('function layeredSubset', component)
-        self.assertIn('sequence available', component)
+        self.assertIn("const startOpen = hasSequence", component)
         self.assertIn('aria-expanded="false"', component)
         self.assertIn("card.classList.toggle('expanded'", component)
-        self.assertIn('.curriculum-branch-grid', styles)
+        self.assertIn('.curriculum-group-card', styles)
         self.assertIn('.curriculum-node.expanded .node-details', styles)
+
+    def test_graph_redraws_after_resizing_and_highlights_downstream_path(self):
+        component = (ROOT / "frontend" / "curriculum_graph.js").read_text(encoding="utf-8")
+        styles = (ROOT / "frontend" / "curriculum_graph.css").read_text(encoding="utf-8")
+        self.assertIn('new ResizeObserver(scheduleDrawEdges)', component)
+        self.assertIn("setTimeout(() => requestAnimationFrame(drawEdges), 180)", component)
+        self.assertIn('function downstreamPath', component)
+        self.assertIn("path.setAttribute('stroke-width', '5')", component)
+        self.assertIn('.curriculum-node.path-destination', styles)
 
     def test_admin_changes_are_stored_as_overrides_not_canonical_rows(self):
         models = (ROOT / "models.py").read_text(encoding="utf-8")

@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Curriculum Graph Editor | Academic Advisement</title>
   <link rel="stylesheet" href="/frontend/app_shell.css">
-  <link rel="stylesheet" href="/frontend/curriculum_graph.css?v=2">
+  <link rel="stylesheet" href="/frontend/curriculum_graph.css?v=3">
   <style>
     body { margin: 0; color: #172033; background: #f3f6fb; font-family: Arial, sans-serif; }
     main { max-width: 1240px; margin: 30px auto; padding: 0 20px 50px; }
@@ -52,7 +52,7 @@
   <section class="editor-card"><h2>Administrator overrides</h2><p>Reset removes the override and restores the canonical CSV relationship.</p><div class="table-wrap"><table><thead><tr><th>From</th><th>To</th><th>Type</th><th>Action</th><th>Group</th><th>Note</th><th></th></tr></thead><tbody id="overrideRows"></tbody></table></div></section>
   <section class="editor-card"><h2>Live preview</h2><div id="graphPreview"></div></section>
 </main>
-<script src="/frontend/curriculum_graph.js?v=2"></script>
+<script src="/frontend/curriculum_graph.js?v=3"></script>
 <script>
 let currentGraph = null;
 const programSelect = document.getElementById('programSelect');
