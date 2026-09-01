@@ -45,6 +45,17 @@ class CurriculumGraphModuleTests(unittest.TestCase):
         self.assertIn("/admin/curriculum-graph", dashboard)
         self.assertIn('@app.get("/admin/curriculum-graph")', server)
 
+    def test_group_branches_are_compact_sequenced_and_course_cards_expand(self):
+        component = (ROOT / "frontend" / "curriculum_graph.js").read_text(encoding="utf-8")
+        styles = (ROOT / "frontend" / "curriculum_graph.css").read_text(encoding="utf-8")
+        self.assertIn('<details class="curriculum-cluster', component)
+        self.assertIn('function layeredSubset', component)
+        self.assertIn('sequence available', component)
+        self.assertIn('aria-expanded="false"', component)
+        self.assertIn("card.classList.toggle('expanded'", component)
+        self.assertIn('.curriculum-branch-grid', styles)
+        self.assertIn('.curriculum-node.expanded .node-details', styles)
+
     def test_admin_changes_are_stored_as_overrides_not_canonical_rows(self):
         models = (ROOT / "models.py").read_text(encoding="utf-8")
         api = (ROOT / "api_db_routes.py").read_text(encoding="utf-8")

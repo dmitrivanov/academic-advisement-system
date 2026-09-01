@@ -19,9 +19,74 @@
     return modal;
   }
 
-  function nodeCard(node) {
+  function relationshipSummary(node, graph) {
+    const nodeById = new Map(graph.nodes.map(item => [item.id, item]));
+    const incoming = graph.edges.filter(edge => edge.target_id === node.id).map(edge => nodeById.get(edge.source_id)?.code).filter(Boolean);
+    const outgoing = graph.edges.filter(edge => edge.source_id === node.id).map(edge => nodeById.get(edge.target_id)?.code).filter(Boolean);
+    return { incoming, outgoing };
+  }
+
+  function nodeCard(node, graph) {
     const completed = state.completed.has(node.code) ? ' completed' : '';
-    return `<article class="curriculum-node${completed}" data-node-id="${node.id}"><div class="code">${escapeHtml(node.code)}</div><div class="title">${escapeHtml(node.title)}</div><div class="credits">${node.credits} credit${node.credits === 1 ? '' : 's'}</div></article>`;
+    const relationships = relationshipSummary(node, graph);
+    const prerequisites = relationships.incoming.length ? relationships.incoming.join(' or ') : 'None shown';
+    const unlocks = relationships.outgoing.length ? relationships.outgoing.join(', ') : 'No later course shown';
+    return `<button type="button" class="curriculum-node${completed}" data-node-id="${node.id}" aria-expanded="false"><span class="node-topline"><span class="code">${escapeHtml(node.code)}</span><span class="node-expand" aria-hidden="true">+</span></span><span class="node-details"><span class="title">${escapeHtml(node.title)}</span><span class="credits">${node.credits} credit${node.credits === 1 ? '' : 's'}</span><span class="relationship"><strong>Needs:</strong> ${escapeHtml(prerequisites)}</span><span class="relationship"><strong>Unlocks:</strong> ${escapeHtml(unlocks)}</span></span></button>`;
+  }
+
+  function layeredSubset(nodeIds, graph) {
+    const ids = new Set(nodeIds);
+    const inbound = new Map([...ids].map(id => [id, 0]));
+    const outbound = new Map([...ids].map(id => [id, []]));
+    graph.edges.forEach(edge => {
+      if (edge.relation_type !== 'prerequisite' || !ids.has(edge.source_id) || !ids.has(edge.target_id)) return;
+      outbound.get(edge.source_id).push(edge.target_id);
+      inbound.set(edge.target_id, inbound.get(edge.target_id) + 1);
+    });
+    let ready = [...ids].filter(id => inbound.get(id) === 0).sort((a, b) => a - b);
+    const layers = [], emitted = new Set();
+    while (ready.length) {
+      const level = ready;
+      layers.push(level);
+      ready = [];
+      level.forEach(source => {
+        emitted.add(source);
+        outbound.get(source).forEach(target => {
+          inbound.set(target, inbound.get(target) - 1);
+          if (inbound.get(target) === 0) ready.push(target);
+        });
+      });
+      ready.sort((a, b) => a - b);
+    }
+    const remaining = [...ids].filter(id => !emitted.has(id));
+    if (remaining.length) layers.push(remaining);
+    return layers;
+  }
+
+  function clusterRequirement(cluster) {
+    if (cluster.required_credits) return `${cluster.required_credits} credits`;
+    if (cluster.required_course_count) return `${cluster.required_course_count} course${cluster.required_course_count === 1 ? '' : 's'}`;
+    return `${cluster.node_ids.length} option${cluster.node_ids.length === 1 ? '' : 's'}`;
+  }
+
+  function clusterBranch(cluster, nodes, graph) {
+    const layers = layeredSubset(cluster.node_ids, graph);
+    const hasSequence = layers.length > 1;
+    return `<details class="curriculum-cluster ${escapeHtml(cluster.type)}"><summary><span><strong>${escapeHtml(cluster.name)}</strong><small>${escapeHtml(clusterRequirement(cluster))}${hasSequence ? ' · sequence available' : ''}</small></span><span class="cluster-chevron" aria-hidden="true">⌄</span></summary><div class="curriculum-mini-branch">${layers.map((layer, index) => `${index ? '<div class="mini-branch-arrow" aria-hidden="true">↓</div>' : ''}<div class="curriculum-mini-level" aria-label="${escapeHtml(cluster.name)} level ${index + 1}">${layer.map(id => nodes.has(id) ? nodeCard(nodes.get(id), graph) : '').join('')}</div>`).join('')}</div></details>`;
+  }
+
+  function attachInteractions(target) {
+    if (target.dataset.graphInteractionsAttached) return;
+    target.dataset.graphInteractionsAttached = 'true';
+    target.addEventListener('click', event => {
+      const card = event.target.closest('.curriculum-node');
+      if (!card || !target.contains(card)) return;
+      const expanded = card.getAttribute('aria-expanded') === 'true';
+      card.setAttribute('aria-expanded', String(!expanded));
+      card.classList.toggle('expanded', !expanded);
+      card.querySelector('.node-expand').textContent = expanded ? '+' : '−';
+      requestAnimationFrame(drawEdges);
+    });
   }
 
   function render(graph, target) {
@@ -45,13 +110,14 @@
     const mainLayers = graph.layers.map(layer => layer.filter(id => mainIds.has(id))).filter(layer => layer.length);
     const seenClusters = new Set();
     const secondary = graph.clusters.filter(cluster => {
-      if (mainClusterTypes.has(cluster.type) || !cluster.node_ids.length) return false;
+      if (mainClusterTypes.has(cluster.type) || cluster.type === 'prerequisite_support' || !cluster.node_ids.length) return false;
       const signature = `${cluster.name}|${cluster.node_ids.join(',')}`;
       if (seenClusters.has(signature)) return false;
       seenClusters.add(signature);
       return true;
     });
-    target.innerHTML = `<div class="curriculum-graph-legend"><span>Prerequisite</span><span class="coreq">Corequisite</span><span class="recommended">Recommended sequence</span></div>${graph.cycle_node_ids.length ? '<p class="curriculum-cycle-warning">This graph contains a circular relationship. An administrator should review the highlighted curriculum data.</p>' : ''}<section class="curriculum-tree-panel"><h3>Required-course dependency tree</h3><p class="curriculum-cluster-meta">Read from top to bottom. A branching line means the later course depends on an earlier course.</p><div class="curriculum-graph-canvas" id="curriculumGraphCanvas"><svg class="curriculum-edge-layer" aria-hidden="true"></svg><div class="curriculum-levels">${mainLayers.map((layer, index) => `<div class="curriculum-level" aria-label="Dependency level ${index + 1}">${layer.map(id => nodes.has(id) ? nodeCard(nodes.get(id)) : '').join('')}</div>`).join('')}</div></div></section>${secondary.map(cluster => `<section class="curriculum-cluster ${escapeHtml(cluster.type)}"><h3>${escapeHtml(cluster.name)}</h3><p class="curriculum-cluster-meta">${cluster.required_credits ? `${cluster.required_credits} credits required` : cluster.required_course_count ? `${cluster.required_course_count} course(s) required` : 'Separate curriculum group'}</p><div class="curriculum-cluster-nodes">${cluster.node_ids.map(id => nodes.has(id) ? nodeCard(nodes.get(id)) : '').join('')}</div></section>`).join('')}`;
+    target.innerHTML = `<div class="curriculum-graph-legend"><span>Prerequisite</span><span class="coreq">Corequisite</span><span class="recommended">Recommended sequence</span><em>Click any course card for details</em></div>${graph.cycle_node_ids.length ? '<p class="curriculum-cycle-warning">This graph contains a circular relationship. An administrator should review the highlighted curriculum data.</p>' : ''}<section class="curriculum-branch-section"><div class="curriculum-branch-heading"><div><h3>Curriculum group branches</h3><p>Compact by default. Open a group to see its courses and any internal sequence.</p></div><span>${secondary.length} groups</span></div><div class="curriculum-branch-grid">${secondary.map(cluster => clusterBranch(cluster, nodes, graph)).join('')}</div></section><section class="curriculum-tree-panel"><h3>Required-course dependency tree</h3><p class="curriculum-cluster-meta">Read from top to bottom. A branching line means the later course depends on an earlier course.</p><div class="curriculum-graph-canvas" id="curriculumGraphCanvas"><svg class="curriculum-edge-layer" aria-hidden="true"></svg><div class="curriculum-levels">${mainLayers.map((layer, index) => `<div class="curriculum-level" aria-label="Dependency level ${index + 1}">${layer.map(id => nodes.has(id) ? nodeCard(nodes.get(id), graph) : '').join('')}</div>`).join('')}</div></div></section>`;
+    attachInteractions(target);
     requestAnimationFrame(drawEdges);
   }
 
