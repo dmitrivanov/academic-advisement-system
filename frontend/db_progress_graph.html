@@ -1553,7 +1553,7 @@ body { background: #f5f5f7; color: #1d1d1f; }
 
 </style>
 <link rel="stylesheet" href="/frontend/app_shell.css">
-<link rel="stylesheet" href="/frontend/curriculum_graph.css?v=3">
+<link rel="stylesheet" href="/frontend/curriculum_graph.css?v=4">
 <script src="/frontend/app_shell.js?v=20260826-2" defer></script>
 </head>
 
@@ -2243,7 +2243,18 @@ function updateSelectedProgramHeader() {
 function openDependencyGraph() {
   const programCode = CURRENT_REQUIREMENTS?.program?.code;
   if (!programCode || !window.CurriculumGraph?.isSupported(programCode)) return;
-  window.CurriculumGraph.open(programCode, { completedCourseCodes: [...getCompletedCourses()] });
+  window.CurriculumGraph.open(programCode, {
+    completedCourseCodes: [...getCompletedCourses()],
+    onGroupOpen: cluster => {
+      const placeholderCode = (cluster.placeholder_course_codes || []).find(code => {
+        const course = allCoursesFromGroups()[code];
+        return course?.choice_group_code === cluster.choice_group_code;
+      });
+      if (!placeholderCode) return;
+      window.CurriculumGraph.close();
+      openChoiceModal(placeholderCode);
+    }
+  });
 }
 
 async function loadInstitutions() {
@@ -4633,7 +4644,7 @@ function updateProgressWidget() {
 
 </script>
 
-<script src="/frontend/curriculum_graph.js?v=3"></script>
+<script src="/frontend/curriculum_graph.js?v=4"></script>
 <script src="/frontend/session_access.js"></script>
 </body>
 </html>

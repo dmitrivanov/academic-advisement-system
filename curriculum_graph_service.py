@@ -20,13 +20,18 @@ from models import (
 )
 
 
-CS_GRAPH_PROGRAM_CODES = frozenset({"CS", "CCNY_CS_BS", "BC_CS_BS", "JJAY_CSIS_BS"})
 ALLOWED_RELATION_TYPES = frozenset({"prerequisite", "corequisite", "recommended"})
 ALLOWED_OVERRIDE_ACTIONS = frozenset({"add", "remove"})
 
 
-def is_cs_graph_program(program):
-    return bool(program and program.code in CS_GRAPH_PROGRAM_CODES)
+def is_graph_program(db, program):
+    """A graph is available for every program that has seeded curriculum rows."""
+    if not program:
+        return False
+    return bool(
+        db.query(RequirementGroup).filter_by(program_id=program.id).first()
+        or db.query(ProgramCourse).filter_by(program_id=program.id).first()
+    )
 
 
 def _course_payload(course):
@@ -70,8 +75,8 @@ def _layers(node_ids, edges):
 
 
 def build_curriculum_graph(db, program):
-    if not is_cs_graph_program(program):
-        raise ValueError("Curriculum dependency graphs are currently enabled only for CS majors")
+    if not is_graph_program(db, program):
+        raise ValueError("This program does not have a populated curriculum to graph")
 
     groups = (
         db.query(RequirementGroup)
@@ -116,6 +121,8 @@ def build_curriculum_graph(db, program):
                         "required_credits": choice_group.required_credits,
                         "required_course_count": choice_group.required_course_count,
                         "node_ids": sorted(set(choice_ids)),
+                        "choice_group_code": choice_group.code,
+                        "placeholder_course_codes": [course.display_code],
                     })
 
         clusters.append({
@@ -142,12 +149,18 @@ def build_curriculum_graph(db, program):
     # Include external/support prerequisites so every visible edge has two nodes.
     target_ids = set(nodes)
     base_rows = db.query(CoursePrerequisite).filter_by(program_id=program.id).all()
-    for row in base_rows:
-        if row.course_id in target_ids:
+    changed = True
+    while changed:
+        changed = False
+        for row in base_rows:
+            if row.course_id not in target_ids or row.prereq_course_id in target_ids:
+                continue
             support = db.query(Course).filter_by(id=row.prereq_course_id).first()
-            if support and support.id not in nodes:
+            if support:
                 nodes[support.id] = _course_payload(support)
                 node_cluster_ids[support.id].append("prerequisite-support")
+                target_ids.add(support.id)
+                changed = True
     support_ids = sorted(node_id for node_id in nodes if "prerequisite-support" in node_cluster_ids[node_id])
     if support_ids:
         clusters.append({
@@ -205,6 +218,19 @@ def build_curriculum_graph(db, program):
                 "override_id": row.id,
             })
 
+    # Courses sharing a prerequisite group are alternatives (A OR B). Expose
+    # that meaning explicitly so clients do not accidentally present them as AND.
+    prerequisite_group_sizes = defaultdict(int)
+    for edge in edges:
+        if edge["relation_type"] == "prerequisite":
+            prerequisite_group_sizes[(edge["target_id"], edge["group_id"])] += 1
+    for edge in edges:
+        edge["logic"] = (
+            "or" if edge["relation_type"] == "prerequisite"
+            and prerequisite_group_sizes[(edge["target_id"], edge["group_id"])] > 1
+            else "and"
+        )
+
     layers, cycle_node_ids = _layers(nodes, edges)
     for node_id, node in nodes.items():
         node["cluster_ids"] = node_cluster_ids.get(node_id, [])
@@ -225,6 +251,7 @@ def build_curriculum_graph(db, program):
         "layers": layers,
         "clusters": clusters,
         "cycle_node_ids": cycle_node_ids,
+        "preferred_root_course_codes": ["MAT 206"] if program.code == "CS" else [],
         "overrides": [{
             "id": row.id,
             "source_course_id": row.source_course_id,

@@ -1,18 +1,19 @@
 import unittest
 from pathlib import Path
 
-from curriculum_graph_service import CS_GRAPH_PROGRAM_CODES, _layers
+from curriculum_graph_service import _layers
 
 
 ROOT = Path(__file__).resolve().parents[1]
 
 
 class CurriculumGraphModuleTests(unittest.TestCase):
-    def test_cs_scope_is_explicit(self):
-        self.assertEqual(
-            {"CS", "CCNY_CS_BS", "BC_CS_BS", "JJAY_CSIS_BS"},
-            set(CS_GRAPH_PROGRAM_CODES),
-        )
+    def test_graph_scope_is_every_populated_program(self):
+        service = (ROOT / "curriculum_graph_service.py").read_text(encoding="utf-8")
+        api = (ROOT / "api_db_routes.py").read_text(encoding="utf-8")
+        self.assertIn("def is_graph_program", service)
+        self.assertNotIn("CS_GRAPH_PROGRAM_CODES", service)
+        self.assertNotIn("CS_GRAPH_PROGRAM_CODES", api)
 
     def test_dependency_layers_and_cycle_reporting_are_deterministic(self):
         edges = [
@@ -64,6 +65,18 @@ class CurriculumGraphModuleTests(unittest.TestCase):
         self.assertIn('function downstreamPath', component)
         self.assertIn("path.setAttribute('stroke-width', '5')", component)
         self.assertIn('.curriculum-node.path-destination', styles)
+        self.assertIn("#16a34a", component)
+
+    def test_choice_groups_pdf_or_logic_and_cs_math_entry_are_exposed(self):
+        component = (ROOT / "frontend" / "curriculum_graph.js").read_text(encoding="utf-8")
+        progress = (ROOT / "frontend" / "db_progress_graph.html").read_text(encoding="utf-8")
+        service = (ROOT / "curriculum_graph_service.py").read_text(encoding="utf-8")
+        self.assertIn("Download / save PDF", component)
+        self.assertIn("window.print()", component)
+        self.assertIn("onGroupOpen", component)
+        self.assertIn("openChoiceModal(placeholderCode)", progress)
+        self.assertIn('"logic"] =', service)
+        self.assertIn('["MAT 206"] if program.code == "CS"', service)
 
     def test_admin_changes_are_stored_as_overrides_not_canonical_rows(self):
         models = (ROOT / "models.py").read_text(encoding="utf-8")

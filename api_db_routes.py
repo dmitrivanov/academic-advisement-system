@@ -48,9 +48,8 @@ from models import (
 from curriculum_graph_service import (
     ALLOWED_OVERRIDE_ACTIONS,
     ALLOWED_RELATION_TYPES,
-    CS_GRAPH_PROGRAM_CODES,
     build_curriculum_graph,
-    is_cs_graph_program,
+    is_graph_program,
 )
 
 
@@ -1958,8 +1957,8 @@ def get_program_graph(program_code: str, db: Session = Depends(get_db)):
 
     if not program:
         raise HTTPException(status_code=404, detail="Program not found")
-    if not is_cs_graph_program(program):
-        raise HTTPException(status_code=404, detail="Dependency graph is currently available only for CS majors")
+    if not is_graph_program(db, program):
+        raise HTTPException(status_code=404, detail="This program has no populated curriculum to graph")
     return build_curriculum_graph(db, program)
 
 
@@ -1968,11 +1967,11 @@ def get_curriculum_graph_programs(_admin=Depends(require_admin), db: Session = D
     programs = (
         db.query(Program)
         .options(joinedload(Program.department).joinedload(Department.institution))
-        .filter(Program.code.in_(CS_GRAPH_PROGRAM_CODES))
         .order_by(Program.name, Program.catalog_year)
         .all()
     )
-    return [{
+    populated = [program for program in programs if is_graph_program(db, program)]
+    return canonical_selector_programs([{
         "id": program.id,
         "code": program.code,
         "name": program.name,
@@ -1980,7 +1979,8 @@ def get_curriculum_graph_programs(_admin=Depends(require_admin), db: Session = D
         "catalog_year": program.catalog_year,
         "institution": program.department.institution.name,
         "institution_code": program.department.institution.code,
-    } for program in programs]
+        "has_curriculum": True,
+    } for program in populated])
 
 
 @router.put("/admin/curriculum-graphs/{program_code}/edges")
@@ -1991,8 +1991,8 @@ def set_curriculum_graph_edge(
     db: Session = Depends(get_db),
 ):
     program = db.query(Program).filter_by(code=program_code).first()
-    if not program or not is_cs_graph_program(program):
-        raise HTTPException(status_code=404, detail="CS graph program not found")
+    if not program or not is_graph_program(db, program):
+        raise HTTPException(status_code=404, detail="Curriculum graph program not found")
     relation_type = payload.relation_type.strip().lower()
     action = payload.action.strip().lower()
     if relation_type not in ALLOWED_RELATION_TYPES:
@@ -2041,8 +2041,8 @@ def delete_curriculum_graph_override(
     db: Session = Depends(get_db),
 ):
     program = db.query(Program).filter_by(code=program_code).first()
-    if not program or not is_cs_graph_program(program):
-        raise HTTPException(status_code=404, detail="CS graph program not found")
+    if not program or not is_graph_program(db, program):
+        raise HTTPException(status_code=404, detail="Curriculum graph program not found")
     row = db.query(CurriculumGraphEdgeOverride).filter_by(id=override_id, program_id=program.id).first()
     if not row:
         raise HTTPException(status_code=404, detail="Graph override not found")

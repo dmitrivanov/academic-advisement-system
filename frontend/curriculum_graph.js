@@ -1,5 +1,5 @@
 (function () {
-  const state = { graph: null, completed: new Set(), lastFocus: null, highlightedNodeId: null, resizeObserver: null, drawTimer: null };
+  const state = { graph: null, completed: new Set(), lastFocus: null, highlightedNodeId: null, resizeObserver: null, drawTimer: null, onGroupOpen: null };
 
   function escapeHtml(value) {
     return String(value ?? '').replace(/[&<>'"]/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[char]));
@@ -12,16 +12,24 @@
     modal.id = 'curriculumGraphModal';
     modal.className = 'curriculum-graph-modal';
     modal.hidden = true;
-    modal.innerHTML = `<div class="curriculum-graph-backdrop" data-graph-close></div><section class="curriculum-graph-dialog" role="dialog" aria-modal="true" aria-labelledby="curriculumGraphTitle"><header class="curriculum-graph-toolbar"><div><h2 id="curriculumGraphTitle">Course dependency map</h2><p id="curriculumGraphSubtitle">Loading curriculum relationships…</p></div><button class="curriculum-graph-close" type="button" data-graph-close>Close</button></header><div id="curriculumGraphContent" class="curriculum-graph-scroll"></div></section>`;
+    modal.innerHTML = `<div class="curriculum-graph-backdrop" data-graph-close></div><section class="curriculum-graph-dialog" role="dialog" aria-modal="true" aria-labelledby="curriculumGraphTitle"><header class="curriculum-graph-toolbar"><div><h2 id="curriculumGraphTitle">Course dependency map</h2><p id="curriculumGraphSubtitle">Loading curriculum relationships…</p></div><div class="curriculum-graph-actions"><button class="curriculum-graph-print" type="button">Download / save PDF</button><button class="curriculum-graph-close" type="button" data-graph-close>Close</button></div></header><div id="curriculumGraphContent" class="curriculum-graph-scroll"></div></section>`;
     document.body.appendChild(modal);
     modal.querySelectorAll('[data-graph-close]').forEach(item => item.addEventListener('click', close));
+    modal.querySelector('.curriculum-graph-print').addEventListener('click', printGraph);
     modal.addEventListener('keydown', event => { if (event.key === 'Escape') close(); });
     return modal;
   }
 
   function relationshipSummary(node, graph) {
     const nodeById = new Map(graph.nodes.map(item => [item.id, item]));
-    const incoming = graph.edges.filter(edge => edge.target_id === node.id).map(edge => nodeById.get(edge.source_id)?.code).filter(Boolean);
+    const incomingGroups = new Map();
+    graph.edges.filter(edge => edge.target_id === node.id).forEach(edge => {
+      const key = `${edge.relation_type}-${edge.group_id}`;
+      if (!incomingGroups.has(key)) incomingGroups.set(key, []);
+      const code = nodeById.get(edge.source_id)?.code;
+      if (code) incomingGroups.get(key).push(code);
+    });
+    const incoming = [...incomingGroups.values()].map(codes => codes.join(' or '));
     const outgoing = graph.edges.filter(edge => edge.source_id === node.id).map(edge => nodeById.get(edge.target_id)?.code).filter(Boolean);
     return { incoming, outgoing };
   }
@@ -29,7 +37,7 @@
   function nodeCard(node, graph, isMainNode = false) {
     const completed = state.completed.has(node.code) ? ' completed' : '';
     const relationships = relationshipSummary(node, graph);
-    const prerequisites = relationships.incoming.length ? relationships.incoming.join(' or ') : 'None shown';
+    const prerequisites = relationships.incoming.length ? relationships.incoming.join(' and ') : 'None shown';
     const unlocks = relationships.outgoing.length ? relationships.outgoing.join(', ') : 'No later course shown';
     return `<button type="button" class="curriculum-node${completed}" data-node-id="${node.id}"${isMainNode ? ` data-main-node-id="${node.id}"` : ''} aria-expanded="false"><span class="node-topline"><span class="code">${escapeHtml(node.code)}</span><span class="node-expand" aria-hidden="true">+</span></span><span class="node-details"><span class="title">${escapeHtml(node.title)}</span><span class="credits">${node.credits} credit${node.credits === 1 ? '' : 's'}</span><span class="relationship"><strong>Needs:</strong> ${escapeHtml(prerequisites)}</span><span class="relationship"><strong>Unlocks:</strong> ${escapeHtml(unlocks)}</span></span></button>`;
   }
@@ -73,7 +81,7 @@
     const layers = layeredSubset(cluster.node_ids, graph);
     const hasSequence = layers.length > 1;
     const startOpen = hasSequence && cluster.node_ids.length <= 5;
-    return `<details class="curriculum-group-tree ${escapeHtml(cluster.type)}"${startOpen ? ' open' : ''}><summary class="curriculum-group-card"><span><strong>${escapeHtml(cluster.name)}</strong><small>${escapeHtml(clusterRequirement(cluster))}${hasSequence ? ' · sequence' : ''}</small></span><span class="cluster-chevron" aria-hidden="true">+</span></summary><div class="curriculum-mini-branch">${layers.map((layer, index) => `${index ? '<div class="mini-branch-arrow" aria-hidden="true">↓</div>' : ''}<div class="curriculum-mini-level" aria-label="${escapeHtml(cluster.name)} level ${index + 1}">${layer.map(id => nodes.has(id) ? nodeCard(nodes.get(id), graph) : '').join('')}</div>`).join('')}</div></details>`;
+    return `<details class="curriculum-group-tree ${escapeHtml(cluster.type)}" data-cluster-id="${escapeHtml(cluster.id)}"${startOpen ? ' open' : ''}><summary class="curriculum-group-card"><span><strong>${escapeHtml(cluster.name)}</strong><small>${escapeHtml(clusterRequirement(cluster))}${hasSequence ? ' · sequence' : ''}</small></span><span class="cluster-chevron" aria-hidden="true">+</span></summary><div class="curriculum-mini-branch">${layers.map((layer, index) => `${index ? '<div class="mini-branch-arrow" aria-hidden="true">↓</div>' : ''}<div class="curriculum-mini-level" aria-label="${escapeHtml(cluster.name)} level ${index + 1}">${layer.map(id => nodes.has(id) ? nodeCard(nodes.get(id), graph) : '').join('')}</div>`).join('')}</div></details>`;
   }
 
   function downstreamPath(nodeId) {
@@ -116,6 +124,16 @@
     if (target.dataset.graphInteractionsAttached) return;
     target.dataset.graphInteractionsAttached = 'true';
     target.addEventListener('click', event => {
+      const groupCard = event.target.closest('.curriculum-group-card');
+      if (groupCard && state.onGroupOpen) {
+        const clusterId = groupCard.closest('.curriculum-group-tree')?.dataset.clusterId;
+        const cluster = state.graph?.clusters.find(item => item.id === clusterId);
+        if (cluster?.choice_group_code) {
+          event.preventDefault();
+          state.onGroupOpen(cluster);
+          return;
+        }
+      }
       const card = event.target.closest('.curriculum-node');
       if (!card || !target.contains(card)) return;
       const expanded = card.getAttribute('aria-expanded') === 'true';
@@ -134,13 +152,14 @@
     const nodes = new Map(graph.nodes.map(node => [node.id, node]));
     const mainClusterTypes = new Set(['program_required']);
     const mainIds = new Set(graph.clusters.filter(cluster => mainClusterTypes.has(cluster.type)).flatMap(cluster => cluster.node_ids));
+    const preferredRoots = new Set((graph.preferred_root_course_codes || []).map(code => graph.nodes.find(node => node.code === code)?.id).filter(Boolean));
     // Required-course ancestors may live in Common/Flexible Core or in the
     // support bucket. Pull only ancestors that actually unlock a required node.
     let changed = true;
     while (changed) {
       changed = false;
       graph.edges.forEach(edge => {
-        if (edge.relation_type === 'prerequisite' && mainIds.has(edge.target_id) && !mainIds.has(edge.source_id)) {
+        if (edge.relation_type === 'prerequisite' && mainIds.has(edge.target_id) && !preferredRoots.has(edge.target_id) && !mainIds.has(edge.source_id)) {
           mainIds.add(edge.source_id);
           changed = true;
         }
@@ -194,7 +213,7 @@
       path.dataset.edgeKey = `${edge.source_id}-${edge.target_id}-${edge.relation_type}-${edge.group_id}`;
       const highlighted = highlightedEdgeKeys.has(path.dataset.edgeKey);
       if (highlighted) {
-        path.setAttribute('stroke', '#dc2626');
+        path.setAttribute('stroke', '#16a34a');
         path.setAttribute('stroke-width', '5');
         path.classList.add('path-highlight');
       }
@@ -215,6 +234,7 @@
     const modal = ensureModal();
     state.lastFocus = document.activeElement;
     state.completed = new Set(options.completedCourseCodes || []);
+    state.onGroupOpen = typeof options.onGroupOpen === 'function' ? options.onGroupOpen : null;
     modal.hidden = false;
     document.body.style.overflow = 'hidden';
     const content = modal.querySelector('#curriculumGraphContent');
@@ -236,6 +256,14 @@
     state.lastFocus?.focus?.();
   }
 
+  function printGraph() {
+    document.body.classList.add('curriculum-graph-printing');
+    const cleanup = () => document.body.classList.remove('curriculum-graph-printing');
+    window.addEventListener('afterprint', cleanup, { once: true });
+    window.print();
+    setTimeout(cleanup, 1500);
+  }
+
   window.addEventListener('resize', drawEdges);
-  window.CurriculumGraph = { open, close, load, render, isSupported: code => ['CS','CCNY_CS_BS','BC_CS_BS','JJAY_CSIS_BS'].includes(code) };
+  window.CurriculumGraph = { open, close, load, render, isSupported: code => Boolean(code), printGraph };
 })();
