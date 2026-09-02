@@ -12,7 +12,7 @@
     modal.id = 'curriculumGraphModal';
     modal.className = 'curriculum-graph-modal';
     modal.hidden = true;
-    modal.innerHTML = `<div class="curriculum-graph-backdrop" data-graph-close></div><section class="curriculum-graph-dialog" role="dialog" aria-modal="true" aria-labelledby="curriculumGraphTitle"><header class="curriculum-graph-toolbar"><div><h2 id="curriculumGraphTitle">Course dependency map</h2><p id="curriculumGraphSubtitle">Loading curriculum relationships…</p></div><div class="curriculum-graph-actions"><button class="curriculum-graph-print" type="button">Download / save PDF</button><button class="curriculum-graph-close" type="button" data-graph-close>Close</button></div></header><div id="curriculumGraphContent" class="curriculum-graph-scroll"></div></section>`;
+    modal.innerHTML = `<div class="curriculum-graph-backdrop" data-graph-close></div><section class="curriculum-graph-dialog" role="dialog" aria-modal="true" aria-labelledby="curriculumGraphTitle"><header class="curriculum-graph-toolbar"><div><h2 id="curriculumGraphTitle">Degree map tree</h2><p id="curriculumGraphSubtitle">Loading curriculum relationships…</p></div><div class="curriculum-graph-actions"><button class="curriculum-graph-print" type="button">Download / save PDF</button><button class="curriculum-graph-close" type="button" data-graph-close>Close</button></div></header><div id="curriculumGraphContent" class="curriculum-graph-scroll"></div></section>`;
     document.body.appendChild(modal);
     modal.querySelectorAll('[data-graph-close]').forEach(item => item.addEventListener('click', close));
     modal.querySelector('.curriculum-graph-print').addEventListener('click', printGraph);
@@ -224,9 +224,9 @@
   }
 
   async function load(programCode, target) {
-    target.innerHTML = '<div class="curriculum-graph-empty">Loading dependency map…</div>';
+    target.innerHTML = '<div class="curriculum-graph-empty">Loading degree map tree…</div>';
     const response = await fetch(`/api/db/programs/${encodeURIComponent(programCode)}/graph`);
-    if (!response.ok) throw new Error((await response.json().catch(() => ({}))).detail || 'Could not load dependency map');
+    if (!response.ok) throw new Error((await response.json().catch(() => ({}))).detail || 'Could not load degree map tree');
     const graph = await response.json();
     render(graph, target);
     return graph;
@@ -242,7 +242,7 @@
     const content = modal.querySelector('#curriculumGraphContent');
     try {
       const graph = await load(programCode, content);
-      modal.querySelector('#curriculumGraphTitle').textContent = `${graph.program.name} dependency map`;
+      modal.querySelector('#curriculumGraphTitle').textContent = `${graph.program.name} degree map tree`;
       modal.querySelector('#curriculumGraphSubtitle').textContent = `${graph.program.institution} · ${graph.program.catalog_year || 'current catalog'} · administrator-editable relationships`;
     } catch (error) {
       content.innerHTML = `<div class="curriculum-graph-error">${escapeHtml(error.message)}</div>`;

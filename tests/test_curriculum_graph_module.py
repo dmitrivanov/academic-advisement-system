@@ -40,17 +40,17 @@ class CurriculumGraphModuleTests(unittest.TestCase):
         chatbot = (ROOT / "frontend" / "cuny_beyond.js").read_text(encoding="utf-8")
         dashboard = (ROOT / "frontend" / "admin_dashboard.html").read_text(encoding="utf-8")
         server = (ROOT / "faq_fallback_api.py").read_text(encoding="utf-8")
-        self.assertIn("Dependency Map", progress)
+        self.assertIn("Degree Map Tree", progress)
         self.assertIn("CurriculumGraph.open", progress)
-        self.assertNotIn("data-open-graph", chatbot)
+        self.assertIn("data-open-graph", chatbot)
         self.assertIn("/admin/curriculum-graph", dashboard)
         self.assertIn('@app.get("/admin/curriculum-graph")', server)
 
-    def test_degree_trees_live_on_completed_course_planner_not_chatbot(self):
+    def test_degree_trees_live_on_planner_and_matched_cards_without_global_browser(self):
         page = (ROOT / "frontend" / "cuny_beyond.html").read_text(encoding="utf-8")
         progress = (ROOT / "frontend" / "db_progress_graph.html").read_text(encoding="utf-8")
+        self.assertIn('curriculum_graph.js', page)
         self.assertNotIn('degree-tree-browser-button', page)
-        self.assertNotIn('curriculum_graph.js', page)
         self.assertIn('id="dependencyGraphButton"', progress)
         self.assertIn("isSupported(program.code)", progress)
 

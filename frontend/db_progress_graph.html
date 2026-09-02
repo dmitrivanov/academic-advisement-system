@@ -1588,7 +1588,7 @@ body { background: #f5f5f7; color: #1d1d1f; }
       </button>
       <button id="dependencyGraphButton" class="action-item" onclick="openDependencyGraph()" style="display:none;" title="View course prerequisite tree">
         <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v5M6 20v-5h12v5M6 15v-3h12v3M12 9v3"/><circle cx="12" cy="3" r="2"/><circle cx="6" cy="21" r="2"/><circle cx="18" cy="21" r="2"/></svg>
-        <span class="action-copy"><strong>Dependency Map</strong><small>Prerequisite course tree</small></span>
+        <span class="action-copy"><strong>Degree Map Tree</strong><small>Prerequisite course pathways</small></span>
       </button>
       <div class="action-spacer"></div>
       <div id="progressWidget" class="progress-widget" onclick="toggleProgressDetails()" onkeydown="if(event.key === 'Enter' || event.key === ' '){ event.preventDefault(); toggleProgressDetails(); }" role="button" tabindex="0" aria-label="Show detailed degree progress">
@@ -4644,7 +4644,7 @@ function updateProgressWidget() {
 
 </script>
 
-<script src="/frontend/curriculum_graph.js?v=5"></script>
+<script src="/frontend/curriculum_graph.js?v=6"></script>
 <script src="/frontend/session_access.js"></script>
 </body>
 </html>
