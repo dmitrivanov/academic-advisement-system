@@ -1951,6 +1951,31 @@ def get_program_courses(program_code: str, db: Session = Depends(get_db)):
     }
 
 
+def _curriculum_graph_program_list(db):
+    programs = (
+        db.query(Program)
+        .options(joinedload(Program.department).joinedload(Department.institution))
+        .order_by(Program.name, Program.catalog_year)
+        .all()
+    )
+    return canonical_selector_programs([{
+        "id": program.id,
+        "code": program.code,
+        "name": program.name,
+        "degree_type": program.degree_type,
+        "catalog_year": program.catalog_year,
+        "institution": program.department.institution.name,
+        "institution_code": program.department.institution.code,
+        "has_curriculum": True,
+    } for program in programs if is_graph_program(db, program)])
+
+
+@router.get("/programs/graphs")
+def get_public_curriculum_graph_programs(db: Session = Depends(get_db)):
+    """Public catalog for the degree-tree browser; contains no student data."""
+    return _curriculum_graph_program_list(db)
+
+
 @router.get("/programs/{program_code}/graph")
 def get_program_graph(program_code: str, db: Session = Depends(get_db)):
     program = db.query(Program).filter_by(code=program_code).first()
@@ -1964,23 +1989,7 @@ def get_program_graph(program_code: str, db: Session = Depends(get_db)):
 
 @router.get("/admin/curriculum-graphs/programs")
 def get_curriculum_graph_programs(_admin=Depends(require_admin), db: Session = Depends(get_db)):
-    programs = (
-        db.query(Program)
-        .options(joinedload(Program.department).joinedload(Department.institution))
-        .order_by(Program.name, Program.catalog_year)
-        .all()
-    )
-    populated = [program for program in programs if is_graph_program(db, program)]
-    return canonical_selector_programs([{
-        "id": program.id,
-        "code": program.code,
-        "name": program.name,
-        "degree_type": program.degree_type,
-        "catalog_year": program.catalog_year,
-        "institution": program.department.institution.name,
-        "institution_code": program.department.institution.code,
-        "has_curriculum": True,
-    } for program in populated])
+    return _curriculum_graph_program_list(db)
 
 
 @router.put("/admin/curriculum-graphs/{program_code}/edges")

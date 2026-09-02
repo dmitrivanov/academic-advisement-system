@@ -46,6 +46,17 @@ class CurriculumGraphModuleTests(unittest.TestCase):
         self.assertIn("/admin/curriculum-graph", dashboard)
         self.assertIn('@app.get("/admin/curriculum-graph")', server)
 
+    def test_public_fallback_page_can_browse_every_populated_degree_tree(self):
+        page = (ROOT / "frontend" / "cuny_beyond.html").read_text(encoding="utf-8")
+        client = (ROOT / "frontend" / "cuny_beyond.js").read_text(encoding="utf-8")
+        api = (ROOT / "api_db_routes.py").read_text(encoding="utf-8")
+        self.assertIn('id="degree-tree-browser-button"', page)
+        self.assertIn('id="degree-tree-browser"', page)
+        self.assertIn("/api/db/programs/graphs", client)
+        self.assertIn("data-browse-graph", client)
+        self.assertIn('@router.get("/programs/graphs")', api)
+        self.assertIn("_curriculum_graph_program_list", api)
+
     def test_group_branches_are_compact_sequenced_and_course_cards_expand(self):
         component = (ROOT / "frontend" / "curriculum_graph.js").read_text(encoding="utf-8")
         styles = (ROOT / "frontend" / "curriculum_graph.css").read_text(encoding="utf-8")

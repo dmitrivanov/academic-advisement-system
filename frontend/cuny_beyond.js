@@ -39,6 +39,7 @@
   let supportedCareers = [];
   let latestCplScreening = null;
   let latestMatchedCareer = null;
+  let degreeTreePrograms = [];
 
   function selectedValue(name) {
     const selected = form.querySelector(`input[name="${name}"]:checked`);
@@ -532,6 +533,51 @@
   document.getElementById('close-planner-modal').addEventListener('click', closePlannerModal);
   document.querySelector('[data-close-planner]').addEventListener('click', closePlannerModal);
   document.addEventListener('keydown', event => { if (event.key === 'Escape' && !document.getElementById('planner-modal').hidden) closePlannerModal(); });
+
+  function renderDegreeTreePrograms(query = '') {
+    const normalized = query.trim().toLowerCase();
+    const filtered = degreeTreePrograms.filter(program => !normalized || `${program.name} ${program.code} ${program.degree_type} ${program.institution}`.toLowerCase().includes(normalized));
+    document.getElementById('degree-tree-count').textContent = `${filtered.length} degree tree${filtered.length === 1 ? '' : 's'} available`;
+    document.getElementById('degree-tree-programs').innerHTML = filtered.map(program => `<button class="degree-tree-program" type="button" data-browse-graph="${escapeHtml(program.code)}"><strong>${escapeHtml(program.name)} (${escapeHtml(program.degree_type || 'Degree')})</strong><small>${escapeHtml(program.institution)} · ${escapeHtml(program.catalog_year || 'Current catalog')}</small></button>`).join('') || '<p>No matching populated major was found.</p>';
+  }
+
+  async function openDegreeTreeBrowser() {
+    const modal = document.getElementById('degree-tree-browser');
+    modal.hidden = false;
+    document.body.style.overflow = 'hidden';
+    document.getElementById('degree-tree-programs').innerHTML = '<p>Loading degree trees…</p>';
+    try {
+      if (!degreeTreePrograms.length) {
+        const response = await fetch('/api/db/programs/graphs');
+        if (!response.ok) throw new Error('Degree trees could not be loaded');
+        degreeTreePrograms = await response.json();
+      }
+      renderDegreeTreePrograms(document.getElementById('degree-tree-filter').value);
+      document.getElementById('degree-tree-filter').focus();
+    } catch (error) {
+      document.getElementById('degree-tree-programs').innerHTML = `<p class="form-error">${escapeHtml(error.message)}</p>`;
+    }
+  }
+
+  function closeDegreeTreeBrowser() {
+    document.getElementById('degree-tree-browser').hidden = true;
+    document.body.style.overflow = '';
+    document.getElementById('degree-tree-browser-button').focus();
+  }
+
+  document.getElementById('degree-tree-browser-button').addEventListener('click', openDegreeTreeBrowser);
+  document.getElementById('close-degree-tree-browser').addEventListener('click', closeDegreeTreeBrowser);
+  document.querySelector('[data-close-degree-trees]').addEventListener('click', closeDegreeTreeBrowser);
+  document.getElementById('degree-tree-filter').addEventListener('input', event => renderDegreeTreePrograms(event.target.value));
+  document.getElementById('degree-tree-programs').addEventListener('click', event => {
+    const button = event.target.closest('[data-browse-graph]');
+    if (!button) return;
+    document.getElementById('degree-tree-browser').hidden = true;
+    CurriculumGraph.open(button.dataset.browseGraph);
+  });
+  document.addEventListener('keydown', event => {
+    if (event.key === 'Escape' && !document.getElementById('degree-tree-browser').hidden) closeDegreeTreeBrowser();
+  });
 
   async function initialize() {
     renderSkills();
