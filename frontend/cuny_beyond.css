@@ -77,18 +77,3 @@ footer { padding:24px; text-align:center; color:var(--muted); font-size:13px; bo
 @media (max-width:760px) { .choice-grid,.choice-grid.compact,.skill-grid,.career-browser-results { grid-template-columns:1fr; }.current-student-card { align-items:flex-start; flex-direction:column; }.button-link { white-space:normal; }.recommendation-heading { flex-direction:column; }.recommendation-actions>* { width:100%; text-align:center; }.page-shell { padding:8px 4px 28px; }.profile-groups { grid-template-columns:1fr; }.chat-window { border-radius:18px; }.chat-window-header { grid-template-columns:minmax(96px,1fr) minmax(118px,1.35fr) 58px; min-height:0; padding:10px; gap:8px; }.chat-header-logo-bmcc { width:118px; height:56px; padding:5px 7px; }.chat-header-logo-bmcc img { width:106px; height:46px; }.chat-header-logo-hub { width:56px; height:56px; padding:5px; }.chat-header-logo-hub img { width:46px; height:46px; }.chat-brand-copy strong { font-size:15px; }.chat-brand-copy small { font-size:10px; }.chat-window-header .text-button { font-size:11px; }.chat-conversation { min-height:500px; max-height:none; }.chat-conversation .step { max-width:100%; }.chat-bubble { max-width:90%; }.chat-actions { margin-left:-16px; margin-right:-16px; padding-left:16px; padding-right:16px; }.chat-conversation .summary { grid-template-columns:1fr; }.inline-entry,.ap-entry { flex-wrap:wrap; }.inline-entry button,.ap-entry button { width:100%; }.degree-map-preview iframe { height:330px; } }
 @media (max-width:760px) { .planner-modal { padding:8px; }.planner-modal-dialog { width:100%; height:94vh; border-radius:16px; }.planner-modal-dialog>header { align-items:flex-start; padding:12px; }.planner-modal-dialog header small { font-size:11px; } }
 @media (prefers-reduced-motion:reduce) { * { scroll-behavior:auto!important; transition:none!important; } }
-.degree-tree-browser[hidden] { display:none; }
-.degree-tree-browser { position:fixed; inset:0; z-index:1100; display:grid; place-items:center; padding:24px; }
-.degree-tree-browser-backdrop { position:absolute; inset:0; background:rgba(12,27,51,.68); backdrop-filter:blur(5px); }
-.degree-tree-browser-dialog { position:relative; width:min(780px,92vw); max-height:min(760px,90vh); display:grid; grid-template-rows:auto 1fr; overflow:hidden; border-radius:22px; background:#fff; box-shadow:0 28px 90px rgba(0,0,0,.35); }
-.degree-tree-browser-dialog>header { display:flex; align-items:center; justify-content:space-between; gap:18px; padding:17px 20px; color:#fff; background:linear-gradient(120deg,#123f86,#2463c7); }
-.degree-tree-browser-dialog header div { display:grid; gap:4px; }
-.degree-tree-browser-dialog header small { color:#dceaff; }
-.degree-tree-browser-dialog header button { border:1px solid #ffffff80; border-radius:999px; padding:9px 15px; color:#fff; background:#ffffff1f; font-weight:800; cursor:pointer; }
-.degree-tree-browser-content { padding:20px; overflow:auto; }
-.degree-tree-programs { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
-.degree-tree-program { min-width:0; padding:14px; text-align:left; border:1px solid #bfd0e5; border-radius:13px; color:var(--navy); background:#f8fbff; cursor:pointer; }
-.degree-tree-program:hover,.degree-tree-program:focus-visible { border-color:var(--blue); background:#eaf3ff; }
-.degree-tree-program strong,.degree-tree-program small { display:block; }
-.degree-tree-program small { margin-top:5px; color:var(--muted); }
-@media (max-width:760px) { .degree-tree-browser { padding:8px; }.degree-tree-browser-dialog { width:100%; max-height:94vh; }.degree-tree-programs { grid-template-columns:1fr; } }

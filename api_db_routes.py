@@ -1970,12 +1970,6 @@ def _curriculum_graph_program_list(db):
     } for program in programs if is_graph_program(db, program)])
 
 
-@router.get("/programs/graphs")
-def get_public_curriculum_graph_programs(db: Session = Depends(get_db)):
-    """Public catalog for the degree-tree browser; contains no student data."""
-    return _curriculum_graph_program_list(db)
-
-
 @router.get("/programs/{program_code}/graph")
 def get_program_graph(program_code: str, db: Session = Depends(get_db)):
     program = db.query(Program).filter_by(code=program_code).first()

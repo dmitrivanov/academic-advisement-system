@@ -91,6 +91,7 @@ def build_curriculum_graph(db, program):
     for group in groups:
         course_links = db.query(RequirementGroupCourse).filter_by(requirement_group_id=group.id).all()
         group_node_ids = []
+        group_display_node_ids = []
         for link in course_links:
             course = db.query(Course).filter_by(id=link.course_id).first()
             if not course:
@@ -124,6 +125,11 @@ def build_curriculum_graph(db, program):
                         "choice_group_code": choice_group.code,
                         "placeholder_course_codes": [course.display_code],
                     })
+                    group_display_node_ids.extend(choice_ids)
+                else:
+                    group_display_node_ids.append(course.id)
+            else:
+                group_display_node_ids.append(course.id)
 
         clusters.append({
             "id": f"requirement-{group.id}",
@@ -132,6 +138,7 @@ def build_curriculum_graph(db, program):
             "required_credits": group.required_credits,
             "required_course_count": group.required_course_count,
             "node_ids": sorted(set(group_node_ids)),
+            "display_node_ids": sorted(set(group_display_node_ids)),
         })
 
     if not groups:

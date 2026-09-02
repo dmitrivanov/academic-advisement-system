@@ -74,13 +74,15 @@
   function clusterRequirement(cluster) {
     if (cluster.required_credits) return `${cluster.required_credits} credits`;
     if (cluster.required_course_count) return `${cluster.required_course_count} course${cluster.required_course_count === 1 ? '' : 's'}`;
-    return `${cluster.node_ids.length} option${cluster.node_ids.length === 1 ? '' : 's'}`;
+    const count = (cluster.display_node_ids || cluster.node_ids).length;
+    return `${count} option${count === 1 ? '' : 's'}`;
   }
 
   function clusterBranch(cluster, nodes, graph) {
-    const layers = layeredSubset(cluster.node_ids, graph);
+    const displayNodeIds = cluster.display_node_ids || cluster.node_ids;
+    const layers = layeredSubset(displayNodeIds, graph);
     const hasSequence = layers.length > 1;
-    const startOpen = hasSequence && cluster.node_ids.length <= 5;
+    const startOpen = false;
     return `<details class="curriculum-group-tree ${escapeHtml(cluster.type)}" data-cluster-id="${escapeHtml(cluster.id)}"${startOpen ? ' open' : ''}><summary class="curriculum-group-card"><span><strong>${escapeHtml(cluster.name)}</strong><small>${escapeHtml(clusterRequirement(cluster))}${hasSequence ? ' · sequence' : ''}</small></span><span class="cluster-chevron" aria-hidden="true">+</span></summary><div class="curriculum-mini-branch">${layers.map((layer, index) => `${index ? '<div class="mini-branch-arrow" aria-hidden="true">↓</div>' : ''}<div class="curriculum-mini-level" aria-label="${escapeHtml(cluster.name)} level ${index + 1}">${layer.map(id => nodes.has(id) ? nodeCard(nodes.get(id), graph) : '').join('')}</div>`).join('')}</div></details>`;
   }
 
@@ -169,13 +171,13 @@
     const mainLayers = graph.layers.map(layer => layer.filter(id => mainIds.has(id))).filter(layer => layer.length);
     const seenClusters = new Set();
     const secondary = graph.clusters.filter(cluster => {
-      if (mainClusterTypes.has(cluster.type) || cluster.type === 'prerequisite_support' || !cluster.node_ids.length) return false;
+      if (mainClusterTypes.has(cluster.type) || cluster.type === 'prerequisite_support' || cluster.type === 'elective_choice' || !(cluster.display_node_ids || cluster.node_ids).length) return false;
       const signature = `${cluster.name}|${cluster.node_ids.join(',')}`;
       if (seenClusters.has(signature)) return false;
       seenClusters.add(signature);
       return true;
     });
-    target.innerHTML = `<div class="curriculum-graph-legend"><span>Prerequisite</span><span class="coreq">Corequisite</span><span class="recommended">Recommended sequence</span><span class="highlighted">Selected pathway</span><em>Click a course to expand it and highlight everything it unlocks</em></div>${graph.cycle_node_ids.length ? '<p class="curriculum-cycle-warning">This graph contains a circular relationship. An administrator should review the highlighted curriculum data.</p>' : ''}<section class="curriculum-tree-panel"><h3>Course dependency forest</h3><p class="curriculum-cluster-meta">Course groups begin beside the first classes as independent trees. Short sequences start open; click a group card to fold or unfold it.</p><div class="curriculum-graph-canvas" id="curriculumGraphCanvas"><svg class="curriculum-edge-layer" aria-hidden="true"></svg><div class="curriculum-levels">${mainLayers.map((layer, index) => `<div class="curriculum-level${index === 0 ? ' curriculum-root-level' : ''}" aria-label="Dependency level ${index + 1}">${index === 0 ? secondary.map(cluster => clusterBranch(cluster, nodes, graph)).join('') : ''}${layer.map(id => nodes.has(id) ? nodeCard(nodes.get(id), graph, true) : '').join('')}</div>`).join('')}</div></div></section>`;
+    target.innerHTML = `<div class="curriculum-graph-legend"><span>Prerequisite</span><span class="coreq">Corequisite</span><span class="recommended">Recommended sequence</span><span class="highlighted">Selected pathway</span><em>Click a course to expand it and highlight everything it unlocks</em></div>${graph.cycle_node_ids.length ? '<p class="curriculum-cycle-warning">This graph contains a circular relationship. An administrator should review the highlighted curriculum data.</p>' : ''}<section class="curriculum-tree-panel"><h3>Course dependency forest</h3><p class="curriculum-cluster-meta">Requirement categories sit at the top level as compact cards. Open Common Core, Flexible Core, Program Electives, or another category only when you need its course choices.</p><div class="curriculum-graph-canvas" id="curriculumGraphCanvas"><svg class="curriculum-edge-layer" aria-hidden="true"></svg><div class="curriculum-levels">${mainLayers.map((layer, index) => `<div class="curriculum-level${index === 0 ? ' curriculum-root-level' : ''}" aria-label="Dependency level ${index + 1}">${index === 0 ? secondary.map(cluster => clusterBranch(cluster, nodes, graph)).join('') : ''}${layer.map(id => nodes.has(id) ? nodeCard(nodes.get(id), graph, true) : '').join('')}</div>`).join('')}</div></div></section>`;
     attachInteractions(target);
     state.highlightedNodeId = null;
     if (state.resizeObserver) state.resizeObserver.disconnect();
