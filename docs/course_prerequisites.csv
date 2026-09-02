@@ -1,3 +1,15 @@
 institution_code,course_code,prerequisites,source
 BMCC,CIS 316,CSC 110 or CSC 111 or CIS 165,https://www.bmcc.cuny.edu/academics/departments/cis/course-listings/
+BMCC,CIS 272,CSC 101,https://www.bmcc.cuny.edu/academics/departments/cis/course-listings/
+BMCC,CIS 285,CSC 101,https://www.bmcc.cuny.edu/academics/departments/cis/course-listings/
+BMCC,CIS 359,CSC 110 or CSC 111 or CIS 165,https://www.bmcc.cuny.edu/academics/departments/cis/course-listings/
+BMCC,CIS 362,CSC 110 or CSC 111 or CIS 165,https://www.bmcc.cuny.edu/academics/departments/cis/course-listings/
+BMCC,CIS 364,CSC 210,https://www.bmcc.cuny.edu/academics/departments/cis/course-listings/
+BMCC,CIS 459,CIS 440|CIS 345,https://www.bmcc.cuny.edu/academics/departments/cis/course-listings/
+BMCC,CIS 490,CIS 395,https://www.bmcc.cuny.edu/academics/departments/cis/course-listings/
+BMCC,CSC 110,CSC 101 or GIS 101,https://www.bmcc.cuny.edu/academics/departments/cis/course-listings/
+BMCC,CSC 111,CSC 101 or CSC 103|MAT 200 or MAT 206 or MAT 206.5,https://www.bmcc.cuny.edu/academics/departments/cis/course-listings/
+BMCC,CSC 210,CSC 110 or CSC 111,https://www.bmcc.cuny.edu/academics/departments/cis/course-listings/
+BMCC,CSC 211,CSC 111,https://www.bmcc.cuny.edu/academics/departments/cis/course-listings/
 BMCC,MAT 206,MAT 157 or MAT 157.5,https://www.bmcc.cuny.edu/academics/departments/math/course-listings/
+BMCC,MAT 301,MAT 206 or MAT 206.5,https://www.bmcc.cuny.edu/academics/departments/math/course-listings/

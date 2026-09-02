@@ -14,6 +14,23 @@ class CanonicalPrerequisiteTests(unittest.TestCase):
 
         self.assertEqual("CSC 110 or CSC 111 or CIS 165", rows["CIS 316"]["prerequisites"])
         self.assertEqual("MAT 157 or MAT 157.5", rows["MAT 206"]["prerequisites"])
+        self.assertEqual("MAT 206 or MAT 206.5", rows["MAT 301"]["prerequisites"])
+        self.assertEqual("CSC 111", rows["CSC 211"]["prerequisites"])
+        self.assertEqual("CIS 440|CIS 345", rows["CIS 459"]["prerequisites"])
+
+    def test_cis_program_electives_include_verified_prerequisites(self):
+        with (DOCS / "cis_courses.csv").open(newline="", encoding="utf-8-sig") as handle:
+            rows = {row["course_code"]: row for row in csv.DictReader(handle)}
+        expected = {
+            "CIS 272": "CSC 101",
+            "CIS 285": "CSC 101",
+            "CIS 359": "CSC 110 or CSC 111 or CIS 165",
+            "CIS 362": "CSC 110 or CSC 111 or CIS 165",
+            "CIS 364": "CSC 210",
+            "CIS 459": "CIS 440|CIS 345",
+            "CIS 490": "CIS 395",
+        }
+        self.assertEqual(expected, {code: rows[code]["prerequisites"] for code in expected})
 
     def test_legacy_cis_and_cnt_no_longer_omit_cis_316_rule(self):
         for filename in ("cis_courses.csv", "cnt_courses.csv"):
