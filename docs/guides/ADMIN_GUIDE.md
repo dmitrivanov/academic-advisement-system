@@ -1,7 +1,7 @@
 # Administrator Guide: Academic Advisement System
 
 **Illustrated curriculum-management and operations manual**  
-Version 1.0 | Academic Advisement System prototype
+Version 1.1 | Academic Advisement System prototype
 
 This guide covers role-based access, database inspection, Major Constructor drafts, curriculum bins, alternatives, prerequisites, elective pools, Core adjustments, preview, validation, review, publication, equivalencies, AI settings, and quality assurance.
 
@@ -50,6 +50,7 @@ Use a tester account for student-experience verification so an administrator-onl
 The dashboard groups tools by operational purpose:
 
 - **Major Constructor** for draft-based curriculum authoring.
+- **Degree Tree Constructor** for prerequisite, corequisite, and recommended-sequence relationships.
 - **Institutions** and **Departments** for organizational records.
 - **Majors / Programs** and **Courses** for catalog data.
 - **Requirement Groups** for curriculum structure.
@@ -277,7 +278,26 @@ Validation success means the draft is structurally consistent; it does not prove
 
 <!-- PAGEBREAK -->
 
-## 16. Review, approve, publish, and roll back
+## 16. Build and verify a Degree Map Tree
+
+Use **Degree Tree Constructor** at `/admin/curriculum-graph` after curriculum membership has been defined in Major Constructor.
+
+1. Select the campus and program.
+2. Confirm that the preview contains the expected required courses and folded requirement-category cards.
+3. Import either the program curriculum CSV or the compact relationship template.
+4. Review parsed relationships and warnings before saving.
+5. For a manual relationship, drag the earlier course and dependent course into the relationship wells.
+6. Choose prerequisite, corequisite, or recommended sequence, and assign the correct AND/OR group.
+7. Save the override and reopen the student-facing tree to verify it.
+8. Use **Reset** to remove an override and restore the canonical CSV-derived relationship.
+
+Source precedence is deliberate: explicit program CSV relationships win, campus-wide prerequisites fill only undeclared cases, and saved administrator overrides are applied last. This keeps the course selector and tree aligned while preserving reversible local corrections.
+
+Do not use the tree constructor to add a course to a major or move it between curriculum bins. Make those changes in Major Constructor, validate the curriculum, and then return to the tree to edit relationships.
+
+<!-- PAGEBREAK -->
+
+## 17. Review, approve, publish, and roll back
 
 The intended lifecycle is:
 
@@ -296,7 +316,7 @@ Separate authoring from approval whenever possible. Record the official source a
 
 <!-- PAGEBREAK -->
 
-## 17. Maintain course equivalencies
+## 18. Maintain course equivalencies
 
 Course equivalencies are directional and institution-specific. A complete record can include:
 
@@ -315,7 +335,7 @@ Never infer equivalence from matching course numbers or similar titles. Keep unv
 
 <!-- PAGEBREAK -->
 
-## 18. Configure the AI advisor
+## 19. Configure the AI advisor
 
 Open **AI Settings** to configure:
 
@@ -336,7 +356,7 @@ Store production secrets in environment variables or an appropriate secrets serv
 
 <!-- PAGEBREAK -->
 
-## 19. Regression testing checklist
+## 20. Regression testing checklist
 
 Before publishing curriculum or platform changes:
 
@@ -356,7 +376,7 @@ Use a representative mature program, such as Computer Science, as a regression b
 
 <!-- PAGEBREAK -->
 
-## 20. Data-source and audit checklist
+## 21. Data-source and audit checklist
 
 For every new or modified program, preserve:
 
@@ -375,7 +395,7 @@ If sources conflict, stop publication and request department clarification. A te
 
 <!-- PAGEBREAK -->
 
-## 21. Incident response and rollback
+## 22. Incident response and rollback
 
 When a published defect is reported:
 

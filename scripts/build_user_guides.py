@@ -1,4 +1,4 @@
-"""Build illustrated student and administrator guides from Markdown sources."""
+"""Build attachment-ready student, administrator, and degree-tree guides."""
 
 from __future__ import annotations
 
@@ -238,6 +238,7 @@ def main() -> None:
     temp_admin.write_text(admin_text, encoding="utf-8")
     build_pdf(GUIDE_DIR / "STUDENT_GUIDE.md", OUTPUT_DIR / "academic_advisement_student_guide.pdf", "Student Guide")
     build_pdf(temp_admin, OUTPUT_DIR / "academic_advisement_admin_guide.pdf", "Administrator Guide")
+    build_pdf(ROOT / "docs" / "DEGREE_TREE_CONSTRUCTOR_GUIDE.md", OUTPUT_DIR / "degree_map_tree_constructor_guide.pdf", "Degree Tree Constructor Guide")
 
 
 if __name__ == "__main__":

@@ -1,7 +1,7 @@
 # Student Guide: Academic Advisement System
 
 **Illustrated step-by-step manual**  
-Version 1.0 | Academic Advisement System prototype
+Version 1.1 | Academic Advisement System prototype
 
 This guide explains how a student or tester uses the advising platform from login through program selection, completed-course entry, degree planning, major-change review, transfer analysis, and PDF export. The examples use BMCC Computer Science, but the same workflow applies to other populated programs.
 
@@ -19,6 +19,7 @@ The platform combines several advising tasks in one workspace:
 - Record college courses you have already completed.
 - Understand prerequisites, alternatives, electives, and Core requirements.
 - See degree progress by requirement category.
+- Open an interactive Degree Map Tree to understand course dependencies.
 - Build a tentative semester-by-semester plan.
 - Compare another major or a program at another CUNY college.
 - Download a degree-plan PDF for discussion with an advisor.
@@ -243,7 +244,24 @@ The overall percentage is a planning estimate derived from the selected curricul
 
 <!-- PAGEBREAK -->
 
-## 15. Switch to AI Degree Plan mode
+## 15. Explore the Degree Map Tree
+
+Select **Degree Map Tree** from the completed-course workspace or from a matched-major card in the public advising chatbot.
+
+The tree is another view of the same published curriculum used by the course selector. It does not create a separate degree plan.
+
+1. Open a folded category card such as **Required Common Core**, **Flexible Core**, or **Program Electives** to see its choices.
+2. Select a course card to expand its title, credits, and relationship summary.
+3. Follow solid prerequisite lines, dashed corequisite lines, and dotted recommended-sequence lines.
+4. When a course is selected, follow the green highlighted pathway to see which later courses it unlocks.
+5. Read `OR` prerequisite branches as alternatives; either approved branch can satisfy that prerequisite group.
+6. Select **Download / save PDF** when you want a printable copy for an advising conversation.
+
+The tree helps explain sequencing, but it does not replace official prerequisite enforcement, DegreeWorks, or advisor confirmation. If a relationship appears inconsistent with the catalog, report the program, course code, and catalog year to an administrator.
+
+<!-- PAGEBREAK -->
+
+## 16. Switch to AI Degree Plan mode
 
 Under **Degree Planning**, select **AI Degree Plan**. Configure:
 
@@ -259,7 +277,7 @@ If required credits cannot fit, lengthen the timeline or investigate missing pre
 
 <!-- PAGEBREAK -->
 
-## 16. Review the generated semester plan
+## 17. Review the generated semester plan
 
 Read every semester card before relying on the plan:
 
@@ -275,7 +293,7 @@ The plan does not guarantee that a course will run in the displayed term or that
 
 <!-- PAGEBREAK -->
 
-## 17. Download or save the degree-plan PDF
+## 18. Download or save the degree-plan PDF
 
 1. Finish completed-course entry.
 2. Open **AI Degree Plan**.
@@ -290,7 +308,7 @@ Regenerate the plan after changing completed courses or program selections becau
 
 <!-- PAGEBREAK -->
 
-## 18. Ask the AI advisor a focused question
+## 19. Ask the AI advisor a focused question
 
 Select **Ask AI Advisor** to open the advising drawer. The advisor receives the current program and progress-page context.
 
@@ -309,7 +327,7 @@ AI features require a configured Gemini key. Manual progress and planning remain
 
 <!-- PAGEBREAK -->
 
-## 19. Explore a major change
+## 20. Explore a major change
 
 Use **Major Change** when considering another program at the current college.
 
@@ -324,7 +342,7 @@ A what-if analysis does not change the official student record. Catalog year, ad
 
 <!-- PAGEBREAK -->
 
-## 20. Explore a transfer scenario
+## 21. Explore a transfer scenario
 
 Transfer analysis compares selected completed courses with a destination program at another institution.
 
@@ -341,7 +359,7 @@ If the comparison page reports that no progress snapshot exists, return to **My 
 
 <!-- PAGEBREAK -->
 
-## 21. Troubleshooting and responsible use
+## 22. Troubleshooting and responsible use
 
 **A course is gray even though I completed it.** Check whether you selected its prerequisite, whether an alternative already satisfies the requirement, and whether the course is reserved elsewhere.
 
@@ -355,7 +373,7 @@ If the comparison page reports that no progress snapshot exists, return to **My 
 
 <!-- PAGEBREAK -->
 
-## 22. Advising appointment checklist
+## 23. Advising appointment checklist
 
 Before meeting an advisor:
 
