@@ -93,6 +93,12 @@ def prepare_visual_assets() -> None:
         [("Source", "Catalog, program page, degree map"), ("Draft", "Metadata, bins, rules, adjustments"), ("Validate", "Structure, totals, references"), ("Review", "Approve or request changes"), ("Publish", "Verify students and retain rollback")],
         "#f0ecff",
     )
+    draw_workflow(
+        DIAGRAM_DIR / "chatbot_workflow.png",
+        "AI Academic Advisement Chatbot workflow",
+        [("Describe", "Student situation and career goal"), ("Refine", "Employment, interests, and skills"), ("Review", "Prior learning, AP, and coursework"), ("Explore", "Matched majors, maps, and trees"), ("Prepare", "Degree planner and advising summary")],
+        "#e8f7f4",
+    )
     for source_name in ["12-admin-dashboard.png", "15-major-constructor-list.png"]:
         source = SCREENSHOT_DIR / source_name
         if not source.exists():
@@ -239,6 +245,7 @@ def main() -> None:
     build_pdf(GUIDE_DIR / "STUDENT_GUIDE.md", OUTPUT_DIR / "academic_advisement_student_guide.pdf", "Student Guide")
     build_pdf(temp_admin, OUTPUT_DIR / "academic_advisement_admin_guide.pdf", "Administrator Guide")
     build_pdf(ROOT / "docs" / "DEGREE_TREE_CONSTRUCTOR_GUIDE.md", OUTPUT_DIR / "degree_map_tree_constructor_guide.pdf", "Degree Tree Constructor Guide")
+    build_pdf(GUIDE_DIR / "AI_ACADEMIC_ADVISEMENT_CHATBOT_GUIDE.md", OUTPUT_DIR / "ai_academic_advisement_chatbot_guide.pdf", "Chatbot Guide")
 
 
 if __name__ == "__main__":
