@@ -45,6 +45,10 @@ class CanonicalPrerequisiteTests(unittest.TestCase):
             source.rindex("seed_canonical_course_prerequisites(db)"),
             source.rindex("seed_program_choice_group_adjustments(db)"),
         )
+        canonical = source[source.index("def seed_canonical_course_prerequisites"):source.index("def seed_ccny_elective_groups")]
+        self.assertIn("explicit_or_existing", canonical)
+        self.assertIn("if explicit_or_existing:", canonical)
+        self.assertNotIn(".delete(", canonical)
 
     def test_prerequisite_support_courses_are_cataloged_and_exposed_without_degree_credit(self):
         with (DOCS / "course_catalog.csv").open(newline="", encoding="utf-8-sig") as handle:

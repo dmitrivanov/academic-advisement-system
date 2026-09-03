@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Curriculum Graph Editor | Academic Advisement</title>
+  <title>Degree Tree Constructor | Academic Advisement</title>
   <link rel="stylesheet" href="/frontend/app_shell.css">
   <link rel="stylesheet" href="/frontend/curriculum_graph.css?v=4">
   <style>
@@ -22,6 +22,12 @@
     button.danger { color: #991b1b; background: #fee2e2; }
     .actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 12px; }
     .message { min-height: 20px; margin-top: 10px; color: #166534; font-weight: 700; }
+    .import-grid { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:12px; align-items:end; }
+    .import-preview { max-height:220px; overflow:auto; margin-top:12px; padding:12px; border:1px solid #dbe4f0; border-radius:12px; background:#f8fafc; }
+    .drag-palette { display:flex; gap:8px; overflow-x:auto; padding:10px 2px 13px; }
+    .drag-course { flex:0 0 auto; padding:8px 10px; border:1px solid #93b4e6; border-radius:10px; color:#173d79; background:#eff6ff; cursor:grab; font-weight:800; }
+    .drop-well { min-height:48px; padding:9px; border:2px dashed #9bb3d3; border-radius:11px; background:#f8fbff; }
+    .drop-well.drag-over { border-color:#1d4ed8; background:#dbeafe; }
     .table-wrap { overflow-x: auto; } table { width: 100%; border-collapse: collapse; font-size: 13px; }
     th, td { padding: 9px; text-align: left; border-bottom: 1px solid #e2e8f0; } th { background: #eff6ff; }
     #graphPreview .curriculum-tree-panel, #graphPreview .curriculum-cluster { box-shadow: none; }
@@ -31,17 +37,24 @@
 </head>
 <body>
 <main>
-  <section class="hero"><div><h1>Curriculum Dependency Graph Editor</h1><p>Available for every populated major. Canonical CSV prerequisites remain unchanged; edits are stored as reversible graph overrides.</p></div><a class="back" href="/admin">Admin dashboard</a></section>
+  <section class="hero"><div><h1>Degree Tree Constructor</h1><p>Import prerequisite relationships, arrange them by dragging course cards, preview the resulting tree, and save reversible relationships used by student-facing trees.</p></div><div class="toolbar"><a class="back" href="/admin/major-constructor">Edit curriculum bins</a><a class="back" href="/admin">Admin dashboard</a></div></section>
   <section class="editor-card">
     <label for="programSelect">Program</label>
     <select id="programSelect"></select>
   </section>
   <section class="editor-card">
+    <h2>Import a degree-tree CSV</h2>
+    <p>Use the same curriculum format as <code>docs/cs_courses.csv</code>, or a compact file with <code>source_course,target_course,relation_type,group_id,note</code>. Import builds a reviewable preview; nothing changes until you press Save imported relationships. <a href="/docs/degree_tree_relationship_template.csv" download>Download template</a> · <a href="/docs/DEGREE_TREE_CONSTRUCTOR_GUIDE.md" target="_blank" rel="noopener">Open guide</a></p>
+    <div class="import-grid"><div><label for="graphCsv">CSV file</label><input id="graphCsv" type="file" accept=".csv,text/csv"></div><button id="saveImported" type="button" disabled>Save imported relationships</button></div>
+    <div id="importPreview" class="import-preview muted">No CSV loaded.</div>
+  </section>
+  <section class="editor-card">
     <h2>Add or hide a relationship</h2>
-    <p>Choose the earlier course first, then the course it unlocks. OR alternatives share the same group number.</p>
+    <p>Drag course cards into the two wells or use the dropdowns. Choose the earlier course first, then the course it unlocks. OR alternatives share the same group number.</p>
+    <div id="coursePalette" class="drag-palette" aria-label="Draggable program courses"></div>
     <div class="form-grid">
-      <div><label for="sourceCourse">Earlier / prerequisite course</label><select id="sourceCourse"></select></div>
-      <div><label for="targetCourse">Later / dependent course</label><select id="targetCourse"></select></div>
+      <div class="drop-well" data-drop-select="sourceCourse"><label for="sourceCourse">Earlier / prerequisite course</label><select id="sourceCourse"></select></div>
+      <div class="drop-well" data-drop-select="targetCourse"><label for="targetCourse">Later / dependent course</label><select id="targetCourse"></select></div>
       <div><label for="relationType">Relationship</label><select id="relationType"><option value="prerequisite">Prerequisite</option><option value="corequisite">Corequisite</option><option value="recommended">Recommended sequence</option></select></div>
       <div><label for="groupId">AND/OR group</label><input id="groupId" type="number" min="1" max="99" value="1"></div>
     </div>
@@ -59,11 +72,19 @@ const programSelect = document.getElementById('programSelect');
 const message = document.getElementById('message');
 
 async function fetchJson(url, options) { const response = await fetch(url, options); const data = await response.json().catch(() => ({})); if (!response.ok) throw new Error(data.detail || 'Request failed'); return data; }
-function fillCourses() { const options = currentGraph.nodes.map(node => `<option value="${node.id}">${node.code} — ${node.title}</option>`).join(''); document.getElementById('sourceCourse').innerHTML = options; document.getElementById('targetCourse').innerHTML = options; }
+let pendingImports = [];
+function fillCourses() { const options = currentGraph.nodes.map(node => `<option value="${node.id}">${node.code} — ${node.title}</option>`).join(''); document.getElementById('sourceCourse').innerHTML = options; document.getElementById('targetCourse').innerHTML = options; document.getElementById('coursePalette').innerHTML=currentGraph.nodes.map(node=>`<div class="drag-course" draggable="true" data-course-id="${node.id}" title="${node.title}">${node.code}</div>`).join(''); }
 function renderOverrides() { document.getElementById('overrideRows').innerHTML = currentGraph.overrides.length ? currentGraph.overrides.map(row => `<tr><td>${row.source_code || row.source_course_id}</td><td>${row.target_code || row.target_course_id}</td><td>${row.relation_type}</td><td>${row.action}</td><td>${row.group_id}</td><td>${row.note || ''}</td><td><button class="secondary" onclick="resetOverride(${row.id})">Reset</button></td></tr>`).join('') : '<tr><td colspan="7">No administrator overrides. The graph uses canonical prerequisite data.</td></tr>'; }
 async function loadGraph() { currentGraph = await CurriculumGraph.load(programSelect.value, document.getElementById('graphPreview')); fillCourses(); renderOverrides(); }
 async function saveEdge(action) { try { message.textContent = 'Saving…'; const payload = { source_course_id: Number(document.getElementById('sourceCourse').value), target_course_id: Number(document.getElementById('targetCourse').value), relation_type: document.getElementById('relationType').value, action, group_id: Number(document.getElementById('groupId').value), note: document.getElementById('edgeNote').value }; const data = await fetchJson(`/api/db/admin/curriculum-graphs/${encodeURIComponent(programSelect.value)}/edges`, {method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload)}); currentGraph = data.graph; CurriculumGraph.render(currentGraph, document.getElementById('graphPreview')); renderOverrides(); message.textContent = action === 'add' ? 'Relationship added.' : 'Canonical relationship hidden.'; } catch (error) { message.textContent = error.message; } }
 async function resetOverride(id) { try { const data = await fetchJson(`/api/db/admin/curriculum-graphs/${encodeURIComponent(programSelect.value)}/overrides/${id}`, {method:'DELETE'}); currentGraph = data.graph; CurriculumGraph.render(currentGraph, document.getElementById('graphPreview')); renderOverrides(); message.textContent = 'Override reset; canonical graph restored.'; } catch (error) { message.textContent = error.message; } }
+function parseCsv(text){const rows=[];let row=[],cell='',quoted=false;for(let i=0;i<text.length;i++){const ch=text[i],next=text[i+1];if(ch==='"'&&quoted&&next==='"'){cell+='"';i++;}else if(ch==='"'){quoted=!quoted;}else if(ch===','&&!quoted){row.push(cell);cell='';}else if((ch==='\n'||ch==='\r')&&!quoted){if(ch==='\r'&&next==='\n')i++;row.push(cell);if(row.some(x=>x.trim()))rows.push(row);row=[];cell='';}else cell+=ch;}row.push(cell);if(row.some(x=>x.trim()))rows.push(row);const headers=(rows.shift()||[]).map(x=>x.trim());return rows.map(values=>Object.fromEntries(headers.map((h,i)=>[h,(values[i]||'').trim()])))}
+function relationshipGroups(value){return String(value||'').split('|').map(group=>group.split(/\s+or\s+/i).map(x=>x.trim()).filter(Boolean)).filter(x=>x.length)}
+function previewCsv(text){const rows=parseCsv(text),byCode=new Map(currentGraph.nodes.map(node=>[node.code.toUpperCase(),node]));pendingImports=[];const warnings=[];rows.forEach(row=>{if(row.source_course&&row.target_course){const source=byCode.get(row.source_course.toUpperCase()),target=byCode.get(row.target_course.toUpperCase());if(!source||!target){warnings.push(`${row.source_course} → ${row.target_course}: course not in selected program tree`);return;}pendingImports.push({source_course_id:source.id,target_course_id:target.id,relation_type:(row.relation_type||'prerequisite').toLowerCase(),action:(row.action||'add').toLowerCase(),group_id:Number(row.group_id||1),note:row.note||'Imported from degree-tree CSV'});return;}const target=byCode.get(String(row.course_code||'').toUpperCase());if(!target||!row.prerequisites)return;relationshipGroups(row.prerequisites).forEach((group,index)=>group.forEach(code=>{const source=byCode.get(code.toUpperCase());if(source)pendingImports.push({source_course_id:source.id,target_course_id:target.id,relation_type:'prerequisite',action:'add',group_id:index+1,note:'Imported from curriculum CSV'});else warnings.push(`${code} → ${row.course_code}: prerequisite course not in selected program tree`)}));});document.getElementById('saveImported').disabled=!pendingImports.length;document.getElementById('importPreview').innerHTML=`<strong>${pendingImports.length} relationship${pendingImports.length===1?'':'s'} ready for review</strong>${pendingImports.slice(0,80).map(edge=>{const source=currentGraph.nodes.find(x=>x.id===edge.source_course_id),target=currentGraph.nodes.find(x=>x.id===edge.target_course_id);return`<div>${source?.code||'?'} → ${target?.code||'?'} · ${edge.relation_type} · group ${edge.group_id} · ${edge.action}</div>`}).join('')}${warnings.map(x=>`<div style="color:#9f2440">${x}</div>`).join('')}`;const preview=JSON.parse(JSON.stringify(currentGraph));pendingImports.forEach((edge,index)=>{const key=item=>item.source_id===edge.source_course_id&&item.target_id===edge.target_course_id&&item.relation_type===edge.relation_type&&item.group_id===edge.group_id;if(edge.action==='remove')preview.edges=preview.edges.filter(item=>!key(item));else if(!preview.edges.some(key))preview.edges.push({id:`import-preview-${index}`,source_id:edge.source_course_id,target_id:edge.target_course_id,relation_type:edge.relation_type,group_id:edge.group_id,origin:'import-preview',logic:'and'});});CurriculumGraph.render(preview,document.getElementById('graphPreview'))}
+document.getElementById('graphCsv').onchange=async event=>{const file=event.target.files[0];if(file)previewCsv(await file.text())};
+document.getElementById('saveImported').onclick=async()=>{try{message.textContent=`Saving ${pendingImports.length} relationships…`;let graph=currentGraph;for(const payload of pendingImports){const data=await fetchJson(`/api/db/admin/curriculum-graphs/${encodeURIComponent(programSelect.value)}/edges`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});graph=data.graph;}currentGraph=graph;CurriculumGraph.render(currentGraph,document.getElementById('graphPreview'));fillCourses();renderOverrides();pendingImports=[];document.getElementById('saveImported').disabled=true;message.textContent='Imported relationships saved and now used by the degree tree.';}catch(error){message.textContent=error.message}};
+document.getElementById('coursePalette').addEventListener('dragstart',event=>{const card=event.target.closest('[data-course-id]');if(card)event.dataTransfer.setData('text/plain',card.dataset.courseId)});
+document.querySelectorAll('[data-drop-select]').forEach(well=>{well.addEventListener('dragover',event=>{event.preventDefault();well.classList.add('drag-over')});well.addEventListener('dragleave',()=>well.classList.remove('drag-over'));well.addEventListener('drop',event=>{event.preventDefault();well.classList.remove('drag-over');const id=event.dataTransfer.getData('text/plain');if(id)document.getElementById(well.dataset.dropSelect).value=id;});});
 async function init() { try { const programs = await fetchJson('/api/db/admin/curriculum-graphs/programs'); programs.sort((a, b) => (a.institution_code === 'BMCC' ? -1 : b.institution_code === 'BMCC' ? 1 : a.institution_code.localeCompare(b.institution_code))); programSelect.innerHTML = programs.map(program => `<option value="${program.code}">${program.institution_code} · ${program.name} (${program.catalog_year || 'current'})</option>`).join(''); programSelect.addEventListener('change', loadGraph); await loadGraph(); } catch (error) { message.textContent = error.message; } }
 init();
 </script>

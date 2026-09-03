@@ -1,0 +1,4 @@
+source_course,target_course,relation_type,group_id,note
+CSC 111,CSC 211,prerequisite,1,CSC 111 is required before CSC 211
+MAT 206,MAT 301,prerequisite,1,MAT 206 is one allowed prerequisite
+MAT 206.5,MAT 301,prerequisite,1,MAT 206.5 is an OR alternative in group 1

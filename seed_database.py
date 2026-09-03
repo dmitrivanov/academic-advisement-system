@@ -1067,7 +1067,7 @@ def seed_course_catalog(db):
 
 
 def seed_canonical_course_prerequisites(db):
-    """Apply campus-wide prerequisite facts consistently in every program context."""
+    """Fill missing campus-wide facts without replacing a program CSV rule."""
     path = DOCS_DIR / "course_prerequisites.csv"
     if not path.exists():
         return
@@ -1093,10 +1093,12 @@ def seed_canonical_course_prerequisites(db):
             )
             prereq_groups = parse_relationships(row.get("prerequisites", ""))
             for program in programs:
-                db.query(CoursePrerequisite).filter_by(
+                explicit_or_existing = db.query(CoursePrerequisite).filter_by(
                     program_id=program.id,
                     course_id=course.id,
-                ).delete(synchronize_session=False)
+                ).first()
+                if explicit_or_existing:
+                    continue
                 for group_id, prereq_codes in prereq_groups:
                     for prereq_code in prereq_codes:
                         prereq = find_course(db, institution, prereq_code)

@@ -96,6 +96,16 @@ class CurriculumGraphModuleTests(unittest.TestCase):
         self.assertIn('CurriculumGraphEdgeOverride(', api)
         self.assertNotIn('db.add(CoursePrerequisite(', api.split('@router.put("/admin/curriculum-graphs/', 1)[1])
 
+    def test_degree_tree_constructor_imports_csv_and_supports_dragged_relationships(self):
+        editor = (ROOT / "frontend" / "curriculum_graph_admin.html").read_text(encoding="utf-8")
+        self.assertIn("Degree Tree Constructor", editor)
+        self.assertIn('id="graphCsv"', editor)
+        self.assertIn("source_course,target_course,relation_type,group_id,note", editor)
+        self.assertIn("function parseCsv", editor)
+        self.assertIn("function previewCsv", editor)
+        self.assertIn('class="drag-course" draggable="true"', editor)
+        self.assertIn("Save imported relationships", editor)
+
 
 if __name__ == "__main__":
     unittest.main()
