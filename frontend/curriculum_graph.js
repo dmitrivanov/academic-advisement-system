@@ -1,5 +1,5 @@
 (function () {
-  const state = { graph: null, completed: new Set(), lastFocus: null, highlightedNodeId: null, resizeObserver: null, drawTimer: null, onGroupOpen: null };
+  const state = { graph: null, completed: new Set(), lastFocus: null, highlightedNodeId: null, resizeObserver: null, drawTimer: null, onGroupOpen: null, renderOptions: {} };
 
   function escapeHtml(value) {
     return String(value ?? '').replace(/[&<>'"]/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[char]));
@@ -138,6 +138,11 @@
       }
       const card = event.target.closest('.curriculum-node');
       if (!card || !target.contains(card)) return;
+      if (card.dataset.justDragged === 'true') {
+        card.dataset.justDragged = 'false';
+        return;
+      }
+      if (card.hasAttribute('data-main-node-id') && state.renderOptions.onNodeClick?.(Number(card.dataset.nodeId), card, event) === true) return;
       const expanded = card.getAttribute('aria-expanded') === 'true';
       card.setAttribute('aria-expanded', String(!expanded));
       card.classList.toggle('expanded', !expanded);
@@ -149,8 +154,9 @@
     target.addEventListener('toggle', scheduleDrawEdges, true);
   }
 
-  function render(graph, target) {
+  function render(graph, target, options = {}) {
     state.graph = graph;
+    state.renderOptions = options;
     const nodes = new Map(graph.nodes.map(node => [node.id, node]));
     const mainClusterTypes = new Set(['program_required']);
     const mainIds = new Set(graph.clusters.filter(cluster => mainClusterTypes.has(cluster.type)).flatMap(cluster => cluster.node_ids));
@@ -177,8 +183,16 @@
       seenClusters.add(signature);
       return true;
     });
-    target.innerHTML = `<div class="curriculum-graph-legend"><span>Prerequisite</span><span class="coreq">Corequisite</span><span class="recommended">Recommended sequence</span><span class="highlighted">Selected pathway</span><em>Click a course to expand it and highlight everything it unlocks</em></div>${graph.cycle_node_ids.length ? '<p class="curriculum-cycle-warning">This graph contains a circular relationship. An administrator should review the highlighted curriculum data.</p>' : ''}<section class="curriculum-tree-panel"><h3>Course dependency forest</h3><p class="curriculum-cluster-meta">Requirement categories sit at the top level as compact cards. Open Common Core, Flexible Core, Program Electives, or another category only when you need its course choices.</p><div class="curriculum-graph-canvas" id="curriculumGraphCanvas"><svg class="curriculum-edge-layer" aria-hidden="true"></svg><div class="curriculum-levels">${mainLayers.map((layer, index) => `<div class="curriculum-level${index === 0 ? ' curriculum-root-level' : ''}" aria-label="Dependency level ${index + 1}">${index === 0 ? secondary.map(cluster => clusterBranch(cluster, nodes, graph)).join('') : ''}${layer.map(id => nodes.has(id) ? nodeCard(nodes.get(id), graph, true) : '').join('')}</div>`).join('')}</div></div></section>`;
+    target.innerHTML = `<div class="curriculum-graph-legend"><span>Prerequisite</span><span class="coreq">Corequisite</span><span class="recommended">Recommended sequence</span><span class="highlighted">Selected pathway</span><em>Click a course to expand it and highlight everything it unlocks</em></div>${graph.cycle_node_ids.length ? '<p class="curriculum-cycle-warning">This graph contains a circular relationship. An administrator should review the highlighted curriculum data.</p>' : ''}<section class="curriculum-tree-panel"><h3>Course dependency forest</h3><p class="curriculum-cluster-meta">Requirement categories sit at the top level as compact cards. Open Common Core, Flexible Core, Program Electives, or another category only when you need its course choices.</p><div class="curriculum-graph-canvas${options.editable ? ' curriculum-graph-editable' : ''}" id="curriculumGraphCanvas"><svg class="curriculum-edge-layer" aria-hidden="true"></svg><div class="curriculum-levels">${mainLayers.map((layer, index) => `<div class="curriculum-level${index === 0 ? ' curriculum-root-level' : ''}" aria-label="Dependency level ${index + 1}">${index === 0 ? secondary.map(cluster => clusterBranch(cluster, nodes, graph)).join('') : ''}${layer.map(id => nodes.has(id) ? nodeCard(nodes.get(id), graph, true) : '').join('')}</div>`).join('')}</div></div></section>`;
     attachInteractions(target);
+    const positionById = new Map((graph.layout || []).map(item => [Number(item.course_id), item]));
+    target.querySelectorAll('[data-main-node-id]').forEach(card => {
+      const position = positionById.get(Number(card.dataset.mainNodeId)) || { x: 0, y: 0 };
+      card.dataset.offsetX = String(position.x || 0);
+      card.dataset.offsetY = String(position.y || 0);
+      card.style.setProperty('--graph-x', `${position.x || 0}px`);
+      card.style.setProperty('--graph-y', `${position.y || 0}px`);
+    });
     state.highlightedNodeId = null;
     if (state.resizeObserver) state.resizeObserver.disconnect();
     const canvas = target.querySelector('#curriculumGraphCanvas');
@@ -197,6 +211,9 @@
     const bounds = canvas.getBoundingClientRect();
     svg.setAttribute('viewBox', `0 0 ${bounds.width} ${bounds.height}`);
     svg.innerHTML = '';
+    const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
+    defs.innerHTML = '<marker id="curriculum-arrowhead" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="context-stroke"></path></marker>';
+    svg.appendChild(defs);
     const highlightedEdgeKeys = state.highlightedNodeId == null ? new Set() : downstreamPath(state.highlightedNodeId).highlightedEdges;
     state.graph.edges.forEach(edge => {
       const source = canvas.querySelector(`[data-main-node-id="${edge.source_id}"]`);
@@ -209,15 +226,34 @@
       const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
       path.setAttribute('d', `M ${x1} ${y1} C ${x1} ${mid}, ${x2} ${mid}, ${x2} ${y2}`);
       path.setAttribute('fill', 'none');
+      path.setAttribute('marker-end', 'url(#curriculum-arrowhead)');
       path.setAttribute('stroke', edge.relation_type === 'corequisite' ? '#8b5cf6' : edge.relation_type === 'recommended' ? '#f59e0b' : '#2563eb');
       path.setAttribute('stroke-width', edge.origin === 'admin' ? '3.5' : '2.5');
       if (edge.relation_type !== 'prerequisite') path.setAttribute('stroke-dasharray', edge.relation_type === 'corequisite' ? '7 5' : '3 5');
       path.dataset.edgeKey = `${edge.source_id}-${edge.target_id}-${edge.relation_type}-${edge.group_id}`;
+      path.dataset.sourceId = String(edge.source_id);
+      path.dataset.targetId = String(edge.target_id);
+      path.dataset.relationType = edge.relation_type;
+      path.dataset.groupId = String(edge.group_id);
       const highlighted = highlightedEdgeKeys.has(path.dataset.edgeKey);
       if (highlighted) {
         path.setAttribute('stroke', '#16a34a');
         path.setAttribute('stroke-width', '5');
         path.classList.add('path-highlight');
+      }
+      if (state.renderOptions.onEdgeClick) {
+        path.classList.add('curriculum-editable-edge');
+        path.setAttribute('tabindex', '0');
+        path.setAttribute('role', 'button');
+        path.setAttribute('aria-label', `Remove ${edge.relation_type} relationship`);
+        const activate = event => {
+          if (event.type === 'keydown' && event.key !== 'Enter' && event.key !== ' ') return;
+          event.preventDefault();
+          event.stopPropagation();
+          state.renderOptions.onEdgeClick(edge, path);
+        };
+        path.addEventListener('click', activate);
+        path.addEventListener('keydown', activate);
       }
       svg.appendChild(path);
     });
@@ -267,5 +303,5 @@
   }
 
   window.addEventListener('resize', drawEdges);
-  window.CurriculumGraph = { open, close, load, render, isSupported: code => Boolean(code), printGraph };
+  window.CurriculumGraph = { open, close, load, render, redraw: scheduleDrawEdges, isSupported: code => Boolean(code), printGraph };
 })();

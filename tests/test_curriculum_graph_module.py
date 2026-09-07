@@ -106,6 +106,24 @@ class CurriculumGraphModuleTests(unittest.TestCase):
         self.assertIn('class="drag-course" draggable="true"', editor)
         self.assertIn("Save imported relationships", editor)
 
+    def test_visual_editor_moves_cards_tracks_edges_and_confirms_persistence(self):
+        editor = (ROOT / "frontend" / "curriculum_graph_admin.html").read_text(encoding="utf-8")
+        component = (ROOT / "frontend" / "curriculum_graph.js").read_text(encoding="utf-8")
+        styles = (ROOT / "frontend" / "curriculum_graph.css").read_text(encoding="utf-8")
+        api = (ROOT / "api_db_routes.py").read_text(encoding="utf-8")
+        models = (ROOT / "models.py").read_text(encoding="utf-8")
+
+        self.assertIn('id="connectMode"', editor)
+        self.assertIn("enableCardDragging", editor)
+        self.assertIn("CurriculumGraph.redraw()", editor)
+        self.assertIn("window.confirm", editor)
+        self.assertIn("onEdgeClick:removeVisualEdge", editor)
+        self.assertIn("curriculum-editable-edge", component)
+        self.assertIn("curriculum-arrowhead", component)
+        self.assertIn("--graph-x", styles)
+        self.assertIn('class CurriculumGraphNodePosition', models)
+        self.assertIn('@router.put("/admin/curriculum-graphs/{program_code}/layout")', api)
+
 
 if __name__ == "__main__":
     unittest.main()

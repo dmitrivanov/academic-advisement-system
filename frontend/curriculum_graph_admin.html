@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Degree Tree Constructor | Academic Advisement</title>
   <link rel="stylesheet" href="/frontend/app_shell.css">
-  <link rel="stylesheet" href="/frontend/curriculum_graph.css?v=4">
+  <link rel="stylesheet" href="/frontend/curriculum_graph.css?v=5">
   <style>
     body { margin: 0; color: #172033; background: #f3f6fb; font-family: Arial, sans-serif; }
     main { max-width: 1240px; margin: 30px auto; padding: 0 20px 50px; }
@@ -19,6 +19,7 @@
     textarea { min-height: 72px; resize: vertical; }
     button { padding: 10px 14px; border: 0; border-radius: 10px; color: white; background: #1d4ed8; font-weight: 800; cursor: pointer; }
     button.secondary { color: #1e3a8a; background: #dbeafe; }
+    button.secondary.active { color: white; background: #15803d; box-shadow: 0 0 0 4px rgba(21,128,61,.16); }
     button.danger { color: #991b1b; background: #fee2e2; }
     .actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 12px; }
     .message { min-height: 20px; margin-top: 10px; color: #166534; font-weight: 700; }
@@ -31,6 +32,11 @@
     .table-wrap { overflow-x: auto; } table { width: 100%; border-collapse: collapse; font-size: 13px; }
     th, td { padding: 9px; text-align: left; border-bottom: 1px solid #e2e8f0; } th { background: #eff6ff; }
     #graphPreview .curriculum-tree-panel, #graphPreview .curriculum-cluster { box-shadow: none; }
+    .visual-toolbar { display:flex; flex-wrap:wrap; align-items:center; gap:10px; margin:12px 0; padding:12px; border:1px solid #cfe0f5; border-radius:13px; background:#f7fbff; }
+    .visual-toolbar .hint { flex:1 1 280px; margin:0; color:#475569; font-size:13px; }
+    .advanced-editor { margin-top:14px; border:1px solid #dbe4f0; border-radius:13px; background:#fafcff; }
+    .advanced-editor summary { padding:13px 15px; cursor:pointer; color:#1e3a8a; font-weight:800; }
+    .advanced-editor-body { padding:0 15px 15px; }
     @media (max-width: 800px) { .form-grid { grid-template-columns: 1fr; } .hero { align-items: flex-start; flex-direction: column; } }
   </style>
   <script src="/frontend/app_shell.js" defer></script>
@@ -49,8 +55,11 @@
     <div id="importPreview" class="import-preview muted">No CSV loaded.</div>
   </section>
   <section class="editor-card">
-    <h2>Add or hide a relationship</h2>
-    <p>Drag course cards into the two wells or use the dropdowns. Choose the earlier course first, then the course it unlocks. OR alternatives share the same group number.</p>
+    <h2>Visual degree-tree editor</h2>
+    <p>Drag the course cards directly in the tree. Connecting arrows follow while you move them. Select <strong>Connect courses</strong>, click the earlier course, then the course it unlocks. Click an existing arrow to remove that relationship.</p>
+    <div class="visual-toolbar"><button id="connectMode" class="secondary" type="button">Connect courses</button><button id="saveLayout" class="secondary" type="button">Save card layout</button><button id="resetLayout" class="secondary" type="button">Reset layout</button><p id="visualHint" class="hint">Drag a card to reposition it. Relationship and layout changes are not saved without confirmation.</p></div>
+    <div id="graphPreview"></div>
+    <details class="advanced-editor"><summary>Advanced relationship settings (type, AND/OR group, and note)</summary><div class="advanced-editor-body">
     <div id="coursePalette" class="drag-palette" aria-label="Draggable program courses"></div>
     <div class="form-grid">
       <div class="drop-well" data-drop-select="sourceCourse"><label for="sourceCourse">Earlier / prerequisite course</label><select id="sourceCourse"></select></div>
@@ -59,32 +68,119 @@
       <div><label for="groupId">AND/OR group</label><input id="groupId" type="number" min="1" max="99" value="1"></div>
     </div>
     <label for="edgeNote" style="margin-top:12px;">Administrative note (optional)</label><textarea id="edgeNote" placeholder="Source, rationale, or review note"></textarea>
-    <div class="actions"><button type="button" onclick="saveEdge('add')">Add relationship</button><button class="danger" type="button" onclick="saveEdge('remove')">Hide canonical relationship</button></div>
+    <div class="actions"><button type="button" onclick="saveEdge('add')">Add relationship</button><button class="danger" type="button" onclick="saveEdge('remove')">Remove relationship</button></div>
+    </div></details>
     <div id="message" class="message" aria-live="polite"></div>
   </section>
   <section class="editor-card"><h2>Administrator overrides</h2><p>Reset removes the override and restores the canonical CSV relationship.</p><div class="table-wrap"><table><thead><tr><th>From</th><th>To</th><th>Type</th><th>Action</th><th>Group</th><th>Note</th><th></th></tr></thead><tbody id="overrideRows"></tbody></table></div></section>
-  <section class="editor-card"><h2>Live preview</h2><div id="graphPreview"></div></section>
 </main>
-<script src="/frontend/curriculum_graph.js?v=6"></script>
+<script src="/frontend/curriculum_graph.js?v=7"></script>
 <script>
 let currentGraph = null;
+let pendingImports = [];
+let connecting = false;
+let connectionSource = null;
+let layoutDirty = false;
+let workingLayout = new Map();
 const programSelect = document.getElementById('programSelect');
 const message = document.getElementById('message');
+const visualHint = document.getElementById('visualHint');
+const connectButton = document.getElementById('connectMode');
 
 async function fetchJson(url, options) { const response = await fetch(url, options); const data = await response.json().catch(() => ({})); if (!response.ok) throw new Error(data.detail || 'Request failed'); return data; }
-let pendingImports = [];
 function fillCourses() { const options = currentGraph.nodes.map(node => `<option value="${node.id}">${node.code} — ${node.title}</option>`).join(''); document.getElementById('sourceCourse').innerHTML = options; document.getElementById('targetCourse').innerHTML = options; document.getElementById('coursePalette').innerHTML=currentGraph.nodes.map(node=>`<div class="drag-course" draggable="true" data-course-id="${node.id}" title="${node.title}">${node.code}</div>`).join(''); }
 function renderOverrides() { document.getElementById('overrideRows').innerHTML = currentGraph.overrides.length ? currentGraph.overrides.map(row => `<tr><td>${row.source_code || row.source_course_id}</td><td>${row.target_code || row.target_course_id}</td><td>${row.relation_type}</td><td>${row.action}</td><td>${row.group_id}</td><td>${row.note || ''}</td><td><button class="secondary" onclick="resetOverride(${row.id})">Reset</button></td></tr>`).join('') : '<tr><td colspan="7">No administrator overrides. The graph uses canonical prerequisite data.</td></tr>'; }
-async function loadGraph() { currentGraph = await CurriculumGraph.load(programSelect.value, document.getElementById('graphPreview')); fillCourses(); renderOverrides(); }
-async function saveEdge(action) { try { message.textContent = 'Saving…'; const payload = { source_course_id: Number(document.getElementById('sourceCourse').value), target_course_id: Number(document.getElementById('targetCourse').value), relation_type: document.getElementById('relationType').value, action, group_id: Number(document.getElementById('groupId').value), note: document.getElementById('edgeNote').value }; const data = await fetchJson(`/api/db/admin/curriculum-graphs/${encodeURIComponent(programSelect.value)}/edges`, {method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload)}); currentGraph = data.graph; CurriculumGraph.render(currentGraph, document.getElementById('graphPreview')); renderOverrides(); message.textContent = action === 'add' ? 'Relationship added.' : 'Canonical relationship hidden.'; } catch (error) { message.textContent = error.message; } }
-async function resetOverride(id) { try { const data = await fetchJson(`/api/db/admin/curriculum-graphs/${encodeURIComponent(programSelect.value)}/overrides/${id}`, {method:'DELETE'}); currentGraph = data.graph; CurriculumGraph.render(currentGraph, document.getElementById('graphPreview')); renderOverrides(); message.textContent = 'Override reset; canonical graph restored.'; } catch (error) { message.textContent = error.message; } }
+
+function nodeCode(id) { return currentGraph.nodes.find(node => node.id === Number(id))?.code || `course ${id}`; }
+function graphWithWorkingLayout(graph) { graph.layout = [...workingLayout].map(([course_id, point]) => ({ course_id, x: Math.round(point.x), y: Math.round(point.y) })); return graph; }
+function renderGraphEditor() {
+  CurriculumGraph.render(graphWithWorkingLayout(currentGraph), document.getElementById('graphPreview'), { editable:true, onNodeClick:handleVisualNodeClick, onEdgeClick:removeVisualEdge });
+  enableCardDragging();
+}
+async function loadGraph() {
+  const response = await fetch(`/api/db/programs/${encodeURIComponent(programSelect.value)}/graph`);
+  if (!response.ok) throw new Error('Could not load degree tree');
+  currentGraph = await response.json();
+  workingLayout = new Map((currentGraph.layout || []).map(item => [Number(item.course_id), {x:Number(item.x)||0, y:Number(item.y)||0}]));
+  layoutDirty = false; connectionSource = null; setConnectMode(false); renderGraphEditor(); fillCourses(); renderOverrides();
+}
+
+function setConnectMode(enabled) {
+  connecting = enabled;
+  connectButton.classList.toggle('active', enabled);
+  connectButton.textContent = enabled ? 'Cancel connecting' : 'Connect courses';
+  if (!enabled) { connectionSource = null; document.querySelectorAll('.connection-source').forEach(card => card.classList.remove('connection-source')); }
+  visualHint.textContent = enabled ? 'Click the earlier course, then click the course it unlocks.' : 'Drag a card to reposition it. Relationship and layout changes are not saved without confirmation.';
+}
+
+function handleVisualNodeClick(nodeId, card) {
+  if (!connecting) return false;
+  if (!connectionSource) {
+    connectionSource = nodeId;
+    card.classList.add('connection-source');
+    visualHint.textContent = `${nodeCode(nodeId)} selected. Now click the later course.`;
+    return true;
+  }
+  if (connectionSource === nodeId) { setConnectMode(false); return true; }
+  document.getElementById('sourceCourse').value = String(connectionSource);
+  document.getElementById('targetCourse').value = String(nodeId);
+  const source = connectionSource;
+  setConnectMode(false);
+  saveEdge('add', {source_course_id:source, target_course_id:nodeId});
+  return true;
+}
+
+function enableCardDragging() {
+  document.querySelectorAll('#graphPreview [data-main-node-id]').forEach(card => {
+    card.addEventListener('pointerdown', event => {
+      if (connecting || event.button !== 0) return;
+      const startX = event.clientX, startY = event.clientY;
+      const baseX = Number(card.dataset.offsetX || 0), baseY = Number(card.dataset.offsetY || 0);
+      let moved = false;
+      card.setPointerCapture(event.pointerId);
+      card.classList.add('dragging');
+      const move = moveEvent => {
+        const x = baseX + moveEvent.clientX - startX, y = baseY + moveEvent.clientY - startY;
+        if (Math.abs(moveEvent.clientX - startX) + Math.abs(moveEvent.clientY - startY) > 4) moved = true;
+        card.style.setProperty('--graph-x', `${x}px`); card.style.setProperty('--graph-y', `${y}px`);
+        card.dataset.offsetX = String(x); card.dataset.offsetY = String(y);
+        workingLayout.set(Number(card.dataset.mainNodeId), {x, y});
+        CurriculumGraph.redraw();
+      };
+      const stop = () => {
+        card.classList.remove('dragging'); card.removeEventListener('pointermove', move); card.removeEventListener('pointerup', stop); card.removeEventListener('pointercancel', stop);
+        if (moved) { card.dataset.justDragged = 'true'; layoutDirty = true; visualHint.textContent = 'Layout changed. Select Save card layout to make it visible to all users.'; }
+        CurriculumGraph.redraw();
+      };
+      card.addEventListener('pointermove', move); card.addEventListener('pointerup', stop); card.addEventListener('pointercancel', stop);
+    });
+  });
+}
+
+function edgePayload(overrides = {}) { return { source_course_id:Number(document.getElementById('sourceCourse').value), target_course_id:Number(document.getElementById('targetCourse').value), relation_type:document.getElementById('relationType').value, action:'add', group_id:Number(document.getElementById('groupId').value), note:document.getElementById('edgeNote').value, ...overrides }; }
+async function saveEdge(action, overrides = {}) {
+  const payload = edgePayload({...overrides, action});
+  const verb = action === 'add' ? 'add' : 'remove';
+  if (!window.confirm(`${verb === 'add' ? 'Add' : 'Remove'} the ${payload.relation_type} relationship ${nodeCode(payload.source_course_id)} → ${nodeCode(payload.target_course_id)}?\n\nThis will update the saved degree-tree data.`)) return;
+  try {
+    message.textContent = 'Saving relationship…';
+    const data = await fetchJson(`/api/db/admin/curriculum-graphs/${encodeURIComponent(programSelect.value)}/edges`, {method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload)});
+    currentGraph = graphWithWorkingLayout(data.graph); renderGraphEditor(); renderOverrides();
+    message.textContent = action === 'add' ? 'Relationship added to the database.' : 'Relationship removed from the published tree.';
+  } catch (error) { message.textContent = error.message; }
+}
+function removeVisualEdge(edge) { saveEdge('remove', {source_course_id:edge.source_id, target_course_id:edge.target_id, relation_type:edge.relation_type, group_id:edge.group_id, note:'Removed in visual degree-tree editor'}); }
+async function resetOverride(id) { if (!window.confirm('Reset this override and restore the canonical relationship data?')) return; try { const data = await fetchJson(`/api/db/admin/curriculum-graphs/${encodeURIComponent(programSelect.value)}/overrides/${id}`, {method:'DELETE'}); currentGraph = graphWithWorkingLayout(data.graph); renderGraphEditor(); renderOverrides(); message.textContent = 'Override reset; canonical graph restored.'; } catch (error) { message.textContent = error.message; } }
 function parseCsv(text){const rows=[];let row=[],cell='',quoted=false;for(let i=0;i<text.length;i++){const ch=text[i],next=text[i+1];if(ch==='"'&&quoted&&next==='"'){cell+='"';i++;}else if(ch==='"'){quoted=!quoted;}else if(ch===','&&!quoted){row.push(cell);cell='';}else if((ch==='\n'||ch==='\r')&&!quoted){if(ch==='\r'&&next==='\n')i++;row.push(cell);if(row.some(x=>x.trim()))rows.push(row);row=[];cell='';}else cell+=ch;}row.push(cell);if(row.some(x=>x.trim()))rows.push(row);const headers=(rows.shift()||[]).map(x=>x.trim());return rows.map(values=>Object.fromEntries(headers.map((h,i)=>[h,(values[i]||'').trim()])))}
 function relationshipGroups(value){return String(value||'').split('|').map(group=>group.split(/\s+or\s+/i).map(x=>x.trim()).filter(Boolean)).filter(x=>x.length)}
-function previewCsv(text){const rows=parseCsv(text),byCode=new Map(currentGraph.nodes.map(node=>[node.code.toUpperCase(),node]));pendingImports=[];const warnings=[];rows.forEach(row=>{if(row.source_course&&row.target_course){const source=byCode.get(row.source_course.toUpperCase()),target=byCode.get(row.target_course.toUpperCase());if(!source||!target){warnings.push(`${row.source_course} → ${row.target_course}: course not in selected program tree`);return;}pendingImports.push({source_course_id:source.id,target_course_id:target.id,relation_type:(row.relation_type||'prerequisite').toLowerCase(),action:(row.action||'add').toLowerCase(),group_id:Number(row.group_id||1),note:row.note||'Imported from degree-tree CSV'});return;}const target=byCode.get(String(row.course_code||'').toUpperCase());if(!target||!row.prerequisites)return;relationshipGroups(row.prerequisites).forEach((group,index)=>group.forEach(code=>{const source=byCode.get(code.toUpperCase());if(source)pendingImports.push({source_course_id:source.id,target_course_id:target.id,relation_type:'prerequisite',action:'add',group_id:index+1,note:'Imported from curriculum CSV'});else warnings.push(`${code} → ${row.course_code}: prerequisite course not in selected program tree`)}));});document.getElementById('saveImported').disabled=!pendingImports.length;document.getElementById('importPreview').innerHTML=`<strong>${pendingImports.length} relationship${pendingImports.length===1?'':'s'} ready for review</strong>${pendingImports.slice(0,80).map(edge=>{const source=currentGraph.nodes.find(x=>x.id===edge.source_course_id),target=currentGraph.nodes.find(x=>x.id===edge.target_course_id);return`<div>${source?.code||'?'} → ${target?.code||'?'} · ${edge.relation_type} · group ${edge.group_id} · ${edge.action}</div>`}).join('')}${warnings.map(x=>`<div style="color:#9f2440">${x}</div>`).join('')}`;const preview=JSON.parse(JSON.stringify(currentGraph));pendingImports.forEach((edge,index)=>{const key=item=>item.source_id===edge.source_course_id&&item.target_id===edge.target_course_id&&item.relation_type===edge.relation_type&&item.group_id===edge.group_id;if(edge.action==='remove')preview.edges=preview.edges.filter(item=>!key(item));else if(!preview.edges.some(key))preview.edges.push({id:`import-preview-${index}`,source_id:edge.source_course_id,target_id:edge.target_course_id,relation_type:edge.relation_type,group_id:edge.group_id,origin:'import-preview',logic:'and'});});CurriculumGraph.render(preview,document.getElementById('graphPreview'))}
+function previewCsv(text){const rows=parseCsv(text),byCode=new Map(currentGraph.nodes.map(node=>[node.code.toUpperCase(),node]));pendingImports=[];const warnings=[];rows.forEach(row=>{if(row.source_course&&row.target_course){const source=byCode.get(row.source_course.toUpperCase()),target=byCode.get(row.target_course.toUpperCase());if(!source||!target){warnings.push(`${row.source_course} → ${row.target_course}: course not in selected program tree`);return;}pendingImports.push({source_course_id:source.id,target_course_id:target.id,relation_type:(row.relation_type||'prerequisite').toLowerCase(),action:(row.action||'add').toLowerCase(),group_id:Number(row.group_id||1),note:row.note||'Imported from degree-tree CSV'});return;}const target=byCode.get(String(row.course_code||'').toUpperCase());if(!target||!row.prerequisites)return;relationshipGroups(row.prerequisites).forEach((group,index)=>group.forEach(code=>{const source=byCode.get(code.toUpperCase());if(source)pendingImports.push({source_course_id:source.id,target_course_id:target.id,relation_type:'prerequisite',action:'add',group_id:index+1,note:'Imported from curriculum CSV'});else warnings.push(`${code} → ${row.course_code}: prerequisite course not in selected program tree`)}));});document.getElementById('saveImported').disabled=!pendingImports.length;document.getElementById('importPreview').innerHTML=`<strong>${pendingImports.length} relationship${pendingImports.length===1?'':'s'} ready for review</strong>${pendingImports.slice(0,80).map(edge=>{const source=currentGraph.nodes.find(x=>x.id===edge.source_course_id),target=currentGraph.nodes.find(x=>x.id===edge.target_course_id);return`<div>${source?.code||'?'} → ${target?.code||'?'} · ${edge.relation_type} · group ${edge.group_id} · ${edge.action}</div>`}).join('')}${warnings.map(x=>`<div style="color:#9f2440">${x}</div>`).join('')}`;const preview=JSON.parse(JSON.stringify(currentGraph));pendingImports.forEach((edge,index)=>{const key=item=>item.source_id===edge.source_course_id&&item.target_id===edge.target_course_id&&item.relation_type===edge.relation_type&&item.group_id===edge.group_id;if(edge.action==='remove')preview.edges=preview.edges.filter(item=>!key(item));else if(!preview.edges.some(key))preview.edges.push({id:`import-preview-${index}`,source_id:edge.source_course_id,target_id:edge.target_course_id,relation_type:edge.relation_type,group_id:edge.group_id,origin:'import-preview',logic:'and'});});currentGraph=preview;renderGraphEditor()}
 document.getElementById('graphCsv').onchange=async event=>{const file=event.target.files[0];if(file)previewCsv(await file.text())};
-document.getElementById('saveImported').onclick=async()=>{try{message.textContent=`Saving ${pendingImports.length} relationships…`;let graph=currentGraph;for(const payload of pendingImports){const data=await fetchJson(`/api/db/admin/curriculum-graphs/${encodeURIComponent(programSelect.value)}/edges`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});graph=data.graph;}currentGraph=graph;CurriculumGraph.render(currentGraph,document.getElementById('graphPreview'));fillCourses();renderOverrides();pendingImports=[];document.getElementById('saveImported').disabled=true;message.textContent='Imported relationships saved and now used by the degree tree.';}catch(error){message.textContent=error.message}};
+document.getElementById('saveImported').onclick=async()=>{if(!window.confirm(`Save ${pendingImports.length} imported relationships to the database?`))return;try{message.textContent=`Saving ${pendingImports.length} relationships…`;let graph=currentGraph;for(const payload of pendingImports){const data=await fetchJson(`/api/db/admin/curriculum-graphs/${encodeURIComponent(programSelect.value)}/edges`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});graph=data.graph;}currentGraph=graphWithWorkingLayout(graph);renderGraphEditor();fillCourses();renderOverrides();pendingImports=[];document.getElementById('saveImported').disabled=true;message.textContent='Imported relationships saved and now used by the degree tree.';}catch(error){message.textContent=error.message}};
 document.getElementById('coursePalette').addEventListener('dragstart',event=>{const card=event.target.closest('[data-course-id]');if(card)event.dataTransfer.setData('text/plain',card.dataset.courseId)});
 document.querySelectorAll('[data-drop-select]').forEach(well=>{well.addEventListener('dragover',event=>{event.preventDefault();well.classList.add('drag-over')});well.addEventListener('dragleave',()=>well.classList.remove('drag-over'));well.addEventListener('drop',event=>{event.preventDefault();well.classList.remove('drag-over');const id=event.dataTransfer.getData('text/plain');if(id)document.getElementById(well.dataset.dropSelect).value=id;});});
+connectButton.onclick=()=>setConnectMode(!connecting);
+document.getElementById('saveLayout').onclick=async()=>{if(!layoutDirty){message.textContent='The card layout has no unsaved changes.';return;}if(!window.confirm('Save this card layout for the selected program? It will become the shared degree-tree layout.'))return;try{const positions=[...workingLayout].map(([course_id,p])=>({course_id,x:Math.round(p.x),y:Math.round(p.y)}));const data=await fetchJson(`/api/db/admin/curriculum-graphs/${encodeURIComponent(programSelect.value)}/layout`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({positions})});currentGraph=data.graph;workingLayout=new Map((currentGraph.layout||[]).map(item=>[Number(item.course_id),{x:item.x,y:item.y}]));layoutDirty=false;renderGraphEditor();message.textContent='Card layout saved to the database.';}catch(error){message.textContent=error.message}};
+document.getElementById('resetLayout').onclick=async()=>{if(!window.confirm('Reset every manually positioned card to the automatic layout?'))return;try{const data=await fetchJson(`/api/db/admin/curriculum-graphs/${encodeURIComponent(programSelect.value)}/layout`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({positions:[]})});currentGraph=data.graph;workingLayout=new Map();layoutDirty=false;renderGraphEditor();message.textContent='Manual card layout removed.';}catch(error){message.textContent=error.message}};
 async function init() { try { const programs = await fetchJson('/api/db/admin/curriculum-graphs/programs'); programs.sort((a, b) => (a.institution_code === 'BMCC' ? -1 : b.institution_code === 'BMCC' ? 1 : a.institution_code.localeCompare(b.institution_code))); programSelect.innerHTML = programs.map(program => `<option value="${program.code}">${program.institution_code} · ${program.name} (${program.catalog_year || 'current'})</option>`).join(''); programSelect.addEventListener('change', loadGraph); await loadGraph(); } catch (error) { message.textContent = error.message; } }
 init();
 </script>

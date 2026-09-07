@@ -46,11 +46,13 @@ Use campus-qualified course records. Visible codes may repeat across CUNY colleg
 1. Select the program.
 2. Upload a CSV and review every parsed relationship and warning.
 3. Press **Save imported relationships** only after review.
-4. For a manual change, drag a course card into the earlier-course and dependent-course wells.
-5. Select the relationship type and AND/OR group number.
-6. Add the relationship or hide a canonical relationship.
-7. Inspect the live preview. Saved overrides immediately become the relationships used by student-facing degree trees.
-8. Use **Reset** to remove an override and restore the CSV-derived relationship.
+4. Drag course cards directly in the visual tree; connecting arrows follow the cards while they move.
+5. Select **Save card layout** and confirm before the shared layout is written to the database.
+6. To add a link visually, select **Connect courses**, select the earlier course, and then select the course it unlocks.
+7. Confirm the proposed link before it is saved. Use the advanced settings only when the relationship is a corequisite, recommended sequence, or needs a particular AND/OR group.
+8. To remove a link, select its arrow and confirm. Canonical links are hidden through reversible overrides rather than deleted from the source CSV.
+9. Inspect the live preview. Saved overrides immediately become the relationships used by student-facing degree trees.
+10. Use **Reset** to remove an override and restore the CSV-derived relationship. Use **Reset layout** to return cards to automatic placement.
 
 ## Creating a tree for a newly added major
 

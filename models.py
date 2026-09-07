@@ -394,6 +394,24 @@ class CurriculumGraphEdgeOverride(Base):
     )
 
 
+class CurriculumGraphNodePosition(Base):
+    """Administrator-saved visual placement for a course in one program tree."""
+
+    __tablename__ = "curriculum_graph_node_positions"
+
+    id = Column(Integer, primary_key=True, index=True)
+    program_id = Column(Integer, ForeignKey("programs.id"), nullable=False, index=True)
+    course_id = Column(Integer, ForeignKey("courses.id"), nullable=False)
+    x = Column(Integer, nullable=False, default=0)
+    y = Column(Integer, nullable=False, default=0)
+    updated_by = Column(String, nullable=True)
+    updated_at = Column(DateTime, nullable=False, default=lambda: datetime.now(timezone.utc))
+
+    __table_args__ = (
+        UniqueConstraint("program_id", "course_id", name="uq_curriculum_graph_node_position"),
+    )
+
+
 class CourseRequirementGroupPrerequisite(Base):
     __tablename__ = "course_requirement_group_prerequisites"
 

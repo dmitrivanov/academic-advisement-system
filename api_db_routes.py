@@ -44,6 +44,7 @@ from models import (
     GovernanceDraft,
     GovernanceDraftVersion,
     CurriculumGraphEdgeOverride,
+    CurriculumGraphNodePosition,
 )
 from curriculum_graph_service import (
     ALLOWED_OVERRIDE_ACTIONS,
@@ -101,6 +102,16 @@ class CurriculumGraphEdgePayload(BaseModel):
     action: str = "add"
     group_id: int = Field(default=1, ge=1, le=99)
     note: Optional[str] = Field(default=None, max_length=500)
+
+
+class CurriculumGraphNodePositionPayload(BaseModel):
+    course_id: int
+    x: int = Field(ge=-5000, le=5000)
+    y: int = Field(ge=-5000, le=5000)
+
+
+class CurriculumGraphLayoutPayload(BaseModel):
+    positions: list[CurriculumGraphNodePositionPayload] = Field(default_factory=list, max_length=1000)
 
 
 class CunyBeyondRecommendationPayload(BaseModel):
@@ -2034,6 +2045,42 @@ def set_curriculum_graph_edge(
     db.commit()
     db.refresh(row)
     return {"status": "saved", "override_id": row.id, "graph": build_curriculum_graph(db, program)}
+
+
+@router.put("/admin/curriculum-graphs/{program_code}/layout")
+def save_curriculum_graph_layout(
+    program_code: str,
+    payload: CurriculumGraphLayoutPayload,
+    admin=Depends(require_admin),
+    db: Session = Depends(get_db),
+):
+    program = db.query(Program).filter_by(code=program_code).first()
+    if not program or not is_graph_program(db, program):
+        raise HTTPException(status_code=404, detail="Curriculum graph program not found")
+    graph_course_ids = {node["id"] for node in build_curriculum_graph(db, program)["nodes"]}
+    submitted_ids = [position.course_id for position in payload.positions]
+    if len(submitted_ids) != len(set(submitted_ids)):
+        raise HTTPException(status_code=400, detail="Each course may have only one saved position")
+    if not set(submitted_ids).issubset(graph_course_ids):
+        raise HTTPException(status_code=400, detail="Layout contains a course outside the selected program tree")
+
+    existing = {
+        row.course_id: row
+        for row in db.query(CurriculumGraphNodePosition).filter_by(program_id=program.id).all()
+    }
+    for position in payload.positions:
+        row = existing.pop(position.course_id, None)
+        if not row:
+            row = CurriculumGraphNodePosition(program_id=program.id, course_id=position.course_id)
+            db.add(row)
+        row.x = position.x
+        row.y = position.y
+        row.updated_by = str(admin)
+        row.updated_at = datetime.now(timezone.utc)
+    for stale in existing.values():
+        db.delete(stale)
+    db.commit()
+    return {"status": "saved", "graph": build_curriculum_graph(db, program)}
 
 
 @router.delete("/admin/curriculum-graphs/{program_code}/overrides/{override_id}")

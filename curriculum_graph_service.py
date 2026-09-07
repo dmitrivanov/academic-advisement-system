@@ -13,6 +13,7 @@ from models import (
     Course,
     CoursePrerequisite,
     CurriculumGraphEdgeOverride,
+    CurriculumGraphNodePosition,
     Program,
     ProgramCourse,
     RequirementGroup,
@@ -180,6 +181,7 @@ def build_curriculum_graph(db, program):
         })
 
     overrides = db.query(CurriculumGraphEdgeOverride).filter_by(program_id=program.id).all()
+    saved_positions = db.query(CurriculumGraphNodePosition).filter_by(program_id=program.id).all()
     override_keys = {
         (row.source_course_id, row.target_course_id, row.relation_type, row.group_id): row
         for row in overrides
@@ -271,5 +273,10 @@ def build_curriculum_graph(db, program):
             "note": row.note,
             "updated_by": row.updated_by,
         } for row in overrides],
+        "layout": [
+            {"course_id": row.course_id, "x": row.x, "y": row.y}
+            for row in saved_positions
+            if row.course_id in nodes
+        ],
         "editable": True,
     }
