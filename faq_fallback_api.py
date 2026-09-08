@@ -1,7 +1,7 @@
 from contextlib import asynccontextmanager
 import threading
 
-from fastapi import FastAPI, Request, Form, HTTPException, UploadFile, File
+from fastapi import FastAPI, Request, Form, HTTPException, UploadFile, File, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
@@ -302,7 +302,7 @@ def login_page():
 
 
 @app.get("/downloads/macos-launcher")
-def download_macos_launcher():
+def download_macos_launcher(_admin=Depends(require_admin)):
     return FileResponse(
         "frontend/downloads/AI_Academic_Advisement_Mac.zip",
         media_type="application/zip",
@@ -311,7 +311,7 @@ def download_macos_launcher():
 
 
 @app.get("/downloads/windows-launcher")
-def download_windows_launcher():
+def download_windows_launcher(_admin=Depends(require_admin)):
     return FileResponse(
         "frontend/downloads/AI_Academic_Advisement_Windows.zip",
         media_type="application/zip",

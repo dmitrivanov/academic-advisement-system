@@ -1,6 +1,6 @@
 # Local Launchers
 
-The hosted chatbot provides self-updating local launchers for macOS and Windows.
+The protected Admin Dashboard provides self-updating local launchers for macOS and Windows. A signed-in administrator is required both to see the download controls and to access either download endpoint.
 
 ## Download addresses
 

@@ -22,10 +22,15 @@ def test_downloadable_launchers_are_present_and_secret_free():
 def test_launcher_download_routes_and_page_links_are_exposed():
     server = (ROOT / "faq_fallback_api.py").read_text(encoding="utf-8")
     page = (ROOT / "frontend" / "cuny_beyond.html").read_text(encoding="utf-8")
+    dashboard = (ROOT / "frontend" / "admin_dashboard.html").read_text(encoding="utf-8")
     assert '@app.get("/downloads/macos-launcher")' in server
     assert '@app.get("/downloads/windows-launcher")' in server
-    assert 'href="/downloads/macos-launcher"' in page
-    assert 'href="/downloads/windows-launcher"' in page
+    assert 'def download_macos_launcher(_admin=Depends(require_admin))' in server
+    assert 'def download_windows_launcher(_admin=Depends(require_admin))' in server
+    assert 'href="/downloads/macos-launcher"' not in page
+    assert 'href="/downloads/windows-launcher"' not in page
+    assert 'href="/downloads/macos-launcher"' in dashboard
+    assert 'href="/downloads/windows-launcher"' in dashboard
     assert (ROOT / "frontend" / "downloads" / "AI_Academic_Advisement_Mac.zip").is_file()
     assert (ROOT / "frontend" / "downloads" / "AI_Academic_Advisement_Windows.zip").is_file()
 
