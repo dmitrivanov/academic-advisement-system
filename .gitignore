@@ -3,7 +3,7 @@ __pycache__/
 *.pyc
 .DS_Store
 .env
+.launcher-seeded-commit
 *.db
 chroma_db/
-
 

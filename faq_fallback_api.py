@@ -7,6 +7,7 @@ from fastapi.responses import FileResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from starlette.middleware.sessions import SessionMiddleware
 from pydantic import BaseModel, Field
+from dotenv import load_dotenv
 from google import genai
 from google.genai import types
 import os
@@ -19,6 +20,8 @@ from datetime import datetime, timezone
 from email.message import EmailMessage
 from pathlib import Path
 from typing import Optional, Dict, Any
+
+load_dotenv()
 
 from api_db_routes import router as db_router
 import career_routes
@@ -296,6 +299,24 @@ Include only clearly visible records. Exclude courses marked in progress, withdr
 @app.get("/login")
 def login_page():
     return FileResponse("frontend/login.html")
+
+
+@app.get("/downloads/macos-launcher")
+def download_macos_launcher():
+    return FileResponse(
+        "frontend/downloads/AI_Academic_Advisement_Mac.zip",
+        media_type="application/zip",
+        filename="AI_Academic_Advisement_Mac.zip",
+    )
+
+
+@app.get("/downloads/windows-launcher")
+def download_windows_launcher():
+    return FileResponse(
+        "frontend/downloads/AI_Academic_Advisement_Windows.zip",
+        media_type="application/zip",
+        filename="AI_Academic_Advisement_Windows.zip",
+    )
 
 
 @app.get("/cuny-beyond")
