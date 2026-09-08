@@ -366,6 +366,7 @@
 
   function showStep(focusHeading) {
     steps.forEach((step, index) => { step.hidden = index !== state.step; });
+    form.classList.toggle('results-view', state.step === steps.length - 1);
     renderChatHistory();
     document.getElementById('step-count').textContent = state.step === steps.length - 1 ? 'Your results' : `Question ${state.step + 1} of ${steps.length - 1}`;
     document.getElementById('progress-fill').style.width = `${((state.step + 1) / steps.length) * 100}%`;

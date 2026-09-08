@@ -47,6 +47,16 @@ def test_chat_preserves_free_text_browse_back_restart_and_accessibility():
     assert "MAX_SKILLS = 5" in js
 
 
+def test_results_actions_do_not_cover_referral_text():
+    css = (ROOT / "frontend/cuny_beyond.css").read_text(encoding="utf-8")
+    js = (ROOT / "frontend/cuny_beyond.js").read_text(encoding="utf-8")
+    assert ".next-stage .button-link" in css
+    assert "display:inline-flex" in css
+    assert ".chat-conversation.results-view .chat-actions" in css
+    assert "position:static" in css
+    assert "form.classList.toggle('results-view'" in js
+
+
 def test_module_documentation_package_is_complete_and_route_grounded():
     folder = ROOT / "docs" / "cuny_beyond_module"
     expected = {"README.md", "ACCESS_AND_ROUTES.md", "RUN_LOCAL_MACOS.md", "RUN_LOCAL_WINDOWS.md", "FEATURES.md", "USER_STORIES.md"}
