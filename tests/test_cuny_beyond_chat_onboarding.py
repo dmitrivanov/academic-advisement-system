@@ -32,7 +32,7 @@ def test_public_landing_is_branded_grouped_and_login_hidden():
     assert 'id="ai-assisted" type="checkbox" checked hidden' in page
     assert ".profile-groups" in css and ".profile-group-current" in css
     root_route = server.split('@app.get("/")', 1)[1].split('@app.get("/progress")', 1)[0]
-    assert 'FileResponse("frontend/cuny_beyond.html")' in root_route
+    assert 'FileResponse("frontend/advising_chatbot.html")' in root_route
     assert 'is_logged_in' not in root_route
 
 

@@ -28,6 +28,7 @@ import career_routes
 from career_routes import router as career_router
 from auth import authenticate, is_admin, is_logged_in, require_admin
 from cuny_beyond import is_cuny_beyond_enabled, public_config
+from narrative_intake import deterministic_narrative_intake
 from database import Base, engine
 import models  # noqa: F401 - registers all SQLAlchemy tables
 
@@ -224,6 +225,12 @@ class BeyondInterpretPayload(BaseModel):
     allowed_values: list[str] = Field(default_factory=list)
 
 
+class NarrativeIntakePayload(BaseModel):
+    message: str = Field(min_length=1, max_length=1200)
+    stage: str = Field(default="identity", max_length=40)
+    context: Dict[str, Any] = Field(default_factory=dict)
+
+
 def parse_model_json(text: str):
     cleaned = (text or "").strip()
     cleaned = re.sub(r"^```(?:json)?\s*|\s*```$", "", cleaned, flags=re.IGNORECASE)
@@ -231,6 +238,43 @@ def parse_model_json(text: str):
         return json.loads(cleaned)
     except json.JSONDecodeError as exc:
         raise HTTPException(status_code=502, detail="The AI response could not be safely interpreted") from exc
+
+
+@app.post("/api/advising-chatbot/interpret")
+def interpret_narrative_intake(payload: NarrativeIntakePayload):
+    """Extract routing facts from a narrative answer; never make an academic decision."""
+    fallback = deterministic_narrative_intake(payload.message, payload.stage)
+    prompt = f"""Extract college-advising intake facts from the student's narrative. Return JSON only.
+Current stage: {payload.stage}
+Known context: {json.dumps(payload.context)[:2500]}
+Student message: {payload.message}
+
+Schema: {{"student_type":null|"current_bmcc"|"current_cuny"|"other_college"|"degree_holder"|"working_adult"|"high_school",
+"current_major":null|string, "goal_type":null|"transfer"|"change_major"|"next_semester"|"general"|"career_exploration",
+"career_goal":null|string, "has_college_courses":null|boolean, "employment":null|"yes"|"no"|"prefer_not",
+"skills":[up to five short skills]}}.
+Use null when the student did not say it. Do not infer official credit, admission, eligibility, or requirements."""
+    try:
+        client = make_gemini_client()
+        response = client.models.generate_content(
+            model=load_ai_settings().get("model", DEFAULT_MODEL), contents=prompt
+        )
+        parsed = parse_model_json(response.text or "")
+        allowed_student_types = {"current_bmcc", "current_cuny", "other_college", "degree_holder", "working_adult", "high_school"}
+        allowed_goals = {"transfer", "change_major", "next_semester", "general", "career_exploration"}
+        allowed_employment = {"yes", "no", "prefer_not"}
+        return {
+            "student_type": parsed.get("student_type") if parsed.get("student_type") in allowed_student_types else fallback["student_type"],
+            "current_major": str(parsed.get("current_major") or fallback["current_major"] or "")[:160] or None,
+            "goal_type": parsed.get("goal_type") if parsed.get("goal_type") in allowed_goals else fallback["goal_type"],
+            "career_goal": str(parsed.get("career_goal") or fallback["career_goal"] or "")[:240] or None,
+            "has_college_courses": parsed.get("has_college_courses") if isinstance(parsed.get("has_college_courses"), bool) else fallback["has_college_courses"],
+            "employment": parsed.get("employment") if parsed.get("employment") in allowed_employment else fallback["employment"],
+            "skills": [str(item).strip()[:80] for item in (parsed.get("skills") or []) if str(item).strip()][:5],
+            "confidence": "ai-assisted",
+        }
+    except Exception:
+        return fallback
 
 
 @app.post("/api/cuny-beyond/interpret")
@@ -324,6 +368,13 @@ def serve_cuny_beyond():
     if not is_cuny_beyond_enabled():
         raise HTTPException(status_code=404, detail="CUNY Beyond is not enabled")
     return FileResponse("frontend/cuny_beyond.html")
+
+
+@app.get("/advising-chatbot")
+def serve_advising_chatbot():
+    if not is_cuny_beyond_enabled():
+        raise HTTPException(status_code=404, detail="Public advising chatbot is not enabled")
+    return FileResponse("frontend/advising_chatbot.html")
 
 
 @app.get("/cuny-beyond/referral")
@@ -482,7 +533,7 @@ def serve_home():
     """Use the public chatbot as the application's primary entry point."""
     if not is_cuny_beyond_enabled():
         return RedirectResponse("/login", status_code=303)
-    return FileResponse("frontend/cuny_beyond.html")
+    return FileResponse("frontend/advising_chatbot.html")
 
 
 @app.get("/progress")

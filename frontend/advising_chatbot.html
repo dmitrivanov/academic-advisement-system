@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>AI Academic Advisement Chatbot | BMCC</title>
+  <link rel="stylesheet" href="/frontend/advising_chatbot.css?v=20260914-1">
+  <script src="/frontend/advising_chatbot.js?v=20260914-1" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#message-input">Skip to conversation</a>
+  <main class="page-shell">
+    <section class="chat-window" aria-labelledby="chat-title">
+      <header class="chat-header">
+        <a href="https://www.bmcc.cuny.edu/" target="_blank" rel="noopener" aria-label="Visit BMCC"><img class="bmcc-logo" src="/frontend/assets/branding/bmcc-logo.png" alt="BMCC"></a>
+        <div><h1 id="chat-title">AI Academic Advisement Chatbot</h1><p><span aria-hidden="true">●</span> Online · No login required</p></div>
+        <a href="https://aichallenge.aitechhub.tech/web/generic/index.php" target="_blank" rel="noopener" aria-label="Visit AI Tech Innovation Hub"><img class="hub-logo" src="/frontend/assets/branding/ai-hub-logo.png" alt="AI Tech Innovation Hub"></a>
+      </header>
+
+      <div class="chat-tools"><span id="progress-label">Getting to know you</span><button id="restart" type="button">Start over</button></div>
+      <div id="conversation" class="conversation" role="log" aria-live="polite" aria-relevant="additions"></div>
+      <div id="suggestions" class="suggestions" aria-label="Optional quick replies"></div>
+      <form id="composer" class="composer">
+        <label class="visually-hidden" for="message-input">Your answer</label>
+        <textarea id="message-input" rows="2" maxlength="1200" placeholder="Write your answer in your own words…" required></textarea>
+        <button id="send" type="submit">Send</button>
+      </form>
+      <p class="privacy">Do not enter your CUNY ID, Social Security number, or other sensitive information. Recommendations are planning guidance, not an official audit.</p>
+    </section>
+  </main>
+
+  <template id="transcript-template">
+    <section class="inline-module transcript-module">
+      <h2>Optional transcript review</h2>
+      <p>Upload a PDF, JPG, or PNG. The file is read for this session and is not stored. Always review extracted courses.</p>
+      <input class="transcript-file" type="file" accept="application/pdf,image/jpeg,image/png">
+      <div class="module-actions"><button class="analyze-transcript" type="button">Analyze transcript</button><button class="skip-transcript secondary" type="button">Skip for now</button></div>
+      <p class="transcript-status" role="status"></p><div class="transcript-results"></div>
+    </section>
+  </template>
+
+  <template id="recommendations-template"><section class="inline-module recommendations"><h2>Reviewed BMCC starting points</h2><p class="recommendation-status" role="status">Checking reviewed mappings…</p><div class="recommendation-results"></div></section></template>
+</body>
+</html>
