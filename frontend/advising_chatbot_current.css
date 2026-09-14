@@ -1,0 +1,26 @@
+.current-program-card {
+  border: 2px solid #8eb6eb;
+  background: linear-gradient(135deg, #fff, #f4f8ff);
+}
+.current-program-card .program-meta { color: #607089; font-size: 13px; }
+.program-badge {
+  display: inline-block;
+  margin-bottom: 8px;
+  padding: 5px 9px;
+  border-radius: 999px;
+  color: #145440;
+  background: #dcf7eb;
+  font-size: 11px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+.current-program-card button {
+  padding: 8px 10px;
+  border: 0;
+  border-radius: 13px;
+  color: #fff;
+  background: #174ea6;
+  font-weight: 800;
+  cursor: pointer;
+}
+.program-error { color: #9b291f; font-weight: 700; }

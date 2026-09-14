@@ -5,7 +5,7 @@
   const input = document.getElementById('message-input');
   const send = document.getElementById('send');
   const STORAGE_KEY = 'narrativeAdvisingDraftV1';
-  const state = { stage: 'identity', student_type: null, current_major: null, goal_type: null, career_goal: null, has_college_courses: null, employment: null, skills: [], transcript_courses: [], pending_action: null };
+  const state = { stage: 'identity', student_type: null, current_major: null, selected_program: null, goal_type: null, career_goal: null, has_college_courses: null, employment: null, skills: [], transcript_courses: [], pending_action: null };
 
   const esc = value => String(value ?? '').replace(/[&<>'"]/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[char]));
   const safeUrl = value => { try { const url = new URL(value, location.origin); return ['http:','https:'].includes(url.protocol) ? esc(url.href) : '#'; } catch (_) { return '#'; } };
@@ -45,7 +45,9 @@
   function nextAfterIdentity() {
     if (state.student_type === 'current_bmcc') {
       if (state.current_major && state.goal_type) {
-        state.goal_type === 'general' ? askConfirmation('route') : showTranscript();
+        showCurrentProgramCard(state.current_major).then(found => {
+          if (found) state.goal_type === 'general' ? askConfirmation('workspace') : showTranscript();
+        });
         return;
       }
       state.stage = 'major';
@@ -65,6 +67,54 @@
       {label:'Transfer planning',value:'I want to transfer to another CUNY college'}, {label:'Change my major',value:'I want to change my major'},
       {label:'Plan next semester',value:'Help me decide what to take next semester'}, {label:'General question',value:'I have a general question for an advisor'}
     ], 'For example: I want to change from engineering to computer science');
+  }
+
+  function programScore(program, query) {
+    const needle = query.toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+    const code = String(program.code || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+    const name = String(program.name || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+    if (!needle) return 0;
+    if (needle === code || needle === name) return 100;
+    if (name.includes(needle) || needle.includes(name)) return 80;
+    return needle.split(' ').filter(token => token.length > 1).reduce(
+      (score, token) => score + (name.includes(token) || code === token ? 12 : 0), 0
+    );
+  }
+
+  async function resolveCurrentProgram(query) {
+    const response = await fetch('/api/db/programs?selector_only=true');
+    if (!response.ok) throw new Error('The program list is temporarily unavailable.');
+    const programs = (await response.json()).filter(program => program.institution_code === 'BMCC' && program.has_curriculum);
+    return programs.map(program => ({program, score:programScore(program, query)})).sort((a,b)=>b.score-a.score)[0];
+  }
+
+  function saveSelectedProgram(program) {
+    state.selected_program = program; state.current_major = program.name;
+    sessionStorage.setItem('selectedProgramContext', JSON.stringify({
+      institutionCode:'BMCC', programCode:program.code, studentStatus:'current', onboardingSource:'narrative'
+    }));
+    save();
+  }
+
+  async function showCurrentProgramCard(query) {
+    try {
+      const match = await resolveCurrentProgram(query);
+      if (!match || match.score < 12) {
+        addTurn('assistant','<span class="program-error">I could not match that to a BMCC major in the advising database. Please type the official major name or program code.</span>');
+        state.stage = 'major'; return false;
+      }
+      const program = match.program; saveSelectedProgram(program);
+      let degreeMap = null;
+      try {
+        const response = await fetch(`/api/db/programs/${encodeURIComponent(program.code)}/degree-map-source`);
+        if (response.ok) degreeMap = await response.json();
+      } catch (_) {}
+      const mapUrl = degreeMap?.source_pdf || degreeMap?.source_pdfs?.[0]?.url;
+      addTurn('assistant', `<section class="inline-module current-program-card"><span class="program-badge">Current BMCC major</span><h2>${esc(program.name)} (${esc(program.degree_type || 'Degree')})</h2><p class="program-meta">${esc(program.department)} · ${esc(program.catalog_year || 'Current catalog')} · ${program.course_count} curriculum selections</p><div class="recommendation-actions"><a href="/login">Open interactive degree planner</a><button type="button" data-current-tree="${esc(program.code)}">View interactive degree tree</button>${mapUrl?`<a class="secondary" href="${safeUrl(mapUrl)}" target="_blank" rel="noopener">View degree-map PDF</a>`:''}</div></section>`);
+      return true;
+    } catch (error) {
+      addTurn('assistant', `<span class="program-error">${esc(error.message)}</span>`); return false;
+    }
   }
   function summaryText() {
     const parts = [];
@@ -121,7 +171,7 @@
     const selected = state.transcript_courses.filter(course => course.include && course.code);
     sessionStorage.setItem('transferSnapshot', JSON.stringify({completed_courses:selected.map(c=>c.code),completed_course_details:selected,source:'narrative-chatbot-import',timestamp:new Date().toISOString()}));
     form.hidden = false; module.querySelectorAll('button,input').forEach(element => element.disabled = true);
-    if (state.student_type === 'current_bmcc') askConfirmation('route');
+    if (state.student_type === 'current_bmcc') askConfirmation(state.goal_type === 'general' ? 'workspace' : 'route');
     else { state.stage = 'career'; ask('What would you like to do in your life or career?', [{label:'Data Analyst'},{label:'Registered Nurse'},{label:'Software Developer'}]); }
   }
 
@@ -149,12 +199,13 @@
       nextAfterIdentity();
     } else if (state.stage === 'major') {
       if (!state.current_major) state.current_major = message;
-      if (state.goal_type) state.goal_type === 'general' ? askConfirmation('route') : showTranscript();
+      if (!(await showCurrentProgramCard(state.current_major))) return;
+      if (state.goal_type) state.goal_type === 'general' ? askConfirmation('workspace') : showTranscript();
       else askGoal();
     }
     else if (state.stage === 'goal') {
       if (!state.goal_type) { ask('Would you like help with transferring, changing your major, planning next semester, or a general advising question?', [{label:'Transfer planning'},{label:'Change my major'},{label:'Plan next semester'},{label:'General question'}]); return; }
-      if (state.goal_type === 'general') askConfirmation('route'); else showTranscript();
+      if (state.goal_type === 'general') askConfirmation('workspace'); else showTranscript();
     } else if (state.stage === 'career') {
       if (!state.career_goal) state.career_goal = message; state.stage = 'skills';
       ask('What skills do you already use or want to build? A sentence is fine; I will extract up to five.', [{label:'Analyze data and solve problems'},{label:'Help people and communicate clearly'},{label:'Build software and learn technology'}]);
@@ -162,12 +213,14 @@
     else if (state.stage === 'confirm') {
       if (/^(no|not|incorrect|start over)/i.test(message.trim())) { restart(); return; }
       if (!/^(yes|correct|right|continue|ok|okay)/i.test(message.trim())) { askConfirmation(state.pending_action); return; }
-      state.pending_action === 'recommend' ? showRecommendations() : showRoute();
+      if (state.pending_action === 'recommend') showRecommendations();
+      else if (state.pending_action === 'workspace') location.href = '/current-student-advisor';
+      else showRoute();
     }
   }
 
   function restart() {
-    sessionStorage.removeItem(STORAGE_KEY); Object.assign(state,{stage:'identity',student_type:null,current_major:null,goal_type:null,career_goal:null,has_college_courses:null,employment:null,skills:[],transcript_courses:[],pending_action:null});
+    sessionStorage.removeItem(STORAGE_KEY); Object.assign(state,{stage:'identity',student_type:null,current_major:null,selected_program:null,goal_type:null,career_goal:null,has_college_courses:null,employment:null,skills:[],transcript_courses:[],pending_action:null});
     conversation.innerHTML=''; form.hidden=false; ask('Tell me where you are in your education right now. You can answer naturally.', [
       {label:'Current BMCC student',value:'I am a current BMCC student'}, {label:'Another CUNY student',value:'I am a student at another CUNY college'},
       {label:'High-school student',value:'I am a high-school student'}, {label:'Working adult',value:'I am a working adult and not currently a CUNY student'}
@@ -176,6 +229,10 @@
   form.addEventListener('submit', event => { event.preventDefault(); const message=input.value.trim(); if(!message)return; input.value=''; handleMessage(message); });
   input.addEventListener('keydown', event => { if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();form.requestSubmit();} });
   suggestions.addEventListener('click', event => { const button=event.target.closest('[data-answer]'); if(!button)return; input.value=button.dataset.answer; form.requestSubmit(); });
+  conversation.addEventListener('click', event => {
+    const tree = event.target.closest('[data-current-tree]');
+    if (tree && window.CurriculumGraph) window.CurriculumGraph.open(tree.dataset.currentTree, {completedCourseCodes:[]});
+  });
   document.getElementById('restart').addEventListener('click', restart);
   restart();
 })();

@@ -2101,6 +2101,14 @@ def delete_curriculum_graph_override(
     return {"status": "deleted", "graph": build_curriculum_graph(db, program)}
 
 
+@router.get("/programs/{program_code}/degree-map-source")
+def get_program_degree_map_source(program_code: str):
+    source = load_degree_map_sources().get(program_code)
+    if not source:
+        raise HTTPException(status_code=404, detail="No degree-map source is published for this program")
+    return source
+
+
 @router.get("/programs/{program_code}/requirements")
 def get_program_requirements(program_code: str, db: Session = Depends(get_db)):
     program = db.query(Program).filter_by(code=program_code).first()

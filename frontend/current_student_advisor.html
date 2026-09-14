@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Current Student AI Advising | BMCC</title>
+  <link rel="stylesheet" href="/frontend/current_student_advisor.css?v=1">
+  <link rel="stylesheet" href="/frontend/curriculum_graph.css?v=7">
+  <script src="/frontend/curriculum_graph.js?v=7" defer></script>
+  <script src="/frontend/current_student_advisor.js?v=1" defer></script>
+</head>
+<body>
+  <header class="workspace-header">
+    <a href="https://www.bmcc.cuny.edu/" target="_blank" rel="noopener"><img src="/frontend/assets/branding/bmcc-logo.png" alt="BMCC"></a>
+    <div><h1>Current Student AI Advising</h1><p id="program-heading">Loading your selected major…</p></div>
+    <a class="back-link" href="/">← Back to intake</a>
+  </header>
+  <main class="workspace">
+    <section class="advisor-panel" aria-labelledby="advisor-title">
+      <header><div><h2 id="advisor-title">Ask the AI advisor</h2><p>Ask naturally. The advisor will suggest the relevant planning tool when useful.</p></div><span class="status-dot">AI assisted</span></header>
+      <div id="messages" class="messages" role="log" aria-live="polite">
+        <div class="message assistant">I can help you think through your current major, course progress, prerequisites, next semester, major changes, and transfer planning. What would you like to ask?</div>
+      </div>
+      <div id="question-suggestions" class="question-suggestions">
+        <button type="button">What should I take next semester?</button>
+        <button type="button">Which courses unlock the most?</button>
+        <button type="button">How should I prepare to transfer?</button>
+      </div>
+      <form id="advisor-form" class="advisor-form">
+        <label class="visually-hidden" for="advisor-question">Question for the AI advisor</label>
+        <textarea id="advisor-question" rows="3" maxlength="1200" placeholder="Ask about your major, progress, prerequisites, transfer, or next semester…" required></textarea>
+        <button id="ask-button" type="submit">Ask</button>
+      </form>
+      <p class="boundary">Planning guidance only. Confirm requirements, registration, transfer credit, and approvals with BMCC.</p>
+    </section>
+
+    <aside class="tools-panel" aria-labelledby="tools-title">
+      <div class="selected-program"><span>Selected major</span><h2 id="program-name">—</h2><p id="program-meta"></p></div>
+      <h2 id="tools-title">Advising tools</h2>
+      <p class="tools-intro">The AI will highlight tools related to your question. You can also open any tool directly.</p>
+      <div id="recommended-tools" class="recommended-tools" aria-live="polite"></div>
+      <nav id="all-tools" class="tool-grid" aria-label="Available advising tools"></nav>
+      <div id="degree-map-link"></div>
+    </aside>
+  </main>
+</body>
+</html>

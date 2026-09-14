@@ -231,6 +231,12 @@ class NarrativeIntakePayload(BaseModel):
     context: Dict[str, Any] = Field(default_factory=dict)
 
 
+class CurrentStudentAdvisorPayload(BaseModel):
+    user_question: str = Field(min_length=1, max_length=1200)
+    program: Dict[str, Any] = Field(default_factory=dict)
+    conversation_summary: Optional[str] = Field(default="", max_length=2500)
+
+
 def parse_model_json(text: str):
     cleaned = (text or "").strip()
     cleaned = re.sub(r"^```(?:json)?\s*|\s*```$", "", cleaned, flags=re.IGNORECASE)
@@ -275,6 +281,53 @@ Use null when the student did not say it. Do not infer official credit, admissio
         }
     except Exception:
         return fallback
+
+
+def advising_workspace_actions(question: str):
+    text = question.lower()
+    catalog = {
+        "planner": {"id": "planner", "label": "Interactive degree planner", "url": "/db-progress", "description": "Review completed and remaining requirements."},
+        "semester": {"id": "semester", "label": "AI degree / next-semester plan", "url": "/db-progress?mode=ai-plan", "description": "Build a suggested semester sequence from completed courses."},
+        "transfer": {"id": "transfer", "label": "Transfer analysis", "url": "/transfer-analysis", "description": "Compare program requirements and transfer pathways."},
+        "major": {"id": "major", "label": "Major change", "url": "/program-selector", "description": "Compare another program with the current major."},
+        "tree": {"id": "tree", "label": "Interactive degree tree", "url": "#degree-tree", "description": "See prerequisites and course dependencies."},
+    }
+    selected = []
+    rules = [
+        ("transfer", ("transfer", "four-year", "4 year", "another college")),
+        ("major", ("change major", "switch major", "different major", "compare major")),
+        ("tree", ("prerequisite", "unlock", "dependency", "sequence", "degree tree")),
+        ("semester", ("next semester", "next term", "schedule", "what should i take", "degree plan")),
+        ("planner", ("completed", "remaining", "progress", "requirement", "elective", "course")),
+    ]
+    for action_id, keywords in rules:
+        if any(keyword in text for keyword in keywords):
+            selected.append(catalog[action_id])
+    if not selected:
+        selected = [catalog["planner"], catalog["semester"]]
+    return selected[:3]
+
+
+@app.post("/api/current-student-advisor/ask")
+def current_student_advisor_ask(request: Request, payload: CurrentStudentAdvisorPayload):
+    program_name = str(payload.program.get("name") or "the selected program")[:160]
+    program_code = str(payload.program.get("code") or "")[:30]
+    page_context = {
+        "student_type": "current BMCC student",
+        "selected_program": {"code": program_code, "name": program_name,
+                             "degree_type": payload.program.get("degree_type"),
+                             "catalog_year": payload.program.get("catalog_year")},
+        "conversation_summary": payload.conversation_summary,
+        "available_tools": ["interactive degree planner", "interactive degree tree", "AI next-semester plan", "major change", "transfer analysis"],
+        "safety_boundary": "Give planning guidance only. Do not claim an official audit, approval, registration, or transfer-credit decision.",
+    }
+    result = run_contextual_agent(
+        request=request, user_question=payload.user_question, page_context=page_context,
+        page_name="Current Student Advising Workspace", page_url="/current-student-advisor",
+        agent_id="current_student_advisor",
+    )
+    result["recommended_actions"] = advising_workspace_actions(payload.user_question)
+    return result
 
 
 @app.post("/api/cuny-beyond/interpret")
@@ -375,6 +428,13 @@ def serve_advising_chatbot():
     if not is_cuny_beyond_enabled():
         raise HTTPException(status_code=404, detail="Public advising chatbot is not enabled")
     return FileResponse("frontend/advising_chatbot.html")
+
+
+@app.get("/current-student-advisor")
+def serve_current_student_advisor():
+    if not is_cuny_beyond_enabled():
+        raise HTTPException(status_code=404, detail="Public advising chatbot is not enabled")
+    return FileResponse("frontend/current_student_advisor.html")
 
 
 @app.get("/cuny-beyond/referral")
