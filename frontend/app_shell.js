@@ -22,14 +22,13 @@
     header.className = 'aas-header';
     header.innerHTML = `
       <div class="aas-inner">
-        <a class="aas-brand" href="/program-selector" aria-label="Academic Advisement home">
+        <a class="aas-brand" href="/" aria-label="Academic Advisement home">
           <span class="aas-mark">AA</span>
           <span class="aas-brand-copy"><strong>Academic Advisement</strong><small>Plan with a complete curriculum view</small></span>
         </a>
         <button class="aas-menu-button" type="button" aria-expanded="false" aria-controls="aas-primary-nav" aria-label="Open navigation">☰</button>
         <nav class="aas-nav" id="aas-primary-nav" aria-label="Main navigation">
           ${items.map(linkMarkup).join('')}
-          <a class="aas-link aas-logout" href="/logout">Log out</a>
         </nav>
       </div>`;
     document.body.prepend(header);

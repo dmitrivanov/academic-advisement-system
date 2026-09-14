@@ -34,7 +34,7 @@ def test_current_bmcc_pipeline_resolves_major_and_opens_advising_workspace():
     workspace_js = (ROOT / "frontend/current_student_advisor.js").read_text(encoding="utf-8")
     assert "showCurrentProgramCard" in chat and "selectedProgramContext" in chat
     assert "View interactive degree tree" in chat and "View degree-map PDF" in chat
-    assert "askConfirmation('workspace')" in chat
+    assert "state.goal_type === 'general' ? 'workspace' : 'route'" in chat
     assert '@app.get("/current-student-advisor")' in server
     assert '@app.post("/api/current-student-advisor/ask")' in server
     assert '@router.get("/programs/{program_code}/degree-map-source")' in api
@@ -42,6 +42,30 @@ def test_current_bmcc_pipeline_resolves_major_and_opens_advising_workspace():
     for label in ("Interactive degree planner", "AI degree / next-semester plan", "Transfer analysis", "Major change", "Interactive degree tree"):
         assert label in workspace_js
     assert "recommended_actions" in server and "recommended-tools" in workspace
+
+
+def test_college_students_supply_institution_major_goal_and_courses_before_routing():
+    chat = (ROOT / "frontend/advising_chatbot.js").read_text(encoding="utf-8")
+    assert "state.stage = 'institution'" in chat
+    assert "What major or degree are you pursuing" in chat
+    assert "askGoal()" in chat and "askCompletedCourses()" in chat
+    assert "List courses in chat" in (ROOT / "frontend/advising_chatbot.html").read_text(encoding="utf-8")
+    assert "Select manually" in (ROOT / "frontend/advising_chatbot.html").read_text(encoding="utf-8")
+    assert "course_list" in chat and "narrative-chat-entry" in chat
+    assert "is not currently loaded in our curriculum database" in chat
+    assert 'href="/login"' not in chat
+
+
+def test_login_is_archived_for_render_and_new_tools_use_open_routes():
+    server = (ROOT / "faq_fallback_api.py").read_text(encoding="utf-8")
+    workspace = (ROOT / "frontend/current_student_advisor.js").read_text(encoding="utf-8")
+    shell = (ROOT / "frontend/app_shell.js").read_text(encoding="utf-8")
+    for route in ("/program-selector", "/db-progress", "/transfer-analysis", "/schedule-handoff", "/careers"):
+        section = server.split(f'@app.get("{route}")', 1)[1].split('@app.get(', 1)[0]
+        assert 'RedirectResponse("/login"' not in section
+    assert 'href="/login"' not in (ROOT / "frontend/advising_chatbot.js").read_text(encoding="utf-8")
+    assert 'href="/logout"' not in shell
+    assert "'/db-progress'" in workspace and "'/transfer-analysis'" in workspace
 
 
 def test_deterministic_router_handles_professor_pipeline_examples():

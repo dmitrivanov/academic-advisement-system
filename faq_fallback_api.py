@@ -256,7 +256,7 @@ Known context: {json.dumps(payload.context)[:2500]}
 Student message: {payload.message}
 
 Schema: {{"student_type":null|"current_bmcc"|"current_cuny"|"other_college"|"degree_holder"|"working_adult"|"high_school",
-"current_major":null|string, "goal_type":null|"transfer"|"change_major"|"next_semester"|"general"|"career_exploration",
+"institution":null|string, "current_major":null|string, "goal_type":null|"transfer"|"change_major"|"next_semester"|"general"|"career_exploration",
 "career_goal":null|string, "has_college_courses":null|boolean, "employment":null|"yes"|"no"|"prefer_not",
 "skills":[up to five short skills]}}.
 Use null when the student did not say it. Do not infer official credit, admission, eligibility, or requirements."""
@@ -271,6 +271,7 @@ Use null when the student did not say it. Do not infer official credit, admissio
         allowed_employment = {"yes", "no", "prefer_not"}
         return {
             "student_type": parsed.get("student_type") if parsed.get("student_type") in allowed_student_types else fallback["student_type"],
+            "institution": str(parsed.get("institution") or fallback["institution"] or "")[:160] or None,
             "current_major": str(parsed.get("current_major") or fallback["current_major"] or "")[:160] or None,
             "goal_type": parsed.get("goal_type") if parsed.get("goal_type") in allowed_goals else fallback["goal_type"],
             "career_goal": str(parsed.get("career_goal") or fallback["career_goal"] or "")[:240] or None,
@@ -313,7 +314,7 @@ def current_student_advisor_ask(request: Request, payload: CurrentStudentAdvisor
     program_name = str(payload.program.get("name") or "the selected program")[:160]
     program_code = str(payload.program.get("code") or "")[:30]
     page_context = {
-        "student_type": "current BMCC student",
+        "student_type": "current or previously enrolled college student",
         "selected_program": {"code": program_code, "name": program_name,
                              "degree_type": payload.program.get("degree_type"),
                              "catalog_year": payload.program.get("catalog_year")},
@@ -395,7 +396,7 @@ Include only clearly visible records. Exclude courses marked in progress, withdr
 
 @app.get("/login")
 def login_page():
-    return FileResponse("frontend/login.html")
+    return RedirectResponse("/", status_code=303)
 
 
 @app.get("/downloads/macos-launcher")
@@ -568,19 +569,19 @@ def login_submit(request: Request, username: str = Form(...), password: str = Fo
         request.session.update(account)
         return RedirectResponse("/program-selector", status_code=303)
 
-    return RedirectResponse("/login?error=1", status_code=303)
+    return RedirectResponse("/", status_code=303)
 
 
 @app.get("/logout")
 def logout(request: Request):
     request.session.clear()
-    return RedirectResponse("/login", status_code=303)
+    return RedirectResponse("/", status_code=303)
 
 
 @app.get("/api/session")
 def session_info(request: Request):
     if not is_logged_in(request):
-        raise HTTPException(status_code=401, detail="Not logged in")
+        return {"username": "guest", "role": "guest", "is_admin": False, "login_archived": True}
     return {
         "username": request.session.get("username"),
         "role": request.session.get("role", "tester"),
@@ -592,14 +593,12 @@ def session_info(request: Request):
 def serve_home():
     """Use the public chatbot as the application's primary entry point."""
     if not is_cuny_beyond_enabled():
-        return RedirectResponse("/login", status_code=303)
+        raise HTTPException(status_code=404, detail="Public advising chatbot is not enabled")
     return FileResponse("frontend/advising_chatbot.html")
 
 
 @app.get("/progress")
 def serve_progress(request: Request):
-    if not is_logged_in(request):
-        return RedirectResponse("/login", status_code=303)
     return RedirectResponse("/program-selector", status_code=303)
 
 
@@ -607,14 +606,10 @@ def serve_progress(request: Request):
 
 @app.get("/program-selector")
 def serve_program_selector(request: Request):
-    if not is_logged_in(request):
-        return RedirectResponse("/login", status_code=303)
     return FileResponse("frontend/program_selector.html")
 
 @app.get("/db-progress")
 def serve_db_progress(request: Request):
-    if not is_logged_in(request):
-        return RedirectResponse("/login", status_code=303)
     return FileResponse("frontend/db_progress_graph.html")
 
 
@@ -622,64 +617,58 @@ def serve_db_progress(request: Request):
 
 @app.get("/transfer-analysis")
 def serve_transfer_analysis(request: Request):
-    if not is_logged_in(request):
-        return RedirectResponse("/login", status_code=303)
     return FileResponse("frontend/transfer_analysis.html")
 
 
 @app.get("/schedule-handoff")
 def serve_schedule_handoff(request: Request):
-    if not is_logged_in(request):
-        return RedirectResponse("/login", status_code=303)
     return FileResponse("frontend/schedule_handoff.html")
 
 
 @app.get("/careers")
 def serve_careers(request: Request):
-    if not is_logged_in(request):
-        return RedirectResponse("/login", status_code=303)
     return FileResponse("frontend/careers.html")
 
 
 @app.get("/admin")
 def serve_admin(request: Request):
     if not is_admin(request):
-        return RedirectResponse("/login", status_code=303)
+        raise HTTPException(status_code=403, detail="Administrator access remains protected while login is archived")
     return FileResponse("frontend/admin_dashboard.html")
 
 
 @app.get("/admin/ai-settings")
 def serve_ai_settings(request: Request):
     if not is_admin(request):
-        return RedirectResponse("/login", status_code=303)
+        raise HTTPException(status_code=403, detail="Administrator access remains protected while login is archived")
     return FileResponse("frontend/ai_settings.html")
 
 
 @app.get("/admin/major-constructor")
 def serve_major_constructor(request: Request):
     if not is_admin(request):
-        return RedirectResponse("/login", status_code=303)
+        raise HTTPException(status_code=403, detail="Administrator access remains protected while login is archived")
     return FileResponse("frontend/major_constructor.html")
 
 
 @app.get("/admin/schedule-settings")
 def serve_schedule_settings(request: Request):
     if not is_admin(request):
-        return RedirectResponse("/login", status_code=303)
+        raise HTTPException(status_code=403, detail="Administrator access remains protected while login is archived")
     return FileResponse("frontend/schedule_settings.html")
 
 
 @app.get("/admin/cuny-beyond-governance")
 def serve_cuny_beyond_governance(request: Request):
     if not is_admin(request):
-        return RedirectResponse("/login", status_code=303)
+        raise HTTPException(status_code=403, detail="Administrator access remains protected while login is archived")
     return FileResponse("frontend/governance_dashboard.html")
 
 
 @app.get("/admin/curriculum-graph")
 def serve_curriculum_graph_admin(request: Request):
     if not is_admin(request):
-        return RedirectResponse("/login", status_code=303)
+        raise HTTPException(status_code=403, detail="Administrator access remains protected while login is archived")
     return FileResponse("frontend/curriculum_graph_admin.html")
 
 

@@ -3,7 +3,7 @@
 
 def deterministic_narrative_intake(message: str, stage: str):
     text = " ".join(message.lower().split())
-    result = {"student_type": None, "current_major": None, "goal_type": None,
+    result = {"student_type": None, "institution": None, "current_major": None, "goal_type": None,
               "career_goal": None, "has_college_courses": None, "employment": None,
               "skills": [], "confidence": "deterministic"}
     if any(term in text for term in ("current bmcc", "at bmcc", "bmcc student")):
@@ -32,7 +32,9 @@ def deterministic_narrative_intake(message: str, stage: str):
         result["goal_type"] = "next_semester"
     elif any(term in text for term in ("general question", "ask a question", "need help")):
         result["goal_type"] = "general"
-    if stage == "major":
+    if stage == "institution":
+        result["institution"] = message.strip()[:160]
+    elif stage == "major":
         result["current_major"] = message.strip()[:160]
     elif stage == "career":
         result["career_goal"] = message.strip()[:240]
