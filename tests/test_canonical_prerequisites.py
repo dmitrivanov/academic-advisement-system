@@ -13,7 +13,7 @@ class CanonicalPrerequisiteTests(unittest.TestCase):
             rows = {row["course_code"]: row for row in csv.DictReader(handle)}
 
         self.assertEqual("CSC 110 or CSC 111 or CIS 165", rows["CIS 316"]["prerequisites"])
-        self.assertEqual("MAT 157 or MAT 157.5", rows["MAT 206"]["prerequisites"])
+        self.assertEqual("", rows["MAT 206"]["prerequisites"])
         self.assertEqual("MAT 206 or MAT 206.5", rows["MAT 301"]["prerequisites"])
         self.assertEqual("CSC 111", rows["CSC 211"]["prerequisites"])
         self.assertEqual("CIS 440|CIS 345", rows["CIS 459"]["prerequisites"])
@@ -38,6 +38,13 @@ class CanonicalPrerequisiteTests(unittest.TestCase):
                 row = next(row for row in csv.DictReader(handle) if row["course_code"] == "CIS 316")
             self.assertEqual("CSC 110 or CSC 111 or CIS 165", row["prerequisites"], filename)
 
+    def test_mat_206_is_an_unblocked_entry_course_in_every_curriculum(self):
+        for path in DOCS.glob("*_courses.csv"):
+            with path.open(newline="", encoding="utf-8-sig") as handle:
+                for row in csv.DictReader(handle):
+                    if row.get("institution_code") == "BMCC" and row.get("course_code") == "MAT 206":
+                        self.assertEqual("", row.get("prerequisites", ""), path.name)
+
     def test_seed_applies_canonical_rules_after_all_programs_and_choice_groups(self):
         source = (ROOT / "seed_database.py").read_text(encoding="utf-8")
         self.assertIn("def seed_canonical_course_prerequisites", source)
@@ -48,7 +55,8 @@ class CanonicalPrerequisiteTests(unittest.TestCase):
         canonical = source[source.index("def seed_canonical_course_prerequisites"):source.index("def seed_ccny_elective_groups")]
         self.assertIn("explicit_or_existing", canonical)
         self.assertIn("if explicit_or_existing:", canonical)
-        self.assertNotIn(".delete(", canonical)
+        self.assertIn("if not prereq_groups:", canonical)
+        self.assertIn(".delete(synchronize_session=False)", canonical)
 
     def test_prerequisite_support_courses_are_cataloged_and_exposed_without_degree_credit(self):
         with (DOCS / "course_catalog.csv").open(newline="", encoding="utf-8-sig") as handle:
