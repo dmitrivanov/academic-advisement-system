@@ -12,7 +12,7 @@
   const PROFILE_LABELS = {
     high_school: 'High-school student', working_adult: 'Working adult',
     some_college: 'Adult with some college', transfer: 'Transfer to BMCC',
-    returning: 'Returning BMCC student', degree_holder: 'Adult with a degree',
+    degree_holder: 'Adult with a degree',
     current_bmcc: 'Current BMCC student', current_cuny: 'Current CUNY student'
   };
   const EMPLOYMENT_LABELS = { yes: 'Yes, I currently work', no: 'No, I am not currently working', prefer_not: 'Prefer not to say' };

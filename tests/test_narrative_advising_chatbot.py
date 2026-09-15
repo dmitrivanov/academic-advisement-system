@@ -39,7 +39,7 @@ def test_current_bmcc_pipeline_resolves_major_and_opens_advising_workspace():
     assert '@app.post("/api/current-student-advisor/ask")' in server
     assert '@router.get("/programs/{program_code}/degree-map-source")' in api
     assert 'class="advisor-panel"' in workspace and 'class="tools-panel"' in workspace
-    for label in ("Interactive degree planner", "AI degree / next-semester plan", "Transfer analysis", "Major change", "Interactive degree tree"):
+    for label in ("Degree progress", "Next semester", "Transfer analysis", "Major change", "Interactive degree tree"):
         assert label in workspace_js
     assert "recommended_actions" in server and "recommended-tools" in workspace
 
@@ -84,7 +84,26 @@ def test_login_is_archived_for_render_and_new_tools_use_open_routes():
         assert 'RedirectResponse("/login"' not in section
     assert 'href="/login"' not in (ROOT / "frontend/advising_chatbot.js").read_text(encoding="utf-8")
     assert 'href="/logout"' not in shell
-    assert "'/db-progress'" in workspace and "'/transfer-analysis'" in workspace
+    assert "'/db-progress?embedded=workspace'" in workspace and "'/transfer-analysis?embedded=workspace'" in workspace
+
+
+def test_advising_workspace_embeds_tools_and_shares_active_mode_with_ai():
+    html = (ROOT / "frontend/current_student_advisor.html").read_text(encoding="utf-8")
+    js = (ROOT / "frontend/current_student_advisor.js").read_text(encoding="utf-8")
+    server = (ROOT / "faq_fallback_api.py").read_text(encoding="utf-8")
+    assert 'class="tool-tabs"' in html and 'id="tool-frame"' in html
+    assert 'id="expand-tool"' in html and 'id="tool-modal"' in html
+    assert "active_tool:{...activeAction" in js and "is active" in js
+    assert "active_tool: Dict[str, Any]" in server and '"active_tool": {' in server
+
+
+def test_primary_intake_restores_grouped_identity_and_ap_selectors():
+    html = (ROOT / "frontend/advising_chatbot.html").read_text(encoding="utf-8")
+    js = (ROOT / "frontend/advising_chatbot.js").read_text(encoding="utf-8")
+    legacy = (ROOT / "frontend/cuny_beyond.html").read_text(encoding="utf-8")
+    assert "setIdentitySuggestions" in js and "New students" in js and "Current students" in js
+    assert 'class="ap-selector"' in html and "/api/db/cuny-beyond/ap-equivalencies" in js
+    assert "Returning BMCC student" not in js and "Returning BMCC student" not in legacy
 
 
 def test_deterministic_router_handles_professor_pipeline_examples():

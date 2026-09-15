@@ -235,6 +235,7 @@ class CurrentStudentAdvisorPayload(BaseModel):
     user_question: str = Field(min_length=1, max_length=1200)
     program: Dict[str, Any] = Field(default_factory=dict)
     conversation_summary: Optional[str] = Field(default="", max_length=2500)
+    active_tool: Dict[str, Any] = Field(default_factory=dict)
 
 
 def parse_model_json(text: str):
@@ -319,6 +320,12 @@ def current_student_advisor_ask(request: Request, payload: CurrentStudentAdvisor
                              "degree_type": payload.program.get("degree_type"),
                              "catalog_year": payload.program.get("catalog_year")},
         "conversation_summary": payload.conversation_summary,
+        "active_tool": {
+            "id": str(payload.active_tool.get("id") or "planner")[:40],
+            "label": str(payload.active_tool.get("label") or "Interactive degree planner")[:120],
+            "mode": str(payload.active_tool.get("mode") or "Degree progress")[:120],
+            "completed_courses": [str(code)[:30] for code in (payload.active_tool.get("completed_courses") or [])[:100]],
+        },
         "available_tools": ["interactive degree planner", "interactive degree tree", "AI next-semester plan", "major change", "transfer analysis"],
         "safety_boundary": "Give planning guidance only. Do not claim an official audit, approval, registration, or transfer-credit decision.",
     }

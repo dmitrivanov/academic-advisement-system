@@ -5,7 +5,7 @@
   const input = document.getElementById('message-input');
   const send = document.getElementById('send');
   const STORAGE_KEY = 'narrativeAdvisingDraftV1';
-  const state = { stage: 'identity', student_type: null, institution: null, current_major: null, selected_program: null, goal_type: null, career_goal: null, has_college_courses: null, employment: null, skills: [], transcript_courses: [], course_description: '', pending_action: null };
+  const state = { stage: 'identity', student_type: null, institution: null, current_major: null, selected_program: null, goal_type: null, career_goal: null, has_college_courses: null, employment: null, skills: [], transcript_courses: [], ap_exams: [], course_description: '', pending_action: null };
 
   const esc = value => String(value ?? '').replace(/[&<>'"]/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[char]));
   const safeUrl = value => { try { const url = new URL(value, location.origin); return ['http:','https:'].includes(url.protocol) ? esc(url.href) : '#'; } catch (_) { return '#'; } };
@@ -21,7 +21,12 @@
     requestAnimationFrame(() => turn.scrollIntoView({behavior:'smooth', block:'center'}));
   }
   function setSuggestions(items = []) {
+    suggestions.classList.remove('identity-selector');
     suggestions.innerHTML = items.map(item => `<button type="button" data-answer="${esc(item.value || item.label)}">${esc(item.label)}</button>`).join('');
+  }
+  function setIdentitySuggestions() {
+    suggestions.classList.add('identity-selector');
+    suggestions.innerHTML = `<section><strong>New students</strong><div><button type="button" data-answer="I am a high-school student">High-school student</button><button type="button" data-answer="I am a working adult and not currently a CUNY student">Working adult</button><button type="button" data-answer="I have some college coursework and want to attend BMCC">Adult with some college</button><button type="button" data-answer="I want to transfer to BMCC">Transfer to BMCC</button><button type="button" data-answer="I already have a college degree">Adult with a degree</button></div></section><section><strong>Current students</strong><div><button type="button" data-answer="I am a current BMCC student">Current BMCC student</button><button type="button" data-answer="I am a student at another CUNY college">Current CUNY student</button></div></section>`;
   }
   function ask(text, items = [], placeholder = 'Write your answer in your own words…') {
     addTurn('assistant', `<strong>AI Advisor</strong>${esc(text)}`); setSuggestions(items); input.placeholder = placeholder; input.focus();
@@ -165,14 +170,27 @@
 
   function showTranscript() {
     state.stage = 'course_list'; save();
-    ask('Upload a transcript, list completed courses in the chat, or use the manual completed-course selector. I will not route you until you choose one of these options.');
+    ask('Type completed courses directly below, or optionally use the transcript, AP, or manual-selection controls. The buttons are shortcuts, not required.');
     setSuggestions([]); form.hidden = false;
     const node = document.getElementById('transcript-template').content.cloneNode(true);
     conversation.appendChild(node); const module = conversation.lastElementChild; module.scrollIntoView({behavior:'smooth', block:'center'});
+    setupPriorLearning(module);
     module.querySelector('.list-courses').addEventListener('click', () => chooseCourseEntry(module, 'list'));
     module.querySelector('.manual-courses').addEventListener('click', () => chooseCourseEntry(module, 'manual'));
     module.querySelector('.no-courses').addEventListener('click', () => chooseCourseEntry(module, 'none'));
     module.querySelector('.analyze-transcript').addEventListener('click', () => analyzeTranscript(module));
+  }
+  async function setupPriorLearning(module) {
+    const apPanel=module.querySelector('.ap-selector'),exam=module.querySelector('.ap-exam');
+    module.querySelectorAll('[data-prior]').forEach(button=>button.addEventListener('click',()=>{module.querySelectorAll('[data-prior]').forEach(item=>item.classList.toggle('is-selected',item===button));apPanel.hidden=button.dataset.prior!=='ap'}));
+    try{const response=await fetch('/api/db/cuny-beyond/ap-equivalencies');if(response.ok){const data=await response.json();const names=[...new Set((data.exams||data||[]).map(item=>item.exam||item.name).filter(Boolean))];exam.innerHTML=names.map(name=>`<option value="${esc(name)}">${esc(name)}</option>`).join('')}}catch(_){}
+    module.querySelector('.add-ap').addEventListener('click',async()=>{
+      const item={exam:exam.value,score:Number(module.querySelector('.ap-score').value)};if(!item.exam)return;
+      if(!state.ap_exams.some(existing=>existing.exam===item.exam))state.ap_exams.push(item);save();
+      module.querySelector('.ap-list').innerHTML=state.ap_exams.map(entry=>`<span>${esc(entry.exam)} · score ${entry.score}</span>`).join('');
+      try{const response=await fetch('/api/db/cuny-beyond/ap-equivalencies',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({exams:state.ap_exams})});if(response.ok){const data=await response.json();const apCourses=(data.results||[]).filter(result=>result.bmcc_equivalency&&!result.bmcc_equivalency.includes(' or ')).map(result=>({code:result.bmcc_equivalency,title:`${result.exam} score ${result.score}`,credits:result.estimated_credits,source:'AP planning estimate',include:true}));state.transcript_courses=[...state.transcript_courses.filter(course=>course.source!=='AP planning estimate'),...apCourses];persistImportedCourses(state.transcript_courses,'ap-and-coursework');save()}}catch(_){}
+      let continueButton=module.querySelector('.use-ap');if(!continueButton){continueButton=document.createElement('button');continueButton.type='button';continueButton.className='use-ap';continueButton.textContent='Use AP estimates and continue';module.querySelector('.ap-selector').appendChild(continueButton);continueButton.addEventListener('click',()=>{persistImportedCourses(state.transcript_courses,'ap-and-coursework');module.querySelectorAll('button,input,select').forEach(element=>element.disabled=true);askConfirmation(state.goal_type==='general'?'workspace':'route')})}
+    });
   }
   async function analyzeTranscript(module) {
     const file = module.querySelector('.transcript-file').files[0]; const status = module.querySelector('.transcript-status');
@@ -306,11 +324,8 @@
   }
 
   function restart() {
-    sessionStorage.removeItem(STORAGE_KEY); sessionStorage.removeItem('unloadedProgramContext'); sessionStorage.removeItem('cunyBeyondImportedCoursesV1'); Object.assign(state,{stage:'identity',student_type:null,institution:null,current_major:null,selected_program:null,goal_type:null,career_goal:null,has_college_courses:null,employment:null,skills:[],transcript_courses:[],course_description:'',pending_action:null});
-    conversation.innerHTML=''; form.hidden=false; ask('Tell me where you are in your education right now. You can answer naturally.', [
-      {label:'Current BMCC student',value:'I am a current BMCC student'}, {label:'Another CUNY student',value:'I am a student at another CUNY college'},
-      {label:'High-school student',value:'I am a high-school student'}, {label:'Working adult',value:'I am a working adult and not currently a CUNY student'}
-    ], 'For example: I am at BMCC studying computer science');
+    sessionStorage.removeItem(STORAGE_KEY); sessionStorage.removeItem('unloadedProgramContext'); sessionStorage.removeItem('cunyBeyondImportedCoursesV1'); Object.assign(state,{stage:'identity',student_type:null,institution:null,current_major:null,selected_program:null,goal_type:null,career_goal:null,has_college_courses:null,employment:null,skills:[],transcript_courses:[],ap_exams:[],course_description:'',pending_action:null});
+    conversation.innerHTML=''; form.hidden=false; ask('Tell me where you are in your education right now. You can answer naturally.', [], 'For example: I am at BMCC studying computer science');setIdentitySuggestions();
   }
   form.addEventListener('submit', event => { event.preventDefault(); const message=input.value.trim(); if(!message)return; input.value=''; handleMessage(message); });
   input.addEventListener('keydown', event => { if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();form.requestSubmit();} });

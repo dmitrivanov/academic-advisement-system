@@ -4,10 +4,10 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Current Student AI Advising | BMCC</title>
-  <link rel="stylesheet" href="/frontend/current_student_advisor.css?v=1">
+  <link rel="stylesheet" href="/frontend/current_student_advisor.css?v=2">
   <link rel="stylesheet" href="/frontend/curriculum_graph.css?v=7">
   <script src="/frontend/curriculum_graph.js?v=7" defer></script>
-  <script src="/frontend/current_student_advisor.js?v=1" defer></script>
+  <script src="/frontend/current_student_advisor.js?v=2" defer></script>
 </head>
 <body>
   <header class="workspace-header">
@@ -35,13 +35,24 @@
     </section>
 
     <aside class="tools-panel" aria-labelledby="tools-title">
-      <div class="selected-program"><span>Selected major</span><h2 id="program-name">—</h2><p id="program-meta"></p></div>
-      <h2 id="tools-title">Advising tools</h2>
-      <p class="tools-intro">The AI will highlight tools related to your question. You can also open any tool directly.</p>
+      <header class="tool-header">
+        <div class="tool-context"><span id="tool-mode">Degree progress mode is active</span><strong id="tools-title">Advising workspace</strong></div>
+        <button id="expand-tool" class="expand-tool" type="button" aria-label="Open active tool full screen">↗ Expand</button>
+      </header>
+      <nav id="all-tools" class="tool-tabs" aria-label="Advising workspace tools"></nav>
       <div id="recommended-tools" class="recommended-tools" aria-live="polite"></div>
-      <nav id="all-tools" class="tool-grid" aria-label="Available advising tools"></nav>
-      <div id="degree-map-link"></div>
+      <section id="tool-stage" class="tool-stage" aria-live="polite">
+        <iframe id="tool-frame" title="Interactive degree planner"></iframe>
+      </section>
+      <div class="selected-program compact"><span>Selected major</span><h2 id="program-name">—</h2><p id="program-meta"></p><div id="degree-map-link"></div></div>
     </aside>
   </main>
+  <div id="tool-modal" class="tool-modal" hidden>
+    <div class="tool-modal-backdrop" data-close-tool></div>
+    <section class="tool-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="tool-modal-title">
+      <header><strong id="tool-modal-title">Advising tool</strong><button id="close-tool" type="button">Close</button></header>
+      <iframe id="tool-modal-frame" title="Expanded advising tool"></iframe>
+    </section>
+  </div>
 </body>
 </html>

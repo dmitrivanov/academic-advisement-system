@@ -4,10 +4,11 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>AI Academic Advisement Chatbot | BMCC</title>
-  <link rel="stylesheet" href="/frontend/advising_chatbot.css?v=20260914-2">
+  <link rel="stylesheet" href="/frontend/advising_chatbot.css?v=20260915-1">
   <link rel="stylesheet" href="/frontend/curriculum_graph.css?v=7">
   <link rel="stylesheet" href="/frontend/advising_chatbot_current.css?v=1">
-  <script src="/frontend/advising_chatbot.js?v=20260914-2" defer></script>
+  <link rel="stylesheet" href="/frontend/advising_chatbot_selectors.css?v=1">
+  <script src="/frontend/advising_chatbot.js?v=20260915-1" defer></script>
   <script src="/frontend/curriculum_graph.js?v=7" defer></script>
 </head>
 <body>
@@ -36,6 +37,16 @@
     <section class="inline-module transcript-module">
       <h2>Optional transcript review</h2>
       <p>Upload a PDF, JPG, or PNG. The file is read for this session and is not stored. Always review extracted courses.</p>
+      <div class="prior-learning-selectors" aria-label="Previous coursework options">
+        <button class="prior-choice is-selected" type="button" data-prior="college">Previous college coursework</button>
+        <button class="prior-choice" type="button" data-prior="ap">AP exams</button>
+      </div>
+      <section class="ap-selector" hidden>
+        <label>AP exam<select class="ap-exam"></select></label>
+        <label>Score<select class="ap-score"><option value="3">3</option><option value="4">4</option><option value="5">5</option></select></label>
+        <button class="add-ap" type="button">Add AP exam</button>
+        <div class="ap-list" aria-live="polite"></div>
+      </section>
       <input class="transcript-file" type="file" accept="application/pdf,image/jpeg,image/png">
       <div class="module-actions"><button class="analyze-transcript" type="button">Analyze transcript</button><button class="list-courses secondary" type="button">List courses in chat</button><button class="manual-courses secondary" type="button">Select manually</button><button class="no-courses secondary" type="button">No completed courses</button></div>
       <p class="transcript-status" role="status"></p><div class="transcript-results"></div>
