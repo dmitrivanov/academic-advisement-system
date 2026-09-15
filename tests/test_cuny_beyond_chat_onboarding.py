@@ -25,7 +25,7 @@ def test_public_landing_is_branded_grouped_and_login_hidden():
     assert (ROOT / "frontend/assets/branding/bmcc-logo.png").is_file()
     assert (ROOT / "frontend/assets/branding/ai-hub-logo.png").is_file()
     assert "What best describes you?" in page and "Which path best describes you?" not in page
-    assert "New students" in page and "Current CUNY / BMCC students" in page
+    assert "Prospective students" in page and "Current CUNY / BMCC students" in page
     assert 'value="current_bmcc"' in page and 'value="current_cuny"' in page
     assert 'href="/login">Log in</a>' not in page
     assert "chat-header-logo-bmcc" in page and "chat-header-logo-hub" in page

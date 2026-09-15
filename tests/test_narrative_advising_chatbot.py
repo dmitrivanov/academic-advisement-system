@@ -101,7 +101,7 @@ def test_primary_intake_restores_grouped_identity_and_ap_selectors():
     html = (ROOT / "frontend/advising_chatbot.html").read_text(encoding="utf-8")
     js = (ROOT / "frontend/advising_chatbot.js").read_text(encoding="utf-8")
     legacy = (ROOT / "frontend/cuny_beyond.html").read_text(encoding="utf-8")
-    assert "setIdentitySuggestions" in js and "New students" in js and "Current students" in js
+    assert "setIdentitySuggestions" in js and "Prospective students" in js and "Current students" in js
     assert 'class="ap-selector"' in html and "/api/db/cuny-beyond/ap-equivalencies" in js
     assert "Returning BMCC student" not in js and "Returning BMCC student" not in legacy
 
