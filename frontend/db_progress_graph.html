@@ -2456,6 +2456,7 @@ async function loadProgramRequirements() {
 
   CURRENT_REQUIREMENTS = await fetchJson(`/api/db/programs/${code}/requirements`);
 
+  await hydrateSingleChoiceGroups();
   attachPrerequisiteSupportGroup();
   ensurePlaceholderGroups();
   await loadOfficialDegreeMap();
@@ -2482,6 +2483,13 @@ function applyCunyBeyondImportedCourses() {
   const availableCodes = new Set(
     (CURRENT_REQUIREMENTS.groups || []).flatMap(group => group.courses || []).map(course => course.code)
   );
+  const choiceOptionToPlaceholder = new Map();
+  (CURRENT_REQUIREMENTS.groups || []).flatMap(group => group.courses || []).forEach(course =>
+    (course.choice_options || []).forEach(option => {
+      availableCodes.add(option.code);
+      choiceOptionToPlaceholder.set(option.code, {placeholder: course.code, option});
+    })
+  );
   imported.forEach(item => {
     const institution = String(item?.institution || "").toLowerCase();
     const currentInstitution = String(CURRENT_REQUIREMENTS?.program?.institution || CURRENT_REQUIREMENTS?.program?.institution_code || "").toLowerCase();
@@ -2491,14 +2499,34 @@ function applyCunyBeyondImportedCourses() {
     if (!isCurrentInstitutionRecord && !hasPublishedBmccEquivalency) return;
     const code = String(item?.bmcc_equivalency || item?.code || "").trim().toUpperCase();
     if (availableCodes.has(code)) {
-      DIRECT_COMPLETED_COURSES.add(code);
+      const choice = choiceOptionToPlaceholder.get(code);
+      if (choice) CHOICE_SELECTIONS[choice.placeholder] = [choice.option];
+      else DIRECT_COMPLETED_COURSES.add(code);
       AUTO_IMPORTED_COURSES.add(code);
       AUTO_IMPORTED_COURSE_LABELS.set(code, item?.recognition_source === "chat-entered"
         ? "Entered in chatbot — review this selection"
         : "AI recognized — review this selection");
     }
   });
-  COMPLETED_COURSES = new Set(DIRECT_COMPLETED_COURSES);
+  rebuildCompletedCourses();
+}
+
+async function hydrateSingleChoiceGroups() {
+  const program = CURRENT_REQUIREMENTS?.program;
+  if (!program) return;
+  const placeholders = (CURRENT_REQUIREMENTS.groups || [])
+    .flatMap(group => group.courses || [])
+    .filter(course => course.choice_group_code);
+  await Promise.all(placeholders.map(async placeholder => {
+    try {
+      const params = new URLSearchParams({institution_code: program.institution_code || "BMCC", program_code: program.code || ""});
+      const data = await fetchJson(`/api/db/choice-groups/${placeholder.choice_group_code}/courses?${params.toString()}`);
+      placeholder.choice_options = data.courses || [];
+      placeholder.choice_group = data.group || null;
+    } catch (_) {
+      placeholder.choice_options = [];
+    }
+  }));
 }
 
 function attachPrerequisiteSupportGroup() {
@@ -3151,6 +3179,33 @@ function createSelectableCourseCard(course) {
     ? `<div class="course-detail"><strong>Status:</strong> Not needed / alternative satisfied</div>`
     : "";
 
+  if (isChoice && course.choice_options?.length === 1) {
+    const option = course.choice_options[0];
+    const applied = selectedChoices.some(choice => choice.code === option.code);
+    const currentCourse = allCoursesFromGroups()[option.code] || option;
+    const optionStatus = getCourseStatus(option.code, currentCourse, completed, course._group);
+    const optionDisabled = optionStatus === "locked" || optionStatus === "not_needed" ? "disabled" : "";
+    label.className = `course-card ${applied ? "completed" : optionStatus}`;
+    label.innerHTML = `
+      <div class="course-code">
+        <input type="checkbox" class="completed-check course-check" value="${option.code}"
+          ${applied ? "checked" : ""} ${optionDisabled}
+          onchange='handleSingleChoiceChange(this, ${JSON.stringify(course.code)}, ${JSON.stringify(option.code)})'>
+        ${option.code}
+      </div>
+      <div class="course-title">${option.title}</div>
+      <details class="course-details">
+        <summary>Class details</summary>
+        <div>Credits: ${option.credits}</div>
+        <div>Requirement: ${course.title}</div>
+        <div>Prereqs: ${formatPrereqs(currentCourse.prereqs, currentCourse.prerequisite_groups)}</div>
+        <div>Area: ${course.group_name}</div>
+      </details>
+      ${optionStatus === "locked" ? `<div class="course-detail"><strong>Unavailable:</strong> complete ${formatPrereqs(currentCourse.prereqs, currentCourse.prerequisite_groups)} first.</div>` : ""}
+    `;
+    return label;
+  }
+
   const selectedChoiceText = selectedChoices.length
     ? `<div class="choice-selected-note">Selected (${choiceCredits} / ${course.credits} credits): ${selectedChoices.map(choice => `${choice.code} — ${choice.title}`).join("; ")}</div>`
     : "";
@@ -3525,6 +3580,16 @@ function handleCourseCheckboxChange(checkbox) {
   renderRecommendations();
   updateProgressWidget();
   refreshPlannerTimelineFromProgress();
+}
+
+function handleSingleChoiceChange(checkbox, placeholderCode, optionCode) {
+  const placeholder = allCoursesFromGroups()[placeholderCode];
+  const option = placeholder?.choice_options?.find(item => item.code === optionCode);
+  if (!option) return;
+  if (checkbox.checked) CHOICE_SELECTIONS[placeholderCode] = [option];
+  else delete CHOICE_SELECTIONS[placeholderCode];
+  rebuildCompletedCourses();
+  refreshProgressViews();
 }
 
 function clearCompleted() {

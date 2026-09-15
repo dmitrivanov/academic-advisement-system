@@ -81,6 +81,13 @@ class CanonicalPrerequisiteTests(unittest.TestCase):
         self.assertIn('types: ["common_core"]', display_areas)
         self.assertIn('types: ["flexible_core"]', display_areas)
 
+    def test_single_course_core_adjustments_render_as_direct_course_cards(self):
+        page = (ROOT / "frontend" / "db_progress_graph.html").read_text(encoding="utf-8")
+        self.assertIn("async function hydrateSingleChoiceGroups()", page)
+        self.assertIn("await hydrateSingleChoiceGroups();", page)
+        self.assertIn("course.choice_options?.length === 1", page)
+        self.assertIn("function handleSingleChoiceChange", page)
+
 
 if __name__ == "__main__":
     unittest.main()
