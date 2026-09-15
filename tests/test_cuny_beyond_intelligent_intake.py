@@ -51,7 +51,7 @@ def test_degree_map_and_import_handoffs_are_wired():
     assert "degree-map-preview" in chat
     assert "cunyBeyondImportedCoursesV1" in chat
     assert "applyCunyBeyondImportedCourses" in planner
-    assert "isBmccRecord" in planner and "hasPublishedBmccEquivalency" in planner
+    assert "isCurrentInstitutionRecord" in planner and "hasPublishedBmccEquivalency" in planner
     assert "openPlannerModal" in chat and "planner-modal-frame" in chat
     assert "AUTO_IMPORTED_COURSES" in planner and "auto-recognized-badge" in planner
 

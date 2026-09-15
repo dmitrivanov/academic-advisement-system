@@ -51,9 +51,28 @@ def test_college_students_supply_institution_major_goal_and_courses_before_routi
     assert "askGoal()" in chat and "askCompletedCourses()" in chat
     assert "List courses in chat" in (ROOT / "frontend/advising_chatbot.html").read_text(encoding="utf-8")
     assert "Select manually" in (ROOT / "frontend/advising_chatbot.html").read_text(encoding="utf-8")
-    assert "course_list" in chat and "narrative-chat-entry" in chat
+    assert "course_list" in chat and "narrative-${recognitionSource}-import" in chat
+    assert "cunyBeyondImportedCoursesV1" in chat and "resolveTypedCourses" in chat
     assert "is not currently loaded in our curriculum database" in chat
     assert 'href="/login"' not in chat
+
+
+def test_typed_courses_use_same_colored_import_path_as_transcript_courses():
+    chat = (ROOT / "frontend/advising_chatbot.js").read_text(encoding="utf-8")
+    progress = (ROOT / "frontend/db_progress_graph.html").read_text(encoding="utf-8")
+    assert "persistImportedCourses(selected, 'transcript')" in chat
+    assert "persistImportedCourses(state.transcript_courses, 'chat-entered')" in chat
+    assert "AUTO_IMPORTED_COURSE_LABELS" in progress
+    assert "Entered in chatbot — review this selection" in progress
+    assert "DIRECT_COMPLETED_COURSES.add(code)" in progress
+    assert "form.hidden = false" in chat.split("function showTranscript()", 1)[1].split("async function analyzeTranscript", 1)[0]
+
+
+def test_matched_program_actions_share_consistent_layout():
+    css = (ROOT / "frontend/advising_chatbot_current.css").read_text(encoding="utf-8")
+    assert ".current-program-card .recommendation-actions a" in css
+    assert "grid-template-columns: repeat(3" in css
+    assert "background: #174ea6" in css and "text-decoration: none" in css
 
 
 def test_login_is_archived_for_render_and_new_tools_use_open_routes():

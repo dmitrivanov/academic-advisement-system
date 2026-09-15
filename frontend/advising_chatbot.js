@@ -5,7 +5,7 @@
   const input = document.getElementById('message-input');
   const send = document.getElementById('send');
   const STORAGE_KEY = 'narrativeAdvisingDraftV1';
-  const state = { stage: 'identity', student_type: null, institution: null, current_major: null, selected_program: null, goal_type: null, career_goal: null, has_college_courses: null, employment: null, skills: [], transcript_courses: [], pending_action: null };
+  const state = { stage: 'identity', student_type: null, institution: null, current_major: null, selected_program: null, goal_type: null, career_goal: null, has_college_courses: null, employment: null, skills: [], transcript_courses: [], course_description: '', pending_action: null };
 
   const esc = value => String(value ?? '').replace(/[&<>'"]/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[char]));
   const safeUrl = value => { try { const url = new URL(value, location.origin); return ['http:','https:'].includes(url.protocol) ? esc(url.href) : '#'; } catch (_) { return '#'; } };
@@ -164,9 +164,9 @@
   }
 
   function showTranscript() {
-    state.stage = 'transcript'; save();
+    state.stage = 'course_list'; save();
     ask('Upload a transcript, list completed courses in the chat, or use the manual completed-course selector. I will not route you until you choose one of these options.');
-    setSuggestions([]); form.hidden = true;
+    setSuggestions([]); form.hidden = false;
     const node = document.getElementById('transcript-template').content.cloneNode(true);
     conversation.appendChild(node); const module = conversation.lastElementChild; module.scrollIntoView({behavior:'smooth', block:'center'});
     module.querySelector('.list-courses').addEventListener('click', () => chooseCourseEntry(module, 'list'));
@@ -197,9 +197,28 @@
   function finishTranscript(module) {
     module.querySelectorAll('[data-course]').forEach(box => state.transcript_courses[Number(box.dataset.course)].include = box.checked);
     const selected = state.transcript_courses.filter(course => course.include && course.code);
-    sessionStorage.setItem('transferSnapshot', JSON.stringify({completed_courses:selected.map(c=>c.code),completed_course_details:selected,source:'narrative-chatbot-import',timestamp:new Date().toISOString()}));
+    persistImportedCourses(selected, 'transcript');
     form.hidden = false; module.querySelectorAll('button,input').forEach(element => element.disabled = true);
     askConfirmation(state.goal_type === 'general' ? 'workspace' : 'route');
+  }
+  function persistImportedCourses(courses, recognitionSource) {
+    const institution = state.selected_program?.institution || state.institution || '';
+    const imported = courses.map(course => ({...course, institution:course.institution || institution, recognition_source:recognitionSource, include:true}));
+    sessionStorage.setItem('cunyBeyondImportedCoursesV1', JSON.stringify(imported));
+    sessionStorage.setItem('transferSnapshot', JSON.stringify({completed_courses:imported.map(item=>item.code),completed_course_details:imported,source:`narrative-${recognitionSource}-import`,timestamp:new Date().toISOString()}));
+  }
+  async function resolveTypedCourses(message) {
+    const codes = message.toUpperCase().match(/\b[A-Z]{2,4}\s*\d{2,4}(?:\.\d)?\b/g) || [];
+    const resolved = new Map(codes.map(code => {
+      const normalized=code.replace(/\s+/g,' ');return [normalized,{code:normalized,title:'Student-entered course',include:true}];
+    }));
+    if (state.selected_program) {
+      try {
+        const response=await fetch(`/api/db/programs/${encodeURIComponent(state.selected_program.code)}/requirements`);
+        if(response.ok){const data=await response.json();const normalizedMessage=message.toLowerCase().replace(/[^a-z0-9]+/g,' ');(data.groups||[]).flatMap(group=>group.courses||[]).forEach(course=>{const title=String(course.title||'').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();if(title.length>5&&normalizedMessage.includes(title))resolved.set(course.code,{code:course.code,title:course.title,include:true});});}
+      } catch (_) {}
+    }
+    return [...resolved.values()];
   }
   function chooseCourseEntry(module, mode) {
     if (mode === 'manual') {
@@ -267,9 +286,9 @@
         ask('Please tell me whether you have completed any college-level or AP courses.', [{label:'Yes'},{label:'No'}]);
       }
     } else if (state.stage === 'course_list') {
-      const codes = message.toUpperCase().match(/\b[A-Z]{2,4}\s*\d{2,4}(?:\.\d)?\b/g) || [];
-      state.transcript_courses = [...new Set(codes.map(code => code.replace(/\s+/g,' ')))].map(code => ({code,title:'Student-entered course',include:true}));
-      sessionStorage.setItem('transferSnapshot', JSON.stringify({completed_courses:state.transcript_courses.map(c=>c.code),completed_course_details:state.transcript_courses,source:'narrative-chat-entry',timestamp:new Date().toISOString()}));
+      state.course_description = message;
+      state.transcript_courses = await resolveTypedCourses(message);
+      persistImportedCourses(state.transcript_courses, 'chat-entered');
       save();
       addTurn('assistant', state.transcript_courses.length ? `I recorded ${state.transcript_courses.map(course=>esc(course.code)).join(', ')} for review.` : 'I saved your course description for the advisor, but I could not identify standardized course codes. The next tool will require manual review.');
       askConfirmation(state.goal_type === 'general' ? 'workspace' : 'route');
@@ -287,7 +306,7 @@
   }
 
   function restart() {
-    sessionStorage.removeItem(STORAGE_KEY); sessionStorage.removeItem('unloadedProgramContext'); Object.assign(state,{stage:'identity',student_type:null,institution:null,current_major:null,selected_program:null,goal_type:null,career_goal:null,has_college_courses:null,employment:null,skills:[],transcript_courses:[],pending_action:null});
+    sessionStorage.removeItem(STORAGE_KEY); sessionStorage.removeItem('unloadedProgramContext'); sessionStorage.removeItem('cunyBeyondImportedCoursesV1'); Object.assign(state,{stage:'identity',student_type:null,institution:null,current_major:null,selected_program:null,goal_type:null,career_goal:null,has_college_courses:null,employment:null,skills:[],transcript_courses:[],course_description:'',pending_action:null});
     conversation.innerHTML=''; form.hidden=false; ask('Tell me where you are in your education right now. You can answer naturally.', [
       {label:'Current BMCC student',value:'I am a current BMCC student'}, {label:'Another CUNY student',value:'I am a student at another CUNY college'},
       {label:'High-school student',value:'I am a high-school student'}, {label:'Working adult',value:'I am a working adult and not currently a CUNY student'}

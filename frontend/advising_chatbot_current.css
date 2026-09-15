@@ -23,6 +23,31 @@
   font-weight: 800;
   cursor: pointer;
 }
+.current-program-card .recommendation-actions {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 18px;
+}
+.current-program-card .recommendation-actions a,
+.current-program-card .recommendation-actions button {
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 14px;
+  border: 1px solid #174ea6;
+  border-radius: 13px;
+  color: #fff;
+  background: #174ea6;
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1.25;
+  text-align: center;
+  text-decoration: none;
+}
+.current-program-card .recommendation-actions a:hover,
+.current-program-card .recommendation-actions button:hover { background: #123f86; }
 .program-error { color: #9b291f; font-weight: 700; }
 .manual-selector iframe {
   display: block;
@@ -41,4 +66,7 @@
   background: #174ea6;
   font-weight: 800;
   cursor: pointer;
+}
+@media (max-width: 720px) {
+  .current-program-card .recommendation-actions { grid-template-columns: 1fr; }
 }

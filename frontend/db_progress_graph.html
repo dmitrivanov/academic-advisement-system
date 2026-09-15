@@ -1802,6 +1802,7 @@ let CURRENT_PLANNING_MODE = "manual";
 let LAST_DEGREE_PLAN = [];
 let OFFICIAL_DEGREE_MAP = null;
 let AUTO_IMPORTED_COURSES = new Set();
+let AUTO_IMPORTED_COURSE_LABELS = new Map();
 
 if (new URLSearchParams(window.location.search).has("embedded")) document.body.classList.add("embedded-transcript");
 
@@ -2476,19 +2477,25 @@ function applyCunyBeyondImportedCourses() {
   try { imported = JSON.parse(sessionStorage.getItem("cunyBeyondImportedCoursesV1") || "[]"); }
   catch (_) { imported = []; }
   AUTO_IMPORTED_COURSES = new Set();
+  AUTO_IMPORTED_COURSE_LABELS = new Map();
   if (!Array.isArray(imported) || !imported.length) return;
   const availableCodes = new Set(
     (CURRENT_REQUIREMENTS.groups || []).flatMap(group => group.courses || []).map(course => course.code)
   );
   imported.forEach(item => {
     const institution = String(item?.institution || "").toLowerCase();
-    const isBmccRecord = institution.includes("bmcc") || institution.includes("borough of manhattan");
+    const currentInstitution = String(CURRENT_REQUIREMENTS?.program?.institution || CURRENT_REQUIREMENTS?.program?.institution_code || "").toLowerCase();
+    const isCurrentInstitutionRecord = !institution || institution.includes(currentInstitution) || currentInstitution.includes(institution)
+      || (CURRENT_REQUIREMENTS?.program?.institution_code === "BMCC" && (institution.includes("bmcc") || institution.includes("borough of manhattan")));
     const hasPublishedBmccEquivalency = Boolean(item?.bmcc_equivalency);
-    if (!isBmccRecord && !hasPublishedBmccEquivalency) return;
+    if (!isCurrentInstitutionRecord && !hasPublishedBmccEquivalency) return;
     const code = String(item?.bmcc_equivalency || item?.code || "").trim().toUpperCase();
     if (availableCodes.has(code)) {
       DIRECT_COMPLETED_COURSES.add(code);
       AUTO_IMPORTED_COURSES.add(code);
+      AUTO_IMPORTED_COURSE_LABELS.set(code, item?.recognition_source === "chat-entered"
+        ? "Entered in chatbot — review this selection"
+        : "AI recognized — review this selection");
     }
   });
   COMPLETED_COURSES = new Set(DIRECT_COMPLETED_COURSES);
@@ -3192,7 +3199,7 @@ function createSelectableCourseCard(course) {
       <div>Area: ${course.group_name}</div>
     </details>
 
-    ${autoRecognized ? '<span class="auto-recognized-badge">AI recognized — review this selection</span>' : ''}
+    ${autoRecognized ? `<span class="auto-recognized-badge">${AUTO_IMPORTED_COURSE_LABELS.get(course.code) || "Imported — review this selection"}</span>` : ''}
     ${statusText}
   `;
 
@@ -3235,7 +3242,7 @@ function createAlternativeCourseCard(courses, group) {
       <span class="alternative-badge">Choose one</span>
     </div>
     <div class="alternative-options">${options}</div>
-    ${autoRecognized ? '<span class="auto-recognized-badge">AI recognized — review this selection</span>' : ''}
+    ${autoRecognized ? `<span class="auto-recognized-badge">${AUTO_IMPORTED_COURSE_LABELS.get(selectedCourse.code) || "Imported — review this selection"}</span>` : ''}
     ${selectedCourse ? `<button type="button" class="toggle-button" onclick='clearAlternativeSelection(${JSON.stringify(key)}, ${JSON.stringify(selectedCourse.code)})'>Change selection</button>` : ""}
   `;
   return card;
