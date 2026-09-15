@@ -72,6 +72,15 @@ class CanonicalPrerequisiteTests(unittest.TestCase):
         self.assertIn("excluded_from_degree: true", page)
         self.assertIn("if (group.excluded_from_degree) return total", page)
 
+    def test_prerequisite_support_does_not_appear_as_a_program_requirement(self):
+        page = (ROOT / "frontend" / "db_progress_graph.html").read_text(encoding="utf-8")
+        display_areas = page[page.index("const DISPLAY_AREAS"):page.index("async function fetchJson")]
+        self.assertIn('types: ["program_required"]', display_areas)
+        self.assertNotIn('types: ["program_required", "prerequisite_support"]', display_areas)
+        self.assertIn('types: ["program_elective"]', display_areas)
+        self.assertIn('types: ["common_core"]', display_areas)
+        self.assertIn('types: ["flexible_core"]', display_areas)
+
 
 if __name__ == "__main__":
     unittest.main()
