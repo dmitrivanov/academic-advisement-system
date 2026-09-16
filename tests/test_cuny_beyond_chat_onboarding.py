@@ -16,7 +16,7 @@ def test_onboarding_uses_chat_window_history_and_quick_choices():
     assert "chatAnswers" in js and "Private browser draft" in page
 
 
-def test_public_landing_is_branded_grouped_and_login_hidden():
+def test_authenticated_chatbot_is_branded_grouped_and_login_is_primary():
     page = (ROOT / "frontend/cuny_beyond.html").read_text(encoding="utf-8")
     css = (ROOT / "frontend/cuny_beyond.css").read_text(encoding="utf-8")
     server = (ROOT / "faq_fallback_api.py").read_text(encoding="utf-8")
@@ -32,8 +32,12 @@ def test_public_landing_is_branded_grouped_and_login_hidden():
     assert 'id="ai-assisted" type="checkbox" checked hidden' in page
     assert ".profile-groups" in css and ".profile-group-current" in css
     root_route = server.split('@app.get("/")', 1)[1].split('@app.get("/progress")', 1)[0]
-    assert 'FileResponse("frontend/advising_chatbot.html")' in root_route
-    assert 'is_logged_in' not in root_route
+    assert 'FileResponse("frontend/login.html")' in root_route
+    assert 'is_logged_in' in root_route
+    chatbot_route = server.split('@app.get("/advising-chatbot")', 1)[1].split('@app.get(', 1)[0]
+    legacy_route = server.split('@app.get("/cuny-beyond")', 1)[1].split('@app.get(', 1)[0]
+    assert 'if not is_logged_in(request)' in chatbot_route
+    assert 'if not is_logged_in(request)' in legacy_route
 
 
 def test_chat_preserves_free_text_browse_back_restart_and_accessibility():

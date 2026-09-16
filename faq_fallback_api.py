@@ -403,7 +403,7 @@ Include only clearly visible records. Exclude courses marked in progress, withdr
 
 @app.get("/login")
 def login_page():
-    return RedirectResponse("/", status_code=303)
+    return FileResponse("frontend/login.html")
 
 
 @app.get("/downloads/macos-launcher")
@@ -425,14 +425,18 @@ def download_windows_launcher(_admin=Depends(require_admin)):
 
 
 @app.get("/cuny-beyond")
-def serve_cuny_beyond():
+def serve_cuny_beyond(request: Request):
+    if not is_logged_in(request):
+        return RedirectResponse("/", status_code=303)
     if not is_cuny_beyond_enabled():
         raise HTTPException(status_code=404, detail="CUNY Beyond is not enabled")
     return FileResponse("frontend/cuny_beyond.html")
 
 
 @app.get("/advising-chatbot")
-def serve_advising_chatbot():
+def serve_advising_chatbot(request: Request):
+    if not is_logged_in(request):
+        return RedirectResponse("/", status_code=303)
     if not is_cuny_beyond_enabled():
         raise HTTPException(status_code=404, detail="Public advising chatbot is not enabled")
     return FileResponse("frontend/advising_chatbot.html")
@@ -574,9 +578,9 @@ def login_submit(request: Request, username: str = Form(...), password: str = Fo
     if account:
         request.session["logged_in"] = True
         request.session.update(account)
-        return RedirectResponse("/program-selector", status_code=303)
+        return RedirectResponse("/advising-chatbot", status_code=303)
 
-    return RedirectResponse("/", status_code=303)
+    return RedirectResponse("/?error=1", status_code=303)
 
 
 @app.get("/logout")
@@ -597,11 +601,11 @@ def session_info(request: Request):
 
 
 @app.get("/")
-def serve_home():
-    """Use the public chatbot as the application's primary entry point."""
-    if not is_cuny_beyond_enabled():
-        raise HTTPException(status_code=404, detail="Public advising chatbot is not enabled")
-    return FileResponse("frontend/advising_chatbot.html")
+def serve_home(request: Request):
+    """Temporarily use login as the entry point and keep chatbots authenticated."""
+    if is_logged_in(request):
+        return RedirectResponse("/advising-chatbot", status_code=303)
+    return FileResponse("frontend/login.html")
 
 
 @app.get("/progress")

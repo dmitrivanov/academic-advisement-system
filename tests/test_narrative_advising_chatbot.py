@@ -6,13 +6,17 @@ from narrative_intake import deterministic_narrative_intake
 ROOT = Path(__file__).resolve().parents[1]
 
 
-def test_new_narrative_chatbot_is_primary_and_legacy_is_preserved():
+def test_login_is_primary_and_both_chatbot_versions_are_preserved_behind_it():
     server = (ROOT / "faq_fallback_api.py").read_text(encoding="utf-8")
     root_route = server.split('@app.get("/")', 1)[1].split('@app.get("/progress")', 1)[0]
     legacy_route = server.split('@app.get("/cuny-beyond")', 1)[1].split('@app.get("/advising-chatbot")', 1)[0]
-    assert 'FileResponse("frontend/advising_chatbot.html")' in root_route
+    primary_route = server.split('@app.get("/advising-chatbot")', 1)[1].split('@app.get("/current-student-advisor")', 1)[0]
+    assert 'FileResponse("frontend/login.html")' in root_route
+    assert 'RedirectResponse("/advising-chatbot"' in root_route
     assert 'FileResponse("frontend/cuny_beyond.html")' in legacy_route
-    assert '@app.get("/advising-chatbot")' in server
+    assert 'FileResponse("frontend/advising_chatbot.html")' in primary_route
+    assert 'if not is_logged_in(request)' in legacy_route
+    assert 'if not is_logged_in(request)' in primary_route
 
 
 def test_narrative_page_uses_one_composer_and_optional_quick_replies():
