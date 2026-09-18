@@ -3340,6 +3340,7 @@ function refreshProgressViews() {
   renderRecommendations();
   updateProgressWidget();
   refreshPlannerTimelineFromProgress();
+  notifyEmbeddedCourseSelection();
 }
 
 async function openChoiceModal(placeholderCode) {
@@ -3580,6 +3581,15 @@ function handleCourseCheckboxChange(checkbox) {
   renderRecommendations();
   updateProgressWidget();
   refreshPlannerTimelineFromProgress();
+  notifyEmbeddedCourseSelection();
+}
+
+function notifyEmbeddedCourseSelection() {
+  if (window.parent === window) return;
+  window.parent.postMessage({
+    type: "advising-completed-courses",
+    courses: Array.from(COMPLETED_COURSES).sort(),
+  }, window.location.origin);
 }
 
 function handleSingleChoiceChange(checkbox, placeholderCode, optionCode) {
@@ -3604,6 +3614,7 @@ function clearCompleted() {
   renderRecommendations();
   updateProgressWidget();
   refreshPlannerTimelineFromProgress();
+  notifyEmbeddedCourseSelection();
 }
 
 function groupsForCurrentTab() {

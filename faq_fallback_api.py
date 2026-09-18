@@ -225,6 +225,11 @@ class BeyondInterpretPayload(BaseModel):
     allowed_values: list[str] = Field(default_factory=list)
 
 
+class CourseRecognitionPayload(BaseModel):
+    text: str = Field(min_length=1, max_length=1200)
+    courses: list[Dict[str, Any]] = Field(default_factory=list, max_length=250)
+
+
 class NarrativeIntakePayload(BaseModel):
     message: str = Field(min_length=1, max_length=1200)
     stage: str = Field(default="identity", max_length=40)
@@ -399,6 +404,41 @@ Include only clearly visible records. Exclude courses marked in progress, withdr
     warnings = [str(item)[:300] for item in (result.get("warnings") or [])[:10]]
     return {"courses": courses, "ap_exams": ap_exams, "warnings": warnings,
             "disclaimer": "Draft extraction only. Review every row; BMCC must evaluate official records and award applicable credit."}
+
+
+@app.post("/api/cuny-beyond/recognize-courses")
+def recognize_cuny_beyond_courses(payload: CourseRecognitionPayload):
+    """Match informal course text only to the selected program's supplied catalog."""
+    catalog = []
+    for item in payload.courses[:250]:
+        if not isinstance(item, dict):
+            continue
+        code = " ".join(str(item.get("code") or "").upper().split())[:30]
+        if code:
+            catalog.append({"code": code, "title": str(item.get("title") or "")[:180], "credits": item.get("credits")})
+    if not catalog:
+        return {"courses": [], "warnings": ["The selected program did not provide a course catalog."]}
+
+    normalized = payload.text.upper()
+    deterministic = [item for item in catalog if re.search(rf"(?<![A-Z0-9]){re.escape(item['code'])}(?![A-Z0-9])", normalized)]
+    if deterministic and len(deterministic) >= len([part for part in re.split(r"[,;\n]+", payload.text) if part.strip()]):
+        return {"courses": [{**item, "institution": "", "grade": "", "include": True, "source": "manual entry"} for item in deterministic], "warnings": []}
+
+    prompt = f"""Match the student's completed-course description to this closed course catalog.
+Return JSON only: {{"codes":["ABC 123"],"warnings":[]}}.
+Use only exact codes from the catalog. Match course titles and common wording conservatively. Do not invent equivalencies.
+Student text: {payload.text}
+Catalog: {json.dumps(catalog, ensure_ascii=False)}"""
+    client = make_gemini_client()
+    response = client.models.generate_content(model=load_ai_settings().get("model", DEFAULT_MODEL), contents=prompt)
+    result = parse_model_json(response.text or "")
+    allowed = {item["code"]: item for item in catalog}
+    codes = list(dict.fromkeys(str(code).upper().strip() for code in (result.get("codes") or [])))
+    matched = [allowed[code] for code in codes if code in allowed]
+    return {
+        "courses": [{**item, "institution": "", "grade": "", "include": True, "source": "AI-recognized manual entry"} for item in matched],
+        "warnings": [str(item)[:300] for item in (result.get("warnings") or [])[:5]],
+    }
 
 
 @app.get("/login")

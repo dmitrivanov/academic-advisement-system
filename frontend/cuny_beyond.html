@@ -4,9 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>AI Academic Advisement Chatbot | BMCC</title>
-  <link rel="stylesheet" href="/frontend/cuny_beyond.css?v=20260908-3">
+  <link rel="stylesheet" href="/frontend/cuny_beyond.css?v=20260918-1">
   <link rel="stylesheet" href="/frontend/curriculum_graph.css?v=5">
-  <script src="/frontend/cuny_beyond.js?v=20260908-1" defer></script>
+  <script src="/frontend/cuny_beyond.js?v=20260918-1" defer></script>
   <script src="/frontend/curriculum_graph.js?v=7" defer></script>
 </head>
 <body>
@@ -68,20 +68,31 @@
         </section>
 
         <section class="step" data-step="1" hidden>
-          <h2 tabindex="-1">What do you want to do in your life or career?</h2>
-          <p class="step-copy">A role, field, or problem you want to work on is enough. Example: Data Analyst.</p>
-          <label class="field-label" for="career-goal">Career or life goal</label>
-          <input id="career-goal" class="career-input" name="career_goal" type="text" maxlength="240" list="career-options" placeholder="For example: Data Analyst">
-          <datalist id="career-options"></datalist>
-          <p class="field-help"><span id="goal-count">0</span>/240 characters. Do not include private information.</p>
-          <div id="career-suggestions" class="career-suggestions" aria-label="Supported career examples"></div>
-          <details class="career-browser">
+          <div id="career-goal-panel">
+            <h2 tabindex="-1">What do you want to do in your life or career?</h2>
+            <p class="step-copy">A role, field, or problem you want to work on is enough. Example: Data Analyst.</p>
+            <label class="field-label" for="career-goal">Career or life goal</label>
+            <input id="career-goal" class="career-input" name="career_goal" type="text" maxlength="240" list="career-options" placeholder="For example: Data Analyst">
+            <datalist id="career-options"></datalist>
+            <p class="field-help"><span id="goal-count">0</span>/240 characters. Do not include private information.</p>
+            <div id="career-suggestions" class="career-suggestions" aria-label="Supported career examples"></div>
+            <details class="career-browser">
             <summary>Browse all reviewed careers</summary>
             <label class="field-label" for="career-filter">Filter careers</label>
             <input id="career-filter" class="career-input" type="search" placeholder="Type nursing, accounting, counseling, technology…" autocomplete="off">
             <p id="career-browser-count" class="field-help" role="status" aria-live="polite"></p>
             <div id="career-browser-results" class="career-browser-results" aria-label="Reviewed career choices"></div>
-          </details>
+            </details>
+          </div>
+          <div id="current-major-panel" hidden>
+            <h2 tabindex="-1">What is your major?</h2>
+            <p class="step-copy">Choose a common major or search the reviewed program list. Search is fast and does not use AI.</p>
+            <div id="popular-major-choices" class="major-quick-choices" aria-label="Often chosen majors"></div>
+            <label class="field-label" for="current-major-search">Search or enter your major</label>
+            <input id="current-major-search" class="career-input" type="search" autocomplete="off" placeholder="Start typing, for example: Computer Science">
+            <div id="current-major-results" class="major-search-results" role="listbox" aria-label="Matching majors"></div>
+            <p id="current-major-status" class="field-help" role="status" aria-live="polite"></p>
+          </div>
         </section>
 
         <section class="step" data-step="2" hidden>
@@ -98,18 +109,30 @@
         </section>
 
         <section class="step" data-step="3" hidden>
-          <h2 tabindex="-1">Choose up to five skills you use or want to build.</h2>
+          <div id="skills-panel"><h2 tabindex="-1">Choose up to five skills you use or want to build.</h2>
           <p class="step-copy">These are broad starting points, not a test of your ability.</p>
           <fieldset id="skill-choices" class="skill-grid">
             <legend class="visually-hidden">Select up to five skills</legend>
           </fieldset>
           <label class="field-label free-answer-label" for="skills-free">Add a skill in your own words</label>
           <div class="inline-entry"><input id="skills-free" class="career-input free-answer" type="text" maxlength="100" placeholder="For example: explaining medical information"><button id="add-skill" type="button">Add</button></div>
-          <p id="skill-count" class="field-help" role="status" aria-live="polite">0 of 5 selected</p>
+          <p id="skill-count" class="field-help" role="status" aria-live="polite">0 of 5 selected</p></div>
+          <div id="semester-standing-panel" hidden>
+            <h2 tabindex="-1">Which semester are you in?</h2>
+            <p class="step-copy">This helps us decide whether to ask about prior learning or your completed BMCC/CUNY courses.</p>
+            <fieldset class="semester-choices">
+              <legend class="visually-hidden">Semester standing</legend>
+              <label class="semester-one"><input type="radio" name="semester_standing" value="1"><span><strong>First semester</strong><small>Just starting the program</small></span></label>
+              <label class="semester-two"><input type="radio" name="semester_standing" value="2"><span><strong>Second semester</strong></span></label>
+              <label class="semester-three"><input type="radio" name="semester_standing" value="3"><span><strong>Third semester</strong></span></label>
+              <label class="semester-four"><input type="radio" name="semester_standing" value="4"><span><strong>Fourth semester</strong></span></label>
+              <label class="semester-later"><input type="radio" name="semester_standing" value="5+"><span><strong>Fifth or later</strong></span></label>
+            </fieldset>
+          </div>
         </section>
 
         <section class="step" data-step="4" hidden>
-          <h2 tabindex="-1">Could any previous learning be relevant?</h2>
+          <div id="prior-learning-panel"><h2 tabindex="-1">Could any previous learning be relevant?</h2>
           <p class="step-copy">Choose everything that may apply. This prepares questions and documents for an official review; it does not estimate or award credit.</p>
           <fieldset id="cpl-choices" class="choice-grid cpl-grid">
             <legend class="visually-hidden">Select possible prior-learning categories</legend>
@@ -131,11 +154,31 @@
             <p class="field-help">Add each exam and score. BMCC requires at least 3. Results are planning estimates pending official evaluation.</p>
             <div class="ap-entry"><select id="ap-exam" class="career-input" aria-label="AP exam"></select><select id="ap-score" class="career-input" aria-label="AP score"><option value="3">Score 3</option><option value="4">Score 4</option><option value="5">Score 5</option></select><button id="add-ap" type="button">Add exam</button></div>
             <div id="ap-results" class="ap-results" aria-live="polite"></div>
-          </section>
+          </section></div>
+          <div id="current-coursework-panel" hidden>
+            <h2 tabindex="-1">Which courses have you completed?</h2>
+            <p class="step-copy">Use any method below. You will return here to confirm the recognized list, and it will stay available for this advising session.</p>
+            <div class="course-intake-options">
+              <section class="course-intake-card">
+                <h3>Upload a transcript</h3><p>PDF, JPG, or PNG. AI creates a draft for your review.</p>
+                <input id="current-transcript-file" type="file" accept="application/pdf,image/jpeg,image/png">
+                <button id="current-analyze-transcript" type="button">Analyze transcript</button>
+              </section>
+              <section class="course-intake-card">
+                <h3>Enter courses manually</h3><p>Codes or names both work, such as “MAT 301, ENG 101” or “Calculus I.”</p>
+                <textarea id="manual-course-entry" class="career-input" rows="3" maxlength="1200" placeholder="List the courses you completed"></textarea>
+                <button id="recognize-manual-courses" type="button">Recognize courses</button>
+              </section>
+            </div>
+            <button id="open-completed-selector" class="large-tool-button" type="button">Select completed courses visually</button>
+            <div id="current-course-status" class="match-status" role="status" aria-live="polite"></div>
+            <div id="current-course-review"></div>
+            <div id="confirmed-courses" class="confirmed-courses" aria-live="polite"></div>
+          </div>
         </section>
 
         <section class="step" data-step="5" hidden>
-          <h2 tabindex="-1">Your starting profile is ready.</h2>
+          <div id="prospective-results"><h2 tabindex="-1">Your starting profile is ready.</h2>
           <div id="summary" class="summary"></div>
           <div class="next-stage">
             <strong>Reviewed matching is available</strong>
@@ -163,7 +206,14 @@
             <p>Create a concise pre-advisement package, save it as PDF, or prepare a consented referral.</p>
             <a class="button-link" href="/cuny-beyond/referral">Prepare advising summary</a>
           </div>
-          <p class="advisor-note">This prototype supports exploration; it does not replace an academic, career, transfer, or CPL advisor.</p>
+          <p class="advisor-note">This prototype supports exploration; it does not replace an academic, career, transfer, or CPL advisor.</p></div>
+          <div id="current-student-results" hidden>
+            <h2 tabindex="-1">Your advising workspace is ready.</h2>
+            <div id="current-student-summary" class="summary"></div>
+            <div id="current-final-courses" class="confirmed-courses"></div>
+            <button id="open-next-semester-plan" class="large-tool-button" type="button">Prepare AI advisor next-semester plan</button>
+            <p class="advisor-note">The planner opens here without ending your chatbot session. Use “Return to chatbot” when you are finished.</p>
+          </div>
         </section>
 
         <div id="form-error" class="form-error" role="alert" aria-live="assertive"></div>
@@ -177,7 +227,7 @@
   <div id="planner-modal" class="planner-modal" hidden>
     <div class="planner-modal-backdrop" data-close-planner></div>
     <section class="planner-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="planner-modal-title">
-      <header><div><strong id="planner-modal-title">Review recognized completed courses</strong><small>AI-recognized selections are highlighted in purple. Review and change them before planning.</small></div><button id="close-planner-modal" type="button">Close</button></header>
+      <header><div><strong id="planner-modal-title">Review recognized completed courses</strong><small id="planner-modal-copy">Review and change selections before continuing.</small></div><button id="close-planner-modal" type="button">Return to chatbot</button></header>
       <iframe id="planner-modal-frame" title="Completed courses degree planner"></iframe>
     </section>
   </div>
