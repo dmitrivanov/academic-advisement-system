@@ -41,6 +41,7 @@ def test_current_student_results_route_to_full_advising_tools_and_report():
     for element_id in ("open-next-semester-plan", "open-major-change", "open-general-advising", "open-transfer-analysis", "prepare-current-summary"):
         assert f'id="{element_id}"' in html
     assert "/current-student-advisor?tool=" in js
+    assert "'/db-progress?mode=ai-plan&from=structured-chatbot'" in js
     assert "/transfer-analysis?mode=major-change" in js
     assert "transferDestinationIntentV1" in js and "transferDestinationIntentV1" in transfer
     assert "cunyBeyondReferralSummaryV1" in js

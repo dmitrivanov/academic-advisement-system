@@ -4575,6 +4575,7 @@ async function initializePage() {
   applyOnboardingState();
   await loadInstitutions();
   await loadPrograms();
+  if (previewParams.get("mode") === "ai-plan") setPlanningMode("ai");
 }
 
 async function initializeDraftPreview(draftId, concentrationIndex) {

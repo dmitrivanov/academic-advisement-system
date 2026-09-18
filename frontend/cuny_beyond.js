@@ -643,6 +643,12 @@
     window.location.href = `/current-student-advisor?tool=${encodeURIComponent(tool)}&from=structured-chatbot`;
   }
 
+  function openNextSemesterPlanner() {
+    saveCurrentReferralSummary('Next-semester / degree planning');
+    saveCurrentProgramContext();
+    window.location.href = '/db-progress?mode=ai-plan&from=structured-chatbot';
+  }
+
   function openTransferAnalysis() {
     const schoolCode = document.getElementById('transfer-school').value;
     const programCode = document.getElementById('transfer-major').value;
@@ -725,7 +731,7 @@
   document.getElementById('recognize-manual-courses').addEventListener('click', recognizeManualCourses);
   document.getElementById('open-completed-selector').addEventListener('click', () => openPlannerModal('coursework'));
   document.getElementById('transfer-school').addEventListener('change', populateTransferMajors);
-  document.getElementById('open-next-semester-plan').addEventListener('click', () => navigateToAdvisor('semester'));
+  document.getElementById('open-next-semester-plan').addEventListener('click', openNextSemesterPlanner);
   document.getElementById('open-general-advising').addEventListener('click', () => navigateToAdvisor('planner'));
   document.getElementById('open-major-change').addEventListener('click', openMajorChange);
   document.getElementById('open-transfer-analysis').addEventListener('click', openTransferAnalysis);
