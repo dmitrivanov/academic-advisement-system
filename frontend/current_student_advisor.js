@@ -3,13 +3,14 @@
   const unloaded=(()=>{try{return JSON.parse(sessionStorage.getItem('unloadedProgramContext')||'null')}catch(_){return null}})();
   const intake=(()=>{try{return JSON.parse(sessionStorage.getItem('narrativeAdvisingDraftV1')||'null')}catch(_){return null}})();
   const messages=document.getElementById('messages'),form=document.getElementById('advisor-form'),question=document.getElementById('advisor-question'),askButton=document.getElementById('ask-button');
+  const requestedTool=new URLSearchParams(window.location.search).get('tool');
   let program=null,activeAction=null;
   const esc=value=>String(value??'').replace(/[&<>'"]/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[char]));
   const ACTIONS={
     planner:{id:'planner',label:'Degree progress',mode:'Degree progress',url:'/db-progress?embedded=workspace',description:'Completed and remaining requirements'},
     semester:{id:'semester',label:'Next semester',mode:'Next-semester AI advisement',url:'/db-progress?embedded=workspace&mode=ai-plan',description:'AI-supported semester planning'},
     transfer:{id:'transfer',label:'Transfer',mode:'Transfer analysis',url:'/transfer-analysis?embedded=workspace',description:'Program and transfer comparison'},
-    major:{id:'major',label:'Major change',mode:'Major-change comparison',url:'/program-selector?embedded=workspace',description:'Explore another curriculum'},
+    major:{id:'major',label:'Major change',mode:'Major-change comparison',url:'/transfer-analysis?embedded=workspace&mode=major-change',description:'Compare completed courses with another major'},
     tree:{id:'tree',label:'Degree tree',mode:'Prerequisite degree-tree',url:'#degree-tree',description:'Prerequisites and dependencies'}
   };
   function addMessage(role,text){const div=document.createElement('div');div.className=`message ${role}`;div.textContent=text;messages.appendChild(div);div.scrollIntoView({behavior:'smooth',block:'end'})}
@@ -34,7 +35,7 @@
     if(selected?.programCode){const response=await fetch('/api/db/programs?selector_only=true'),programs=await response.json();program=programs.find(item=>item.institution_code===selected.institutionCode&&item.code===selected.programCode)}
     if(!program)program={code:'NOT_LOADED',name:unloaded?.current_major||intake?.current_major||'Program not loaded',degree_type:'',catalog_year:'',department:'Curriculum not loaded',institution:unloaded?.institution||intake?.institution||'Other institution',institution_code:''};else selectProgramContext();
     document.getElementById('program-heading').textContent=`${program.name} · ${program.catalog_year||'Current catalog'}`;document.getElementById('program-name').textContent=`${program.name} (${program.degree_type||'Degree'})`;document.getElementById('program-meta').textContent=`${program.department} · ${program.catalog_year||'Current catalog'}`;
-    const available=program.code==='NOT_LOADED'?[ACTIONS.transfer,ACTIONS.major]:Object.values(ACTIONS);renderTabs(available);openTool(available[0].id);
+    const available=program.code==='NOT_LOADED'?[ACTIONS.transfer,ACTIONS.major]:Object.values(ACTIONS);renderTabs(available);openTool(available.some(action=>action.id===requestedTool)?requestedTool:available[0].id);
     if(program.code!=='NOT_LOADED')try{const response=await fetch(`/api/db/programs/${encodeURIComponent(program.code)}/degree-map-source`);if(response.ok){const map=await response.json(),url=map.source_pdf||map.source_pdfs?.[0]?.url;if(url)document.getElementById('degree-map-link').innerHTML=`<a class="degree-map" href="${esc(url)}" target="_blank" rel="noopener">Official PDF ↗</a>`}}catch(_){}
   }
   document.getElementById('all-tools').addEventListener('click',event=>{const button=event.target.closest('[data-action]');if(button)openTool(button.dataset.action)});

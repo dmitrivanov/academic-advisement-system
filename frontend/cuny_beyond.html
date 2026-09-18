@@ -211,8 +211,26 @@
             <h2 tabindex="-1">Your advising workspace is ready.</h2>
             <div id="current-student-summary" class="summary"></div>
             <div id="current-final-courses" class="confirmed-courses"></div>
-            <button id="open-next-semester-plan" class="large-tool-button" type="button">Prepare AI advisor next-semester plan</button>
-            <p class="advisor-note">The planner opens here without ending your chatbot session. Use “Return to chatbot” when you are finished.</p>
+            <h3 class="advising-goal-heading">What would you like to do next?</h3>
+            <div class="advising-goal-grid">
+              <button id="open-next-semester-plan" class="advising-goal-card primary" type="button"><strong>Prepare my next-semester / degree plan</strong><span>Open the full AI advising workspace with your major and completed courses loaded.</span></button>
+              <button id="open-major-change" class="advising-goal-card" type="button"><strong>Explore changing my major</strong><span>Compare your completed courses with another major.</span></button>
+              <button id="open-general-advising" class="advising-goal-card" type="button"><strong>Ask a general advising question</strong><span>Use the full AI advisor and its connected planning tools.</span></button>
+            </div>
+            <section class="transfer-intent-card" aria-labelledby="transfer-intent-title">
+              <h3 id="transfer-intent-title">Are you considering transferring?</h3>
+              <p>Choose a destination college and major first. The Transfer Analysis tool will open with your completed courses and destination loaded.</p>
+              <div class="transfer-intent-fields">
+                <label>Destination school<select id="transfer-school" class="career-input"><option value="">Choose a school</option></select></label>
+                <label>Destination major<select id="transfer-major" class="career-input" disabled><option value="">Choose a major</option></select></label>
+              </div>
+              <button id="open-transfer-analysis" class="large-tool-button" type="button">Open Transfer Analysis</button>
+              <p id="transfer-intent-status" class="field-help" role="status" aria-live="polite"></p>
+            </section>
+            <section class="session-summary-action">
+              <div><h3>Finish this advising session</h3><p>Create a printable PDF-ready report or prepare it for an advisor. The next page asks for email and the last four digits of your CUNY ID only when you choose to send it.</p></div>
+              <button id="prepare-current-summary" type="button">Prepare printable advising report</button>
+            </section>
           </div>
         </section>
 

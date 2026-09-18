@@ -420,6 +420,7 @@
       <div class="summary-row"><strong>Semester</strong>${escapeHtml(state.semesterStanding === '5+' ? 'Fifth or later' : `Semester ${state.semesterStanding}`)}</div>
       <div class="summary-row"><strong>Completed-course context</strong>${courses.length ? `${courses.length} recognized course${courses.length === 1 ? '' : 's'}` : (isFirstSemester() ? 'First-semester / prior-learning review' : 'No courses confirmed')}</div>`;
     renderConfirmedCourses('current-final-courses');
+    populateTransferSchools();
   }
 
   function showStep(focusHeading) {
@@ -594,8 +595,74 @@
   function persistCompletedCourses() {
     const selected = state.transcriptCourses.filter(item => item.include !== false && item.code);
     sessionStorage.setItem('cunyBeyondImportedCoursesV1', JSON.stringify(selected));
-    sessionStorage.setItem('transferSnapshot', JSON.stringify({ completed_courses: selected.map(item => item.code), completed_course_details: selected, source: 'cuny-beyond-current-student', timestamp: new Date().toISOString() }));
+    sessionStorage.setItem('transferSnapshot', JSON.stringify({
+      source_program: {
+        code: state.currentProgram?.code || '', name: state.currentProgram?.name || state.currentMajor,
+        institution: state.currentProgram?.institution || '', institution_code: state.currentProgram?.institution_code || '',
+        catalog_year: state.currentProgram?.catalog_year || ''
+      },
+      completed_courses: selected.map(item => item.code), completed_course_details: selected,
+      source: 'cuny-beyond-current-student', timestamp: new Date().toISOString()
+    }));
     saveDraft();
+  }
+
+  function saveCurrentReferralSummary(goal, extra = {}) {
+    persistCompletedCourses();
+    const completed = state.transcriptCourses.filter(item => item.include !== false && item.code);
+    sessionStorage.setItem('cunyBeyondReferralSummaryV1', JSON.stringify({
+      pathway: PROFILE_LABELS[state.profile] || 'Current student',
+      current_program: state.currentProgram ? { code: state.currentProgram.code, name: state.currentProgram.name, institution: state.currentProgram.institution, catalog_year: state.currentProgram.catalog_year } : { name: state.currentMajor },
+      semester: state.semesterStanding,
+      advising_goal: goal,
+      completed_courses: completed,
+      transfer_destination: extra.transfer_destination || null,
+      recommended_programs: [], cpl_possibilities: [], transfer_options: extra.transfer_destination ? [{ program: state.currentMajor, next_step: `Analyze transfer to ${extra.transfer_destination.school_name} — ${extra.transfer_destination.program_name}` }] : [],
+      sources: [{ title: 'BMCC Academic Advisement', url: 'https://www.bmcc.cuny.edu/academics/advisement/advisement/' }],
+      expires_at: Date.now() + ttlHours * 60 * 60 * 1000,
+    }));
+  }
+
+  function populateTransferSchools() {
+    const school = document.getElementById('transfer-school');
+    if (!school || school.options.length > 1) return;
+    const institutions = [...new Map(availablePrograms.filter(item => item.institution_code !== state.currentProgram?.institution_code).map(item => [item.institution_code, item.institution])).entries()];
+    school.insertAdjacentHTML('beforeend', institutions.map(([code, name]) => `<option value="${escapeHtml(code)}">${escapeHtml(name)}</option>`).join(''));
+  }
+
+  function populateTransferMajors() {
+    const institutionCode = document.getElementById('transfer-school').value;
+    const major = document.getElementById('transfer-major');
+    const programs = availablePrograms.filter(item => item.institution_code === institutionCode);
+    major.innerHTML = '<option value="">Choose a major</option>' + programs.map(item => `<option value="${escapeHtml(item.code)}">${escapeHtml(item.name)}${item.degree_type ? ` (${escapeHtml(item.degree_type)})` : ''}</option>`).join('');
+    major.disabled = !programs.length;
+  }
+
+  function navigateToAdvisor(tool) {
+    saveCurrentReferralSummary(tool === 'semester' ? 'Next-semester / degree planning' : 'General advisement question');
+    window.location.href = `/current-student-advisor?tool=${encodeURIComponent(tool)}&from=structured-chatbot`;
+  }
+
+  function openTransferAnalysis() {
+    const schoolCode = document.getElementById('transfer-school').value;
+    const programCode = document.getElementById('transfer-major').value;
+    const status = document.getElementById('transfer-intent-status');
+    const program = availablePrograms.find(item => item.code === programCode && item.institution_code === schoolCode);
+    if (!program) { status.textContent = 'Choose both a destination school and destination major.'; return; }
+    const intent = { institution_code: schoolCode, school_name: program.institution, program_code: program.code, program_name: program.name };
+    sessionStorage.setItem('transferDestinationIntentV1', JSON.stringify(intent));
+    saveCurrentReferralSummary('Transfer analysis', { transfer_destination: intent });
+    window.location.href = '/transfer-analysis?from=structured-chatbot';
+  }
+
+  function openMajorChange() {
+    saveCurrentReferralSummary('Major change exploration');
+    window.location.href = '/transfer-analysis?mode=major-change&from=structured-chatbot';
+  }
+
+  function prepareCurrentSummary() {
+    saveCurrentReferralSummary('Advising session summary');
+    window.location.href = '/cuny-beyond/referral?from=current-student';
   }
 
   function renderConfirmedCourses(targetId = 'confirmed-courses') {
@@ -657,7 +724,12 @@
   document.getElementById('current-analyze-transcript').addEventListener('click', analyzeCurrentTranscript);
   document.getElementById('recognize-manual-courses').addEventListener('click', recognizeManualCourses);
   document.getElementById('open-completed-selector').addEventListener('click', () => openPlannerModal('coursework'));
-  document.getElementById('open-next-semester-plan').addEventListener('click', () => openPlannerModal('next-semester'));
+  document.getElementById('transfer-school').addEventListener('change', populateTransferMajors);
+  document.getElementById('open-next-semester-plan').addEventListener('click', () => navigateToAdvisor('semester'));
+  document.getElementById('open-general-advising').addEventListener('click', () => navigateToAdvisor('planner'));
+  document.getElementById('open-major-change').addEventListener('click', openMajorChange);
+  document.getElementById('open-transfer-analysis').addEventListener('click', openTransferAnalysis);
+  document.getElementById('prepare-current-summary').addEventListener('click', prepareCurrentSummary);
   window.addEventListener('message', event => {
     if (event.origin !== window.location.origin || event.data?.type !== 'advising-completed-courses') return;
     modalSelectedCodes = Array.isArray(event.data.courses) ? event.data.courses : [];

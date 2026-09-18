@@ -511,10 +511,21 @@ def clean_referral_summary(raw):
     schedule = raw.get("schedule_checklist") or {}
     if not isinstance(schedule, dict):
         schedule = {}
+    current_program = raw.get("current_program") or {}
+    if not isinstance(current_program, dict):
+        current_program = {}
     return {
         "pathway": text_value(raw.get("pathway"), 100),
         "career_goal": text_value(raw.get("career_goal"), 240),
         "matched_career": text_value(raw.get("matched_career"), 120),
+        "current_program": {
+            "code": text_value(current_program.get("code"), 30),
+            "name": text_value(current_program.get("name"), 160),
+            "institution": text_value(current_program.get("institution"), 160),
+            "catalog_year": text_value(current_program.get("catalog_year"), 30),
+        },
+        "semester": text_value(raw.get("semester"), 30),
+        "advising_goal": text_value(raw.get("advising_goal"), 160),
         "skills": [text_value(item, 100) for item in (raw.get("skills") or [])[:5]],
         "recommended_programs": [
             {"code": text_value(item.get("code"), 30), "name": text_value(item.get("name"), 160), "explanation": text_value(item.get("explanation"), 700)}
@@ -535,12 +546,17 @@ def referral_email_body(name, last_four, summary):
     cpl = "; ".join(item["name"] for item in summary["cpl_possibilities"]) or "None recorded"
     completed = ", ".join(summary["completed_courses"]) or "None supplied"
     schedule = "\n".join(f"- {item}" for item in summary["schedule_checklist"]) or "- No schedule checklist saved"
+    current = summary.get("current_program") or {}
+    current_line = f"{current.get('name')} ({current.get('code')}) at {current.get('institution')}" if current.get("name") else "Not provided"
     return f"""Pre-advisement request from {name}
 
 Student-entered last four ID digits: {last_four or 'Not provided'}
 Pathway: {summary['pathway'] or 'Not provided'}
 Career goal: {summary['career_goal'] or 'Not provided'}
 Matched career: {summary['matched_career'] or 'Not available'}
+Current program: {current_line}
+Current semester: {summary.get('semester') or 'Not provided'}
+Advising goal: {summary.get('advising_goal') or 'Not provided'}
 Skills: {', '.join(summary['skills']) or 'None supplied'}
 Recommended BMCC programs: {programs}
 Possible CPL topics requiring evaluation: {cpl}

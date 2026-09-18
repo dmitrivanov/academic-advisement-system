@@ -313,6 +313,10 @@ let LAST_ANALYSIS = null;
 let APPROVED_EQUIVALENCIES = [];
 let MAJOR_CHANGE_SHORTLIST = [];
 const ANALYSIS_MODE = new URLSearchParams(window.location.search).get("mode") || "transfer";
+const TRANSFER_DESTINATION_INTENT = (() => {
+  try { return JSON.parse(sessionStorage.getItem("transferDestinationIntentV1") || "null"); }
+  catch (_) { return null; }
+})();
 
 function configureAnalysisMode() {
   const isMajorChange = ANALYSIS_MODE === "major-change";
@@ -537,7 +541,9 @@ function populateInstitutionSelect() {
   });
 
   if (firstAvailableValue) {
-    select.value = firstAvailableValue;
+    const requestedInstitution = ANALYSIS_MODE === "transfer" ? TRANSFER_DESTINATION_INTENT?.institution_code : null;
+    select.value = Array.from(select.options).some(option => option.value === requestedInstitution && !option.disabled)
+      ? requestedInstitution : firstAvailableValue;
   } else {
     document.getElementById("targetNote").textContent = ANALYSIS_MODE === "major-change"
       ? "No other programs with curriculum data are available at this campus yet."
@@ -612,7 +618,10 @@ async function populateProgramSelect() {
 
   note.textContent = "";
   programSelect.disabled = false;
-  programSelect.value = firstAvailableProgramCode;
+  const requestedProgram = ANALYSIS_MODE === "transfer" && TRANSFER_DESTINATION_INTENT?.institution_code === selectedInstitutionCode
+    ? TRANSFER_DESTINATION_INTENT.program_code : null;
+  programSelect.value = Array.from(programSelect.options).some(option => option.value === requestedProgram && !option.disabled)
+    ? requestedProgram : firstAvailableProgramCode;
   if (ANALYSIS_MODE === "major-change" && MAJOR_CHANGE_SHORTLIST.includes(firstAvailableProgramCode)) {
     renderMajorChangeContext();
   }
