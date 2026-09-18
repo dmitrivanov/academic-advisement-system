@@ -1551,6 +1551,14 @@ body { background: #f5f5f7; color: #1d1d1f; }
   .planner-actions button { width: 100%; }
 }
 
+.chatbot-return-bar { position: sticky; top: 8px; z-index: 1200; display: flex; align-items: center; justify-content: space-between; gap: 18px; margin-bottom: 14px; padding: 14px 18px; border: 2px solid #70c7a3; border-radius: 16px; background: #effbf6; box-shadow: 0 10px 30px rgba(21, 91, 66, .14); }
+.chatbot-return-bar[hidden] { display: none; }
+.chatbot-return-bar div { display: grid; gap: 3px; }
+.chatbot-return-bar strong { color: #155c45; }
+.chatbot-return-bar span { color: #4d665d; font-size: 13px; }
+.chatbot-return-bar button { flex: 0 0 auto; border: 0; border-radius: 11px; padding: 11px 15px; color: #fff; background: #13795b; font-weight: 850; cursor: pointer; }
+@media(max-width:700px){.chatbot-return-bar{position:static;align-items:stretch;flex-direction:column}.chatbot-return-bar button{width:100%}}
+
 </style>
 <link rel="stylesheet" href="/frontend/app_shell.css">
 <link rel="stylesheet" href="/frontend/curriculum_graph.css?v=5">
@@ -1560,6 +1568,10 @@ body { background: #f5f5f7; color: #1d1d1f; }
 <body>
 
 <div class="container">
+  <section id="chatbotReturnBar" class="chatbot-return-bar" hidden>
+    <div><strong>Next-semester planning from the chatbot</strong><span>Your completed courses and generated plan will be saved back to this advising session.</span></div>
+    <button type="button" onclick="returnToStructuredChatbot()">Save plan and return to chatbot</button>
+  </section>
   <div class="card program-card">
     <div class="program-overview">
       <div id="selectedProgramInfo" class="program-context">Loading selected program...</div>
@@ -4354,6 +4366,71 @@ function buildTransferSnapshot() {
   };
 }
 
+function savePlannerArtifactsForChatbot() {
+  if (!CURRENT_REQUIREMENTS?.program) return;
+  renderDegreePlan();
+  const snapshot = buildTransferSnapshot();
+  snapshot.source = "structured-chatbot-degree-plan";
+  sessionStorage.setItem("transferSnapshot", JSON.stringify(snapshot));
+
+  const imported = snapshot.completed_course_details.map(course => ({
+    code: course.code, title: course.title, credits: course.credits,
+    institution: CURRENT_REQUIREMENTS.program.institution || "",
+    include: true, recognition_source: "planner-confirmed"
+  }));
+  sessionStorage.setItem("cunyBeyondImportedCoursesV1", JSON.stringify(imported));
+
+  let chatbotDraft = {};
+  try { chatbotDraft = JSON.parse(localStorage.getItem("cunyBeyondAnonymousDraftV1") || "{}"); }
+  catch (_) { chatbotDraft = {}; }
+  chatbotDraft.transcriptCourses = imported;
+  chatbotDraft.currentMajor = CURRENT_REQUIREMENTS.program.name;
+  chatbotDraft.currentProgram = {
+    code: CURRENT_REQUIREMENTS.program.code,
+    name: CURRENT_REQUIREMENTS.program.name,
+    degree_type: CURRENT_REQUIREMENTS.program.degree_type,
+    catalog_year: CURRENT_REQUIREMENTS.program.catalog_year,
+    institution: CURRENT_REQUIREMENTS.program.institution,
+    institution_code: CURRENT_REQUIREMENTS.program.institution_code,
+    department: CURRENT_REQUIREMENTS.program.department,
+    has_curriculum: true
+  };
+  chatbotDraft.step = 5;
+  chatbotDraft.expiresAt = Date.now() + 24 * 60 * 60 * 1000;
+  localStorage.setItem("cunyBeyondAnonymousDraftV1", JSON.stringify(chatbotDraft));
+
+  let summary = {};
+  try { summary = JSON.parse(sessionStorage.getItem("cunyBeyondReferralSummaryV1") || "{}"); }
+  catch (_) { summary = {}; }
+  const recommendation = snapshot.recommendation || {};
+  summary.current_program = chatbotDraft.currentProgram;
+  summary.completed_courses = snapshot.completed_course_details;
+  summary.advising_goal = "Next-semester / degree planning";
+  summary.next_semester_recommendation = {
+    semester: recommendation.semester?.name || recommendation.semester || "Next semester",
+    total_credits: recommendation.total_credits || 0,
+    courses: recommendation.courses || []
+  };
+  summary.degree_plan = {
+    generated_at: new Date().toISOString(),
+    summary: document.getElementById("degreePlanSummary")?.innerText || "",
+    ai_explanation: document.getElementById("aiPlanExplanation")?.innerText || "",
+    workload_pattern: document.getElementById("workloadPattern")?.value || "balanced",
+    target_credit_load: Number(document.getElementById("targetCreditLoad")?.value || 15),
+    semesters: LAST_DEGREE_PLAN.map(semester => ({
+      name: semester.name, credits: semester.credits,
+      courses: semester.courses.map(course => ({ code: course.code, title: course.title, credits: course.credits, area: course.group_name }))
+    }))
+  };
+  summary.expires_at = Date.now() + 24 * 60 * 60 * 1000;
+  sessionStorage.setItem("cunyBeyondReferralSummaryV1", JSON.stringify(summary));
+}
+
+function returnToStructuredChatbot() {
+  savePlannerArtifactsForChatbot();
+  window.location.href = "/cuny-beyond?returned=degree-plan";
+}
+
 function startComparison(mode) {
   if (!CURRENT_REQUIREMENTS || !CURRENT_REQUIREMENTS.program || CURRENT_REQUIREMENTS.program.code === "N/A") {
     alert("Please select an available program before starting this analysis.");
@@ -4560,6 +4637,7 @@ document.addEventListener("keydown", function(event) {
 
 async function initializePage() {
   const previewParams = new URLSearchParams(window.location.search);
+  document.getElementById("chatbotReturnBar").hidden = previewParams.get("from") !== "structured-chatbot";
   const draftPreviewId = previewParams.get("draftPreview");
   if (draftPreviewId) {
     await initializeDraftPreview(draftPreviewId, Number(previewParams.get("concentration") || 0));

@@ -514,6 +514,12 @@ def clean_referral_summary(raw):
     current_program = raw.get("current_program") or {}
     if not isinstance(current_program, dict):
         current_program = {}
+    degree_plan = raw.get("degree_plan") or {}
+    if not isinstance(degree_plan, dict):
+        degree_plan = {}
+    next_semester = raw.get("next_semester_recommendation") or {}
+    if not isinstance(next_semester, dict):
+        next_semester = {}
     return {
         "pathway": text_value(raw.get("pathway"), 100),
         "career_goal": text_value(raw.get("career_goal"), 240),
@@ -526,6 +532,28 @@ def clean_referral_summary(raw):
         },
         "semester": text_value(raw.get("semester"), 30),
         "advising_goal": text_value(raw.get("advising_goal"), 160),
+        "next_semester_recommendation": {
+            "semester": text_value(next_semester.get("semester"), 80),
+            "total_credits": next_semester.get("total_credits"),
+            "courses": [
+                {"code": text_value(item.get("code"), 30), "title": text_value(item.get("title"), 180), "credits": item.get("credits")}
+                for item in (next_semester.get("courses") or [])[:12] if isinstance(item, dict)
+            ],
+        },
+        "degree_plan": {
+            "summary": text_value(degree_plan.get("summary"), 1200),
+            "ai_explanation": text_value(degree_plan.get("ai_explanation"), 3000),
+            "semesters": [
+                {
+                    "name": text_value(semester.get("name"), 80), "credits": semester.get("credits"),
+                    "courses": [
+                        {"code": text_value(item.get("code"), 30), "title": text_value(item.get("title"), 180), "credits": item.get("credits")}
+                        for item in (semester.get("courses") or [])[:12] if isinstance(item, dict)
+                    ],
+                }
+                for semester in (degree_plan.get("semesters") or [])[:12] if isinstance(semester, dict)
+            ],
+        },
         "skills": [text_value(item, 100) for item in (raw.get("skills") or [])[:5]],
         "recommended_programs": [
             {"code": text_value(item.get("code"), 30), "name": text_value(item.get("name"), 160), "explanation": text_value(item.get("explanation"), 700)}
@@ -546,6 +574,11 @@ def referral_email_body(name, last_four, summary):
     cpl = "; ".join(item["name"] for item in summary["cpl_possibilities"]) or "None recorded"
     completed = ", ".join(summary["completed_courses"]) or "None supplied"
     schedule = "\n".join(f"- {item}" for item in summary["schedule_checklist"]) or "- No schedule checklist saved"
+    planned_semesters = summary.get("degree_plan", {}).get("semesters", [])
+    plan_text = "\n".join(
+        f"- {semester['name']} ({semester.get('credits') or 0} credits): " + ", ".join(course["code"] for course in semester["courses"])
+        for semester in planned_semesters
+    ) or "- No AI degree plan saved"
     current = summary.get("current_program") or {}
     current_line = f"{current.get('name')} ({current.get('code')}) at {current.get('institution')}" if current.get("name") else "Not provided"
     return f"""Pre-advisement request from {name}
@@ -561,6 +594,9 @@ Skills: {', '.join(summary['skills']) or 'None supplied'}
 Recommended BMCC programs: {programs}
 Possible CPL topics requiring evaluation: {cpl}
 Completed coursework summary: {completed}
+
+Saved AI degree plan:
+{plan_text}
 
 Schedule-search checklist:
 {schedule}

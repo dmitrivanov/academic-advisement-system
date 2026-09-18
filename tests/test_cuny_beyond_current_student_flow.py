@@ -55,3 +55,19 @@ def test_current_student_referral_keeps_program_semester_goal_and_completed_cour
     assert '"semester"' in server and '"advising_goal"' in server
     assert "Current major" in referral and "Advising goal" in referral
     assert "Save / Print PDF" in referral and "Last 4 ID digits" in referral
+
+
+def test_degree_planner_can_save_artifacts_and_return_to_structured_chatbot():
+    planner = (ROOT / "frontend/db_progress_graph.html").read_text(encoding="utf-8")
+    chatbot = (ROOT / "frontend/cuny_beyond.js").read_text(encoding="utf-8")
+    referral = (ROOT / "frontend/cuny_beyond_referral.html").read_text(encoding="utf-8")
+    assert 'id="chatbotReturnBar"' in planner
+    assert "savePlannerArtifactsForChatbot" in planner
+    assert "returnToStructuredChatbot" in planner
+    assert 'window.location.href = "/cuny-beyond?returned=degree-plan"' in planner
+    assert "cunyBeyondAnonymousDraftV1" in planner
+    assert "cunyBeyondReferralSummaryV1" in planner
+    assert "LAST_DEGREE_PLAN" in planner and "ai_explanation" in planner
+    assert 'id="saved-degree-plan"' in (ROOT / "frontend/cuny_beyond.html").read_text(encoding="utf-8")
+    assert "AI degree plan saved to this advising session" in chatbot
+    assert "Saved AI degree plan" in referral

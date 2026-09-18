@@ -420,6 +420,14 @@
       <div class="summary-row"><strong>Semester</strong>${escapeHtml(state.semesterStanding === '5+' ? 'Fifth or later' : `Semester ${state.semesterStanding}`)}</div>
       <div class="summary-row"><strong>Completed-course context</strong>${courses.length ? `${courses.length} recognized course${courses.length === 1 ? '' : 's'}` : (isFirstSemester() ? 'First-semester / prior-learning review' : 'No courses confirmed')}</div>`;
     renderConfirmedCourses('current-final-courses');
+    const savedPlan = (() => { try { return JSON.parse(sessionStorage.getItem('cunyBeyondReferralSummaryV1') || '{}').degree_plan; } catch (_) { return null; } })();
+    const planNotice = document.getElementById('saved-degree-plan');
+    planNotice.hidden = !savedPlan;
+    if (savedPlan) {
+      const semesters = Array.isArray(savedPlan.semesters) ? savedPlan.semesters : [];
+      const credits = semesters.reduce((total, semester) => total + Number(semester.credits || 0), 0);
+      planNotice.innerHTML = `<strong>AI degree plan saved to this advising session</strong><p>${semesters.length} planned semester${semesters.length === 1 ? '' : 's'} · ${credits} planned credits. It will be included in the printable advisor report.</p>`;
+    }
     populateTransferSchools();
   }
 
