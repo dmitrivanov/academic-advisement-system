@@ -33,11 +33,23 @@
     document.getElementById('progress-label').textContent = text.length > 48 ? `${text.slice(0, 45)}…` : text;
   }
   function save() { sessionStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
-  function mergeFacts(facts) {
-    ['student_type','institution','current_major','goal_type','career_goal','has_college_courses','employment'].forEach(key => {
-      if (facts[key] !== null && facts[key] !== undefined && facts[key] !== '') state[key] = facts[key];
+  function mergeFacts(facts, stage) {
+    const stageFields = {
+      identity: ['student_type','institution','current_major','has_college_courses','employment'],
+      institution: ['institution'],
+      major: ['current_major'],
+      goal: ['goal_type'],
+      course_check: ['has_college_courses'],
+      career: ['career_goal'],
+      skills: ['skills']
+    };
+    (stageFields[stage] || []).forEach(key => {
+      if (key === 'skills') {
+        if (Array.isArray(facts.skills) && facts.skills.length) state.skills = facts.skills.slice(0, 5);
+      } else if (facts[key] !== null && facts[key] !== undefined && facts[key] !== '') {
+        state[key] = facts[key];
+      }
     });
-    if (Array.isArray(facts.skills) && facts.skills.length) state.skills = facts.skills.slice(0, 5);
     save();
   }
   async function interpret(message) {
@@ -272,14 +284,15 @@
       results.innerHTML = (data.recommendations || []).map(item => {
         const mapUrl = item.degree_map?.source_pdf || item.degree_map?.source_pdfs?.[0]?.url;
         return `<article class="recommendation-card"><h3>${esc(item.program_name)} (${esc(item.degree_type || 'Degree')})</h3><p>${esc(item.explanation)}</p><div class="recommendation-actions"><a href="/db-progress">Open interactive degree planner</a>${mapUrl ? `<a class="secondary" href="${safeUrl(mapUrl)}" target="_blank" rel="noopener">View degree-map PDF</a>`:''}<a class="secondary" href="${safeUrl(item.official_program_url)}" target="_blank" rel="noopener">Official program page</a></div></article>`;
-      }).join('') || `<p>Try a reviewed title such as Data Analyst, Registered Nurse, or Software Developer, or continue in the <a href="/cuny-beyond">full advising intake</a>.</p>`;
+      }).join('') || `<p>Try a reviewed title such as Journalist, Data Analyst, Registered Nurse, or Software Developer, or continue in the <a href="/advising-app_v1">structured advising intake</a>.</p>`;
     } catch (error) { status.textContent = error.message; }
     module.scrollIntoView({behavior:'smooth', block:'center'});
   }
 
   async function handleMessage(message) {
     addTurn('user', esc(message)); setSuggestions([]); send.disabled = true;
-    const facts = await interpret(message); mergeFacts(facts); send.disabled = false;
+    const messageStage = state.stage;
+    const facts = await interpret(message); mergeFacts(facts, messageStage); send.disabled = false;
     if (state.stage === 'identity') {
       if (!state.student_type) { ask('I did not want to guess. Are you currently at BMCC, at another CUNY/college, in high school, or returning as a working adult?', [{label:'Current BMCC student'},{label:'Another CUNY student'},{label:'High-school student'},{label:'Working adult'}]); return; }
       nextAfterIdentity();

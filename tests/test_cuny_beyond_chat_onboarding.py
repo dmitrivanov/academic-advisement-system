@@ -35,9 +35,11 @@ def test_authenticated_chatbot_is_branded_grouped_and_login_is_primary():
     assert 'FileResponse("frontend/login.html")' in root_route
     assert 'is_logged_in' in root_route
     chatbot_route = server.split('@app.get("/advising-chatbot")', 1)[1].split('@app.get(', 1)[0]
+    structured_route = server.split('@app.get("/advising-app_v1")', 1)[1].split('@app.get(', 1)[0]
     legacy_route = server.split('@app.get("/cuny-beyond")', 1)[1].split('@app.get(', 1)[0]
     assert 'if not is_logged_in(request)' in chatbot_route
-    assert 'if not is_logged_in(request)' in legacy_route
+    assert 'if not is_logged_in(request)' in structured_route
+    assert 'target = "/advising-app_v1"' in legacy_route
 
 
 def test_chat_preserves_free_text_browse_back_restart_and_accessibility():

@@ -35,6 +35,18 @@ def test_reproducible_aliases_resolve_to_reviewed_careers():
         assert resolve_career(phrase, careers)["name"] == name
 
 
+def test_journalism_resolves_to_journalist_and_journalism_concentration():
+    careers = career_records()
+    mappings = rows("cuny_beyond_program_careers.csv")
+    assert resolve_career("Journalism", careers)["name"] == "Journalist"
+    assert any(
+        row["career_slug"] == "journalist"
+        and row["program_code"] == "WAL_JRN_AA"
+        and row["active"] == "true"
+        for row in mappings
+    )
+
+
 def test_new_mappings_disclose_education_or_credential_limits_where_needed():
     mappings = rows("cuny_beyond_program_careers.csv")
     explanations = lambda slug: " ".join(row["explanation"] for row in mappings if row["career_slug"] == slug)

@@ -676,7 +676,7 @@
 
   function prepareCurrentSummary() {
     saveCurrentReferralSummary('Advising session summary');
-    window.location.href = '/cuny-beyond/referral?from=current-student';
+    window.location.href = '/advising-app_v1/referral?from=current-student';
   }
 
   function renderConfirmedCourses(targetId = 'confirmed-courses') {

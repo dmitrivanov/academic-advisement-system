@@ -265,7 +265,11 @@ Schema: {{"student_type":null|"current_bmcc"|"current_cuny"|"other_college"|"deg
 "institution":null|string, "current_major":null|string, "goal_type":null|"transfer"|"change_major"|"next_semester"|"general"|"career_exploration",
 "career_goal":null|string, "has_college_courses":null|boolean, "employment":null|"yes"|"no"|"prefer_not",
 "skills":[up to five short skills]}}.
-Use null when the student did not say it. Do not infer official credit, admission, eligibility, or requirements."""
+Use null when the student did not say it. Extract only facts explicitly stated in the current
+message; do not copy known context into the output. Never infer or replace a career goal from
+a skills answer. At the skills stage, career_goal must be null unless the student explicitly
+states that they are changing their career goal. Do not infer official credit, admission,
+eligibility, or requirements."""
     try:
         client = make_gemini_client()
         response = client.models.generate_content(
@@ -464,13 +468,21 @@ def download_windows_launcher(_admin=Depends(require_admin)):
     )
 
 
-@app.get("/cuny-beyond")
-def serve_cuny_beyond(request: Request):
+@app.get("/advising-app_v1")
+def serve_advising_app_v1(request: Request):
     if not is_logged_in(request):
         return RedirectResponse("/", status_code=303)
     if not is_cuny_beyond_enabled():
         raise HTTPException(status_code=404, detail="CUNY Beyond is not enabled")
     return FileResponse("frontend/cuny_beyond.html")
+
+
+@app.get("/cuny-beyond")
+def redirect_legacy_cuny_beyond(request: Request):
+    target = "/advising-app_v1"
+    if request.url.query:
+        target = f"{target}?{request.url.query}"
+    return RedirectResponse(target, status_code=307)
 
 
 @app.get("/advising-chatbot")
@@ -489,11 +501,19 @@ def serve_current_student_advisor():
     return FileResponse("frontend/current_student_advisor.html")
 
 
-@app.get("/cuny-beyond/referral")
-def serve_cuny_beyond_referral():
+@app.get("/advising-app_v1/referral")
+def serve_advising_app_v1_referral():
     if not is_cuny_beyond_enabled():
         raise HTTPException(status_code=404, detail="CUNY Beyond is not enabled")
     return FileResponse("frontend/cuny_beyond_referral.html")
+
+
+@app.get("/cuny-beyond/referral")
+def redirect_legacy_cuny_beyond_referral(request: Request):
+    target = "/advising-app_v1/referral"
+    if request.url.query:
+        target = f"{target}?{request.url.query}"
+    return RedirectResponse(target, status_code=307)
 
 
 @app.get("/api/cuny-beyond/config")
