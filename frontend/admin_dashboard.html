@@ -310,7 +310,7 @@ tr:hover {
     </div>
 
     <div class="nav">
-      <a href="/">Chatbot</a>
+      <a href="/advising-app_v1">Chatbot</a>
       <a href="/db-progress">DB Graph</a>
       <a href="/logout">Logout</a>
     </div>
@@ -322,6 +322,20 @@ tr:hover {
   </div>
 
   <div class="grid">
+
+    <div class="admin-card" onclick="window.location.href='/advising-app_v1'">
+      <span class="badge">Primary experience</span>
+      <h3>Advising App v1</h3>
+      <p>Open the currently active structured advising chatbot used after login.</p>
+      <span class="button">Open Primary Chatbot</span>
+    </div>
+
+    <div class="admin-card">
+      <span class="badge">Archived versions</span>
+      <h3>Alternate Chatbot Prototypes</h3>
+      <p>Open earlier or experimental chatbot flows for administrator review. These versions are not the current post-login experience.</p>
+      <a class="button" href="/advising-chatbot">Open Narrative Chatbot</a>
+    </div>
 
     <div class="admin-card" onclick="window.location.href='/admin/cuny-beyond-governance'">
       <span class="badge">CUNY Beyond</span><h3>Career & Evidence Governance</h3>

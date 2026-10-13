@@ -6,20 +6,29 @@ from narrative_intake import deterministic_narrative_intake
 ROOT = Path(__file__).resolve().parents[1]
 
 
-def test_login_is_primary_and_both_chatbot_versions_are_preserved_behind_it():
+def test_login_opens_structured_primary_and_both_chatbot_versions_are_preserved():
     server = (ROOT / "faq_fallback_api.py").read_text(encoding="utf-8")
     root_route = server.split('@app.get("/")', 1)[1].split('@app.get("/progress")', 1)[0]
     structured_route = server.split('@app.get("/advising-app_v1")', 1)[1].split('@app.get("/cuny-beyond")', 1)[0]
     legacy_route = server.split('@app.get("/cuny-beyond")', 1)[1].split('@app.get("/advising-chatbot")', 1)[0]
     primary_route = server.split('@app.get("/advising-chatbot")', 1)[1].split('@app.get("/current-student-advisor")', 1)[0]
     assert 'FileResponse("frontend/login.html")' in root_route
-    assert 'RedirectResponse("/advising-chatbot"' in root_route
+    assert 'RedirectResponse("/advising-app_v1"' in root_route
     assert 'FileResponse("frontend/cuny_beyond.html")' in structured_route
     assert 'RedirectResponse(target, status_code=307)' in legacy_route
     assert 'target = "/advising-app_v1"' in legacy_route
     assert 'FileResponse("frontend/advising_chatbot.html")' in primary_route
     assert 'if not is_logged_in(request)' in structured_route
     assert 'if not is_logged_in(request)' in primary_route
+
+
+def test_admin_dashboard_exposes_primary_and_archived_chatbot_versions():
+    dashboard = (ROOT / "frontend/admin_dashboard.html").read_text(encoding="utf-8")
+    shell = (ROOT / "frontend/app_shell.js").read_text(encoding="utf-8")
+    assert 'href="/advising-app_v1">Chatbot</a>' in dashboard
+    assert "Primary experience" in dashboard and "Archived versions" in dashboard
+    assert 'href="/advising-chatbot"' in dashboard
+    assert 'class="aas-brand" href="/advising-app_v1"' in shell
 
 
 def test_narrative_page_uses_one_composer_and_optional_quick_replies():

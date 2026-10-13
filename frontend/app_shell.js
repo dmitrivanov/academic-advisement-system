@@ -22,7 +22,7 @@
     header.className = 'aas-header';
     header.innerHTML = `
       <div class="aas-inner">
-        <a class="aas-brand" href="/" aria-label="Academic Advisement home">
+        <a class="aas-brand" href="/advising-app_v1" aria-label="Academic Advisement home">
           <span class="aas-mark">AA</span>
           <span class="aas-brand-copy"><strong>Academic Advisement</strong><small>Plan with a complete curriculum view</small></span>
         </a>

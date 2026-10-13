@@ -690,7 +690,7 @@ def login_submit(request: Request, username: str = Form(...), password: str = Fo
     if account:
         request.session["logged_in"] = True
         request.session.update(account)
-        return RedirectResponse("/advising-chatbot", status_code=303)
+        return RedirectResponse("/advising-app_v1", status_code=303)
 
     return RedirectResponse("/?error=1", status_code=303)
 
@@ -716,7 +716,7 @@ def session_info(request: Request):
 def serve_home(request: Request):
     """Temporarily use login as the entry point and keep chatbots authenticated."""
     if is_logged_in(request):
-        return RedirectResponse("/advising-chatbot", status_code=303)
+        return RedirectResponse("/advising-app_v1", status_code=303)
     return FileResponse("frontend/login.html")
 
 
