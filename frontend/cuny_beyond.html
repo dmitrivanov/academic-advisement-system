@@ -178,21 +178,21 @@
         </section>
 
         <section class="step" data-step="5" hidden>
-          <div id="prospective-results"><h2 tabindex="-1">Your starting profile is ready.</h2>
-          <div id="summary" class="summary"></div>
-          <div class="next-stage">
-            <strong>Reviewed matching is available</strong>
-            <p>See up to three explainable BMCC starting points. Transfer and prior-learning guidance will be added in later stages.</p>
-          </div>
-          <button id="match-button" class="match-button" type="button">Find my BMCC program matches</button>
+          <div id="prospective-results"><h2 tabindex="-1">Your BMCC program matches</h2>
+          <p class="step-copy">Your answers and previous-learning information were used to prepare these reviewed starting points.</p>
+          <button id="match-button" class="match-button secondary-match" type="button">Refresh my BMCC program matches</button>
           <div id="match-status" class="match-status" role="status" aria-live="polite"></div>
           <div id="recommendation-results" class="recommendation-results" aria-live="polite"></div>
+          <details class="student-profile-fold">
+            <summary>Review my student profile and prior-learning information</summary>
+            <div id="summary" class="summary"></div>
           <section id="cpl-results-section" class="cpl-results-section" aria-labelledby="cpl-results-title" hidden>
             <h3 id="cpl-results-title">Prior-learning preparation</h3>
             <div id="cpl-disclaimer" class="cpl-disclaimer"></div>
             <div id="cpl-results" class="cpl-results"></div>
             <div id="cpl-checklist" class="cpl-checklist"></div>
           </section>
+          </details>
           <section class="transcript-section" aria-labelledby="transcript-title">
             <h3 id="transcript-title">Import previous coursework</h3>
             <p>Upload a PDF, JPG, or PNG transcript or score report. AI extracts a draft table for your review; nothing becomes official credit.</p>
@@ -202,9 +202,9 @@
             <div id="transcript-review"></div>
           </section>
           <div id="referral-action" class="next-stage" hidden>
-            <strong>Ready to talk with an advisor?</strong>
-            <p>Create a concise pre-advisement package, save it as PDF, or prepare a consented referral.</p>
-            <a class="button-link" href="/advising-app_v1/referral">Prepare advising summary</a>
+            <strong>Your advising summary is ready</strong>
+            <p>Open and review it without losing this chat. From the report you can save a PDF, download it, ask the AI advisor a question, or prepare a consented referral to an advisor.</p>
+            <div class="report-actions"><button id="open-ready-report" type="button">Open ready-to-view summary</button><button id="ask-about-report" class="secondary" type="button">Ask a question about this report</button></div>
           </div>
           <p class="advisor-note">This prototype supports exploration; it does not replace an academic, career, transfer, or CPL advisor.</p></div>
           <div id="current-student-results" hidden>

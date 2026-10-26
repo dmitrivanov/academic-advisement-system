@@ -200,7 +200,8 @@
     const result = latestRecommendations[index];
     if (!result) return;
     saveProgramContext(result);
-    window.location.href = '/db-progress';
+    saveDraft();
+    window.location.href = '/db-progress?from=structured-chatbot';
   }
 
   function saveProgramContext(result) {
@@ -362,6 +363,17 @@
     } finally { button.disabled = false; }
   }
 
+  function openReportModal() {
+    plannerMode = 'report';
+    const modal = document.getElementById('planner-modal');
+    document.getElementById('planner-modal-title').textContent = 'Your pre-advisement summary';
+    document.getElementById('planner-modal-copy').textContent = 'Review, save as PDF, download, or prepare it for an advisor. Return here when finished.';
+    document.getElementById('planner-modal-frame').src = `/advising-app_v1/referral?embedded=1&v=${Date.now()}`;
+    modal.hidden = false;
+    document.body.style.overflow = 'hidden';
+    document.getElementById('close-planner-modal').focus();
+  }
+
   async function interpretFreeAnswer(step, answer, allowedValues) {
     if (!answer || !document.getElementById('ai-assisted').checked) return [];
     const response = await fetch('/api/cuny-beyond/interpret', {
@@ -460,7 +472,7 @@
     }
   }
 
-  nextButton.addEventListener('click', async () => {
+  async function submitCurrentStep() {
     const error = validateStep();
     if (error) { errorBox.textContent = error; return; }
     nextButton.disabled = true;
@@ -468,10 +480,20 @@
     try { await applyFreeAnswerForStep(); }
     catch (err) { errorBox.textContent = `${err.message}. Choose a quick tag or turn off AI assist to continue.`; nextButton.disabled = false; return; }
     if (state.step === 1 && !isCurrentStudent()) { captureState(); await refreshContextualSkills(); }
+    const submittedPriorLearning = state.step === 4 && !isCurrentStudent();
     state.step = nextStepFrom(state.step);
     saveDraft();
     showStep(true);
+    if (submittedPriorLearning) await requestRecommendations();
     nextButton.disabled = false;
+  }
+  nextButton.addEventListener('click', submitCurrentStep);
+  form.addEventListener('keydown', event => {
+    if (event.key !== 'Enter' || event.isComposing || event.shiftKey) return;
+    const target = event.target;
+    if (target.closest('button, a, summary') || target.id === 'manual-course-entry' || state.step === steps.length - 1) return;
+    event.preventDefault();
+    if (!nextButton.disabled && !nextButton.hidden) submitCurrentStep();
   });
   backButton.addEventListener('click', () => { captureState(); state.step = previousStepFrom(state.step); saveDraft(); showStep(true); });
   document.getElementById('restart-button').addEventListener('click', () => {
@@ -496,6 +518,12 @@
     document.getElementById('ap-details').hidden = !form.querySelector('input[name="cpl"][value="standardized-exams"]')?.checked;
   });
   document.getElementById('match-button').addEventListener('click', requestRecommendations);
+  document.getElementById('open-ready-report').addEventListener('click', openReportModal);
+  document.getElementById('ask-about-report').addEventListener('click', () => {
+    saveDraft();
+    if (latestRecommendations[0]) saveProgramContext(latestRecommendations[0]);
+    window.location.href = '/current-student-advisor?tool=summary&from=structured-chatbot';
+  });
   document.getElementById('recommendation-results').addEventListener('click', event => {
     const button = event.target.closest('[data-open-program]');
     if (button) openDegreePlanner(Number(button.dataset.openProgram));
@@ -840,6 +868,7 @@
     loadDraft(); restoreInputs();
     if (state.currentProgram) await selectCurrentProgram(state.currentProgram.code);
     renderConfirmedCourses(); showStep(false);
+    if (state.step === steps.length - 1 && !isCurrentStudent()) await requestRecommendations();
   }
   initialize();
 })();

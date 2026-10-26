@@ -2,11 +2,13 @@
   const selected=(()=>{try{return JSON.parse(sessionStorage.getItem('selectedProgramContext')||'null')}catch(_){return null}})();
   const unloaded=(()=>{try{return JSON.parse(sessionStorage.getItem('unloadedProgramContext')||'null')}catch(_){return null}})();
   const intake=(()=>{try{return JSON.parse(sessionStorage.getItem('narrativeAdvisingDraftV1')||'null')}catch(_){return null}})();
+  const advisingSummary=(()=>{try{return JSON.parse(sessionStorage.getItem('cunyBeyondReferralSummaryV1')||'null')}catch(_){return null}})();
   const messages=document.getElementById('messages'),form=document.getElementById('advisor-form'),question=document.getElementById('advisor-question'),askButton=document.getElementById('ask-button');
   const requestedTool=new URLSearchParams(window.location.search).get('tool');
   let program=null,activeAction=null;
   const esc=value=>String(value??'').replace(/[&<>'"]/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[char]));
   const ACTIONS={
+    summary:{id:'summary',label:'Advising summary',mode:'Advising-summary review',url:'/advising-app_v1/referral?embedded=1',description:'Review the saved profile, matches, prior learning, and sources'},
     planner:{id:'planner',label:'Degree progress',mode:'Degree progress',url:'/db-progress?embedded=workspace',description:'Completed and remaining requirements'},
     semester:{id:'semester',label:'Next semester',mode:'Next-semester AI advisement',url:'/db-progress?embedded=workspace&mode=ai-plan',description:'AI-supported semester planning'},
     transfer:{id:'transfer',label:'Transfer',mode:'Transfer analysis',url:'/transfer-analysis?embedded=workspace',description:'Program and transfer comparison'},
@@ -44,7 +46,7 @@
   document.getElementById('question-suggestions').addEventListener('click',event=>{const button=event.target.closest('button');if(!button)return;question.value=button.textContent;question.focus()});
   form.addEventListener('submit',async event=>{
     event.preventDefault();const text=question.value.trim();if(!text||!program)return;addMessage('user',text);question.value='';askButton.disabled=true;askButton.textContent='Thinking…';
-    try{const response=await fetch('/api/current-student-advisor/ask',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({user_question:text,program,active_tool:{...activeAction,completed_courses:completedCourseCodes()},conversation_summary:intake?JSON.stringify({institution:intake.institution,current_major:intake.current_major,goal_type:intake.goal_type,completed_courses:intake.transcript_courses}):''})}),data=await response.json();if(!response.ok)throw new Error(data.detail||'The AI advisor is unavailable.');addMessage('assistant',data.answer||'No answer was returned.');const actions=(data.recommended_actions||[]).filter(action=>program.code!=='NOT_LOADED'||['transfer','major'].includes(action.id));recommendActions(actions)}catch(error){addMessage('error',error.message)}finally{askButton.disabled=false;askButton.textContent='Ask';question.focus()}
+    try{const response=await fetch('/api/current-student-advisor/ask',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({user_question:text,program,active_tool:{...activeAction,completed_courses:completedCourseCodes()},conversation_summary:JSON.stringify({intake:intake?{institution:intake.institution,current_major:intake.current_major,goal_type:intake.goal_type,completed_courses:intake.transcript_courses}:null,advising_summary:advisingSummary})})}),data=await response.json();if(!response.ok)throw new Error(data.detail||'The AI advisor is unavailable.');addMessage('assistant',data.answer||'No answer was returned.');const actions=(data.recommended_actions||[]).filter(action=>program.code!=='NOT_LOADED'||['transfer','major'].includes(action.id));recommendActions(actions)}catch(error){addMessage('error',error.message)}finally{askButton.disabled=false;askButton.textContent='Ask';question.focus()}
   });
   init().catch(()=>location.replace('/'));
 })();

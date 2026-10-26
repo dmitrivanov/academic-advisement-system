@@ -226,6 +226,11 @@ button:hover, .button-link:hover { background: #1d4ed8; }
 
 <body>
 <div class="container">
+  <div id="chatbotReturn" class="card" style="display:none;border:2px solid #70c7a3;background:#effbf6">
+    <strong>Transfer exploration from the chatbot</strong>
+    <p>Your transfer selections remain saved in this browser session.</p>
+    <a class="button-link" href="/advising-app_v1?returned=transfer">Return to chatbot</a>
+  </div>
   <div class="topbar">
     <div>
       <h1 id="pageTitle">Program Comparison</h1>
@@ -313,6 +318,7 @@ let LAST_ANALYSIS = null;
 let APPROVED_EQUIVALENCIES = [];
 let MAJOR_CHANGE_SHORTLIST = [];
 const ANALYSIS_MODE = new URLSearchParams(window.location.search).get("mode") || "transfer";
+if (new URLSearchParams(window.location.search).get("from") === "structured-chatbot") document.getElementById("chatbotReturn").style.display = "block";
 const TRANSFER_DESTINATION_INTENT = (() => {
   try { return JSON.parse(sessionStorage.getItem("transferDestinationIntentV1") || "null"); }
   catch (_) { return null; }

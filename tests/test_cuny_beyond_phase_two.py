@@ -78,5 +78,5 @@ def test_results_ui_links_to_existing_degree_planner_without_reselection():
     api = (ROOT / "api_db_routes.py").read_text(encoding="utf-8")
     assert 'id="recommendation-results"' in html
     assert "selectedProgramContext" in js
-    assert "window.location.href = '/db-progress'" in js
+    assert "window.location.href = '/db-progress?from=structured-chatbot'" in js
     assert '@router.post("/cuny-beyond/recommendations")' in api
