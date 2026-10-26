@@ -110,7 +110,7 @@ def test_current_student_referral_keeps_program_semester_goal_and_completed_cour
     assert '"current_program"' in server
     assert '"semester"' in server and '"advising_goal"' in server
     assert "Current major" in referral and "Advising goal" in referral
-    assert "Advising summary PDF" in referral and "Academic plan PDF" in referral and "Last 4 ID digits" in referral
+    assert "Save summary PDF" in referral and "Save academic plan PDF" in referral and "Last 4 ID digits" in referral
 
 
 def test_degree_planner_can_save_artifacts_and_return_to_structured_chatbot():
@@ -141,8 +141,8 @@ def test_embedded_ai_plan_has_generation_state_and_separate_final_documents():
     assert "academic_plan_document" in chatbot
     assert 'id="advising-summary-document"' in referral
     assert 'id="academic-plan-document"' in referral
-    assert "Advising summary PDF" in referral
-    assert "Academic plan PDF" in referral
+    assert "Save summary PDF" in referral
+    assert "Save academic plan PDF" in referral
 
 
 def test_ai_plan_explanation_is_normalized_into_professional_markdown_sections():
@@ -155,3 +155,15 @@ def test_ai_plan_explanation_is_normalized_into_professional_markdown_sections()
     assert ".advisor-markdown li" in planner
     assert "normalizePlanNarrative" in referral
     assert 'class="commentary-intro"' in referral
+
+
+def test_final_advising_package_uses_compact_notice_and_document_tabs():
+    referral = (ROOT / "frontend/cuny_beyond_referral.html").read_text(encoding="utf-8")
+    assert '<header class="public-header">' not in referral
+    assert 'class="package-notice"' in referral
+    assert 'class="document-tabs"' in referral
+    assert 'id="summary-document-tab"' in referral
+    assert 'id="academic-document-tab"' in referral
+    assert "Two documents, one advising session" not in referral
+    assert "The academic-plan document appears" not in referral
+    assert "activateDocument" in referral
