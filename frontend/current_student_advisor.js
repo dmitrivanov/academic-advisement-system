@@ -16,7 +16,7 @@
     tree:{id:'tree',label:'Degree tree',mode:'Prerequisite degree-tree',url:'#degree-tree',description:'Prerequisites and dependencies'}
   };
   function addMessage(role,text){const div=document.createElement('div');div.className=`message ${role}`;div.textContent=text;messages.appendChild(div);div.scrollIntoView({behavior:'smooth',block:'end'})}
-  function selectProgramContext(){sessionStorage.setItem('selectedProgramContext',JSON.stringify({institutionCode:program.institution_code,programCode:program.code,studentStatus:'current',onboardingSource:'narrative'}))}
+  function selectProgramContext(){sessionStorage.setItem('selectedProgramContext',JSON.stringify({institutionCode:program.institution_code,programCode:program.code,studentStatus:selected?.studentStatus||'current',hasReportedCoursework:Boolean(selected?.hasReportedCoursework),onboardingSource:selected?.onboardingSource||'narrative'}))}
   function actionFor(raw){return ACTIONS[raw?.id]||ACTIONS.planner}
   function renderTabs(actions){document.getElementById('all-tools').innerHTML=actions.map(action=>`<button type="button" class="tool-tab" data-action="${esc(action.id)}" aria-selected="false" title="${esc(action.description)}">${esc(action.label)}</button>`).join('')}
   function setMode(action){activeAction=action;document.getElementById('tool-mode').textContent=`${action.mode} is active`;document.querySelectorAll('.tool-tab').forEach(tab=>tab.setAttribute('aria-selected',String(tab.dataset.action===action.id)))}

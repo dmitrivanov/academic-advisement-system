@@ -2163,6 +2163,7 @@ def get_program_requirements(program_code: str, db: Session = Depends(get_db)):
         for course in [db.query(Course).filter_by(id=course_id).first()]
         if course and course.choice_group_code
     }
+    choice_group_payloads = {}
     if choice_group_codes:
         choice_groups = db.query(ChoiceGroup).filter(
             ChoiceGroup.institution_id == program.department.institution_id,
@@ -2176,6 +2177,26 @@ def get_program_requirements(program_code: str, db: Session = Depends(get_db)):
                     ChoiceGroupCourse.choice_group_id.in_(choice_group_ids)
                 ).all()
             )
+        for choice_group in choice_groups:
+            links = db.query(ChoiceGroupCourse).filter_by(choice_group_id=choice_group.id).all()
+            choice_group_payloads[choice_group.code] = {
+                "group": {
+                    "id": choice_group.id,
+                    "code": choice_group.code,
+                    "name": choice_group.name,
+                    "group_type": choice_group.group_type,
+                    "required_credits": choice_group.required_credits,
+                    "required_course_count": choice_group.required_course_count,
+                    "advising_note": choice_group.advising_note,
+                    "source": choice_group.source,
+                    "institution": program.department.institution.name,
+                    "institution_code": program.department.institution.code,
+                },
+                "courses": sorted(
+                    [build_course_payload(db, program.id, link.course) | {"id": link.course.id} for link in links if link.course],
+                    key=lambda course: course["code"],
+                ),
+            }
 
     support_course_ids = {
         row.prereq_course_id
@@ -2202,5 +2223,6 @@ def get_program_requirements(program_code: str, db: Session = Depends(get_db)):
             "institution_code": program.department.institution.code,
         },
         "groups": result_groups,
+        "choice_groups": choice_group_payloads,
         "prerequisite_support_courses": prerequisite_support_courses,
     }

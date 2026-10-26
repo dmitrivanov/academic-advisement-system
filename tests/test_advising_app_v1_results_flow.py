@@ -28,3 +28,31 @@ def test_internal_exploration_tools_have_return_paths():
     assert "Save plan and return to chatbot" in planner
     assert "Return to chatbot" in transfer
     assert "Return to chatbot" in advisor
+
+
+def test_start_over_clears_cross_module_coursework_and_context():
+    js = (ROOT / "frontend/cuny_beyond.js").read_text(encoding="utf-8")
+    for key in (
+        "cunyBeyondImportedCoursesV1",
+        "cunyBeyondReferralSummaryV1",
+        "selectedProgramContext",
+        "transferSnapshot",
+        "transferDestinationIntentV1",
+    ):
+        assert f"'{key}'" in js
+    assert "writingIntensiveCompleted:" in js
+
+
+def test_requirements_bundle_choice_groups_to_avoid_n_plus_one_loads():
+    api = (ROOT / "api_db_routes.py").read_text(encoding="utf-8")
+    planner = (ROOT / "frontend/db_progress_graph.html").read_text(encoding="utf-8")
+    assert '"choice_groups": choice_group_payloads' in api
+    assert "CURRENT_REQUIREMENTS.choice_groups?.[placeholder.choice_group_code]" in planner
+
+
+def test_prospective_planner_starts_without_unreported_coursework():
+    chatbot = (ROOT / "frontend/cuny_beyond.js").read_text(encoding="utf-8")
+    planner = (ROOT / "frontend/db_progress_graph.html").read_text(encoding="utf-8")
+    assert "studentStatus: isCurrentStudent() ? 'current' : 'prospective'" in chatbot
+    assert "sessionStorage.removeItem('cunyBeyondImportedCoursesV1')" in chatbot
+    assert 'saved.studentStatus === "prospective" && !saved.hasReportedCoursework' in planner

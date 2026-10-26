@@ -1032,7 +1032,7 @@ button:hover {
 }
 
 .completed-card.readonly::after {
-  content: "Completed-course selection is unavailable for a first-semester student.";
+  content: "No completed coursework was reported for this planning session.";
   position: absolute;
   inset: 0;
   display: grid;
@@ -1941,11 +1941,16 @@ function applyOnboardingState() {
   const message = document.getElementById("studentWelcomeMessage");
   card.style.display = "block";
 
-  if (saved.studentStatus === "first_semester") {
-    title.textContent = smart ? "Your smart onboarding plan is ready" : "Welcome to your first semester";
-    message.textContent = smart
-      ? "You indicated that you have no completed college courses. The completed-course selector is locked, and your requested semester timeline and workload preference are applied below."
-      : "Your first-semester schedule and a foldable full-program plan are ready below. Course selection is locked because you indicated that you have not completed college-level classes.";
+  const prospectiveWithoutCoursework = saved.studentStatus === "prospective" && !saved.hasReportedCoursework;
+  if (saved.studentStatus === "first_semester" || prospectiveWithoutCoursework) {
+    title.textContent = prospectiveWithoutCoursework
+      ? "Prospective program exploration"
+      : (smart ? "Your smart onboarding plan is ready" : "Welcome to your first semester");
+    message.textContent = prospectiveWithoutCoursework
+      ? "This exploratory plan starts with no completed BMCC coursework because none was reported. You can review the full program sequence without inherited selections."
+      : smart
+        ? "You indicated that you have no completed college courses. The completed-course selector is locked, and your requested semester timeline and workload preference are applied below."
+        : "Your first-semester schedule and a foldable full-program plan are ready below. Course selection is locked because you indicated that you have not completed college-level classes.";
     document.getElementById("completedCoursesCard").classList.add("readonly");
     setPlanningMode("ai");
   } else {
@@ -2531,6 +2536,12 @@ async function hydrateSingleChoiceGroups() {
     .filter(course => course.choice_group_code);
   await Promise.all(placeholders.map(async placeholder => {
     try {
+      const bundled = CURRENT_REQUIREMENTS.choice_groups?.[placeholder.choice_group_code];
+      if (bundled) {
+        placeholder.choice_options = bundled.courses || [];
+        placeholder.choice_group = bundled.group || null;
+        return;
+      }
       const params = new URLSearchParams({institution_code: program.institution_code || "BMCC", program_code: program.code || ""});
       const data = await fetchJson(`/api/db/choice-groups/${placeholder.choice_group_code}/courses?${params.toString()}`);
       placeholder.choice_options = data.courses || [];

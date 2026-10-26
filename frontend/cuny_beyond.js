@@ -205,6 +205,11 @@
   }
 
   function saveProgramContext(result) {
+    const reportedCourses = state.transcriptCourses.filter(item => item.include !== false && item.code);
+    if (!isCurrentStudent() && !reportedCourses.length) {
+      sessionStorage.removeItem('cunyBeyondImportedCoursesV1');
+      sessionStorage.removeItem('transferSnapshot');
+    }
     sessionStorage.setItem('selectedProgramContext', JSON.stringify({
       institutionCode: result.institution_code,
       institutionName: result.institution_name,
@@ -212,7 +217,9 @@
       programName: result.program_name,
       catalogYear: result.catalog_year || '',
       selectedAt: new Date().toISOString(),
-      source: 'cuny-beyond'
+      source: 'cuny-beyond',
+      studentStatus: isCurrentStudent() ? 'current' : 'prospective',
+      hasReportedCoursework: Boolean(reportedCourses.length)
     }));
   }
 
@@ -318,7 +325,9 @@
         source_title: item.source_title, source_url: item.source_url,
       })),
       cpl_possibilities: (latestCplScreening?.opportunities || []).map(item => ({ name: item.name, status: item.status_label, next_step: item.next_step, official_url: item.official_url })),
-      completed_courses: transferSnapshot?.completed_course_details || [],
+      completed_courses: isCurrentStudent()
+        ? (transferSnapshot?.completed_course_details || [])
+        : state.transcriptCourses.filter(item => item.include !== false && item.code),
       transfer_options: latestRecommendations.slice(0, 3).flatMap(item => item.transfer_options?.length
         ? item.transfer_options.map(option => ({ program: item.program_name, next_step: `${option.target_institution} - ${option.target_program}: ${option.explanation}` }))
         : [{ program: item.program_name, next_step: 'No reviewed destination is published yet; use CUNY Transfer Explorer with an advisor.' }]),
@@ -499,6 +508,13 @@
   document.getElementById('restart-button').addEventListener('click', () => {
     if (!window.confirm('Clear this browser draft and start again?')) return;
     localStorage.removeItem(STORAGE_KEY);
+    localStorage.removeItem('narrativeAdvisingDraftV1');
+    [
+      'cunyBeyondImportedCoursesV1', 'cunyBeyondReferralSummaryV1', 'cunyBeyondScheduleChecklistV1',
+      'majorChangeShortlist', 'selectedProgramContext', 'smartOnboardingContext', 'transferDestinationIntentV1',
+      'transferSnapshot', 'unloadedProgramContext'
+    ].forEach(key => sessionStorage.removeItem(key));
+    Object.keys(sessionStorage).filter(key => key.startsWith('writingIntensiveCompleted:')).forEach(key => sessionStorage.removeItem(key));
     form.reset();
     Object.assign(state, { step: 0, profile: '', careerGoal: '', employment: '', skills: [], cplSelections: [], freeAnswers: {}, apExams: [], transcriptCourses: [], currentMajor: '', currentProgram: null, semesterStanding: '', expiresAt: 0 });
     document.getElementById('save-status').textContent = 'Draft cleared.';
