@@ -1323,11 +1323,68 @@ button:hover {
 }
 
 .prospectus-commentary {
-  padding: 18px 20px;
+  padding: 24px;
   border: 1px solid #dbeafe;
-  border-left: 4px solid #2563eb;
-  border-radius: 0 12px 12px 0;
-  background: #f8fbff;
+  border-radius: 16px;
+  background: linear-gradient(145deg, #f8fbff, #f3f7fd);
+}
+
+.prospectus-commentary .advisor-markdown {
+  max-width: 880px;
+  color: #27364f;
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+.prospectus-commentary .advisor-markdown h2 {
+  margin: 30px 0 12px;
+  padding: 10px 14px;
+  border-left: 5px solid #2563eb;
+  border-radius: 8px;
+  color: #102b56;
+  background: #eaf2ff;
+  font-size: 19px;
+}
+
+.prospectus-commentary .advisor-markdown h3 {
+  margin: 22px 0 9px;
+  color: #155c45;
+  font-size: 16px;
+}
+
+.prospectus-commentary .advisor-markdown .commentary-intro {
+  padding: 14px 16px;
+  border-radius: 10px;
+  background: #fff;
+  box-shadow: inset 0 0 0 1px #dbe5f2;
+  font-size: 15px;
+}
+
+.prospectus-commentary .advisor-markdown ul,
+.prospectus-commentary .advisor-markdown ol {
+  display: grid;
+  gap: 8px;
+  margin: 10px 0 20px;
+  padding: 0;
+  list-style: none;
+}
+
+.prospectus-commentary .advisor-markdown li {
+  position: relative;
+  margin: 0;
+  padding: 11px 14px 11px 34px;
+  border: 1px solid #dce6f2;
+  border-radius: 10px;
+  background: #fff;
+}
+
+.prospectus-commentary .advisor-markdown li::before {
+  content: '✓';
+  position: absolute;
+  left: 13px;
+  top: 11px;
+  color: #16805f;
+  font-weight: 900;
 }
 
 .prospectus-semesters {
@@ -3066,12 +3123,45 @@ function getCourseStatus(code, course, completed, group = null) {
   return "locked";
 }
 
+function normalizeAdvisorNarrative(text) {
+  let value = String(text || "").replace(/\r/g, "").trim();
+  const sections = [
+    ["Next Semester", "## Next Semester"],
+    ["Important Prerequisite Sequences", "## Prerequisite Sequences"],
+    ["Prerequisite Sequences", "## Prerequisite Sequences"],
+    ["Workload Pattern", "## Workload and Credit Balance"],
+    ["Requested Workload Pattern", "## Workload and Credit Balance"],
+    ["Limitations", "## Important Limitations"],
+    ["Course Recommendations", "### Course recommendations"],
+    ["Programming Sequence", "### Programming sequence"],
+    ["Calculus Sequence", "### Mathematics sequence"],
+    ["Mathematics Course Sequence", "### Mathematics sequence"],
+    ["Computer Science Course Sequence", "### Computer science sequence"],
+    ["Discrete Math", "### Discrete mathematics"],
+  ];
+  sections.forEach(([label], index) => {
+    const escaped = label.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    value = value.replace(new RegExp(`(?:\\*\\*)?${escaped}(?:\\*\\*)?:?\\s*`, "gi"), `\n\n@@ADVISOR_SECTION_${index}@@\n`);
+  });
+  sections.forEach(([, markdown], index) => {
+    value = value.replaceAll(`@@ADVISOR_SECTION_${index}@@`, markdown);
+  });
+  value = value
+    .replace(/\*\*Recommendation:\s*/gi, "**\n- **Why it matters:** ")
+    .replace(/Recommendation:\s*/gi, "\n- **Why it matters:** ")
+    .replace(/([.!?])(?=[A-Z]{2,5}(?:-[A-Z]+)?\s*\d{2,3}(?:\.\d)?\b)/g, "$1\n- ")
+    .replace(/((?:Spring|Fall|Summer|Winter)\s+\d{4})(?=[A-Z])/g, "**$1:** ")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+  return value;
+}
+
 function formatAdvisorMarkdown(text) {
   const inline = value => prospectusEscape(value)
     .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
     .replace(/`(.+?)`/g, "<code>$1</code>")
     .replace(/\*(.+?)\*/g, "<em>$1</em>");
-  const lines = String(text || "").replace(/\r/g, "").split("\n");
+  const lines = normalizeAdvisorNarrative(text).split("\n");
   const html = [];
   let listType = null;
 
@@ -3127,7 +3217,8 @@ function formatAdvisorMarkdown(text) {
   });
 
   closeList();
-  return `<div class="advisor-markdown">${html.join("")}</div>`;
+  const rendered = html.join("").replace("<p>", '<p class="commentary-intro">');
+  return `<div class="advisor-markdown">${rendered}</div>`;
 }
 
 function showEmbeddedPlanLoading(message = "Loading your major, completed coursework, and prerequisite sequence.") {

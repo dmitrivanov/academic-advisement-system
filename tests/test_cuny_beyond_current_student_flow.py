@@ -143,3 +143,15 @@ def test_embedded_ai_plan_has_generation_state_and_separate_final_documents():
     assert 'id="academic-plan-document"' in referral
     assert "Advising summary PDF" in referral
     assert "Academic plan PDF" in referral
+
+
+def test_ai_plan_explanation_is_normalized_into_professional_markdown_sections():
+    planner = (ROOT / "frontend/db_progress_graph.html").read_text(encoding="utf-8")
+    referral = (ROOT / "frontend/cuny_beyond_referral.html").read_text(encoding="utf-8")
+    assert "normalizeAdvisorNarrative" in planner
+    assert "## Next Semester" in planner
+    assert "### Course recommendations" in planner
+    assert ".prospectus-commentary .advisor-markdown" in planner
+    assert ".advisor-markdown li" in planner
+    assert "normalizePlanNarrative" in referral
+    assert 'class="commentary-intro"' in referral
