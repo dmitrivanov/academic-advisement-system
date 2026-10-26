@@ -4,9 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>AI Academic Advisement Chatbot | BMCC</title>
-  <link rel="stylesheet" href="/frontend/cuny_beyond.css?v=20260918-1">
+  <link rel="stylesheet" href="/frontend/cuny_beyond.css?v=20261026-2">
   <link rel="stylesheet" href="/frontend/curriculum_graph.css?v=5">
-  <script src="/frontend/cuny_beyond.js?v=20260918-1" defer></script>
+  <script src="/frontend/cuny_beyond.js?v=20261026-2" defer></script>
   <script src="/frontend/curriculum_graph.js?v=7" defer></script>
 </head>
 <body>
@@ -214,17 +214,16 @@
             <div id="saved-degree-plan" class="saved-plan-notice" hidden></div>
             <h3 class="advising-goal-heading">What would you like to do next?</h3>
             <div class="advising-goal-grid">
-              <button id="open-next-semester-plan" class="advising-goal-card primary" type="button"><strong>Prepare next-semester academic plan</strong><span>Open the full planning workspace.</span></button>
+              <section class="advising-goal-card primary plan-goal-card" aria-labelledby="plan-goal-title"><strong id="plan-goal-title">Prepare next-semester academic plan</strong><span>Use your major and completed courses.</span><div class="plan-goal-actions"><button id="open-next-semester-plan" type="button">Open workspace</button><button id="generate-ai-plan-here" type="button">Generate plan here</button></div></section>
               <button id="open-major-change" class="advising-goal-card" type="button"><strong>Explore changing my major</strong><span>Compare your completed courses with another major.</span></button>
               <button id="show-transfer-options" class="advising-goal-card" type="button" aria-expanded="false" aria-controls="transfer-intent-card"><strong>Explore transfer</strong><span>Choose a destination college and major.</span></button>
               <button id="open-general-advising" class="advising-goal-card" type="button"><strong>Ask a general advising question</strong><span>Use the full AI advisor and its connected planning tools.</span></button>
             </div>
-            <div class="direct-plan-action"><button id="generate-ai-plan-here" type="button">Generate AI academic plan here</button><span>Creates the same AI plan in a modal and saves it to your final advisor report.</span></div>
             <section id="transfer-intent-card" class="transfer-intent-card" aria-labelledby="transfer-intent-title" hidden>
               <h3 id="transfer-intent-title">Are you considering transferring?</h3>
               <p>Choose a destination college and major first. The Transfer Analysis tool will open with your completed courses and destination loaded.</p>
               <div class="transfer-intent-fields">
-                <label>Destination school<select id="transfer-school" class="career-input"><option value="">Choose a school</option></select></label>
+                <label>Destination campus<select id="transfer-school" class="career-input"><option value="">Choose a campus</option></select></label>
                 <label>Destination major<select id="transfer-major" class="career-input" disabled><option value="">Choose a major</option></select></label>
               </div>
               <button id="open-transfer-analysis" class="large-tool-button" type="button">Open Transfer Analysis</button>

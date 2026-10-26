@@ -902,7 +902,14 @@
       const response = await fetch('/api/db/cuny-beyond/ap-equivalencies');
       if (response.ok) document.getElementById('ap-exam').innerHTML = (await response.json()).map(item => `<option value="${escapeHtml(item.exam)}">${escapeHtml(item.exam)}</option>`).join('');
     } catch (_) { document.getElementById('ap-details').hidden = true; }
-    loadDraft(); restoreInputs();
+    loadDraft();
+    const returnedTool = new URLSearchParams(window.location.search).get('returned');
+    if (returnedTool && isCurrentStudent()) {
+      state.step = steps.length - 1;
+      saveDraft();
+      window.history.replaceState({}, document.title, '/advising-app_v1');
+    }
+    restoreInputs();
     if (state.currentProgram) await selectCurrentProgram(state.currentProgram.code);
     renderConfirmedCourses(); showStep(false);
     if (state.step === steps.length - 1 && !isCurrentStudent()) await requestRecommendations();

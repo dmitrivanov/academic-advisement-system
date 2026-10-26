@@ -55,13 +55,19 @@ def test_current_student_actions_are_compact_and_direct_plan_returns_with_saved_
     planner = (ROOT / "frontend/db_progress_graph.html").read_text(encoding="utf-8")
     for element_id in ("open-next-semester-plan", "open-major-change", "show-transfer-options", "open-general-advising"):
         assert f'id="{element_id}"' in html
-    assert "repeat(4,minmax(0,1fr))" in css
+    assert ".advising-goal-grid{display:flex" in css
+    assert "flex:1 1 0" in css
+    assert "@media (max-width:980px) { .advising-goal-grid" not in css
     assert 'id="transfer-intent-card"' in html and 'aria-expanded="false"' in html
     assert 'id="generate-ai-plan-here"' in html
+    assert 'class="advising-goal-card primary plan-goal-card"' in html
+    assert "Destination campus" in html and "Destination major" in html
+    assert "cuny_beyond.css?v=20261026-2" in html and "cuny_beyond.js?v=20261026-2" in html
     assert "autogenerate=1&from=structured-chatbot" in js
     assert "advising-degree-plan-saved" in js and "advising-degree-plan-saved" in planner
     assert "generateAIStudyPlan()" in planner
     assert "...existing" in js
+    assert "returnedTool" in js and "state.step = steps.length - 1" in js
 
 
 def test_modern_language_curricula_and_spanish_teacher_mapping_are_seedable():
