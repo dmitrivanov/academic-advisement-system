@@ -74,3 +74,8 @@ def test_degree_tree_renders_in_the_right_workspace_before_expansion():
     assert "async function renderTreeInStage" in js
     assert "window.CurriculumGraph.load(program.code,target)" in js
     assert "if(action.id==='tree'){renderTreeInStage(stage);return}" in js
+
+
+def test_embedded_summary_hides_the_large_standalone_intro_panel():
+    report = (ROOT / "frontend/cuny_beyond_referral.html").read_text(encoding="utf-8")
+    assert "body.embedded .referral-shell>section:first-child{display:none}" in report
