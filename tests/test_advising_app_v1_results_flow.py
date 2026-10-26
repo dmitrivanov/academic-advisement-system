@@ -56,3 +56,21 @@ def test_prospective_planner_starts_without_unreported_coursework():
     assert "studentStatus: isCurrentStudent() ? 'current' : 'prospective'" in chatbot
     assert "sessionStorage.removeItem('cunyBeyondImportedCoursesV1')" in chatbot
     assert 'saved.studentStatus === "prospective" && !saved.hasReportedCoursework' in planner
+
+
+def test_advisor_workspace_is_compact_and_tools_are_actionable_in_chat():
+    html = (ROOT / "frontend/current_student_advisor.html").read_text(encoding="utf-8")
+    css = (ROOT / "frontend/current_student_advisor_compact.css").read_text(encoding="utf-8")
+    js = (ROOT / "frontend/current_student_advisor.js").read_text(encoding="utf-8")
+    assert "current_student_advisor_compact.css" in html
+    assert "grid-template-columns: minmax(330px, .68fr) minmax(620px, 1.32fr)" in css
+    assert 'data-inline-action' in js
+    assert "openTool(button.dataset.inlineAction)" in js
+    assert "form.requestSubmit()" in js
+
+
+def test_degree_tree_renders_in_the_right_workspace_before_expansion():
+    js = (ROOT / "frontend/current_student_advisor.js").read_text(encoding="utf-8")
+    assert "async function renderTreeInStage" in js
+    assert "window.CurriculumGraph.load(program.code,target)" in js
+    assert "if(action.id==='tree'){renderTreeInStage(stage);return}" in js

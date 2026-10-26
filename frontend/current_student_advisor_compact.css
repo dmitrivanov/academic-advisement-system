@@ -1,0 +1,21 @@
+/* Compact split-workspace refinements. */
+@media (min-width: 951px) {
+  .workspace { grid-template-columns: minmax(330px, .68fr) minmax(620px, 1.32fr); }
+}
+
+.advisor-panel > header { gap: 10px; padding: 10px 13px; }
+.advisor-panel > header h2 { font-size: 18px; }
+.advisor-panel header p { margin-top: 2px; font-size: 12px; line-height: 1.3; }
+.status-dot { padding: 4px 7px; font-size: 10px; }
+.messages { padding: 12px; }
+.message { max-width: 92%; margin-bottom: 10px; padding: 10px 12px; line-height: 1.45; }
+.message-tools { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 9px; }
+.message-tools button { padding: 6px 9px; border: 1px solid #70b99d; border-radius: 999px; color: #0f6247; background: #e8f8f1; font-weight: 850; cursor: pointer; }
+.question-suggestions { gap: 5px; padding: 7px 12px 0; }
+.question-suggestions button { padding: 4px 7px; font-size: 11px; }
+.advisor-form { gap: 7px; padding: 9px 12px; }
+.advisor-form textarea { min-height: 58px; padding: 10px; }
+.advisor-form button { padding: 10px 16px; }
+.boundary { padding: 0 12px 9px; font-size: 10px; }
+.embedded-tree { height: 100%; overflow: auto; padding: 10px; }
+.embedded-tree-loading { display: grid; height: 100%; place-content: center; color: var(--muted); font-weight: 800; }
