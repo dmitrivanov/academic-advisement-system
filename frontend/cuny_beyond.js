@@ -241,10 +241,10 @@
     const programName = state.currentProgram?.name || latestRecommendations[0]?.program_name || 'your program';
     document.getElementById('planner-modal-title').textContent = mode === 'next-semester' ? `AI next-semester plan for ${programName}` : `Select completed courses for ${programName}`;
     document.getElementById('planner-modal-copy').textContent = mode === 'next-semester' ? 'Build and review the plan here, then return to the chatbot.' : 'Your selections return to the chatbot and remain available for this session.';
-    document.getElementById('close-planner-modal').textContent = mode === 'next-semester' ? 'Close without saving' : 'Return to chatbot';
+    document.getElementById('close-planner-modal').textContent = mode === 'next-semester' ? 'Close without saving' : 'Close selector';
     document.getElementById('planner-modal-frame').src = mode === 'next-semester'
       ? `/db-progress?embedded=workspace&mode=ai-plan&autogenerate=1&from=structured-chatbot&v=${Date.now()}`
-      : `/db-progress?embedded=course-intake&v=${Date.now()}`;
+      : `/db-progress?embedded=course-intake&mode=course-intake&from=structured-chatbot&v=${Date.now()}`;
     modal.hidden = false;
     document.body.style.overflow = 'hidden';
     document.getElementById('close-planner-modal').focus();
@@ -747,7 +747,7 @@
 
   function renderCurrentCourseReview(courses, warnings = []) {
     const target = document.getElementById('current-course-review');
-    target.innerHTML = courses.length ? `<div class="recognized-draft"><h3>Review recognized courses</h3>${courses.map((item, index) => `<label><input type="checkbox" data-current-course="${index}" checked><span><strong>${escapeHtml(item.code)}</strong> ${escapeHtml(item.title || '')}</span></label>`).join('')}<button id="confirm-current-courses" type="button">Confirm this list</button></div>` : '<p class="transcript-notice">No program courses were confidently recognized. Try course codes or use the visual selector.</p>';
+    target.innerHTML = courses.length ? `<div class="recognized-draft"><h3>Review recognized courses</h3><div class="recognized-chip-list">${courses.map((item, index) => `<label class="recognized-course-chip" title="Click to remove"><input type="checkbox" data-current-course="${index}" checked><span><strong>${escapeHtml(item.code)}</strong>${item.title ? ` · ${escapeHtml(item.title)}` : ''}</span></label>`).join('')}</div><button id="confirm-current-courses" type="button">Approve completed courses</button></div>` : '<p class="transcript-notice">No program courses were confidently recognized. Try course codes or use the visual selector.</p>';
     if (warnings.length) target.insertAdjacentHTML('beforeend', warnings.map(item => `<p class="transcript-notice">${escapeHtml(item)}</p>`).join(''));
     document.getElementById('confirm-current-courses')?.addEventListener('click', () => {
       const selected = courses.filter((_, index) => target.querySelector(`[data-current-course="${index}"]`)?.checked);
@@ -781,7 +781,7 @@
       const data = await response.json();
       if (!response.ok) throw new Error(data.detail || 'Course recognition failed');
       renderCurrentCourseReview(data.courses || [], data.warnings || []);
-      status.textContent = (data.courses || []).length ? 'Review the recognized list below.' : 'No program courses were confidently recognized.';
+      status.textContent = (data.courses || []).length ? 'Review the green course chips below, then approve the list.' : 'No program courses were confidently recognized.';
     } catch (err) { status.textContent = err.message; }
   }
 
@@ -807,6 +807,12 @@
   window.addEventListener('message', event => {
     if (event.origin !== window.location.origin) return;
     if (event.data?.type === 'advising-completed-courses') modalSelectedCodes = Array.isArray(event.data.courses) ? event.data.courses : [];
+    if (event.data?.type === 'advising-completed-courses-saved') {
+      modalSelectedCodes = Array.isArray(event.data.courses) ? event.data.courses : modalSelectedCodes;
+      closePlannerModal();
+      document.getElementById('current-course-status').textContent = 'Completed courses saved. You can continue in the chatbot.';
+      document.getElementById('current-coursework-panel')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
     if (event.data?.type === 'advising-degree-plan-saved') {
       closePlannerModal();
       renderCurrentStudentSummary();

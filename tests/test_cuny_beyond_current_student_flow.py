@@ -26,6 +26,23 @@ def test_completed_course_selector_returns_context_to_chatbot_session():
     assert 'id="open-next-semester-plan"' in (ROOT / "frontend/cuny_beyond.html").read_text(encoding="utf-8")
 
 
+def test_completed_course_intake_is_compact_reviewable_and_saves_from_modal():
+    html = (ROOT / "frontend/cuny_beyond.html").read_text(encoding="utf-8")
+    css = (ROOT / "frontend/cuny_beyond.css").read_text(encoding="utf-8")
+    chatbot = (ROOT / "frontend/cuny_beyond.js").read_text(encoding="utf-8")
+    planner = (ROOT / "frontend/db_progress_graph.html").read_text(encoding="utf-8")
+    assert 'class="course-intake-card visual-selector-card"' in html
+    assert "comma-separated" in html.lower()
+    assert "Review entered courses" in html
+    assert "grid-template-columns:repeat(3,minmax(0,1fr))" in css
+    assert ".recognized-course-chip" in css
+    assert "Approve completed courses" in chatbot
+    assert "mode=course-intake&from=structured-chatbot" in chatbot
+    assert "advising-completed-courses-saved" in chatbot
+    assert "advising-completed-courses-saved" in planner
+    assert "Save completed classes and return to chatbot" in planner
+
+
 def test_manual_course_recognition_is_closed_to_selected_program_catalog():
     server = (ROOT / "faq_fallback_api.py").read_text(encoding="utf-8")
     assert '@app.post("/api/cuny-beyond/recognize-courses")' in server
@@ -62,7 +79,7 @@ def test_current_student_actions_are_compact_and_direct_plan_returns_with_saved_
     assert 'id="generate-ai-plan-here"' in html
     assert 'class="advising-goal-card primary plan-goal-card"' in html
     assert "Destination campus" in html and "Destination major" in html
-    assert "cuny_beyond.css?v=20261026-2" in html and "cuny_beyond.js?v=20261026-2" in html
+    assert "cuny_beyond.css?v=20261026-3" in html and "cuny_beyond.js?v=20261026-3" in html
     assert "autogenerate=1&from=structured-chatbot" in js
     assert "advising-degree-plan-saved" in js and "advising-degree-plan-saved" in planner
     assert "generateAIStudyPlan()" in planner

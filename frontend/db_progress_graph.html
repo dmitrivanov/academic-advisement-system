@@ -4442,6 +4442,15 @@ function savePlannerArtifactsForChatbot() {
 }
 
 function returnToStructuredChatbot() {
+  const returnParams = new URLSearchParams(window.location.search);
+  if (returnParams.get("mode") === "course-intake" && window.parent !== window) {
+    notifyEmbeddedCourseSelection();
+    window.parent.postMessage({
+      type: "advising-completed-courses-saved",
+      courses: Array.from(COMPLETED_COURSES).sort(),
+    }, window.location.origin);
+    return;
+  }
   savePlannerArtifactsForChatbot();
   if (window.parent !== window && new URLSearchParams(window.location.search).has("embedded")) {
     window.parent.postMessage({ type: "advising-degree-plan-saved" }, window.location.origin);
@@ -4657,6 +4666,11 @@ document.addEventListener("keydown", function(event) {
 async function initializePage() {
   const previewParams = new URLSearchParams(window.location.search);
   document.getElementById("chatbotReturnBar").hidden = previewParams.get("from") !== "structured-chatbot";
+  if (previewParams.get("mode") === "course-intake") {
+    document.querySelector("#chatbotReturnBar strong").textContent = "Completed-course selection";
+    document.querySelector("#chatbotReturnBar span").textContent = "Save the checked courses and continue your chatbot session.";
+    document.querySelector("#chatbotReturnBar button").textContent = "Save completed classes and return to chatbot";
+  }
   const draftPreviewId = previewParams.get("draftPreview");
   if (draftPreviewId) {
     await initializeDraftPreview(draftPreviewId, Number(previewParams.get("concentration") || 0));
