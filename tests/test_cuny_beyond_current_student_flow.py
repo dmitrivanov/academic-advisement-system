@@ -177,3 +177,17 @@ def test_saved_academic_plan_renders_markdown_without_raw_markers():
     assert "replace(/#{2,6}/g" in referral
     assert "break-inside:avoid" in referral
     assert "@media print" in referral and ".ai-commentary" in referral
+
+
+def test_embedded_degree_progress_removes_redundant_program_panel():
+    planner = (ROOT / "frontend/db_progress_graph.html").read_text(encoding="utf-8")
+    assert ".embedded-transcript .program-card { display:none!important; }" in planner
+
+
+def test_workspace_chat_handles_structured_api_errors_and_bounded_context():
+    advisor = (ROOT / "frontend/current_student_advisor.js").read_text(encoding="utf-8")
+    assert "function apiErrorMessage" in advisor
+    assert "Array.isArray(detail)" in advisor
+    assert "function compactConversationSummary" in advisor
+    assert ".slice(0,2400)" in advisor
+    assert "new Error(apiErrorMessage(data))" in advisor
