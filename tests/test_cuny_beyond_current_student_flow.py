@@ -167,3 +167,13 @@ def test_final_advising_package_uses_compact_notice_and_document_tabs():
     assert "Two documents, one advising session" not in referral
     assert "The academic-plan document appears" not in referral
     assert "activateDocument" in referral
+
+
+def test_saved_academic_plan_renders_markdown_without_raw_markers():
+    referral = (ROOT / "frontend/cuny_beyond_referral.html").read_text(encoding="utf-8")
+    assert "renderPlanMarkdown" in referral
+    assert "inlinePlanMarkdown" in referral
+    assert "plan-markdown-section" in referral
+    assert "replace(/#{2,6}/g" in referral
+    assert "break-inside:avoid" in referral
+    assert "@media print" in referral and ".ai-commentary" in referral
