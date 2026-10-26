@@ -110,7 +110,7 @@ def test_current_student_referral_keeps_program_semester_goal_and_completed_cour
     assert '"current_program"' in server
     assert '"semester"' in server and '"advising_goal"' in server
     assert "Current major" in referral and "Advising goal" in referral
-    assert "Save / Print PDF" in referral and "Last 4 ID digits" in referral
+    assert "Advising summary PDF" in referral and "Academic plan PDF" in referral and "Last 4 ID digits" in referral
 
 
 def test_degree_planner_can_save_artifacts_and_return_to_structured_chatbot():
@@ -125,5 +125,21 @@ def test_degree_planner_can_save_artifacts_and_return_to_structured_chatbot():
     assert "cunyBeyondReferralSummaryV1" in planner
     assert "LAST_DEGREE_PLAN" in planner and "ai_explanation" in planner
     assert 'id="saved-degree-plan"' in (ROOT / "frontend/cuny_beyond.html").read_text(encoding="utf-8")
-    assert "AI degree plan saved to this advising session" in chatbot
-    assert "Saved AI degree plan" in referral
+    assert "Academic plan document is ready" in chatbot
+    assert "Academic and Next-Semester Plan" in referral
+
+
+def test_embedded_ai_plan_has_generation_state_and_separate_final_documents():
+    planner = (ROOT / "frontend/db_progress_graph.html").read_text(encoding="utf-8")
+    chatbot = (ROOT / "frontend/cuny_beyond.js").read_text(encoding="utf-8")
+    referral = (ROOT / "frontend/cuny_beyond_referral.html").read_text(encoding="utf-8")
+    assert 'id="embeddedPlanLoading"' in planner
+    assert "Preparing your academic plan" in planner
+    assert "showEmbeddedPlanLoading" in planner
+    assert "hideEmbeddedPlanLoading" in planner
+    assert "academic_plan_document" in planner
+    assert "academic_plan_document" in chatbot
+    assert 'id="advising-summary-document"' in referral
+    assert 'id="academic-plan-document"' in referral
+    assert "Advising summary PDF" in referral
+    assert "Academic plan PDF" in referral

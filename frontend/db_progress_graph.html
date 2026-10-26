@@ -1557,6 +1557,18 @@ body { background: #f5f5f7; color: #1d1d1f; }
 .chatbot-return-bar strong { color: #155c45; }
 .chatbot-return-bar span { color: #4d665d; font-size: 13px; }
 .chatbot-return-bar button { flex: 0 0 auto; border: 0; border-radius: 11px; padding: 11px 15px; color: #fff; background: #13795b; font-weight: 850; cursor: pointer; }
+.chatbot-return-bar button:disabled { opacity: .55; cursor: wait; }
+.embedded-plan-loading[hidden] { display: none; }
+.embedded-plan-loading { min-height: 430px; display: grid; place-items: center; margin: 18px 0; border: 1px solid #c9d8ea; border-radius: 22px; background: radial-gradient(circle at 50% 30%,#fff 0,#f3f8ff 48%,#edf3fa 100%); text-align: center; }
+.embedded-plan-loading-card { width: min(520px,88%); padding: 34px; border: 1px solid #d8e3f1; border-radius: 20px; background: rgba(255,255,255,.9); box-shadow: 0 20px 55px rgba(20,62,112,.12); }
+.plan-loading-orbit { width: 68px; height: 68px; position: relative; margin: 0 auto 20px; border: 3px solid #dce9fa; border-radius: 50%; }
+.plan-loading-orbit::before { content: ''; position: absolute; inset: -3px; border: 3px solid transparent; border-top-color: #1d5fc0; border-right-color: #39a889; border-radius: 50%; animation: plan-orbit 1.1s linear infinite; }
+.plan-loading-orbit::after { content: 'AI'; position: absolute; inset: 10px; display: grid; place-items: center; border-radius: 50%; color: #fff; background: linear-gradient(135deg,#174ea6,#2e7ade); font-weight: 900; }
+.embedded-plan-loading h2 { margin: 0 0 9px; color: #12213f; }
+.embedded-plan-loading p { margin: 0; color: #5c6d88; line-height: 1.55; }
+.embedded-plan-loading small { display: block; margin-top: 16px; color: #6e7f98; }
+@keyframes plan-orbit { to { transform: rotate(360deg); } }
+@media(prefers-reduced-motion:reduce){.plan-loading-orbit::before{animation:none;border-color:#1d5fc0 #39a889 #dce9fa #dce9fa}}
 @media(max-width:700px){.chatbot-return-bar{position:static;align-items:stretch;flex-direction:column}.chatbot-return-bar button{width:100%}}
 
 </style>
@@ -1570,7 +1582,15 @@ body { background: #f5f5f7; color: #1d1d1f; }
 <div class="container">
   <section id="chatbotReturnBar" class="chatbot-return-bar" hidden>
     <div><strong>Next-semester planning from the chatbot</strong><span>Your completed courses and generated plan will be saved back to this advising session.</span></div>
-    <button type="button" onclick="returnToStructuredChatbot()">Save plan and return to chatbot</button>
+    <button id="chatbotReturnButton" type="button" onclick="returnToStructuredChatbot()">Save plan and return to chatbot</button>
+  </section>
+  <section id="embeddedPlanLoading" class="embedded-plan-loading" hidden aria-live="polite" aria-busy="true">
+    <div class="embedded-plan-loading-card">
+      <div class="plan-loading-orbit" aria-hidden="true"></div>
+      <h2>Preparing your academic plan</h2>
+      <p id="embeddedPlanLoadingMessage">Loading your major, completed coursework, and prerequisite sequence.</p>
+      <small>This may take a moment. The result is an advising aid and should be confirmed with an academic advisor.</small>
+    </div>
   </section>
   <div class="card program-card">
     <div class="program-overview">
@@ -3110,6 +3130,26 @@ function formatAdvisorMarkdown(text) {
   return `<div class="advisor-markdown">${html.join("")}</div>`;
 }
 
+function showEmbeddedPlanLoading(message = "Loading your major, completed coursework, and prerequisite sequence.") {
+  const loading = document.getElementById("embeddedPlanLoading");
+  if (!loading || window.parent === window) return;
+  loading.hidden = false;
+  loading.setAttribute("aria-busy", "true");
+  document.getElementById("embeddedPlanLoadingMessage").textContent = message;
+  const returnButton = document.getElementById("chatbotReturnButton");
+  if (returnButton) returnButton.disabled = true;
+}
+
+function hideEmbeddedPlanLoading() {
+  const loading = document.getElementById("embeddedPlanLoading");
+  if (loading) {
+    loading.hidden = true;
+    loading.setAttribute("aria-busy", "false");
+  }
+  const returnButton = document.getElementById("chatbotReturnButton");
+  if (returnButton) returnButton.disabled = false;
+}
+
 function renderCompletedCourseGrid() {
   const container = document.getElementById("completedCourseGrid");
   container.innerHTML = "";
@@ -4267,6 +4307,7 @@ function renderDegreePlan() {
 }
 
 async function generateAIStudyPlan() {
+  showEmbeddedPlanLoading("Building the semester sequence and asking the AI advisor to explain it.");
   renderDegreePlan();
   const box = document.getElementById("aiPlanExplanation");
   const button = document.getElementById("generatePlanButton");
@@ -4280,7 +4321,7 @@ async function generateAIStudyPlan() {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        user_question: "Explain this proposed multi-semester study plan. Highlight the next semester, the mathematics and computer-science course sequences, the requested workload pattern, and any limitations. Do not add or replace courses that are not in the supplied plan.",
+        user_question: "Explain this proposed multi-semester study plan in clean Markdown. Use short sections with headings and bullet lists for the next semester, important prerequisite sequences, workload pattern, and limitations. Do not add or replace courses that are not in the supplied plan.",
         page_context: {
           ...buildAdvisorPageContext(),
           planning_mode: "ai_semester_plan",
@@ -4319,6 +4360,7 @@ async function generateAIStudyPlan() {
       <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l1.4 4.2L18 9l-4.6 1.8L12 15l-1.4-4.2L6 9l4.6-1.8zM18 15l.8 2.2L21 18l-2.2.8L18 21l-.8-2.2L15 18l2.2-.8z"/></svg>
       Generate AI Degree Plan
     `;
+    hideEmbeddedPlanLoading();
     openPlanProspectus("degree");
   }
 }
@@ -4426,7 +4468,7 @@ function savePlannerArtifactsForChatbot() {
     total_credits: recommendation.total_credits || 0,
     courses: recommendation.courses || []
   };
-  summary.degree_plan = {
+  const academicPlanDocument = {
     generated_at: new Date().toISOString(),
     summary: document.getElementById("degreePlanSummary")?.innerText || "",
     ai_explanation: document.getElementById("aiPlanExplanation")?.innerText || "",
@@ -4437,6 +4479,8 @@ function savePlannerArtifactsForChatbot() {
       courses: semester.courses.map(course => ({ code: course.code, title: course.title, credits: course.credits, area: course.group_name }))
     }))
   };
+  summary.degree_plan = academicPlanDocument;
+  summary.academic_plan_document = academicPlanDocument;
   summary.expires_at = Date.now() + 24 * 60 * 60 * 1000;
   sessionStorage.setItem("cunyBeyondReferralSummaryV1", JSON.stringify(summary));
 }
@@ -4665,6 +4709,9 @@ document.addEventListener("keydown", function(event) {
 
 async function initializePage() {
   const previewParams = new URLSearchParams(window.location.search);
+  if (previewParams.get("mode") === "ai-plan" && previewParams.get("autogenerate") === "1") {
+    showEmbeddedPlanLoading();
+  }
   document.getElementById("chatbotReturnBar").hidden = previewParams.get("from") !== "structured-chatbot";
   if (previewParams.get("mode") === "course-intake") {
     document.querySelector("#chatbotReturnBar strong").textContent = "Completed-course selection";
@@ -4726,6 +4773,7 @@ async function initializeDraftPreview(draftId, concentrationIndex) {
 }
 
 initializePage().catch(err => {
+  hideEmbeddedPlanLoading();
   document.getElementById("summary").innerHTML =
     `<span style="color:#b42318;font-weight:bold;">Error: ${err.message}</span>`;
 });
