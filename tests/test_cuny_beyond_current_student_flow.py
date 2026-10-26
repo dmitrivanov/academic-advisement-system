@@ -48,6 +48,39 @@ def test_current_student_results_route_to_full_advising_tools_and_report():
     assert "requestedTool" in advisor
 
 
+def test_current_student_actions_are_compact_and_direct_plan_returns_with_saved_artifacts():
+    html = (ROOT / "frontend/cuny_beyond.html").read_text(encoding="utf-8")
+    css = (ROOT / "frontend/cuny_beyond.css").read_text(encoding="utf-8")
+    js = (ROOT / "frontend/cuny_beyond.js").read_text(encoding="utf-8")
+    planner = (ROOT / "frontend/db_progress_graph.html").read_text(encoding="utf-8")
+    for element_id in ("open-next-semester-plan", "open-major-change", "show-transfer-options", "open-general-advising"):
+        assert f'id="{element_id}"' in html
+    assert "repeat(4,minmax(0,1fr))" in css
+    assert 'id="transfer-intent-card"' in html and 'aria-expanded="false"' in html
+    assert 'id="generate-ai-plan-here"' in html
+    assert "autogenerate=1&from=structured-chatbot" in js
+    assert "advising-degree-plan-saved" in js and "advising-degree-plan-saved" in planner
+    assert "generateAIStudyPlan()" in planner
+    assert "...existing" in js
+
+
+def test_modern_language_curricula_and_spanish_teacher_mapping_are_seedable():
+    for filename, code in (
+        ("frn_aa_courses.csv", "FRN_AA"),
+        ("ita_aa_courses.csv", "ITA_AA"),
+        ("spa_aa_courses.csv", "SPA_AA"),
+        ("sti_aa_courses.csv", "STI_AA"),
+    ):
+        content = (ROOT / "docs" / filename).read_text(encoding="utf-8")
+        assert code in content
+        assert "Required Common Core" in content and "Flexible Core" in content
+        assert "Program Electives" in content and "General Electives" in content
+    careers = (ROOT / "docs/cuny_beyond_careers.csv").read_text(encoding="utf-8")
+    mappings = (ROOT / "docs/cuny_beyond_program_careers.csv").read_text(encoding="utf-8")
+    assert "spanish-teacher,Spanish Teacher" in careers
+    assert "BMCC,SPA_AA,spanish-teacher,50,strong" in mappings
+
+
 def test_current_student_referral_keeps_program_semester_goal_and_completed_courses():
     server = (ROOT / "faq_fallback_api.py").read_text(encoding="utf-8")
     referral = (ROOT / "frontend/cuny_beyond_referral.html").read_text(encoding="utf-8")

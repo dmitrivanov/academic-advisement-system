@@ -21,10 +21,10 @@ BMCC,SSH,HIS_AA,History,AA,2025-2026
 BMCC,ENG,LA_AA,Liberal Arts,AA,2026
 BMCC,ALL,LIN_AA,Linguistics,AA,2026
 BMCC,ALL,LITST_AA,Literacy Studies,AA,2026
-BMCC,ALL,FRN_AA,Modern Languages: French,AA,2026
-BMCC,ALL,ITA_AA,Modern Languages: Italian,AA,2026
-BMCC,ALL,SPA_AA,Modern Languages: Spanish,AA,2026
-BMCC,ALL,STI_AA,Modern Languages: Spanish Translation and Interpretation,AA,2026
+BMCC,WLC,FRN_AA,Modern Languages: French,AA,2025-2026
+BMCC,WLC,ITA_AA,Modern Languages: Italian,AA,2025-2026
+BMCC,WLC,SPA_AA,Modern Languages: Spanish,AA,2025-2026
+BMCC,WLC,STI_AA,Modern Languages: Spanish Translation and Interpretation,AA,2025-2026
 BMCC,SSH,PHI_AA,Philosophy,AA,2025-2026
 BMCC,SSH,POL_AA,Political Science,AA,2025-2026
 BMCC,SSH,PSY_AA,Psychology - General Concentration,AA,2025-2026

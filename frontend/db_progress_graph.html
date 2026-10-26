@@ -1901,7 +1901,11 @@ async function loadOfficialDegreeMap() {
     DMK_AS: "/docs/bmcc_dmk_degree_map_2025_2026.json",
     AMG_AS: "/docs/bmcc_amg_degree_map_2025_2026.json",
     COM_AA: "/docs/bmcc_com_degree_map_2025_2026.json",
-    MMP_AS: "/docs/bmcc_mmp_degree_map_2025_2026.json"
+    MMP_AS: "/docs/bmcc_mmp_degree_map_2025_2026.json",
+    FRN_AA: "/docs/bmcc_french_degree_map_2025_2026.json",
+    ITA_AA: "/docs/bmcc_italian_degree_map_2025_2026.json",
+    SPA_AA: "/docs/bmcc_spanish_degree_map_2025_2026.json",
+    STI_AA: "/docs/bmcc_spanish_translation_degree_map_2025_2026.json"
   };
   const mapFile = mapFiles[program?.code];
   if (!mapFile) return;
@@ -4439,6 +4443,10 @@ function savePlannerArtifactsForChatbot() {
 
 function returnToStructuredChatbot() {
   savePlannerArtifactsForChatbot();
+  if (window.parent !== window && new URLSearchParams(window.location.search).has("embedded")) {
+    window.parent.postMessage({ type: "advising-degree-plan-saved" }, window.location.origin);
+    return;
+  }
   window.location.href = "/advising-app_v1?returned=degree-plan";
 }
 
@@ -4664,7 +4672,10 @@ async function initializePage() {
   applyOnboardingState();
   await loadInstitutions();
   await loadPrograms();
-  if (previewParams.get("mode") === "ai-plan") setPlanningMode("ai");
+  if (previewParams.get("mode") === "ai-plan") {
+    setPlanningMode("ai");
+    if (previewParams.get("autogenerate") === "1") await generateAIStudyPlan();
+  }
 }
 
 async function initializeDraftPreview(draftId, concentrationIndex) {

@@ -241,7 +241,10 @@
     const programName = state.currentProgram?.name || latestRecommendations[0]?.program_name || 'your program';
     document.getElementById('planner-modal-title').textContent = mode === 'next-semester' ? `AI next-semester plan for ${programName}` : `Select completed courses for ${programName}`;
     document.getElementById('planner-modal-copy').textContent = mode === 'next-semester' ? 'Build and review the plan here, then return to the chatbot.' : 'Your selections return to the chatbot and remain available for this session.';
-    document.getElementById('planner-modal-frame').src = `/db-progress?embedded=${mode === 'next-semester' ? 'workspace' : 'course-intake'}&v=${Date.now()}`;
+    document.getElementById('close-planner-modal').textContent = mode === 'next-semester' ? 'Close without saving' : 'Return to chatbot';
+    document.getElementById('planner-modal-frame').src = mode === 'next-semester'
+      ? `/db-progress?embedded=workspace&mode=ai-plan&autogenerate=1&from=structured-chatbot&v=${Date.now()}`
+      : `/db-progress?embedded=course-intake&v=${Date.now()}`;
     modal.hidden = false;
     document.body.style.overflow = 'hidden';
     document.getElementById('close-planner-modal').focus();
@@ -662,14 +665,17 @@
   function saveCurrentReferralSummary(goal, extra = {}) {
     persistCompletedCourses();
     const completed = state.transcriptCourses.filter(item => item.include !== false && item.code);
+    let existing = {};
+    try { existing = JSON.parse(sessionStorage.getItem('cunyBeyondReferralSummaryV1') || '{}'); } catch (_) { existing = {}; }
     sessionStorage.setItem('cunyBeyondReferralSummaryV1', JSON.stringify({
+      ...existing,
       pathway: PROFILE_LABELS[state.profile] || 'Current student',
       current_program: state.currentProgram ? { code: state.currentProgram.code, name: state.currentProgram.name, institution: state.currentProgram.institution, catalog_year: state.currentProgram.catalog_year } : { name: state.currentMajor },
       semester: state.semesterStanding,
       advising_goal: goal,
       completed_courses: completed,
-      transfer_destination: extra.transfer_destination || null,
-      recommended_programs: [], cpl_possibilities: [], transfer_options: extra.transfer_destination ? [{ program: state.currentMajor, next_step: `Analyze transfer to ${extra.transfer_destination.school_name} — ${extra.transfer_destination.program_name}` }] : [],
+      transfer_destination: extra.transfer_destination || existing.transfer_destination || null,
+      recommended_programs: existing.recommended_programs || [], cpl_possibilities: existing.cpl_possibilities || [], transfer_options: extra.transfer_destination ? [{ program: state.currentMajor, next_step: `Analyze transfer to ${extra.transfer_destination.school_name} — ${extra.transfer_destination.program_name}` }] : (existing.transfer_options || []),
       sources: [{ title: 'BMCC Academic Advisement', url: 'https://www.bmcc.cuny.edu/academics/advisement/advisement/' }],
       expires_at: Date.now() + ttlHours * 60 * 60 * 1000,
     }));
@@ -784,13 +790,28 @@
   document.getElementById('open-completed-selector').addEventListener('click', () => openPlannerModal('coursework'));
   document.getElementById('transfer-school').addEventListener('change', populateTransferMajors);
   document.getElementById('open-next-semester-plan').addEventListener('click', openNextSemesterPlanner);
+  document.getElementById('generate-ai-plan-here').addEventListener('click', () => {
+    saveCurrentReferralSummary('Next-semester / degree planning');
+    openPlannerModal('next-semester');
+  });
+  document.getElementById('show-transfer-options').addEventListener('click', event => {
+    const panel = document.getElementById('transfer-intent-card');
+    panel.hidden = !panel.hidden;
+    event.currentTarget.setAttribute('aria-expanded', String(!panel.hidden));
+    if (!panel.hidden) { populateTransferSchools(); panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }
+  });
   document.getElementById('open-general-advising').addEventListener('click', () => navigateToAdvisor('planner'));
   document.getElementById('open-major-change').addEventListener('click', openMajorChange);
   document.getElementById('open-transfer-analysis').addEventListener('click', openTransferAnalysis);
   document.getElementById('prepare-current-summary').addEventListener('click', prepareCurrentSummary);
   window.addEventListener('message', event => {
-    if (event.origin !== window.location.origin || event.data?.type !== 'advising-completed-courses') return;
-    modalSelectedCodes = Array.isArray(event.data.courses) ? event.data.courses : [];
+    if (event.origin !== window.location.origin) return;
+    if (event.data?.type === 'advising-completed-courses') modalSelectedCodes = Array.isArray(event.data.courses) ? event.data.courses : [];
+    if (event.data?.type === 'advising-degree-plan-saved') {
+      closePlannerModal();
+      renderCurrentStudentSummary();
+      document.getElementById('saved-degree-plan')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
   });
 
   async function calculateApCredits() {

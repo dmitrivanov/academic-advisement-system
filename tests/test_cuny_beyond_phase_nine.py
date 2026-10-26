@@ -47,6 +47,18 @@ def test_journalism_resolves_to_journalist_and_journalism_concentration():
     )
 
 
+def test_spanish_teacher_resolves_to_spanish_program():
+    careers = career_records()
+    mappings = rows("cuny_beyond_program_careers.csv")
+    assert resolve_career("I want to become a Spanish teacher", careers)["name"] == "Spanish Teacher"
+    assert any(
+        row["career_slug"] == "spanish-teacher"
+        and row["program_code"] == "SPA_AA"
+        and row["active"] == "true"
+        for row in mappings
+    )
+
+
 def test_new_mappings_disclose_education_or_credential_limits_where_needed():
     mappings = rows("cuny_beyond_program_careers.csv")
     explanations = lambda slug: " ".join(row["explanation"] for row in mappings if row["career_slug"] == slug)

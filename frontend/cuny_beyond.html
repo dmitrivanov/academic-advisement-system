@@ -214,11 +214,13 @@
             <div id="saved-degree-plan" class="saved-plan-notice" hidden></div>
             <h3 class="advising-goal-heading">What would you like to do next?</h3>
             <div class="advising-goal-grid">
-              <button id="open-next-semester-plan" class="advising-goal-card primary" type="button"><strong>Prepare my next-semester / degree plan</strong><span>Open the full AI advising workspace with your major and completed courses loaded.</span></button>
+              <button id="open-next-semester-plan" class="advising-goal-card primary" type="button"><strong>Prepare next-semester academic plan</strong><span>Open the full planning workspace.</span></button>
               <button id="open-major-change" class="advising-goal-card" type="button"><strong>Explore changing my major</strong><span>Compare your completed courses with another major.</span></button>
+              <button id="show-transfer-options" class="advising-goal-card" type="button" aria-expanded="false" aria-controls="transfer-intent-card"><strong>Explore transfer</strong><span>Choose a destination college and major.</span></button>
               <button id="open-general-advising" class="advising-goal-card" type="button"><strong>Ask a general advising question</strong><span>Use the full AI advisor and its connected planning tools.</span></button>
             </div>
-            <section class="transfer-intent-card" aria-labelledby="transfer-intent-title">
+            <div class="direct-plan-action"><button id="generate-ai-plan-here" type="button">Generate AI academic plan here</button><span>Creates the same AI plan in a modal and saves it to your final advisor report.</span></div>
+            <section id="transfer-intent-card" class="transfer-intent-card" aria-labelledby="transfer-intent-title" hidden>
               <h3 id="transfer-intent-title">Are you considering transferring?</h3>
               <p>Choose a destination college and major first. The Transfer Analysis tool will open with your completed courses and destination loaded.</p>
               <div class="transfer-intent-fields">
