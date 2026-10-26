@@ -1930,6 +1930,65 @@ def build_course_payload(db: Session, program_id: int, course: Course):
     }
 
 
+def build_course_payload_map(db: Session, program_id: int, courses: list[Course]):
+    """Build many program-aware course payloads without per-course database queries."""
+    unique_courses = {course.id: course for course in courses if course}
+    course_ids = list(unique_courses)
+    if not course_ids:
+        return {}
+
+    prereq_rows = db.query(CoursePrerequisite).filter(
+        CoursePrerequisite.program_id == program_id,
+        CoursePrerequisite.course_id.in_(course_ids),
+    ).all()
+    alt_rows = db.query(CourseAlternative).filter(
+        CourseAlternative.program_id == program_id,
+        CourseAlternative.course_id.in_(course_ids),
+    ).all()
+    group_rows = db.query(CourseRequirementGroupPrerequisite).filter(
+        CourseRequirementGroupPrerequisite.program_id == program_id,
+        CourseRequirementGroupPrerequisite.course_id.in_(course_ids),
+    ).all()
+    related_course_ids = {row.prereq_course_id for row in prereq_rows} | {row.alternative_course_id for row in alt_rows}
+    related_courses = db.query(Course).filter(Course.id.in_(related_course_ids)).all() if related_course_ids else []
+    course_by_id = unique_courses | {course.id: course for course in related_courses}
+    requirement_group_ids = {row.requirement_group_id for row in group_rows}
+    requirement_groups = db.query(RequirementGroup).filter(RequirementGroup.id.in_(requirement_group_ids)).all() if requirement_group_ids else []
+    requirement_group_by_id = {group.id: group for group in requirement_groups}
+
+    prereqs_by_course = {}
+    for row in prereq_rows:
+        prereq = course_by_id.get(row.prereq_course_id)
+        if prereq:
+            prereqs_by_course.setdefault(row.course_id, {}).setdefault(row.group_id, []).append(prereq.display_code)
+    alternatives_by_course = {}
+    for row in alt_rows:
+        alternative = course_by_id.get(row.alternative_course_id)
+        if alternative:
+            alternatives_by_course.setdefault(row.course_id, []).append(alternative.display_code)
+    groups_by_course = {}
+    for row in group_rows:
+        group = requirement_group_by_id.get(row.requirement_group_id)
+        if group:
+            groups_by_course.setdefault(row.course_id, []).append(group.name)
+
+    payloads = {}
+    for course_id, course in unique_courses.items():
+        prereqs = []
+        for _, codes in sorted(prereqs_by_course.get(course_id, {}).items()):
+            prereqs.append(codes[0] if len(codes) == 1 else codes)
+        payloads[course_id] = {
+            "code": course.display_code,
+            "title": course.title,
+            "credits": course.credits,
+            "choice_group_code": course.choice_group_code,
+            "prereqs": prereqs,
+            "alternatives": alternatives_by_course.get(course_id, []),
+            "prerequisite_groups": groups_by_course.get(course_id, []),
+        }
+    return payloads
+
+
 @router.get("/programs/{program_code}/courses")
 def get_program_courses(program_code: str, db: Session = Depends(get_db)):
     program = db.query(Program).filter_by(code=program_code).first()
@@ -2171,14 +2230,18 @@ def get_program_requirements(program_code: str, db: Session = Depends(get_db)):
         ).all()
         choice_group_ids = [group.id for group in choice_groups]
         if choice_group_ids:
-            prerequisite_target_ids.update(
-                row.course_id
-                for row in db.query(ChoiceGroupCourse).filter(
-                    ChoiceGroupCourse.choice_group_id.in_(choice_group_ids)
-                ).all()
-            )
+            choice_links = db.query(ChoiceGroupCourse).options(joinedload(ChoiceGroupCourse.course)).filter(
+                ChoiceGroupCourse.choice_group_id.in_(choice_group_ids)
+            ).all()
+            prerequisite_target_ids.update(row.course_id for row in choice_links)
+        else:
+            choice_links = []
+        choice_payload_by_id = build_course_payload_map(db, program.id, [link.course for link in choice_links if link.course])
+        links_by_group = {}
+        for link in choice_links:
+            links_by_group.setdefault(link.choice_group_id, []).append(link)
         for choice_group in choice_groups:
-            links = db.query(ChoiceGroupCourse).filter_by(choice_group_id=choice_group.id).all()
+            links = links_by_group.get(choice_group.id, [])
             choice_group_payloads[choice_group.code] = {
                 "group": {
                     "id": choice_group.id,
@@ -2193,7 +2256,7 @@ def get_program_requirements(program_code: str, db: Session = Depends(get_db)):
                     "institution_code": program.department.institution.code,
                 },
                 "courses": sorted(
-                    [build_course_payload(db, program.id, link.course) | {"id": link.course.id} for link in links if link.course],
+                    [choice_payload_by_id[link.course.id] | {"id": link.course.id} for link in links if link.course],
                     key=lambda course: course["code"],
                 ),
             }
