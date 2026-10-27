@@ -182,6 +182,7 @@ def test_saved_academic_plan_renders_markdown_without_raw_markers():
 def test_embedded_degree_progress_removes_redundant_program_panel():
     planner = (ROOT / "frontend/db_progress_graph.html").read_text(encoding="utf-8")
     assert ".embedded-transcript .program-card { display:none!important; }" in planner
+    assert ".embedded-transcript #completedCoursesCard { margin:0; padding:12px 0 0; border:0; border-radius:0; background:transparent; box-shadow:none; }" in planner
 
 
 def test_workspace_chat_handles_structured_api_errors_and_bounded_context():
