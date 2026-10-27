@@ -63,7 +63,7 @@ def test_current_bmcc_pipeline_resolves_major_and_opens_advising_workspace():
     assert '@app.get("/current-student-advisor")' in server
     assert '@app.post("/api/current-student-advisor/ask")' in server
     assert '@router.get("/programs/{program_code}/degree-map-source")' in api
-    assert 'class="advisor-panel"' in workspace and 'class="tools-panel"' in workspace
+    assert 'class="advisor-panel"' in workspace and 'class="workspace-tools"' in workspace
     for label in ("Degree progress", "Next semester", "Transfer analysis", "Major change", "Interactive degree tree"):
         assert label in workspace_js
     assert "recommended_actions" in server and "recommended-tools" in workspace

@@ -201,3 +201,11 @@ def test_advising_workspace_does_not_render_duplicate_selected_program_panel():
     assert "getElementById('program-name')" not in advisor
     assert "getElementById('program-meta')" not in advisor
     assert "getElementById('degree-map-link')" not in advisor
+
+
+def test_rhs_workspace_has_no_tools_panel_card_wrapper():
+    html = (ROOT / "frontend/current_student_advisor.html").read_text(encoding="utf-8")
+    css = (ROOT / "frontend/current_student_advisor.css").read_text(encoding="utf-8")
+    assert 'class="tools-panel"' not in html
+    assert 'class="workspace-tools"' in html
+    assert ".workspace-tools{display:grid;grid-template-rows:auto auto auto 1fr;min-height:0;overflow:hidden;background:transparent}" in css

@@ -4,8 +4,8 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>AI Advising Workspace | BMCC</title>
-  <link rel="stylesheet" href="/frontend/current_student_advisor.css?v=4">
-  <link rel="stylesheet" href="/frontend/current_student_advisor_compact.css?v=1">
+  <link rel="stylesheet" href="/frontend/current_student_advisor.css?v=5">
+  <link rel="stylesheet" href="/frontend/current_student_advisor_compact.css?v=2">
   <link rel="stylesheet" href="/frontend/curriculum_graph.css?v=7">
   <script src="/frontend/curriculum_graph.js?v=7" defer></script>
   <script src="/frontend/current_student_advisor.js?v=6" defer></script>
@@ -35,7 +35,7 @@
       <p class="boundary">Planning guidance only. Confirm requirements, registration, transfer credit, and approvals with BMCC.</p>
     </section>
 
-    <aside class="tools-panel" aria-labelledby="tools-title">
+    <section class="workspace-tools" aria-labelledby="tools-title">
       <header class="tool-header">
         <div class="tool-context"><span id="tool-mode">Degree progress mode is active</span><strong id="tools-title">Advising workspace</strong></div>
         <button id="expand-tool" class="expand-tool" type="button" aria-label="Open active tool full screen">↗ Expand</button>
@@ -45,7 +45,7 @@
       <section id="tool-stage" class="tool-stage" aria-live="polite">
         <iframe id="tool-frame" title="Interactive degree planner"></iframe>
       </section>
-    </aside>
+    </section>
   </main>
   <div id="tool-modal" class="tool-modal" hidden>
     <div class="tool-modal-backdrop" data-close-tool></div>
