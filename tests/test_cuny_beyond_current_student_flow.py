@@ -191,3 +191,12 @@ def test_workspace_chat_handles_structured_api_errors_and_bounded_context():
     assert "function compactConversationSummary" in advisor
     assert ".slice(0,2400)" in advisor
     assert "new Error(apiErrorMessage(data))" in advisor
+
+
+def test_advising_workspace_does_not_render_duplicate_selected_program_panel():
+    html = (ROOT / "frontend/current_student_advisor.html").read_text(encoding="utf-8")
+    advisor = (ROOT / "frontend/current_student_advisor.js").read_text(encoding="utf-8")
+    assert 'class="selected-program compact"' not in html
+    assert "getElementById('program-name')" not in advisor
+    assert "getElementById('program-meta')" not in advisor
+    assert "getElementById('degree-map-link')" not in advisor

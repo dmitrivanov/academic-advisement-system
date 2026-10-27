@@ -39,9 +39,8 @@
     if(!selected?.programCode&&!unloaded?.current_major){location.replace('/');return}
     if(selected?.programCode){const response=await fetch('/api/db/programs?selector_only=true'),programs=await response.json();program=programs.find(item=>item.institution_code===selected.institutionCode&&item.code===selected.programCode)}
     if(!program)program={code:'NOT_LOADED',name:unloaded?.current_major||intake?.current_major||'Program not loaded',degree_type:'',catalog_year:'',department:'Curriculum not loaded',institution:unloaded?.institution||intake?.institution||'Other institution',institution_code:''};else selectProgramContext();
-    document.getElementById('program-heading').textContent=`${program.name} · ${program.catalog_year||'Current catalog'}`;document.getElementById('program-name').textContent=`${program.name} (${program.degree_type||'Degree'})`;document.getElementById('program-meta').textContent=`${program.department} · ${program.catalog_year||'Current catalog'}`;
+    document.getElementById('program-heading').textContent=`${program.name} · ${program.catalog_year||'Current catalog'}`;
     const available=program.code==='NOT_LOADED'?[ACTIONS.transfer,ACTIONS.major]:Object.values(ACTIONS);renderTabs(available);openTool(available.some(action=>action.id===requestedTool)?requestedTool:available[0].id);
-    if(program.code!=='NOT_LOADED')try{const response=await fetch(`/api/db/programs/${encodeURIComponent(program.code)}/degree-map-source`);if(response.ok){const map=await response.json(),url=map.source_pdf||map.source_pdfs?.[0]?.url;if(url)document.getElementById('degree-map-link').innerHTML=`<a class="degree-map" href="${esc(url)}" target="_blank" rel="noopener">Official PDF ↗</a>`}}catch(_){}
   }
   document.getElementById('all-tools').addEventListener('click',event=>{const button=event.target.closest('[data-action]');if(button)openTool(button.dataset.action)});
   document.getElementById('recommended-tools').addEventListener('click',event=>{const button=event.target.closest('[data-recommended]');if(button)openTool(button.dataset.recommended)});
