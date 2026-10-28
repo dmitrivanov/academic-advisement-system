@@ -208,14 +208,23 @@ def test_rhs_workspace_has_no_tools_panel_card_wrapper():
     css = (ROOT / "frontend/current_student_advisor.css").read_text(encoding="utf-8")
     assert 'class="tools-panel"' not in html
     assert 'class="workspace-tools"' in html
-    assert ".workspace-tools{display:grid;grid-template-rows:auto auto auto 1fr;min-height:0;overflow:hidden;background:transparent}" in css
+    assert ".workspace-tools{display:grid;grid-template-rows:auto auto auto minmax(0,1fr);min-height:0;min-width:0;overflow:hidden;background:transparent}" in css
+
+
+def test_active_workspace_stage_is_pinned_to_the_expanding_grid_row():
+    css = (ROOT / "frontend/current_student_advisor.css").read_text(encoding="utf-8")
+    assert ".tool-header{grid-row:1;" in css
+    assert ".tool-tabs{grid-row:2;" in css
+    assert ".recommended-tools{grid-row:3;" in css
+    assert ".tool-stage{grid-row:4;min-height:0;height:100%;overflow:hidden;position:relative;background:#fff}" in css
+    assert ".tool-stage iframe{display:block;width:100%;height:100%;min-height:0;border:0;background:#fff}" in css
 
 
 def test_embedded_tools_render_as_top_workspace_without_gray_cover():
     advisor_css = (ROOT / "frontend/current_student_advisor.css").read_text(encoding="utf-8")
     planner = (ROOT / "frontend/db_progress_graph.html").read_text(encoding="utf-8")
     transfer = (ROOT / "frontend/transfer_analysis.html").read_text(encoding="utf-8")
-    assert ".tool-stage{min-height:0;position:relative;background:#fff}" in advisor_css
+    assert ".tool-stage{grid-row:4;min-height:0;height:100%;overflow:hidden;position:relative;background:#fff}" in advisor_css
     assert ".embedded-transcript { background:#fff; }" in planner
     assert "body.embedded-workspace { background:#fff; }" in transfer
     assert "body.embedded-workspace .topbar { display:none; }" in transfer
