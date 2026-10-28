@@ -209,3 +209,14 @@ def test_rhs_workspace_has_no_tools_panel_card_wrapper():
     assert 'class="tools-panel"' not in html
     assert 'class="workspace-tools"' in html
     assert ".workspace-tools{display:grid;grid-template-rows:auto auto auto 1fr;min-height:0;overflow:hidden;background:transparent}" in css
+
+
+def test_embedded_tools_render_as_top_workspace_without_gray_cover():
+    advisor_css = (ROOT / "frontend/current_student_advisor.css").read_text(encoding="utf-8")
+    planner = (ROOT / "frontend/db_progress_graph.html").read_text(encoding="utf-8")
+    transfer = (ROOT / "frontend/transfer_analysis.html").read_text(encoding="utf-8")
+    assert ".tool-stage{min-height:0;position:relative;background:#fff}" in advisor_css
+    assert ".embedded-transcript { background:#fff; }" in planner
+    assert "body.embedded-workspace { background:#fff; }" in transfer
+    assert "body.embedded-workspace .topbar { display:none; }" in transfer
+    assert "document.body.classList.add(\"embedded-workspace\")" in transfer

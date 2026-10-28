@@ -219,12 +219,18 @@ button:hover, .button-link:hover { background: #1d4ed8; }
 }
 .major-context { border-color:#a8c7ee; background:#f6faff; }.major-context-grid { display:grid; grid-template-columns:1fr 2fr; gap:18px; }.shortlist { display:flex; flex-wrap:wrap; gap:8px; margin-top:8px; }.shortlist button { margin:0; background:#e5effc; color:#164f9d; border:1px solid #9dbce3; }.shortlist button.active { background:#164f9d; color:#fff; }.outcome-list { display:grid; gap:9px; }.outcome-item { padding:11px; border:1px solid #d7deea; border-radius:11px; background:#fff; line-height:1.4; }.action-plan { border-left:5px solid #2563eb; }.action-plan li { margin:9px 0; line-height:1.45; }.action-plan a { color:#1d4ed8; font-weight:bold; }
 @media (max-width:700px) { .major-context-grid { grid-template-columns:1fr; } }
+body.embedded-workspace { background:#fff; }
+body.embedded-workspace .container { max-width:none; margin:0; padding:0 16px 24px; }
+body.embedded-workspace .topbar { display:none; }
+body.embedded-workspace #chatbotReturn { display:none!important; }
+body.embedded-workspace .card { box-shadow:none; }
 </style>
 <link rel="stylesheet" href="/frontend/app_shell.css">
 <script src="/frontend/app_shell.js" defer></script>
 </head>
 
 <body>
+<script>if(new URLSearchParams(window.location.search).get("embedded")==="workspace")document.body.classList.add("embedded-workspace")</script>
 <div class="container">
   <div id="chatbotReturn" class="card" style="display:none;border:2px solid #70c7a3;background:#effbf6">
     <strong>Transfer exploration from the chatbot</strong>
