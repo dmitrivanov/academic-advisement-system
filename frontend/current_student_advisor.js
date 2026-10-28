@@ -12,7 +12,7 @@
   const ACTIONS={
     summary:{id:'summary',label:'Advising summary',mode:'Advising-summary review',url:'/advising-app_v1/referral?embedded=1',description:'Review the saved profile, matches, prior learning, and sources'},
     planner:{id:'planner',label:'Degree progress',mode:'Degree progress',url:'/db-progress?embedded=workspace',description:'Completed and remaining requirements'},
-    semester:{id:'semester',label:'Next semester',mode:'Next-semester AI advisement',url:'/db-progress?embedded=workspace&mode=ai-plan',description:'AI-supported semester planning'},
+    semester:{id:'semester',label:'Next semester',mode:'Next-semester AI advisement',url:'/db-progress?embedded=workspace&mode=ai-plan&autogenerate=1',description:'AI-supported semester planning'},
     transfer:{id:'transfer',label:'Transfer',mode:'Transfer analysis',url:'/transfer-analysis?embedded=workspace',description:'Program and transfer comparison'},
     major:{id:'major',label:'Major change',mode:'Major-change comparison',url:'/transfer-analysis?embedded=workspace&mode=major-change',description:'Compare completed courses with another major'},
     tree:{id:'tree',label:'Degree tree',mode:'Prerequisite degree-tree',url:'#degree-tree',description:'Interactive degree tree with prerequisites and dependencies'}
@@ -22,11 +22,24 @@
   function actionFor(raw){return ACTIONS[raw?.id]||ACTIONS.planner}
   function renderTabs(actions){document.getElementById('all-tools').innerHTML=actions.map(action=>`<button type="button" class="tool-tab" data-action="${esc(action.id)}" aria-selected="false" title="${esc(action.description)}">${esc(action.label)}</button>`).join('')}
   function setMode(action){activeAction=action;document.getElementById('tool-mode').textContent=`${action.mode} is active`;document.querySelectorAll('.tool-tab').forEach(tab=>tab.setAttribute('aria-selected',String(tab.dataset.action===action.id)))}
-  function completedCourseCodes(){try{return JSON.parse(sessionStorage.getItem('cunyBeyondImportedCoursesV1')||'[]').map(item=>item.code).filter(Boolean)}catch(_){return[]}}
+  function completedCourseCodes(){
+    const imported=(()=>{try{return JSON.parse(sessionStorage.getItem('cunyBeyondImportedCoursesV1')||'[]')}catch(_){return[]}})();
+    const transfer=(()=>{try{return JSON.parse(sessionStorage.getItem('transferSnapshot')||'null')}catch(_){return null}})();
+    const sources=[imported,advisingSummary?.completed_courses,intake?.transcript_courses,transfer?.completed_courses,transfer?.completed_course_details];
+    const codes=sources.flatMap(items=>Array.isArray(items)?items:[]).map(item=>typeof item==='string'?item:item?.code).map(code=>String(code||'').trim().toUpperCase()).filter(Boolean);
+    return [...new Set(codes)];
+  }
+  function syncCompletedCoursesForTools(){
+    const existing=(()=>{try{return JSON.parse(sessionStorage.getItem('cunyBeyondImportedCoursesV1')||'[]')}catch(_){return[]}})();
+    const records=new Map((Array.isArray(existing)?existing:[]).map(item=>{const code=String(typeof item==='string'?item:item?.code||'').trim().toUpperCase();return[code,typeof item==='string'?{code}:item]}).filter(([code])=>code));
+    completedCourseCodes().forEach(code=>{if(!records.has(code))records.set(code,{code})});
+    sessionStorage.setItem('cunyBeyondImportedCoursesV1',JSON.stringify([...records.values()]));
+  }
   async function renderTreeInStage(stage){stage.innerHTML='<div class="embedded-tree-loading">Loading interactive degree tree…</div>';const target=document.createElement('div');target.className='embedded-tree';stage.replaceChildren(target);try{await window.CurriculumGraph.load(program.code,target)}catch(error){target.innerHTML=`<div class="curriculum-graph-error">${esc(error.message)}</div>`}}
   function openTool(actionId){
     const action=actionFor({id:actionId});setMode(action);const stage=document.getElementById('tool-stage');
     if(action.id==='tree'){renderTreeInStage(stage);return}
+    if(action.id==='planner'||action.id==='semester')syncCompletedCoursesForTools();
     stage.innerHTML='<iframe id="tool-frame" title="Embedded advising tool"></iframe>';const frame=document.getElementById('tool-frame');frame.title=action.label;frame.src=action.url;
   }
   function openExpanded(){
@@ -34,7 +47,7 @@
     const modal=document.getElementById('tool-modal');document.getElementById('tool-modal-title').textContent=activeAction.label;document.getElementById('tool-modal-frame').src=activeAction.url;modal.hidden=false;document.body.style.overflow='hidden';document.getElementById('close-tool').focus()
   }
   function closeExpanded(){const modal=document.getElementById('tool-modal');modal.hidden=true;document.getElementById('tool-modal-frame').src='about:blank';document.body.style.overflow='';document.getElementById('expand-tool').focus()}
-  function recommendActions(actions){document.getElementById('recommended-tools').innerHTML=''}
+  function recommendActions(actions){document.getElementById('recommended-tools').innerHTML='';if(actions.some(action=>action.id==='semester')&&activeAction?.id!=='semester')openTool('semester')}
   async function init(){
     if(!selected?.programCode&&!unloaded?.current_major){location.replace('/');return}
     if(selected?.programCode){const response=await fetch('/api/db/programs?selector_only=true'),programs=await response.json();program=programs.find(item=>item.institution_code===selected.institutionCode&&item.code===selected.programCode)}

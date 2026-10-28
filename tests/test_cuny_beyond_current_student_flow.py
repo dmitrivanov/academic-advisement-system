@@ -185,6 +185,37 @@ def test_embedded_degree_progress_removes_redundant_program_panel():
     assert ".embedded-transcript #completedCoursesCard { margin:0; padding:12px 0 0; border:0; border-radius:0; background:transparent; box-shadow:none; }" in planner
 
 
+def test_embedded_next_semester_plan_is_visible_and_generated():
+    planner = (ROOT / "frontend/db_progress_graph.html").read_text(encoding="utf-8")
+    advisor = (ROOT / "frontend/current_student_advisor.js").read_text(encoding="utf-8")
+    assert "mode=ai-plan&autogenerate=1" in advisor
+    assert "embedded-transcript:not(.embedded-ai-plan) #planningModeCard" in planner
+    assert ".embedded-ai-plan #planningModeCard { display:block!important;" in planner
+    assert 'document.body.classList.add("embedded-ai-plan")' in planner
+
+
+def test_workspace_chat_merges_all_saved_completed_course_sources():
+    advisor = (ROOT / "frontend/current_student_advisor.js").read_text(encoding="utf-8")
+    for source in (
+        "cunyBeyondImportedCoursesV1",
+        "advisingSummary?.completed_courses",
+        "intake?.transcript_courses",
+        "transfer?.completed_courses",
+        "transfer?.completed_course_details",
+    ):
+        assert source in advisor
+    assert "return [...new Set(codes)]" in advisor
+    assert "function syncCompletedCoursesForTools" in advisor
+    assert "sessionStorage.setItem('cunyBeyondImportedCoursesV1'" in advisor
+    assert "if(action.id==='planner'||action.id==='semester')syncCompletedCoursesForTools()" in advisor
+
+
+def test_next_semester_chat_recommendation_opens_generated_plan_in_workspace():
+    advisor = (ROOT / "frontend/current_student_advisor.js").read_text(encoding="utf-8")
+    assert "actions.some(action=>action.id==='semester')" in advisor
+    assert "openTool('semester')" in advisor
+
+
 def test_workspace_chat_handles_structured_api_errors_and_bounded_context():
     advisor = (ROOT / "frontend/current_student_advisor.js").read_text(encoding="utf-8")
     assert "function apiErrorMessage" in advisor
