@@ -2672,7 +2672,8 @@ function semesterPlanningProfile(remainingCredits) {
     return { remaining, recommended: 0, options: [] };
   }
 
-  const fastest = Math.max(1, Math.ceil(remaining / 18));
+  const prerequisiteMinimum = minimumPrerequisiteSemesters(getCompletedCourses());
+  const fastest = Math.max(1, Math.ceil(remaining / 18), prerequisiteMinimum);
   const recommended = Math.max(fastest, Math.ceil(remaining / 15));
   const lighterByCredits = Math.ceil(remaining / 9);
   const lastOption = Math.min(12, Math.max(recommended + 1, Math.min(lighterByCredits, recommended + 2)));
@@ -2683,6 +2684,36 @@ function semesterPlanningProfile(remainingCredits) {
   }
 
   return { remaining, fastest, recommended, options };
+}
+
+function minimumPrerequisiteSemesters(completed) {
+  if (!CURRENT_REQUIREMENTS) return 1;
+  const courses = allCoursesFromGroups();
+  const memo = new Map();
+
+  function earliestSemester(code, visiting = new Set()) {
+    if (completed.has(code) || hasSelectedChoiceCourse(code)) return 0;
+    if (memo.has(code)) return memo.get(code);
+    if (visiting.has(code)) return 1;
+    const course = courses[code];
+    if (!course) return 0;
+    const nextVisiting = new Set(visiting);
+    nextVisiting.add(code);
+    const prerequisiteTerms = (course.prereqs || []).map(prereq => {
+      const options = Array.isArray(prereq) ? prereq : [prereq];
+      return Math.min(...options.map(option => earliestSemester(option, nextVisiting)));
+    });
+    const semester = 1 + (prerequisiteTerms.length ? Math.max(...prerequisiteTerms) : 0);
+    memo.set(code, semester);
+    return semester;
+  }
+
+  const requiredCourses = Object.values(courses).filter(course =>
+    !["program_elective", "prerequisite_support"].includes(course.group_type) &&
+    !isCourseCompleted(course.code, course, completed) &&
+    !isNotNeeded(course.code, course, completed)
+  );
+  return Math.max(1, ...requiredCourses.map(course => earliestSemester(course.code)));
 }
 
 function configurePlannerSemesterOptions({ preserveSelection = false } = {}) {
@@ -2787,8 +2818,11 @@ function electivePlanningSlots(completed) {
 }
 
 function planningCoursePool(completed) {
-  const requiredCourses = Object.values(allCoursesFromGroups()).filter(
-    course => !["program_elective", "prerequisite_support"].includes(course.group_type)
+  const requiredCourses = Object.values(allCoursesFromGroups()).filter(course =>
+    course.group_type !== "program_elective" && (
+      course.group_type !== "prerequisite_support" ||
+      downstreamDependencyMetrics(course, completed).count > 0
+    )
   );
   return [...requiredCourses, ...electivePlanningSlots(completed)];
 }
@@ -4050,9 +4084,48 @@ function countUnlocks(course, completed) {
   return unlocks;
 }
 
+function prerequisiteMentionsCourse(course, courseCode) {
+  return (course.prereqs || []).some(prereq =>
+    Array.isArray(prereq) ? prereq.includes(courseCode) : prereq === courseCode
+  );
+}
+
+function downstreamDependencyMetrics(course, completed) {
+  const courses = allCoursesFromGroups();
+  const queue = [{code: course.code, depth: 0}];
+  const visited = new Set([course.code]);
+  let count = 0;
+  let depth = 0;
+
+  while (queue.length) {
+    const current = queue.shift();
+    Object.values(courses).forEach(candidate => {
+      if (visited.has(candidate.code) || !prerequisiteMentionsCourse(candidate, current.code)) return;
+      visited.add(candidate.code);
+      const candidateDepth = current.depth + 1;
+      queue.push({code: candidate.code, depth: candidateDepth});
+      if (
+        candidate.group_type !== "program_elective" &&
+        candidate.group_type !== "prerequisite_support" &&
+        !isCourseCompleted(candidate.code, candidate, completed) &&
+        !isNotNeeded(candidate.code, candidate, completed)
+      ) {
+        count += 1;
+        depth = Math.max(depth, candidateDepth);
+      }
+    });
+  }
+
+  return {count, depth};
+}
+
 function recommendationScore(course, completed, selectedGroupTypes) {
   const unlocks = countUnlocks(course, completed);
-  let score = unlocks * 10 + groupPriority(course.group_type);
+  const downstream = downstreamDependencyMetrics(course, completed);
+  let score = unlocks * 40 + downstream.count * 18 + downstream.depth * 35 + groupPriority(course.group_type);
+
+  if (course.is_elective_slot) score -= 150;
+  if (course.group_type === "prerequisite_support" && downstream.count === 0) score -= 500;
 
   if (!selectedGroupTypes.has(course.group_type)) {
     score += 8;
@@ -4278,8 +4351,8 @@ function buildDegreePlan() {
       available.sort((a, b) => {
         const aOfficial = officialSemesterForCourse(a, desiredSemesters);
         const bOfficial = officialSemesterForCourse(b, desiredSemesters);
-        const aMapScore = aOfficial === index + 1 ? 500 : (aOfficial ? -Math.abs(aOfficial - index - 1) * 40 : 0);
-        const bMapScore = bOfficial === index + 1 ? 500 : (bOfficial ? -Math.abs(bOfficial - index - 1) * 40 : 0);
+        const aMapScore = aOfficial === index + 1 ? 80 : (aOfficial ? -Math.abs(aOfficial - index - 1) * 5 : 0);
+        const bMapScore = bOfficial === index + 1 ? 80 : (bOfficial ? -Math.abs(bOfficial - index - 1) * 5 : 0);
         return (bMapScore + recommendationScore(b, semesterStartCompleted, selectedTypes)) -
           (aMapScore + recommendationScore(a, semesterStartCompleted, selectedTypes));
       });
