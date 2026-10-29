@@ -1879,6 +1879,7 @@ let CURRENT_REQUIREMENTS = null;
 let CURRENT_TAB = "program";
 let COMPLETED_COURSES = new Set();
 let DIRECT_COMPLETED_COURSES = new Set();
+let REPORTED_COMPLETED_COURSES = [];
 let SHOW_NOT_NEEDED = false;
 let CHOICE_SELECTIONS = {};
 let WRITING_INTENSIVE_COMPLETED = false;
@@ -2579,6 +2580,9 @@ function applyCunyBeyondImportedCourses() {
   catch (_) { imported = []; }
   AUTO_IMPORTED_COURSES = new Set();
   AUTO_IMPORTED_COURSE_LABELS = new Map();
+  REPORTED_COMPLETED_COURSES = Array.isArray(imported)
+    ? reconcileCompletedCourseRecords(imported, []).all
+    : [];
   if (!Array.isArray(imported) || !imported.length) return;
   const availableCodes = new Set(
     (CURRENT_REQUIREMENTS.groups || []).flatMap(group => group.courses || []).map(course => course.code)
@@ -2600,7 +2604,12 @@ function applyCunyBeyondImportedCourses() {
     const code = String(item?.bmcc_equivalency || item?.code || "").trim().toUpperCase();
     if (availableCodes.has(code)) {
       const choice = choiceOptionToPlaceholder.get(code);
-      if (choice) CHOICE_SELECTIONS[choice.placeholder] = [choice.option];
+      if (choice) {
+        const selected = selectedChoiceCourses(choice.placeholder);
+        if (!selected.some(option => option.code === choice.option.code)) {
+          CHOICE_SELECTIONS[choice.placeholder] = [...selected, choice.option];
+        }
+      }
       else DIRECT_COMPLETED_COURSES.add(code);
       AUTO_IMPORTED_COURSES.add(code);
       AUTO_IMPORTED_COURSE_LABELS.set(code, item?.recognition_source === "chat-entered"
@@ -4533,6 +4542,34 @@ async function generateAIStudyPlan() {
 
 
 
+function reconcileCompletedCourseRecords(reportedCourses, appliedCourses) {
+  const records = new Map();
+  const normalize = item => {
+    const source = typeof item === "string" ? { code: item } : (item || {});
+    const code = String(source.code || source.bmcc_equivalency || "").trim().toUpperCase();
+    return code ? { ...source, code } : null;
+  };
+
+  (Array.isArray(reportedCourses) ? reportedCourses : []).forEach(item => {
+    const record = normalize(item);
+    if (!record) return;
+    records.set(record.code, { ...record, applied_to_program: false });
+  });
+  (Array.isArray(appliedCourses) ? appliedCourses : []).forEach(item => {
+    const record = normalize(item);
+    if (!record) return;
+    const existing = records.get(record.code) || {};
+    records.set(record.code, { ...existing, ...record, code: record.code, applied_to_program: true });
+  });
+
+  const all = [...records.values()];
+  return {
+    all,
+    applied: all.filter(item => item.applied_to_program),
+    pendingReview: all.filter(item => !item.applied_to_program),
+  };
+}
+
 function buildTransferSnapshot() {
   const completed = [...getCompletedCourses()];
   const courses = allCoursesFromGroups();
@@ -4569,10 +4606,18 @@ function buildTransferSnapshot() {
     });
   });
 
+  const reconciled = reconcileCompletedCourseRecords(
+    REPORTED_COMPLETED_COURSES,
+    completedCourseDetails
+  );
+
   return {
     source_program: CURRENT_REQUIREMENTS ? CURRENT_REQUIREMENTS.program : null,
-    completed_courses: completed,
-    completed_course_details: completedCourseDetails,
+    completed_courses: reconciled.all.map(course => course.code),
+    completed_course_details: reconciled.all,
+    program_applied_completed_courses: completed,
+    applied_completed_course_details: reconciled.applied,
+    pending_review_completed_course_details: reconciled.pendingReview,
     choice_selections: CHOICE_SELECTIONS,
     recommendation: {
       semester: recommendation.semester,
@@ -4640,6 +4685,9 @@ function savePlannerArtifactsForChatbot() {
     ai_explanation: document.getElementById("aiPlanExplanation")?.innerText || "",
     workload_pattern: document.getElementById("workloadPattern")?.value || "balanced",
     target_credit_load: Number(document.getElementById("targetCreditLoad")?.value || 15),
+    reported_completed_courses: snapshot.completed_course_details,
+    applied_completed_courses: snapshot.applied_completed_course_details,
+    pending_review_courses: snapshot.pending_review_completed_course_details,
     semesters: LAST_DEGREE_PLAN.map(semester => ({
       name: semester.name, credits: semester.credits,
       courses: semester.courses.map(course => ({ code: course.code, title: course.title, credits: course.credits, area: course.group_name }))
