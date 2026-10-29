@@ -1283,14 +1283,33 @@ def seed_programs(db):
             ).first()
 
             if not program:
-                program = Program(
-                    department_id=department.id,
-                    code=row["program_code"].strip(),
-                    name=row["program_name"].strip(),
-                    degree_type=row["degree_type"].strip(),
-                    catalog_year=row["catalog_year"].strip()
+                # Advance an existing code-level identity in place so dependent
+                # career, CPL, transfer, and governance records retain a valid
+                # program_id when the active catalog year changes.
+                program = (
+                    db.query(Program)
+                    .join(Department, Program.department_id == Department.id)
+                    .filter(
+                        Department.institution_id == institution.id,
+                        Program.code == row["program_code"].strip(),
+                    )
+                    .first()
                 )
-                db.add(program)
+                if program:
+                    program.department_id = department.id
+                    program.catalog_year = row["catalog_year"].strip()
+                else:
+                    program = Program(
+                        department_id=department.id,
+                        code=row["program_code"].strip(),
+                        name=row["program_name"].strip(),
+                        degree_type=row["degree_type"].strip(),
+                        catalog_year=row["catalog_year"].strip()
+                    )
+                    db.add(program)
+
+            program.name = row["program_name"].strip()
+            program.degree_type = row["degree_type"].strip()
 
             db.flush()
 
@@ -1467,7 +1486,36 @@ def seed():
                 )
                 .all()
             )
+            # Preserve the stable Program row when advancing its active catalog
+            # edition.  Career/CPL/transfer records point at this identity and
+            # must not be orphaned merely because the curriculum year changed.
+            # The curriculum below is still replaced authoritatively and
+            # idempotently by clear_program_data().
+            program = next(
+                (
+                    candidate for candidate in same_code_programs
+                    if candidate.department_id == department.id
+                    and candidate.catalog_year == program_info["catalog_year"]
+                ),
+                same_code_programs[0] if same_code_programs else None,
+            )
+            if program:
+                old_catalog = program.catalog_year
+                program.department_id = department.id
+                program.catalog_year = program_info["catalog_year"]
+                program.name = program_info["program_name"]
+                program.degree_type = program_info["degree_type"]
+                db.flush()
+                if old_catalog != program.catalog_year:
+                    print(
+                        "Advanced program curriculum catalog: "
+                        f"{program_info['program_code']} "
+                        f"({old_catalog} -> {program.catalog_year})"
+                    )
+
             for stale_program in same_code_programs:
+                if stale_program is program:
+                    continue
                 if (
                     stale_program.department_id == department.id
                     and stale_program.catalog_year == program_info["catalog_year"]
@@ -1482,17 +1530,18 @@ def seed():
                     f"{program_info['program_code']} ({stale_catalog})"
                 )
 
-            program = get_or_create(
-                db,
-                Program,
-                department_id=department.id,
-                code=program_info["program_code"],
-                catalog_year=program_info["catalog_year"],
-                defaults={
-                    "name": program_info["program_name"],
-                    "degree_type": program_info["degree_type"],
-                },
-            )
+            if not program:
+                program = get_or_create(
+                    db,
+                    Program,
+                    department_id=department.id,
+                    code=program_info["program_code"],
+                    catalog_year=program_info["catalog_year"],
+                    defaults={
+                        "name": program_info["program_name"],
+                        "degree_type": program_info["degree_type"],
+                    },
+                )
 
             program.name = program_info["program_name"]
             program.degree_type = program_info["degree_type"]
