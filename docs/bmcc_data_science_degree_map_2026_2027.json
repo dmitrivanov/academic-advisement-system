@@ -1,0 +1,27 @@
+{
+  "institution_code": "BMCC",
+  "program_code": "DS_AS",
+  "program_name": "Data Science",
+  "degree_type": "AS",
+  "catalog_year": "2026-2027",
+  "default_semesters": 4,
+  "total_credits": 61,
+  "source_pdf": "https://www.bmcc.cuny.edu/academics/departments/math/data-science/",
+  "faculty_override_note": "The 2026-2027 map requires MAT 206 and uses CIS 395, CSC 211, and CIS 490 to satisfy the 10-credit program-elective requirement; MAT 420 and CSC 203 are approved alternatives.",
+  "semesters": [
+    {"number": 1, "target_credits": 13, "course_codes": ["CSC 103", "ENG 101", "MAT 206", "FC-INDIVIDUAL"]},
+    {"number": 2, "target_credits": 15, "course_codes": ["CSC 111", "ENG 201", "MAT 200", "MAT 301"]},
+    {"number": 3, "target_credits": 18, "course_codes": ["CIS 395", "CSC 211", "MAT 302", "MAT 409", "MAT 415"]},
+    {"number": 4, "target_credits": 15, "course_codes": ["CIS 490", "SPE 100", "CC-LIFE-PHYSICAL", "FC-US-EXP", "FC-WORLD-CULTURES"]}
+  ],
+  "sequence_notes": [
+    "MAT 206 precedes MAT 301.",
+    "MAT 301 precedes MAT 302, MAT 409, and MAT 415.",
+    "MAT 302 is a co-requisite for MAT 409.",
+    "CSC 111 precedes CIS 395 and CSC 211.",
+    "CIS 395 precedes CIS 490.",
+    "CIS 395, CSC 211, and CIS 490 satisfy the 10-credit program-elective requirement; MAT 420 and CSC 203 are approved alternatives.",
+    "SPE 100 satisfies Creative Expression; SPE 102 is the alternative for eligible non-native English speakers.",
+    "A Writing Intensive course is required for graduation."
+  ]
+}

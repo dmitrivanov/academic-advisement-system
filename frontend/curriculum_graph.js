@@ -159,7 +159,13 @@
     state.renderOptions = options;
     const nodes = new Map(graph.nodes.map(node => [node.id, node]));
     const mainClusterTypes = new Set(['program_required']);
-    const mainIds = new Set(graph.clusters.filter(cluster => mainClusterTypes.has(cluster.type)).flatMap(cluster => cluster.node_ids));
+    const inlineProgramElectives = graph.clusters.filter(cluster =>
+      cluster.type === 'program_elective' && (cluster.display_node_ids || cluster.node_ids).length < 10
+    );
+    const mainIds = new Set([
+      ...graph.clusters.filter(cluster => mainClusterTypes.has(cluster.type)).flatMap(cluster => cluster.node_ids),
+      ...inlineProgramElectives.flatMap(cluster => cluster.display_node_ids || cluster.node_ids)
+    ]);
     const preferredRoots = new Set((graph.preferred_root_course_codes || []).map(code => graph.nodes.find(node => node.code === code)?.id).filter(Boolean));
     // Required-course ancestors may live in Common/Flexible Core or in the
     // support bucket. Pull only ancestors that actually unlock a required node.
@@ -177,7 +183,7 @@
     const mainLayers = graph.layers.map(layer => layer.filter(id => mainIds.has(id))).filter(layer => layer.length);
     const seenClusters = new Set();
     const secondary = graph.clusters.filter(cluster => {
-      if (mainClusterTypes.has(cluster.type) || cluster.type === 'prerequisite_support' || cluster.type === 'elective_choice' || !(cluster.display_node_ids || cluster.node_ids).length) return false;
+      if (mainClusterTypes.has(cluster.type) || inlineProgramElectives.includes(cluster) || cluster.type === 'prerequisite_support' || cluster.type === 'elective_choice' || !(cluster.display_node_ids || cluster.node_ids).length) return false;
       const signature = `${cluster.name}|${cluster.node_ids.join(',')}`;
       if (seenClusters.has(signature)) return false;
       seenClusters.add(signature);

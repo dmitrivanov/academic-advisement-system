@@ -67,6 +67,14 @@ class CurriculumGraphModuleTests(unittest.TestCase):
         self.assertIn('.curriculum-group-card', styles)
         self.assertIn('.curriculum-node.expanded .node-details', styles)
 
+    def test_small_program_elective_groups_are_inlined_into_main_tree(self):
+        component = (ROOT / "frontend" / "curriculum_graph.js").read_text(encoding="utf-8")
+        self.assertIn("const inlineProgramElectives", component)
+        self.assertIn("cluster.type === 'program_elective'", component)
+        self.assertIn(".length < 10", component)
+        self.assertIn("...inlineProgramElectives.flatMap", component)
+        self.assertIn("inlineProgramElectives.includes(cluster)", component)
+
     def test_graph_redraws_after_resizing_and_highlights_downstream_path(self):
         component = (ROOT / "frontend" / "curriculum_graph.js").read_text(encoding="utf-8")
         styles = (ROOT / "frontend" / "curriculum_graph.css").read_text(encoding="utf-8")
