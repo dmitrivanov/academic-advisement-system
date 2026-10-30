@@ -7,7 +7,7 @@ from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel, Field
-from sqlalchemy import func
+from sqlalchemy import func, or_
 from sqlalchemy.orm import Session, joinedload
 
 from database import get_db
@@ -23,6 +23,7 @@ from models import (
     Course,
     ProgramCourse,
     CoursePrerequisite,
+    CourseCorequisite,
     CourseRequirementGroupPrerequisite,
     CourseAlternative,
     RequirementGroup,
@@ -1879,6 +1880,10 @@ def get_choice_group_courses(
 
 
 def build_course_payload(db: Session, program_id: int, course: Course):
+    program_course = db.query(ProgramCourse).filter_by(
+        program_id=program_id,
+        course_id=course.id,
+    ).first()
     prereq_rows = (
         db.query(CoursePrerequisite)
         .filter_by(program_id=program_id, course_id=course.id)
@@ -1888,6 +1893,17 @@ def build_course_payload(db: Session, program_id: int, course: Course):
     alt_rows = (
         db.query(CourseAlternative)
         .filter_by(program_id=program_id, course_id=course.id)
+        .all()
+    )
+    coreq_rows = (
+        db.query(CourseCorequisite)
+        .filter(
+            CourseCorequisite.program_id == program_id,
+            or_(
+                CourseCorequisite.course_id == course.id,
+                CourseCorequisite.coreq_course_id == course.id,
+            ),
+        )
         .all()
     )
     group_prereq_rows = (
@@ -1913,6 +1929,13 @@ def build_course_payload(db: Session, program_id: int, course: Course):
         if alt_course:
             alternatives.append(alt_course.display_code)
 
+    corequisites = []
+    for row in coreq_rows:
+        other_id = row.coreq_course_id if row.course_id == course.id else row.course_id
+        coreq_course = db.query(Course).filter_by(id=other_id).first()
+        if coreq_course:
+            corequisites.append(coreq_course.display_code)
+
     prerequisite_groups = []
     for row in group_prereq_rows:
         group = db.query(RequirementGroup).filter_by(id=row.requirement_group_id).first()
@@ -1924,7 +1947,9 @@ def build_course_payload(db: Session, program_id: int, course: Course):
         "title": course.title,
         "credits": course.credits,
         "choice_group_code": course.choice_group_code,
+        "satisfies_requirement": program_course.satisfies_requirement if program_course else None,
         "prereqs": prereqs,
+        "corequisites": corequisites,
         "alternatives": alternatives,
         "prerequisite_groups": prerequisite_groups,
     }
@@ -1937,6 +1962,12 @@ def build_course_payload_map(db: Session, program_id: int, courses: list[Course]
     if not course_ids:
         return {}
 
+    program_links = db.query(ProgramCourse).filter(
+        ProgramCourse.program_id == program_id,
+        ProgramCourse.course_id.in_(course_ids),
+    ).all()
+    program_links_by_course = {link.course_id: link for link in program_links}
+
     prereq_rows = db.query(CoursePrerequisite).filter(
         CoursePrerequisite.program_id == program_id,
         CoursePrerequisite.course_id.in_(course_ids),
@@ -1945,11 +1976,23 @@ def build_course_payload_map(db: Session, program_id: int, courses: list[Course]
         CourseAlternative.program_id == program_id,
         CourseAlternative.course_id.in_(course_ids),
     ).all()
+    coreq_rows = db.query(CourseCorequisite).filter(
+        CourseCorequisite.program_id == program_id,
+        or_(
+            CourseCorequisite.course_id.in_(course_ids),
+            CourseCorequisite.coreq_course_id.in_(course_ids),
+        ),
+    ).all()
     group_rows = db.query(CourseRequirementGroupPrerequisite).filter(
         CourseRequirementGroupPrerequisite.program_id == program_id,
         CourseRequirementGroupPrerequisite.course_id.in_(course_ids),
     ).all()
-    related_course_ids = {row.prereq_course_id for row in prereq_rows} | {row.alternative_course_id for row in alt_rows}
+    related_course_ids = (
+        {row.prereq_course_id for row in prereq_rows}
+        | {row.alternative_course_id for row in alt_rows}
+        | {row.course_id for row in coreq_rows}
+        | {row.coreq_course_id for row in coreq_rows}
+    )
     related_courses = db.query(Course).filter(Course.id.in_(related_course_ids)).all() if related_course_ids else []
     course_by_id = unique_courses | {course.id: course for course in related_courses}
     requirement_group_ids = {row.requirement_group_id for row in group_rows}
@@ -1966,6 +2009,15 @@ def build_course_payload_map(db: Session, program_id: int, courses: list[Course]
         alternative = course_by_id.get(row.alternative_course_id)
         if alternative:
             alternatives_by_course.setdefault(row.course_id, []).append(alternative.display_code)
+    corequisites_by_course = {}
+    for row in coreq_rows:
+        source = course_by_id.get(row.course_id)
+        target = course_by_id.get(row.coreq_course_id)
+        if source and target:
+            if row.course_id in unique_courses:
+                corequisites_by_course.setdefault(row.course_id, []).append(target.display_code)
+            if row.coreq_course_id in unique_courses:
+                corequisites_by_course.setdefault(row.coreq_course_id, []).append(source.display_code)
     groups_by_course = {}
     for row in group_rows:
         group = requirement_group_by_id.get(row.requirement_group_id)
@@ -1982,7 +2034,12 @@ def build_course_payload_map(db: Session, program_id: int, courses: list[Course]
             "title": course.title,
             "credits": course.credits,
             "choice_group_code": course.choice_group_code,
+            "satisfies_requirement": (
+                program_links_by_course[course_id].satisfies_requirement
+                if course_id in program_links_by_course else None
+            ),
             "prereqs": prereqs,
+            "corequisites": corequisites_by_course.get(course_id, []),
             "alternatives": alternatives_by_course.get(course_id, []),
             "prerequisite_groups": groups_by_course.get(course_id, []),
         }
@@ -2269,6 +2326,19 @@ def get_program_requirements(program_code: str, db: Session = Depends(get_db)):
         ).all()
         if row.prereq_course_id not in curriculum_course_ids
     } if prerequisite_target_ids else set()
+    if prerequisite_target_ids:
+        coreq_support_rows = db.query(CourseCorequisite).filter(
+            CourseCorequisite.program_id == program.id,
+            or_(
+                CourseCorequisite.course_id.in_(prerequisite_target_ids),
+                CourseCorequisite.coreq_course_id.in_(prerequisite_target_ids),
+            ),
+        ).all()
+        for row in coreq_support_rows:
+            if row.course_id in prerequisite_target_ids and row.coreq_course_id not in curriculum_course_ids:
+                support_course_ids.add(row.coreq_course_id)
+            if row.coreq_course_id in prerequisite_target_ids and row.course_id not in curriculum_course_ids:
+                support_course_ids.add(row.course_id)
     prerequisite_support_courses = []
     for course_id in sorted(support_course_ids):
         course = db.query(Course).filter_by(id=course_id).first()

@@ -333,6 +333,7 @@ class ProgramCourse(Base):
     program_id = Column(Integer, ForeignKey("programs.id"), nullable=False)
     course_id = Column(Integer, ForeignKey("courses.id"), nullable=False)
     requirement_type = Column(String, default="required")
+    satisfies_requirement = Column(String, nullable=True)
 
     program = relationship("Program", back_populates="courses")
     course = relationship("Course", back_populates="program_links")
@@ -361,6 +362,26 @@ class CoursePrerequisite(Base):
             "prereq_course_id",
             "group_id",
             name="uq_prereq"
+        ),
+    )
+
+
+class CourseCorequisite(Base):
+    """Canonical same-semester relationship for a program curriculum."""
+
+    __tablename__ = "course_corequisites"
+
+    id = Column(Integer, primary_key=True, index=True)
+    program_id = Column(Integer, ForeignKey("programs.id"), nullable=False)
+    course_id = Column(Integer, ForeignKey("courses.id"), nullable=False)
+    coreq_course_id = Column(Integer, ForeignKey("courses.id"), nullable=False)
+
+    __table_args__ = (
+        UniqueConstraint(
+            "program_id",
+            "course_id",
+            "coreq_course_id",
+            name="uq_coreq",
         ),
     )
 

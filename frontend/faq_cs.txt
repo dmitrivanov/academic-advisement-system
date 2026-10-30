@@ -1,12 +1,12 @@
 COMPUTER SCIENCE FAQ
 Q: I am a Computer Science major. What courses are required?
-A: For a Computer Science student, required courses include CSC 101, CSC 111, CSC 211, CSC 215, CSC 231, CSC 331, CSC 350, MAT 206, MAT 301, and MAT 302.
+A: For a Computer Science student, required courses include CSC 101, CSC 111, CSC 211, CSC 215, CSC 231, CSC 331, CSC 350, MAT 206, MAT 301, MAT 302, and PHY 215. PHY 215 satisfies Life and Physical Sciences and must be taken with MAT 302 unless MAT 302 was completed earlier.
 
 Q: I am a Computer Science major. What are the program requirements?
-A: For a Computer Science student, the program requirements include CSC 101, CSC 111, CSC 211, CSC 215, CSC 231, CSC 331, CSC 350, MAT 206, MAT 301, and MAT 302.
+A: For a Computer Science student, the program requirements include CSC 101, CSC 111, CSC 211, CSC 215, CSC 231, CSC 331, CSC 350, MAT 206, MAT 301, MAT 302, and PHY 215. PHY 215 satisfies Life and Physical Sciences and is paired with MAT 302.
 
 Q: I am a Computer Science major. What classes do I need for the major?
-A: For a Computer Science student, courses required for the major include CSC 101, CSC 111, CSC 211, CSC 215, CSC 231, CSC 331, CSC 350, MAT 206, MAT 301, and MAT 302.
+A: For a Computer Science student, courses required for the major include CSC 101, CSC 111, CSC 211, CSC 215, CSC 231, CSC 331, CSC 350, MAT 206, MAT 301, MAT 302, and PHY 215. PHY 215 satisfies Life and Physical Sciences and is paired with MAT 302.
 
 Q: I am a Computer Science major. What are the prerequisites for CSC 101?
 A: For a Computer Science student, CSC 101 has no prerequisites.

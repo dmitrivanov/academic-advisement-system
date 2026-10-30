@@ -60,7 +60,7 @@ class StandardizedCurriculaTests(unittest.TestCase):
 
     def test_bmcc_computing_programs_are_complete_and_valid(self):
         expected = {
-            "cs_courses.csv": ("CS", "AS", 60),
+            "cs_courses.csv": ("CS", "AS", 63),
             "cis_courses.csv": ("CIS", "AAS", 60),
             "cnt_courses.csv": ("CNT", "AAS", 60),
         }
@@ -88,13 +88,13 @@ class StandardizedCurriculaTests(unittest.TestCase):
         }
         self.assertEqual(expected_electives, by_group["Program Electives"])
         self.assertEqual(
-            {"MAT 301", "CSC 211", "CSC 215", "CSC 231", "CSC 331", "CSC 350", "MAT 302"},
+            {"MAT 301", "MAT 302", "PHY 215", "CSC 211", "CSC 215", "CSC 231", "CSC 331", "CSC 350"},
             by_group["Curriculum Requirements"],
         )
 
         adjustments = {row["derived_group_code"]: row for row in rows("program_choice_group_adjustments.csv")}
         self.assertEqual("MAT 206", adjustments["CS_MATH_QUANT"]["include_course_codes"])
-        self.assertEqual("PHY 215", adjustments["CS_LIFE_PHYSICAL"]["include_course_codes"])
+        self.assertNotIn("CS_LIFE_PHYSICAL", adjustments)
         self.assertEqual("SPE 100|SPE 102", adjustments["CS_CREATIVE"]["include_course_codes"])
 
     def test_cs_math_sequence_matches_degree_map(self):
@@ -102,6 +102,30 @@ class StandardizedCurriculaTests(unittest.TestCase):
         self.assertEqual("CS_MATH_QUANT", curriculum["CS-MATH"]["choice_group_code"])
         self.assertEqual("MAT 206", curriculum["MAT 301"]["prerequisites"])
         self.assertEqual("MAT 301", curriculum["MAT 302"]["prerequisites"])
+        self.assertEqual("MAT 302", curriculum["PHY 215"]["corequisites"])
+
+    def test_cs_phy_215_is_a_program_requirement_that_satisfies_lps(self):
+        curriculum = rows("cs_courses.csv")
+        physics = next(row for row in curriculum if row["course_code"] == "PHY 215")
+        self.assertEqual("program_required", physics["group_type"])
+        self.assertEqual("Curriculum Requirements", physics["group_name"])
+        self.assertEqual("Life and Physical Sciences", physics["satisfies_requirement"])
+        self.assertFalse(any(row["course_code"] == "CS-LPS" for row in curriculum))
+
+    def test_corequisites_flow_from_csv_to_graph_api_and_planner(self):
+        model = (ROOT / "models.py").read_text(encoding="utf-8")
+        seeder = (ROOT / "seed_database.py").read_text(encoding="utf-8")
+        api = (ROOT / "api_db_routes.py").read_text(encoding="utf-8")
+        graph = (ROOT / "curriculum_graph_service.py").read_text(encoding="utf-8")
+        planner = (ROOT / "frontend" / "db_progress_graph.html").read_text(encoding="utf-8")
+
+        self.assertIn("class CourseCorequisite", model)
+        self.assertIn('row.get("corequisites", "")', seeder)
+        self.assertIn('"corequisites": corequisites', api)
+        self.assertIn('"satisfies_requirement": program_course.satisfies_requirement', api)
+        self.assertIn('"relation_type": "corequisite"', graph)
+        self.assertIn("pendingCorequisiteBundle", planner)
+        self.assertIn("corequisiteBundleAvailable", planner)
 
     def test_ccny_placeholders_are_bound_to_separate_ccny_pools(self):
         curriculum = rows("ccny_cs_bs_courses.csv")

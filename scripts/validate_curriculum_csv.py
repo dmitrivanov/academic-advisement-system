@@ -34,6 +34,8 @@ CANONICAL_COLUMNS = [
 ]
 
 OPTIONAL_COLUMNS = [
+    "corequisites",
+    "satisfies_requirement",
     "completion_options",
     "required_course_sets",
     "required_course_set_count",
@@ -198,7 +200,7 @@ def validate_legacy_rows(path: Path, headers: list[str], rows: list[dict]) -> Va
         if credits is None or credits <= 0:
             findings.append(Finding("error", "`credits` must be a whole number greater than zero.", index))
 
-        for field in ("prerequisites", "alternatives"):
+        for field in ("prerequisites", "alternatives", "corequisites"):
             value = row.get(field, "")
             if "||" in value or value.startswith("|") or value.endswith("|"):
                 findings.append(Finding("error", f"Malformed `{field}` relationship syntax: {value}.", index))
@@ -372,7 +374,7 @@ def validate_file(path: Path, *, docs_dir: Path | None = None) -> ValidationResu
                     (code, float(credits), row.get("choice_group_code", ""), row.get("alternatives", ""))
                 )
 
-        for field in ("prerequisites", "alternatives"):
+        for field in ("prerequisites", "alternatives", "corequisites"):
             value = row.get(field, "")
             if value:
                 if "||" in value or value.startswith("|") or value.endswith("|"):

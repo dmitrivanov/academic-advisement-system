@@ -87,3 +87,50 @@ runScenario("Mathematics", [
         text=True,
     )
 
+
+@pytest.mark.skipif(not shutil.which("node"), reason="Node.js is required for planner JavaScript scenarios")
+def test_corequisite_pair_is_bundled_in_the_same_semester():
+    planner = ROOT / "frontend" / "db_progress_graph.html"
+    script = r"""
+const fs = require("fs");
+const source = fs.readFileSync(process.argv[1], "utf8");
+function extract(name) {
+  const start = source.indexOf(`function ${name}(`);
+  if (start < 0) throw new Error(`Missing ${name}`);
+  const body = source.indexOf("{", start);
+  let depth = 0;
+  for (let index = body; index < source.length; index += 1) {
+    if (source[index] === "{") depth += 1;
+    if (source[index] === "}") depth -= 1;
+    if (depth === 0) return source.slice(start, index + 1);
+  }
+  throw new Error(`Unclosed ${name}`);
+}
+["pendingCorequisiteBundle", "corequisiteBundleAvailable"].forEach(name =>
+  eval(`${extract(name)}; globalThis.${name}=${name}`)
+);
+function isCourseCompleted(code, course, completed) { return completed.has(code); }
+function allPrereqsSatisfied(course, completed) {
+  return (course.prereqs || []).every(code => completed.has(code));
+}
+const courses = {
+  "MAT 302": {code:"MAT 302", credits:4, prereqs:["MAT 301"], corequisites:[]},
+  "PHY 215": {code:"PHY 215", credits:4, prereqs:[], corequisites:["MAT 302"]}
+};
+const ready = new Set(["MAT 301"]);
+for (const anchor of [courses["MAT 302"], courses["PHY 215"]]) {
+  const bundle = pendingCorequisiteBundle(anchor, courses, ready);
+  const codes = bundle.map(course => course.code).sort().join("|");
+  if (codes !== "MAT 302|PHY 215") throw new Error(`Unexpected bundle from ${anchor.code}: ${codes}`);
+  if (!corequisiteBundleAvailable(bundle, ready)) throw new Error(`Bundle should be available from ${anchor.code}`);
+}
+if (corequisiteBundleAvailable(Object.values(courses), new Set())) {
+  throw new Error("Bundle must wait until MAT 301 is complete");
+}
+"""
+    subprocess.run(
+        [shutil.which("node"), "-e", script, str(planner)],
+        check=True,
+        capture_output=True,
+        text=True,
+    )

@@ -16,7 +16,10 @@ Computer Science retains its program selector course set while adding the publis
 CIS 317 option. The official degree map resolves an ambiguity in the summary table:
 MAT 206 satisfies Common Core, while MAT 301 and MAT 302 remain a required curriculum
 sequence. CSC 101 and CSC 111 remain in Flexible Core as the required Scientific
-World courses. PHY 215 and SPE 100-or-SPE 102 retain their published Core placement.
+World courses. PHY 215 is represented as a program requirement that also satisfies
+Life and Physical Sciences, and its canonical co-requisite is MAT 302. SPE 100-or-SPE
+102 retains its published Core placement. The resulting CS map contains 63 scheduled
+credits because the four-credit STEM courses exceed the three-credit Pathways minima.
 
 ## CCNY
 

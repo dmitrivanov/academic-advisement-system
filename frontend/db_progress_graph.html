@@ -2169,14 +2169,16 @@ function prospectusCourseRows(courses, completed) {
 
   return `<div class="prospectus-course-list">${courses.map(course => {
     const prerequisites = formatPrereqs(course.prereqs, course.prerequisite_groups);
+    const corequisites = formatCorequisites(course.corequisites);
     const area = course.group_name || "Curriculum requirement";
+    const satisfaction = course.satisfies_requirement ? ` · Satisfies ${course.satisfies_requirement}` : "";
     const unlocks = countUnlocks(course, completed);
     return `
       <div class="prospectus-course">
         <div class="prospectus-course-code">${prospectusEscape(course.is_elective_slot ? "Elective choice" : course.code)}</div>
         <div class="prospectus-course-title">
           ${prospectusEscape(course.title)}
-          <small>${prospectusEscape(area)}${course.is_elective_slot ? " · Student selection required" : ` · Prerequisites: ${prospectusEscape(prerequisites)}${unlocks ? ` · Unlocks ${unlocks} future course${unlocks === 1 ? "" : "s"}` : ""}`}</small>
+          <small>${prospectusEscape(area)}${prospectusEscape(satisfaction)}${course.is_elective_slot ? " · Student selection required" : ` · Prerequisites: ${prospectusEscape(prerequisites)}${corequisites !== "None" ? ` · Co-requisites: ${prospectusEscape(corequisites)}` : ""}${unlocks ? ` · Unlocks ${unlocks} future course${unlocks === 1 ? "" : "s"}` : ""}`}</small>
         </div>
         <strong>${Number(course.credits || 0)} cr</strong>
       </div>`;
@@ -2881,10 +2883,31 @@ function allPrereqsSatisfied(course, completed) {
   return coursePrereqsMet && groupPrereqsMet;
 }
 
+function pendingCorequisiteBundle(course, courses, completed, selectedCodes = new Set()) {
+  const requiredCodes = new Set(course.corequisites || []);
+  Object.values(courses).forEach(candidate => {
+    if ((candidate.corequisites || []).includes(course.code)) requiredCodes.add(candidate.code);
+  });
+  return [course, ...[...requiredCodes].map(code => courses[code]).filter(Boolean)]
+    .filter((candidate, index, bundle) =>
+      bundle.findIndex(item => item.code === candidate.code) === index &&
+      !selectedCodes.has(candidate.code) &&
+      !isCourseCompleted(candidate.code, candidate, completed)
+    );
+}
+
+function corequisiteBundleAvailable(bundle, completed) {
+  return bundle.every(course => allPrereqsSatisfied(course, completed));
+}
+
 function formatPrereqs(prereqs, prerequisiteGroups = []) {
   const labels = (prereqs || []).map(p => Array.isArray(p) ? p.join(" or ") : p);
   labels.push(...prerequisiteGroups.map(name => `${name} requirement`));
   return labels.length ? labels.join(", ") : "None";
+}
+
+function formatCorequisites(corequisites = []) {
+  return corequisites.length ? corequisites.join(", ") : "None";
 }
 
 function formatAlternatives(alts) {
@@ -3454,6 +3477,8 @@ function createSelectableCourseCard(course) {
       <summary>Class details</summary>
       <div>Credits: ${course.credits}</div>
       <div>Prereqs: ${formatPrereqs(course.prereqs, course.prerequisite_groups)}</div>
+      <div>Co-requisites: ${formatCorequisites(course.corequisites)}</div>
+      ${course.satisfies_requirement ? `<div>Satisfies: ${course.satisfies_requirement}</div>` : ""}
       <div>Alternatives: ${formatAlternatives(course.alternatives)}</div>
       <div>Area: ${course.group_name}</div>
     </details>
@@ -4173,23 +4198,30 @@ function chooseRecommendedCourses() {
       return scoreB - scoreA;
     });
 
-    let chosen = null;
+    let chosenBundle = null;
 
     for (const course of available) {
-      const courseCredits = Number(course.credits || 0);
-
-      if (credits + courseCredits <= semester.maxCredits) {
-        chosen = course;
+      const bundle = pendingCorequisiteBundle(course, courses, completed, selectedCodes);
+      const bundleCredits = bundle.reduce((sum, item) => sum + Number(item.credits || 0), 0);
+      if (
+        bundle.length &&
+        selected.length + bundle.length <= semester.maxCourses &&
+        credits + bundleCredits <= semester.maxCredits &&
+        corequisiteBundleAvailable(bundle, completed)
+      ) {
+        chosenBundle = bundle;
         break;
       }
     }
 
-    if (!chosen) break;
+    if (!chosenBundle) break;
 
-    selected.push(chosen);
-    selectedCodes.add(chosen.code);
-    selectedGroupTypes.add(chosen.group_type);
-    credits += Number(chosen.credits || 0);
+    chosenBundle.forEach(chosen => {
+      selected.push(chosen);
+      selectedCodes.add(chosen.code);
+      selectedGroupTypes.add(chosen.group_type);
+      credits += Number(chosen.credits || 0);
+    });
 
     available = available.filter(course => !selectedCodes.has(course.code));
 
@@ -4367,18 +4399,35 @@ function buildDegreePlan() {
           (aMapScore + recommendationScore(a, semesterStartCompleted, selectedTypes));
       });
 
-      const chosen = available.find(course => {
+      let chosenBundle = null;
+      available.some(course => {
         const projected = new Set(simulatedCompleted);
         selected.forEach(item => projected.add(item.code));
         if (isNotNeeded(course.code, course, projected)) return false;
-        return credits + Number(course.credits || 0) <= 18;
+        const selectedCodes = new Set(selected.map(item => item.code));
+        const bundle = pendingCorequisiteBundle(course, courses, semesterStartCompleted, selectedCodes);
+        const bundleCredits = bundle.reduce((sum, item) => sum + Number(item.credits || 0), 0);
+        if (
+          bundle.length &&
+          selected.length + bundle.length <= 6 &&
+          credits + bundleCredits <= 18 &&
+          corequisiteBundleAvailable(bundle, semesterStartCompleted) &&
+          bundle.every(item => !isNotNeeded(item.code, item, projected))
+        ) {
+          chosenBundle = bundle;
+          return true;
+        }
+        return false;
       });
-      if (!chosen) break;
+      if (!chosenBundle) break;
 
-      selected.push(chosen);
-      selectedTypes.add(chosen.group_type);
-      credits += Number(chosen.credits || 0);
-      available = available.filter(course => course.code !== chosen.code);
+      chosenBundle.forEach(chosen => {
+        selected.push(chosen);
+        selectedTypes.add(chosen.group_type);
+        credits += Number(chosen.credits || 0);
+      });
+      const chosenCodes = new Set(chosenBundle.map(course => course.code));
+      available = available.filter(course => !chosenCodes.has(course.code));
       if (credits >= targetCredits - 1) break;
     }
 
@@ -4811,6 +4860,8 @@ function getCoursesWithStatuses() {
     area: course.group_name,
     group_type: course.group_type,
     prerequisites: course.prereqs || [],
+    corequisites: course.corequisites || [],
+    satisfies_requirement: course.satisfies_requirement || null,
     alternatives: course.alternatives || [],
     status: getCourseStatus(course.code, course, completed),
     unlocks: countUnlocks(course, completed),

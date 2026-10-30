@@ -14,6 +14,7 @@ from models import (
     Course,
     ProgramCourse,
     CoursePrerequisite,
+    CourseCorequisite,
     CourseRequirementGroupPrerequisite,
     CourseAlternative,
     FAQEntry,
@@ -281,6 +282,14 @@ def ensure_requirement_group_columns(db):
     ):
         if column_name not in columns:
             db.execute(text(f"ALTER TABLE requirement_groups ADD COLUMN {column_name} {column_type}"))
+    db.commit()
+
+
+def ensure_program_course_columns(db):
+    inspector = inspect(engine)
+    columns = {col["name"] for col in inspector.get_columns("program_courses")}
+    if "satisfies_requirement" not in columns:
+        db.execute(text("ALTER TABLE program_courses ADD COLUMN satisfies_requirement VARCHAR"))
     db.commit()
 
 
@@ -560,6 +569,7 @@ def clear_program_data(db, program):
 
     db.query(RequirementGroup).filter_by(program_id=program.id).delete(synchronize_session=False)
     db.query(CoursePrerequisite).filter_by(program_id=program.id).delete(synchronize_session=False)
+    db.query(CourseCorequisite).filter_by(program_id=program.id).delete(synchronize_session=False)
     db.query(CourseAlternative).filter_by(program_id=program.id).delete(synchronize_session=False)
     db.query(ProgramCourse).filter_by(program_id=program.id).delete(synchronize_session=False)
     db.query(FAQEntry).filter_by(program_id=program.id).delete(synchronize_session=False)
@@ -684,13 +694,15 @@ def seed_new_format(db, program, csv_path):
             course.credits = credits
             course.choice_group_code = (row.get("choice_group_code") or "").strip().upper() or None
 
-            get_or_create(
+            program_course = get_or_create(
                 db,
                 ProgramCourse,
                 program_id=program.id,
                 course_id=course.id,
                 defaults={"requirement_type": group_type},
             )
+            program_course.requirement_type = group_type
+            program_course.satisfies_requirement = (row.get("satisfies_requirement") or "").strip() or None
 
             get_or_create(
                 db,
@@ -750,6 +762,21 @@ def add_relationships(db, program, rows, old_format):
                     program_id=program.id,
                     course_id=course.id,
                     alternative_course_id=alt.id,
+                )
+
+        for _, coreq_codes in parse_relationships(row.get("corequisites", "")):
+            for coreq_code in coreq_codes:
+                coreq = find_course(db, institution, coreq_code)
+                if not coreq:
+                    coreq = get_or_create_course(
+                        db, institution, coreq_code, coreq_code, 0
+                    )
+                get_or_create(
+                    db,
+                    CourseCorequisite,
+                    program_id=program.id,
+                    course_id=course.id,
+                    coreq_course_id=coreq.id,
                 )
 
         for group_name in [name.strip() for name in (row.get("prerequisite_groups") or "").split("|") if name.strip()]:
@@ -1414,6 +1441,7 @@ def seed():
         ensure_course_columns(db)
         ensure_choice_group_columns(db)
         ensure_requirement_group_columns(db)
+        ensure_program_course_columns(db)
         seed_institutions(db)
         seed_departments(db)
         seed_programs(db)

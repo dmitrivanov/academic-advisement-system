@@ -11,6 +11,7 @@ from models import (
     ChoiceGroup,
     ChoiceGroupCourse,
     Course,
+    CourseCorequisite,
     CoursePrerequisite,
     CurriculumGraphEdgeOverride,
     CurriculumGraphNodePosition,
@@ -157,6 +158,7 @@ def build_curriculum_graph(db, program):
     # Include external/support prerequisites so every visible edge has two nodes.
     target_ids = set(nodes)
     base_rows = db.query(CoursePrerequisite).filter_by(program_id=program.id).all()
+    corequisite_rows = db.query(CourseCorequisite).filter_by(program_id=program.id).all()
     changed = True
     while changed:
         changed = False
@@ -180,6 +182,25 @@ def build_curriculum_graph(db, program):
             "node_ids": support_ids,
         })
 
+    corequisite_support_ids = set()
+    for row in corequisite_rows:
+        for course_id in (row.course_id, row.coreq_course_id):
+            if course_id not in nodes:
+                course = db.query(Course).filter_by(id=course_id).first()
+                if course:
+                    nodes[course.id] = _course_payload(course)
+                    node_cluster_ids[course.id].append("corequisite-support")
+                    corequisite_support_ids.add(course.id)
+    if corequisite_support_ids:
+        clusters.append({
+            "id": "corequisite-support",
+            "name": "Co-requisite support courses",
+            "type": "prerequisite_support",
+            "required_credits": None,
+            "required_course_count": None,
+            "node_ids": sorted(corequisite_support_ids),
+        })
+
     overrides = db.query(CurriculumGraphEdgeOverride).filter_by(program_id=program.id).all()
     saved_positions = db.query(CurriculumGraphNodePosition).filter_by(program_id=program.id).all()
     override_keys = {
@@ -201,6 +222,23 @@ def build_curriculum_graph(db, program):
                 "target_id": row.course_id,
                 "relation_type": "prerequisite",
                 "group_id": row.group_id,
+                "origin": "canonical",
+                "override_id": override.id if override else None,
+            })
+
+    for row in corequisite_rows:
+        key = (row.coreq_course_id, row.course_id, "corequisite", 1)
+        base_keys.add(key)
+        override = override_keys.get(key)
+        if override and override.action == "remove":
+            continue
+        if row.coreq_course_id in nodes and row.course_id in nodes:
+            edges.append({
+                "id": f"coreq-{row.id}",
+                "source_id": row.coreq_course_id,
+                "target_id": row.course_id,
+                "relation_type": "corequisite",
+                "group_id": 1,
                 "origin": "canonical",
                 "override_id": override.id if override else None,
             })
