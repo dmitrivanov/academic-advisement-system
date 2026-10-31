@@ -488,7 +488,10 @@ def serve_advising_app_v3(request: Request):
         return RedirectResponse("/?next=/advising-app_v3", status_code=303)
     if not is_cuny_beyond_enabled():
         raise HTTPException(status_code=404, detail="Public advising chatbot is not enabled")
-    return FileResponse("frontend/cs_degree_tree_v3.html")
+    return FileResponse(
+        "frontend/cs_degree_tree_v3.html",
+        headers={"Cache-Control": "no-store, max-age=0", "Pragma": "no-cache"},
+    )
 
 
 def serve_configured_advising_entry(request: Request, entry_path: str):

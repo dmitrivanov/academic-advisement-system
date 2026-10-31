@@ -11,8 +11,9 @@ LOGIN = (ROOT / "frontend/login.html").read_text()
 
 def test_v3_is_a_separate_authenticated_entry_point():
     route = SERVER.split('@app.get("/advising-app_v3")', 1)[1].split('@app.get(', 1)[0]
-    assert 'FileResponse("frontend/cs_degree_tree_v3.html")' in route
+    assert '"frontend/cs_degree_tree_v3.html"' in route
     assert 'RedirectResponse("/?next=/advising-app_v3"' in route
+    assert '"Cache-Control": "no-store, max-age=0"' in route
     assert '"/advising-app_v3"' in LOGIN
     assert '"/advising-app_v3"' in SERVER.split("def safe_login_return_path", 1)[1]
 
