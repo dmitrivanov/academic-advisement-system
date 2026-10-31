@@ -80,12 +80,44 @@
   function courseCard(node, elective = false) {
     const status = nodeStatus(node), unlocks = downstreamCount(node.id), coreq = corequisites(node.id)
       .map(id => state.graph.nodes.find(item => item.id === id)?.code).filter(Boolean);
-    return `<button type="button" class="course-card ${status}" data-node-id="${node.id}" data-course-code="${escapeHtml(node.code)}" aria-pressed="${status === 'completed'}">
-      <span class="course-code"><span>${escapeHtml(node.code)}</span><span class="check">${status === 'completed' ? '✓' : ''}</span></span>
-      <span class="course-title">${escapeHtml(node.title)}</span>
-      <span class="course-meta">${node.credits} credits${unlocks ? ` · <span class="unlocks">unlocks ${unlocks}</span>` : ''}${elective ? ' · elective option' : ''}</span>
-      ${coreq.length ? `<span class="coreq-badge">Take with ${escapeHtml(coreq.join(' / '))}</span>` : ''}
-    </button>`;
+    const prerequisiteCodes = prerequisiteGroups(node.id).map(group => group
+      .map(id => state.graph.nodes.find(item => item.id === id)?.code).filter(Boolean).join(' or ')).filter(Boolean);
+    const unlockedCodes = state.graph.edges.filter(edge => edge.source_id === node.id && edge.relation_type === 'prerequisite')
+      .map(edge => state.graph.nodes.find(item => item.id === edge.target_id)?.code).filter(Boolean);
+    const detailsId = `course-details-${String(node.code).replace(/[^a-z0-9]+/gi, '-').toLowerCase()}`;
+    return `<article class="course-card ${status}" data-node-id="${node.id}" data-course-code="${escapeHtml(node.code)}">
+      <button type="button" class="course-select" aria-pressed="${status === 'completed'}" aria-label="${status === 'completed' ? 'Remove' : 'Mark'} ${escapeHtml(node.code)} as completed">
+        <span class="course-code"><span>${escapeHtml(node.code)}</span><span class="check">${status === 'completed' ? '✓' : ''}</span></span>
+        <span class="course-title">${escapeHtml(node.title)}</span>
+      </button>
+      <button type="button" class="course-details-toggle" aria-expanded="false" aria-controls="${detailsId}">Class details</button>
+      <span id="${detailsId}" class="course-details-panel">
+        <span><strong>Credits:</strong> ${Number(node.credits || 0)}</span>
+        <span><strong>Prerequisites:</strong> ${escapeHtml(prerequisiteCodes.join(' and ') || 'None shown')}</span>
+        <span><strong>Unlocks:</strong> ${escapeHtml(unique(unlockedCodes).join(', ') || 'No later course shown')}</span>
+        ${coreq.length ? `<span><strong>Co-requisite:</strong> ${escapeHtml(coreq.join(' / '))}</span>` : ''}
+        ${elective ? '<span><strong>Requirement:</strong> Program elective option</span>' : ''}
+      </span>
+    </article>`;
+  }
+
+  function attachCourseInteractions() {
+    els.tree.querySelectorAll('.course-select').forEach(button => button.addEventListener('click', () => {
+      toggleCourse(button.closest('[data-course-code]').dataset.courseCode);
+    }));
+    els.tree.querySelectorAll('.course-details-toggle').forEach(button => button.addEventListener('click', () => {
+      const card = button.closest('.course-card'), panel = document.getElementById(button.getAttribute('aria-controls'));
+      const expanded = button.getAttribute('aria-expanded') === 'true';
+      els.tree.querySelectorAll('.course-card.details-open').forEach(openCard => {
+        if (openCard === card) return;
+        openCard.classList.remove('details-open');
+        openCard.querySelector('.course-details-toggle')?.setAttribute('aria-expanded', 'false');
+        openCard.querySelector('.course-details-panel')?.classList.remove('open');
+      });
+      button.setAttribute('aria-expanded', String(!expanded));
+      card.classList.toggle('details-open', !expanded);
+      panel.classList.toggle('open', !expanded);
+    }));
   }
 
   function stableStages(nodes) {
@@ -120,7 +152,7 @@
       ${electives.length ? `<section class="elective-orbit"><div class="elective-orbit-header"><div><h3>Program elective pathways</h3><p>Visible as part of the main tree—select completed electives here.</p></div><span class="eyebrow">Choose approved options</span></div><div class="elective-courses">${electives.map(node => courseCard(node, true)).join('')}</div></section>` : ''}
       ${secondaryClusters.length ? `<section class="requirement-ribbon"><strong>General education branches</strong><div class="requirement-pills">${secondaryClusters.map(cluster => `<span>${escapeHtml(cluster.name)} · ${cluster.required_credits || cluster.required_course_count || ''}${cluster.required_credits ? ' credits' : cluster.required_course_count ? ' courses' : ''}</span>`).join('')}</div></section>` : ''}`;
     els.tree.hidden = false; els.status.hidden = true;
-    els.tree.querySelectorAll('[data-course-code]').forEach(card => card.addEventListener('click', () => toggleCourse(card.dataset.courseCode)));
+    attachCourseInteractions();
     updatePlanning();
     requestAnimationFrame(drawConnectors);
   }
@@ -160,7 +192,7 @@
       <section class="support-branches"><div class="communication-branch"><div class="track-heading"><span class="track-icon">Aa</span><div><h3>Communication sequence</h3><p>Complete composition in order and choose one speech course.</p></div></div><div id="communication-map" class="communication-map"><svg class="tree-connectors" aria-hidden="true"></svg><div>${communication[0] ? courseCard(communication[0]) : ''}</div><span class="branch-arrow">→</span><div>${communication[1] ? courseCard(communication[1]) : ''}</div><span class="branch-divider">and</span><div class="alternative-stack"><span class="alternative-label">Choose one</span>${speech.map(node => courseCard(node)).join('')}</div></div></div></section>
       <section class="elective-tracks"><div class="elective-orbit-header"><div><h3>Program elective tracks</h3><p>Twelve approved options grouped into three coherent pathways. The degree requires 6 program-elective credits.</p></div><span class="eyebrow">4 courses per track</span></div><div class="track-grid">${CS_ELECTIVE_TRACKS.map(track => `<article class="elective-track ${track.accent}"><div class="track-heading"><span class="track-icon">${track.accent === 'mobile' ? '▣' : track.accent === 'data' ? '⌁' : '◆'}</span><div><h4>${escapeHtml(track.name)}</h4><p>${track.codes.length} approved courses</p></div></div><div class="track-courses">${track.codes.map(nodeByCode).filter(Boolean).map(node => courseCard(node, true)).join('')}</div></article>`).join('')}</div></section>`;
     els.tree.hidden = false; els.status.hidden = true;
-    els.tree.querySelectorAll('[data-course-code]').forEach(card => card.addEventListener('click', () => toggleCourse(card.dataset.courseCode)));
+    attachCourseInteractions();
     updatePlanning();
     requestAnimationFrame(() => {
       drawFixedConnectors('cs-fixed-map', fixedEdges);

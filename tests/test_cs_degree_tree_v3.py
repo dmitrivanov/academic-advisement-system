@@ -27,11 +27,24 @@ def test_tree_uses_canonical_graph_api_and_limits_program_selector_scope():
 
 def test_course_selection_drives_status_and_deterministic_plan():
     assert 'data-course-code' in SCRIPT
+    assert 'class="course-select"' in SCRIPT
     assert "localStorage.setItem(storageKey" in SCRIPT
     assert "function prerequisiteSatisfied" in SCRIPT
     assert "function deterministicPlan" in SCRIPT
     assert "downstreamCount(b.id) - downstreamCount(a.id)" in SCRIPT
     assert "corequisites(node.id)" in SCRIPT
+
+
+def test_course_titles_and_expandable_details_are_available_on_every_card():
+    assert 'class="course-title"' in SCRIPT
+    assert 'class="course-details-toggle"' in SCRIPT
+    assert 'class="course-details-panel"' in SCRIPT
+    assert '<strong>Prerequisites:</strong>' in SCRIPT
+    assert '<strong>Unlocks:</strong>' in SCRIPT
+    assert "function attachCourseInteractions" in SCRIPT
+    assert ".track-courses{grid-template-columns:1fr 1fr" in STYLE
+    assert ".workspace{grid-template-columns:minmax(0,1.8fr)" in STYLE
+    assert ".fixed-map-section,.support-branches,.elective-tracks{min-width:0}" in STYLE
 
 
 def test_stable_tree_shows_electives_and_dependency_connectors():
