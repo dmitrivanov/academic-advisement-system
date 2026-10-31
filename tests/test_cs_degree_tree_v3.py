@@ -45,3 +45,10 @@ def test_stable_tree_shows_electives_and_dependency_connectors():
 def test_page_explains_prototype_boundary():
     assert "central degree-tree design and deterministic sequencing" in PAGE
     assert "Chatbot and report integration come after" in PAGE
+
+
+def test_page_assets_use_the_frontend_static_mount():
+    assert 'href="/frontend/cs_degree_tree_v3.css' in PAGE
+    assert 'src="/frontend/cs_degree_tree_v3.js' in PAGE
+    assert 'href="/static/' not in PAGE
+    assert 'src="/static/' not in PAGE
