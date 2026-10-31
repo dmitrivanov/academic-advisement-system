@@ -66,9 +66,12 @@ def test_cs_electives_are_exactly_three_four_course_tracks():
     assert "4 courses per track" in SCRIPT
 
 
-def test_page_explains_prototype_boundary():
-    assert "central degree-tree design and deterministic sequencing" in PAGE
-    assert "Chatbot and report integration come after" in PAGE
+def test_page_uses_compact_map_header_without_prototype_copy():
+    assert "Interactive curriculum map" in PAGE
+    assert "Selected program" in PAGE
+    assert "completed courses" in PAGE
+    assert "Your degree pathway, in one view" not in PAGE
+    assert "Prototype boundary" not in PAGE
 
 
 def test_page_assets_use_the_frontend_static_mount():
