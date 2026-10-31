@@ -111,11 +111,15 @@
       els.tree.querySelectorAll('.course-card.details-open').forEach(openCard => {
         if (openCard === card) return;
         openCard.classList.remove('details-open');
+        openCard.closest('.fixed-node, .speech-branch')?.classList.remove('details-active');
+        openCard.closest('.fixed-map-section')?.classList.remove('details-active');
         openCard.querySelector('.course-details-toggle')?.setAttribute('aria-expanded', 'false');
         openCard.querySelector('.course-details-panel')?.classList.remove('open');
       });
       button.setAttribute('aria-expanded', String(!expanded));
       card.classList.toggle('details-open', !expanded);
+      card.closest('.fixed-node, .speech-branch')?.classList.toggle('details-active', !expanded);
+      card.closest('.fixed-map-section')?.classList.toggle('details-active', !expanded);
       panel.classList.toggle('open', !expanded);
     }));
   }
@@ -172,31 +176,33 @@
   }
 
   function renderComputerScienceTree() {
-    const mapNodes = CS_MAP_CODES.map(nodeByCode).filter(Boolean);
     const communication = CS_COMMUNICATION_CODES.map(nodeByCode).filter(Boolean);
     const speech = [speechNode('SPE 100'), speechNode('SPE 102')];
+    const mapNodes = [...CS_MAP_CODES.map(nodeByCode).filter(Boolean), ...communication];
     const positions = {
       'CSC 101':'csc101','CSC 111':'csc111','CSC 211':'csc211','CSC 215':'csc215',
       'CSC 231':'csc231','CSC 331':'csc331','CSC 350':'csc350','MAT 206':'mat206',
-      'MAT 301':'mat301','MAT 302':'mat302','PHY 215':'phy215'
+      'MAT 301':'mat301','MAT 302':'mat302','PHY 215':'phy215','ENG 101':'eng101','ENG 201':'eng201'
     };
     const fixedEdges = [
       ['CSC 101','CSC 111','prerequisite'],['MAT 206','CSC 111','prerequisite'],['MAT 206','MAT 301','prerequisite'],
       ['CSC 111','CSC 211','prerequisite'],['CSC 111','CSC 215','prerequisite'],['CSC 111','CSC 231','prerequisite'],
       ['MAT 301','CSC 231','prerequisite'],['MAT 301','PHY 215','prerequisite'],['MAT 301','MAT 302','prerequisite'],
       ['CSC 211','CSC 331','prerequisite'],['CSC 211','CSC 350','prerequisite'],['CSC 231','CSC 331','prerequisite'],
-      ['MAT 302','PHY 215','corequisite']
+      ['MAT 302','PHY 215','corequisite'],['ENG 101','ENG 201','prerequisite']
     ];
     els.tree.innerHTML = `<section class="fixed-map-section"><div class="map-section-heading"><div><span class="eyebrow">Professor-reviewed primary sequence</span><h3>CSC curriculum map</h3></div><p>Arrows show prerequisites. The dashed purple connection marks a co-requisite.</p></div>
-      <div id="cs-fixed-map" class="cs-fixed-map"><svg class="tree-connectors" aria-hidden="true"></svg>${mapNodes.map(node => `<div class="fixed-node ${positions[node.code]}">${courseCard(node)}</div>`).join('')}</div></section>
-      <section class="support-branches"><div class="communication-branch"><div class="track-heading"><span class="track-icon">Aa</span><div><h3>Communication sequence</h3><p>Complete composition in order and choose one speech course.</p></div></div><div id="communication-map" class="communication-map"><svg class="tree-connectors" aria-hidden="true"></svg><div>${communication[0] ? courseCard(communication[0]) : ''}</div><span class="branch-arrow">→</span><div>${communication[1] ? courseCard(communication[1]) : ''}</div><span class="branch-divider">and</span><div class="alternative-stack"><span class="alternative-label">Choose one</span>${speech.map(node => courseCard(node)).join('')}</div></div></div></section>
+      <div id="cs-fixed-map" class="cs-fixed-map"><svg class="tree-connectors" aria-hidden="true"></svg>
+        ${[1,2,3,4].map(term => `<span class="semester-layer semester-layer-${term}">Semester ${term}</span>`).join('')}
+        ${mapNodes.map(node => `<div class="fixed-node ${positions[node.code]}">${courseCard(node)}</div>`).join('')}
+        <div class="speech-branch"><span class="alternative-label">Choose one speech course</span>${speech.map(node => courseCard(node)).join('')}</div>
+      </div></section>
       <section class="elective-tracks"><div class="elective-orbit-header"><div><h3>Program elective tracks</h3><p>Twelve approved options grouped into three coherent pathways. The degree requires 6 program-elective credits.</p></div><span class="eyebrow">4 courses per track</span></div><div class="track-grid">${CS_ELECTIVE_TRACKS.map(track => `<article class="elective-track ${track.accent}"><div class="track-heading"><span class="track-icon">${track.accent === 'mobile' ? '▣' : track.accent === 'data' ? '⌁' : '◆'}</span><div><h4>${escapeHtml(track.name)}</h4><p>${track.codes.length} approved courses</p></div></div><div class="track-courses">${track.codes.map(nodeByCode).filter(Boolean).map(node => courseCard(node, true)).join('')}</div></article>`).join('')}</div></section>`;
     els.tree.hidden = false; els.status.hidden = true;
     attachCourseInteractions();
     updatePlanning();
     requestAnimationFrame(() => {
       drawFixedConnectors('cs-fixed-map', fixedEdges);
-      drawFixedConnectors('communication-map', [['ENG 101','ENG 201','prerequisite']]);
     });
   }
 

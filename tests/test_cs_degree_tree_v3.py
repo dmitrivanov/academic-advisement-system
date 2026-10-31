@@ -64,6 +64,10 @@ def test_cs_map_matches_professor_sequence_and_adds_requested_branches():
     assert "speechNode('SPE 102')" in SCRIPT
     assert "function renderComputerScienceTree" in SCRIPT
     assert "function drawFixedConnectors" in SCRIPT
+    assert "semester-layer-${term}" in SCRIPT
+    assert "'ENG 101','ENG 201','prerequisite'" in SCRIPT
+    assert 'class="speech-branch"' in SCRIPT
+    assert 'id="communication-map"' not in SCRIPT
 
 
 def test_cs_electives_are_exactly_three_four_course_tracks():
