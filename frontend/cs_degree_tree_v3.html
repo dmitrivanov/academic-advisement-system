@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Tree-first CS advising prototype · BMCC</title>
+  <link rel="stylesheet" href="/static/cs_degree_tree_v3.css">
+</head>
+<body>
+  <header class="site-header">
+    <a class="brand" href="/advising-app_v1" aria-label="Return to AI Academic Advisement">
+      <span class="brand-mark">BMCC</span>
+      <span><strong>Tree-first advising</strong><small>Computer Information Systems department · prototype v3</small></span>
+    </a>
+    <div class="header-actions">
+      <label for="program-select">Program</label>
+      <select id="program-select" aria-label="Choose a CS department program"></select>
+      <button id="reset-progress" class="quiet-button" type="button">Clear selections</button>
+    </div>
+  </header>
+
+  <main>
+    <section class="intro-card">
+      <div>
+        <span class="eyebrow">Professor-reviewed structure · canonical course data</span>
+        <h1>Your degree pathway, in one view.</h1>
+        <p>Select every course you have completed. The pathway immediately shows what is available next and builds a prerequisite-safe semester sequence.</p>
+      </div>
+      <div class="progress-summary" aria-live="polite">
+        <strong id="completed-count">0</strong>
+        <span>courses selected</span>
+        <div class="progress-track"><span id="progress-bar"></span></div>
+      </div>
+    </section>
+
+    <section class="workspace" aria-label="Degree tree advising workspace">
+      <div class="tree-column">
+        <div class="panel-heading">
+          <div><span class="eyebrow">Interactive curriculum map</span><h2 id="tree-title">Loading degree tree…</h2></div>
+          <div class="legend" aria-label="Course status legend">
+            <span class="completed">Completed</span><span class="available">Available next</span><span class="locked">Locked</span>
+          </div>
+        </div>
+        <div id="tree-status" class="status-message">Loading the canonical curriculum…</div>
+        <div id="degree-tree" class="degree-tree" hidden></div>
+      </div>
+
+      <aside class="plan-column" aria-label="Plan preview">
+        <section class="next-card">
+          <span class="eyebrow">Your next semester</span>
+          <h2>Priority courses</h2>
+          <p>Courses that unlock the greatest future progress appear first.</p>
+          <div id="next-courses" class="recommendation-list"></div>
+        </section>
+        <section class="plan-card">
+          <div class="plan-card-heading"><div><span class="eyebrow">Prerequisite-safe preview</span><h2>Remaining pathway</h2></div><span id="plan-total" class="plan-total"></span></div>
+          <div id="semester-plan" class="semester-plan"></div>
+        </section>
+        <p class="prototype-note"><strong>Prototype boundary:</strong> this validates the central degree-tree design and deterministic sequencing. Chatbot and report integration come after the layout is approved.</p>
+      </aside>
+    </section>
+  </main>
+  <script src="/static/cs_degree_tree_v3.js"></script>
+</body>
+</html>

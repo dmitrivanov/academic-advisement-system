@@ -477,6 +477,20 @@ def serve_advising_app_v1(request: Request):
     return FileResponse("frontend/cuny_beyond.html")
 
 
+@app.get("/advising-app_v3")
+def serve_advising_app_v3(request: Request):
+    """CS-department tree-first advising prototype.
+
+    This is intentionally a separate entry point while the professor-reviewed
+    degree-tree interaction is validated before chatbot integration.
+    """
+    if not is_logged_in(request):
+        return RedirectResponse("/?next=/advising-app_v3", status_code=303)
+    if not is_cuny_beyond_enabled():
+        raise HTTPException(status_code=404, detail="Public advising chatbot is not enabled")
+    return FileResponse("frontend/cs_degree_tree_v3.html")
+
+
 def serve_configured_advising_entry(request: Request, entry_path: str):
     """Serve the shared chatbot while preserving the requested authenticated entry URL."""
     if not is_logged_in(request):
@@ -704,7 +718,7 @@ def submit_cuny_beyond_referral(payload: AdvisingReferralPayload):
 
 
 def safe_login_return_path(value: str) -> str:
-    return value if value in {"/bmcc_student", "/high_school_student", "/advising-app_v1"} else "/advising-app_v1"
+    return value if value in {"/bmcc_student", "/high_school_student", "/advising-app_v1", "/advising-app_v3"} else "/advising-app_v1"
 
 
 @app.post("/login")

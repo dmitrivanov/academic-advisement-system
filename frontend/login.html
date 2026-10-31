@@ -117,7 +117,7 @@ button:focus-visible {
 <script>
 const params = new URLSearchParams(window.location.search);
 const requestedPath = params.get("next");
-if (["/bmcc_student", "/high_school_student", "/advising-app_v1"].includes(requestedPath)) {
+if (["/bmcc_student", "/high_school_student", "/advising-app_v1", "/advising-app_v3"].includes(requestedPath)) {
   document.getElementById("next-path").value = requestedPath;
 }
 if (params.get("error")) {
