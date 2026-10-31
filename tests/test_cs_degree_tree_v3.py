@@ -43,6 +43,29 @@ def test_stable_tree_shows_electives_and_dependency_connectors():
     assert ".tree-connectors" in STYLE
 
 
+def test_cs_map_matches_professor_sequence_and_adds_requested_branches():
+    for code in ("CSC 101", "CSC 111", "CSC 211", "CSC 215", "CSC 231", "CSC 331", "CSC 350", "MAT 206", "MAT 301", "MAT 302", "PHY 215"):
+        assert code in SCRIPT
+    assert "['ENG 101','ENG 201']" in SCRIPT
+    assert "speechNode('SPE 100')" in SCRIPT
+    assert "speechNode('SPE 102')" in SCRIPT
+    assert "function renderComputerScienceTree" in SCRIPT
+    assert "function drawFixedConnectors" in SCRIPT
+
+
+def test_cs_electives_are_exactly_three_four_course_tracks():
+    expected = {
+        "Mobile device programming": ['CIS 272','CIS 285','CIS 364','CIS 385'],
+        "Data analytics": ['CSC 103','CSC 203','CIS 317','CIS 395'],
+        "Cybersecurity": ['CIS 316','CIS 345','CIS 359','CIS 362'],
+    }
+    for name, codes in expected.items():
+        assert name in SCRIPT
+        for code in codes:
+            assert code in SCRIPT
+    assert "4 courses per track" in SCRIPT
+
+
 def test_page_explains_prototype_boundary():
     assert "central degree-tree design and deterministic sequencing" in PAGE
     assert "Chatbot and report integration come after" in PAGE
