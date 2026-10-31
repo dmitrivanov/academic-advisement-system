@@ -1,7 +1,14 @@
 (function () {
   'use strict';
 
-  const STORAGE_KEY = 'cunyBeyondAnonymousDraftV1';
+  const BASE_STORAGE_KEY = 'cunyBeyondAnonymousDraftV1';
+  const ENTRY_POINTS = Object.freeze({
+    '/bmcc_student': { profile: 'current_bmcc', entryMode: 'current_student', welcome: 'Welcome, current BMCC student.' },
+    '/high_school_student': { profile: 'high_school', entryMode: 'high_school_student', welcome: 'Welcome, prospective BMCC student.' }
+  });
+  const ENTRY_CONTEXT = ENTRY_POINTS[window.location.pathname] || null;
+  const STORAGE_KEY = ENTRY_CONTEXT ? `${BASE_STORAGE_KEY}:${ENTRY_CONTEXT.entryMode}` : BASE_STORAGE_KEY;
+  const ENTRY_SESSION_KEY = 'cunyBeyondEntryPathV1';
   const MAX_SKILLS = 5;
   const SKILLS = [
     'Analyzing data', 'Communicating ideas', 'Solving technical problems',
@@ -28,7 +35,7 @@
     employment: 'Are you currently working?', semester: 'Which semester are you in?', skills: 'Which skills do you use or want to build?',
     coursework: 'Which courses have you completed?', priorLearning: 'Could any previous learning be relevant?'
   });
-  const state = { step: 0, profile: '', careerGoal: '', employment: '', skills: [], cplSelections: [], freeAnswers: {}, apExams: [], transcriptCourses: [], currentMajor: '', currentProgram: null, semesterStanding: '', expiresAt: 0 };
+  const state = { step: 0, profile: '', careerGoal: '', employment: '', skills: [], cplSelections: [], freeAnswers: {}, apExams: [], transcriptCourses: [], currentMajor: '', currentProgram: null, semesterStanding: '', entryMode: '', entryPath: '', expiresAt: 0 };
   const form = document.getElementById('intake-form');
   const steps = Array.from(document.querySelectorAll('.step'));
   const nextButton = document.getElementById('next-button');
@@ -44,6 +51,23 @@
   let plannerMode = '';
   let modalSelectedCodes = [];
 
+  const SESSION_CONTEXT_KEYS = [
+    'cunyBeyondImportedCoursesV1', 'cunyBeyondReferralSummaryV1', 'cunyBeyondScheduleChecklistV1',
+    'majorChangeShortlist', 'selectedProgramContext', 'smartOnboardingContext', 'transferDestinationIntentV1',
+    'transferSnapshot', 'unloadedProgramContext'
+  ];
+
+  function clearSessionAdvisingContext() {
+    SESSION_CONTEXT_KEYS.forEach(key => sessionStorage.removeItem(key));
+    Object.keys(sessionStorage).filter(key => key.startsWith('writingIntensiveCompleted:')).forEach(key => sessionStorage.removeItem(key));
+  }
+
+  function chatbotEntryUrl(query = '') {
+    const path = state.entryPath || sessionStorage.getItem(ENTRY_SESSION_KEY) || '/advising-app_v1';
+    const safePath = ['/bmcc_student', '/high_school_student', '/advising-app_v1'].includes(path) ? path : '/advising-app_v1';
+    return `${safePath}${query}`;
+  }
+
   function isCurrentStudent() { return ['current_bmcc', 'current_cuny'].includes(state.profile || selectedValue('profile')); }
   function isFirstSemester() { return state.semesterStanding === '1'; }
 
@@ -53,22 +77,36 @@
   }
 
   function loadDraft() {
+    if (ENTRY_CONTEXT) {
+      const previousEntry = sessionStorage.getItem(ENTRY_SESSION_KEY);
+      if (previousEntry && previousEntry !== window.location.pathname) clearSessionAdvisingContext();
+      sessionStorage.setItem(ENTRY_SESSION_KEY, window.location.pathname);
+    } else {
+      sessionStorage.setItem(ENTRY_SESSION_KEY, '/advising-app_v1');
+    }
     try {
       const draft = JSON.parse(localStorage.getItem(STORAGE_KEY));
       if (!draft || !draft.expiresAt || Date.now() >= draft.expiresAt) {
         localStorage.removeItem(STORAGE_KEY);
-        return;
+      } else {
+        Object.assign(state, draft);
+        state.step = Math.min(Math.max(Number(state.step) || 0, 0), steps.length - 1);
+        state.skills = Array.isArray(state.skills) ? state.skills.slice(0, MAX_SKILLS) : [];
+        state.cplSelections = Array.isArray(state.cplSelections) ? state.cplSelections.slice(0, 9) : [];
+        state.freeAnswers = state.freeAnswers && typeof state.freeAnswers === 'object' ? state.freeAnswers : {};
+        state.apExams = Array.isArray(state.apExams) ? state.apExams.slice(0, 20) : [];
+        state.transcriptCourses = Array.isArray(state.transcriptCourses) ? state.transcriptCourses.slice(0, 80) : [];
+        state.currentProgram = state.currentProgram && typeof state.currentProgram === 'object' ? state.currentProgram : null;
+        document.getElementById('save-status').textContent = 'Your saved draft was restored on this device.';
       }
-      Object.assign(state, draft);
-      state.step = Math.min(Math.max(Number(state.step) || 0, 0), steps.length - 1);
-      state.skills = Array.isArray(state.skills) ? state.skills.slice(0, MAX_SKILLS) : [];
-      state.cplSelections = Array.isArray(state.cplSelections) ? state.cplSelections.slice(0, 9) : [];
-      state.freeAnswers = state.freeAnswers && typeof state.freeAnswers === 'object' ? state.freeAnswers : {};
-      state.apExams = Array.isArray(state.apExams) ? state.apExams.slice(0, 20) : [];
-      state.transcriptCourses = Array.isArray(state.transcriptCourses) ? state.transcriptCourses.slice(0, 80) : [];
-      state.currentProgram = state.currentProgram && typeof state.currentProgram === 'object' ? state.currentProgram : null;
-      document.getElementById('save-status').textContent = 'Your saved draft was restored on this device.';
     } catch (_) { localStorage.removeItem(STORAGE_KEY); }
+    if (ENTRY_CONTEXT) {
+      state.profile = ENTRY_CONTEXT.profile;
+      state.entryMode = ENTRY_CONTEXT.entryMode;
+      state.entryPath = window.location.pathname;
+      state.step = Math.max(1, state.step);
+      document.getElementById('save-status').textContent = `${ENTRY_CONTEXT.welcome} Your student type is already selected.`;
+    }
   }
 
   function saveDraft() {
@@ -176,7 +214,8 @@
       { step: 3, question: isCurrentStudent() ? CHAT_QUESTIONS.semester : CHAT_QUESTIONS.skills, answer: isCurrentStudent() ? `${state.semesterStanding}${state.semesterStanding === '1' ? 'st' : state.semesterStanding === '2' ? 'nd' : state.semesterStanding === '3' ? 'rd' : 'th'} semester` : answers.semesterOrSkills },
       { step: 4, question: isCurrentStudent() && !isFirstSemester() ? CHAT_QUESTIONS.coursework : CHAT_QUESTIONS.priorLearning, answer: answers.coursesOrPriorLearning }
     ].filter(turn => turn.step < state.step);
-    document.getElementById('chat-history').innerHTML = turns.map(({ question, answer }) => `
+    const welcome = ENTRY_CONTEXT ? `<div class="chat-turn"><div class="chat-bubble assistant"><small>AI Academic Advisement Chatbot</small><strong>${escapeHtml(ENTRY_CONTEXT.welcome)}</strong><span>${ENTRY_CONTEXT.profile === 'current_bmcc' ? ' Let’s begin with your major and academic progress.' : ' Let’s begin with your interests or intended major.'}</span></div></div>` : '';
+    document.getElementById('chat-history').innerHTML = welcome + turns.map(({ question, answer }) => `
       <div class="chat-turn">
         <div class="chat-bubble assistant"><small>AI Academic Advisement Chatbot</small>${escapeHtml(question)}</div>
         <div class="chat-bubble user"><small>You</small>${escapeHtml(answer || 'Skipped')}</div>
@@ -219,6 +258,9 @@
       selectedAt: new Date().toISOString(),
       source: 'cuny-beyond',
       studentStatus: isCurrentStudent() ? 'current' : 'prospective',
+      studentType: state.profile,
+      entryMode: state.entryMode || '',
+      entryPath: state.entryPath || '',
       hasReportedCoursework: Boolean(reportedCourses.length)
     }));
   }
@@ -228,7 +270,8 @@
     sessionStorage.setItem('selectedProgramContext', JSON.stringify({
       institutionCode: state.currentProgram.institution_code, institutionName: state.currentProgram.institution,
       programCode: state.currentProgram.code, programName: state.currentProgram.name,
-      catalogYear: state.currentProgram.catalog_year || '', selectedAt: new Date().toISOString(), source: 'cuny-beyond-current-student'
+      catalogYear: state.currentProgram.catalog_year || '', selectedAt: new Date().toISOString(), source: 'cuny-beyond-current-student',
+      studentStatus: 'current', studentType: state.profile, entryMode: state.entryMode || '', entryPath: state.entryPath || ''
     }));
   }
 
@@ -319,6 +362,9 @@
     const scheduleChecklist = (() => { try { return JSON.parse(sessionStorage.getItem('cunyBeyondScheduleChecklistV1') || 'null'); } catch (_) { return null; } })();
     const summary = {
       pathway: PROFILE_LABELS[state.profile] || state.profile,
+      student_type: state.profile,
+      entry_mode: state.entryMode || '',
+      entry_path: state.entryPath || '',
       career_goal: state.careerGoal,
       matched_career: latestMatchedCareer?.name || null,
       skills: state.skills.slice(0, MAX_SKILLS),
@@ -433,7 +479,7 @@
 
   function previousStepFrom(step) {
     if (step === 3) return state.profile === 'working_adult' ? 2 : 1;
-    return Math.max(step - 1, 0);
+    return Math.max(step - 1, ENTRY_CONTEXT ? 1 : 0);
   }
 
   function renderCurrentStudentSummary() {
@@ -469,9 +515,11 @@
     document.getElementById('prospective-results').hidden = current;
     document.getElementById('current-student-results').hidden = !current;
     const displayIndex = state.step === 2 ? 3 : state.step >= 3 && state.profile !== 'working_adult' ? state.step : state.step + 1;
-    document.getElementById('step-count').textContent = state.step === steps.length - 1 ? 'Your advising workspace' : `Question ${Math.min(displayIndex, 5)} of 5`;
-    document.getElementById('progress-fill').style.width = `${(Math.min(displayIndex, 5) / 5) * 100}%`;
-    backButton.hidden = state.step === 0;
+    const questionTotal = ENTRY_CONTEXT ? 4 : 5;
+    const effectiveIndex = ENTRY_CONTEXT ? Math.max(1, displayIndex - 1) : displayIndex;
+    document.getElementById('step-count').textContent = state.step === steps.length - 1 ? 'Your advising workspace' : `Question ${Math.min(effectiveIndex, questionTotal)} of ${questionTotal}`;
+    document.getElementById('progress-fill').style.width = `${(Math.min(effectiveIndex, questionTotal) / questionTotal) * 100}%`;
+    backButton.hidden = state.step === 0 || (ENTRY_CONTEXT && state.step === 1);
     nextButton.hidden = state.step === steps.length - 1;
     errorBox.textContent = '';
     if (state.step === steps.length - 1) current ? renderCurrentStudentSummary() : renderSummary();
@@ -512,14 +560,10 @@
     if (!window.confirm('Clear this browser draft and start again?')) return;
     localStorage.removeItem(STORAGE_KEY);
     localStorage.removeItem('narrativeAdvisingDraftV1');
-    [
-      'cunyBeyondImportedCoursesV1', 'cunyBeyondReferralSummaryV1', 'cunyBeyondScheduleChecklistV1',
-      'majorChangeShortlist', 'selectedProgramContext', 'smartOnboardingContext', 'transferDestinationIntentV1',
-      'transferSnapshot', 'unloadedProgramContext'
-    ].forEach(key => sessionStorage.removeItem(key));
-    Object.keys(sessionStorage).filter(key => key.startsWith('writingIntensiveCompleted:')).forEach(key => sessionStorage.removeItem(key));
+    clearSessionAdvisingContext();
     form.reset();
-    Object.assign(state, { step: 0, profile: '', careerGoal: '', employment: '', skills: [], cplSelections: [], freeAnswers: {}, apExams: [], transcriptCourses: [], currentMajor: '', currentProgram: null, semesterStanding: '', expiresAt: 0 });
+    Object.assign(state, { step: ENTRY_CONTEXT ? 1 : 0, profile: ENTRY_CONTEXT?.profile || '', careerGoal: '', employment: '', skills: [], cplSelections: [], freeAnswers: {}, apExams: [], transcriptCourses: [], currentMajor: '', currentProgram: null, semesterStanding: '', entryMode: ENTRY_CONTEXT?.entryMode || '', entryPath: ENTRY_CONTEXT ? window.location.pathname : '', expiresAt: 0 });
+    if (ENTRY_CONTEXT) sessionStorage.setItem(ENTRY_SESSION_KEY, window.location.pathname);
     document.getElementById('save-status').textContent = 'Draft cleared.';
     updateCounts(); showStep(true);
   });
@@ -913,7 +957,7 @@
     if (returnedTool && isCurrentStudent()) {
       state.step = steps.length - 1;
       saveDraft();
-      window.history.replaceState({}, document.title, '/advising-app_v1');
+      window.history.replaceState({}, document.title, chatbotEntryUrl());
     }
     restoreInputs();
     if (state.currentProgram) await selectCurrentProgram(state.currentProgram.code);

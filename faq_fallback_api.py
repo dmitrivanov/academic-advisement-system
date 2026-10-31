@@ -477,6 +477,25 @@ def serve_advising_app_v1(request: Request):
     return FileResponse("frontend/cuny_beyond.html")
 
 
+def serve_configured_advising_entry(request: Request, entry_path: str):
+    """Serve the shared chatbot while preserving the requested authenticated entry URL."""
+    if not is_logged_in(request):
+        return RedirectResponse(f"/?next={entry_path}", status_code=303)
+    if not is_cuny_beyond_enabled():
+        raise HTTPException(status_code=404, detail="CUNY Beyond is not enabled")
+    return FileResponse("frontend/cuny_beyond.html")
+
+
+@app.get("/bmcc_student")
+def serve_bmcc_student_entry(request: Request):
+    return serve_configured_advising_entry(request, "/bmcc_student")
+
+
+@app.get("/high_school_student")
+def serve_high_school_student_entry(request: Request):
+    return serve_configured_advising_entry(request, "/high_school_student")
+
+
 @app.get("/cuny-beyond")
 def redirect_legacy_cuny_beyond(request: Request):
     target = "/advising-app_v1"
@@ -684,15 +703,25 @@ def submit_cuny_beyond_referral(payload: AdvisingReferralPayload):
     }
 
 
+def safe_login_return_path(value: str) -> str:
+    return value if value in {"/bmcc_student", "/high_school_student", "/advising-app_v1"} else "/advising-app_v1"
+
+
 @app.post("/login")
-def login_submit(request: Request, username: str = Form(...), password: str = Form(...)):
+def login_submit(
+    request: Request,
+    username: str = Form(...),
+    password: str = Form(...),
+    next_path: str = Form("", alias="next"),
+):
     account = authenticate(username, password)
     if account:
         request.session["logged_in"] = True
         request.session.update(account)
-        return RedirectResponse("/advising-app_v1", status_code=303)
+        return RedirectResponse(safe_login_return_path(next_path), status_code=303)
 
-    return RedirectResponse("/?error=1", status_code=303)
+    target = safe_login_return_path(next_path)
+    return RedirectResponse(f"/?error=1&next={target}", status_code=303)
 
 
 @app.get("/logout")

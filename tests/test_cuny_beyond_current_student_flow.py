@@ -120,7 +120,8 @@ def test_degree_planner_can_save_artifacts_and_return_to_structured_chatbot():
     assert 'id="chatbotReturnBar"' in planner
     assert "savePlannerArtifactsForChatbot" in planner
     assert "returnToStructuredChatbot" in planner
-    assert 'window.location.href = "/advising-app_v1?returned=degree-plan"' in planner
+    assert 'sessionStorage.getItem("cunyBeyondEntryPathV1")' in planner
+    assert 'window.location.href = `${chatbotPath}?returned=degree-plan`' in planner
     assert "cunyBeyondAnonymousDraftV1" in planner
     assert "cunyBeyondReferralSummaryV1" in planner
     assert "LAST_DEGREE_PLAN" in planner and "ai_explanation" in planner

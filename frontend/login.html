@@ -96,6 +96,7 @@ button:focus-visible {
     <p class="subtitle">Please log in to access the advising prototype.</p>
 
     <form method="POST" action="/login">
+      <input type="hidden" id="next-path" name="next" value="">
       <label for="username">Username</label>
       <input type="text" id="username" name="username" autocomplete="username" required>
 
@@ -115,6 +116,10 @@ button:focus-visible {
 
 <script>
 const params = new URLSearchParams(window.location.search);
+const requestedPath = params.get("next");
+if (["/bmcc_student", "/high_school_student", "/advising-app_v1"].includes(requestedPath)) {
+  document.getElementById("next-path").value = requestedPath;
+}
 if (params.get("error")) {
   document.getElementById("error").textContent = "Invalid username or password.";
 }

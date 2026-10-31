@@ -4764,7 +4764,11 @@ function returnToStructuredChatbot() {
     window.parent.postMessage({ type: "advising-degree-plan-saved" }, window.location.origin);
     return;
   }
-  window.location.href = "/advising-app_v1?returned=degree-plan";
+  const entryPath = sessionStorage.getItem("cunyBeyondEntryPathV1");
+  const chatbotPath = ["/bmcc_student", "/high_school_student", "/advising-app_v1"].includes(entryPath)
+    ? entryPath
+    : "/advising-app_v1";
+  window.location.href = `${chatbotPath}?returned=degree-plan`;
 }
 
 function startComparison(mode) {

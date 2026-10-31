@@ -325,6 +325,10 @@ let APPROVED_EQUIVALENCIES = [];
 let MAJOR_CHANGE_SHORTLIST = [];
 const ANALYSIS_MODE = new URLSearchParams(window.location.search).get("mode") || "transfer";
 if (new URLSearchParams(window.location.search).get("from") === "structured-chatbot") document.getElementById("chatbotReturn").style.display = "block";
+const advisingEntryPath = sessionStorage.getItem("cunyBeyondEntryPathV1");
+if (["/bmcc_student", "/high_school_student", "/advising-app_v1"].includes(advisingEntryPath)) {
+  document.querySelector("#chatbotReturn a").href = `${advisingEntryPath}?returned=transfer`;
+}
 const TRANSFER_DESTINATION_INTENT = (() => {
   try { return JSON.parse(sessionStorage.getItem("transferDestinationIntentV1") || "null"); }
   catch (_) { return null; }
