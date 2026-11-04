@@ -53,11 +53,6 @@
   let availableProgramCourses = [];
   let plannerMode = '';
   let modalSelectedCodes = [];
-  const PROGRAM_ELECTIVE_TRACKS = [
-    { name: 'Mobile device programming', tone: 'mobile', codes: ['CIS 272', 'CIS 285', 'CIS 364', 'CIS 385'] },
-    { name: 'Data analytics', tone: 'data', codes: ['CSC 103', 'CSC 203', 'CIS 317', 'CIS 395'] },
-    { name: 'Cybersecurity', tone: 'cyber', codes: ['CIS 316', 'CIS 345', 'CIS 359', 'CIS 362'] }
-  ];
 
   const SESSION_CONTEXT_KEYS = [
     'cunyBeyondImportedCoursesV1', 'cunyBeyondReferralSummaryV1', 'cunyBeyondScheduleChecklistV1',
@@ -139,19 +134,6 @@
     actions.append(uploadAction, visualAction);
     composer.after(actions);
     uploadCard.hidden = true; manualCard.hidden = true; visualCard.hidden = true;
-  }
-
-  function renderModalElectiveTracks() {
-    const section = document.getElementById('modal-elective-tracks');
-    const grid = document.getElementById('modal-elective-grid');
-    const isCs = /computer science/i.test(state.currentProgram?.name || '');
-    section.hidden = !COPILOT_ENTRY || plannerMode !== 'coursework' || !isCs;
-    if (section.hidden) { grid.innerHTML = ''; return; }
-    grid.innerHTML = PROGRAM_ELECTIVE_TRACKS.map(track => `<section class="modal-track modal-track-${track.tone}"><h3>${track.name}</h3><div>${track.codes.map(code => {
-      const course = courseFromCatalog(code);
-      const selected = modalSelectedCodes.includes(code);
-      return `<button type="button" class="modal-track-course${selected ? ' selected' : ''}" data-elective-code="${code}" aria-pressed="${selected}"><strong>${code}</strong><span>${escapeHtml(course.title || 'Program elective')}</span></button>`;
-    }).join('')}</div></section>`).join('');
   }
 
   function isCurrentStudent() { return ['current_bmcc', 'current_cuny'].includes(state.profile || selectedValue('profile')); }
@@ -363,7 +345,7 @@
     }));
   }
 
-  function openPlannerModal(mode = 'coursework') {
+  function openPlannerModal(mode = 'coursework', options = {}) {
     plannerMode = mode;
     modalSelectedCodes = state.transcriptCourses.filter(item => item.include !== false).map(item => item.code);
     if (isCurrentStudent()) saveCurrentProgramContext();
@@ -374,22 +356,79 @@
     document.getElementById('planner-modal-copy').textContent = mode === 'next-semester' ? 'Build and review the plan here, then return to the chatbot.' : 'Your selections return to the chatbot and remain available for this session.';
     document.getElementById('close-planner-modal').textContent = mode === 'next-semester' ? 'Close without saving' : 'Close selector';
     document.getElementById('planner-modal-frame').src = mode === 'next-semester'
-      ? `/db-progress?embedded=workspace&mode=ai-plan&autogenerate=1&from=structured-chatbot&v=${Date.now()}`
+      ? `/db-progress?embedded=workspace&mode=ai-plan&${options.reuseSaved ? 'reuse_saved_plan=1' : 'autogenerate=1'}&from=structured-chatbot&v=${Date.now()}`
       : `/db-progress?embedded=course-intake&mode=course-intake&from=structured-chatbot&v=${Date.now()}`;
-    renderModalElectiveTracks();
+    modal.classList.toggle('background-generation', Boolean(options.background));
     modal.hidden = false;
-    document.body.style.overflow = 'hidden';
-    document.getElementById('close-planner-modal').focus();
+    document.body.style.overflow = options.background ? '' : 'hidden';
+    if (!options.background) document.getElementById('close-planner-modal').focus();
   }
 
   function closePlannerModal() {
     const modal = document.getElementById('planner-modal');
     modal.hidden = true;
+    modal.classList.remove('background-generation');
     document.getElementById('planner-modal-frame').src = 'about:blank';
     document.body.style.overflow = '';
     if (plannerMode === 'coursework' && modalSelectedCodes.length) confirmCurrentCourses(modalSelectedCodes.map(code => courseFromCatalog(code)), 'visual selector');
     document.getElementById(plannerMode === 'next-semester' ? 'open-next-semester-plan' : 'open-completed-selector')?.focus();
     plannerMode = '';
+  }
+
+  function streamCopilotResponse(target, blocks, onComplete) {
+    target.hidden = false;
+    target.innerHTML = '';
+    let index = 0;
+    const appendNext = () => {
+      if (index >= blocks.length) { onComplete?.(); return; }
+      const block = document.createElement('section');
+      block.className = 'copilot-response-block';
+      block.innerHTML = blocks[index++];
+      target.appendChild(block);
+      window.requestAnimationFrame(appendNext);
+    };
+    window.requestAnimationFrame(appendNext);
+  }
+
+  function renderCopilotTranscriptResponse(courses, warnings = []) {
+    const target = document.getElementById('copilot-course-response');
+    const courseList = courses.length
+      ? `<ul>${courses.map(item => `<li><strong>${escapeHtml(item.code)}</strong>${item.title ? ` — ${escapeHtml(item.title)}` : ''}${item.credits ? ` (${Number(item.credits)} credits)` : ''}</li>`).join('')}</ul>`
+      : '<p>No program courses were confidently recognized.</p>';
+    const warningList = warnings.length ? `<h4>Review notes</h4><ul>${warnings.map(item => `<li>${escapeHtml(item)}</li>`).join('')}</ul>` : '';
+    streamCopilotResponse(target, [
+      '<h3>Transcript review</h3><p>I reviewed the uploaded document and prepared this draft of completed coursework.</p>',
+      `<h4>Recognized classes</h4>${courseList}`,
+      warningList,
+      '<div class="copilot-response-actions"><button id="copilot-approve-courses" class="primary" type="button">Approve recognized courses</button><button id="copilot-open-selector" type="button">Open course selector</button></div>'
+    ].filter(Boolean), () => {
+      document.getElementById('copilot-approve-courses')?.addEventListener('click', () => {
+        confirmCurrentCourses(courses, 'reviewed transcript');
+        document.getElementById('current-course-status').textContent = `${courses.length} recognized course${courses.length === 1 ? '' : 's'} saved for this advising session.`;
+      });
+      document.getElementById('copilot-open-selector')?.addEventListener('click', () => openPlannerModal('coursework'));
+    });
+  }
+
+  function renderCopilotPlanResponse(plan) {
+    const target = document.getElementById('copilot-plan-response');
+    const semesters = Array.isArray(plan?.semesters) ? plan.semesters : [];
+    const first = semesters[0];
+    const firstCourses = first?.courses?.length
+      ? `<ul>${first.courses.map(course => `<li><strong>${escapeHtml(course.code || 'Elective')}</strong> — ${escapeHtml(course.title || course.area || 'Degree requirement')} (${Number(course.credits || 0)} credits)</li>`).join('')}</ul>`
+      : '<p>No next-semester courses could be placed. Review prerequisites or choose a longer timeline.</p>';
+    const remaining = semesters.slice(1).map(semester => `<li><strong>${escapeHtml(semester.name)}</strong>: ${Number(semester.credits || 0)} credits across ${(semester.courses || []).length} courses</li>`).join('');
+    streamCopilotResponse(target, [
+      `<h3>Your AI academic plan is ready</h3><p>${escapeHtml(plan?.summary || 'A prerequisite-aware semester sequence was generated from your selected completed courses.')}</p>`,
+      `<h4>${escapeHtml(first?.name || 'Next semester')}</h4>${firstCourses}`,
+      remaining ? `<h4>Following semesters</h4><ul>${remaining}</ul>` : '',
+      '<div class="copilot-response-file"><span><strong>Academic degree plan</strong><small>PDF-ready advising document</small></span><div class="copilot-response-actions"><button id="copilot-open-plan-pdf" class="primary" type="button">Open / Save PDF</button><button id="copilot-edit-plan" type="button">Open interactive plan</button></div></div>'
+    ].filter(Boolean), () => {
+      const openSaved = () => openPlannerModal('next-semester', { reuseSaved: true });
+      document.getElementById('copilot-open-plan-pdf')?.addEventListener('click', openSaved);
+      document.getElementById('copilot-edit-plan')?.addEventListener('click', openSaved);
+      target.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    });
   }
 
   function renderRecommendations(data) {
@@ -880,6 +919,11 @@
 
   function renderCurrentCourseReview(courses, warnings = []) {
     const target = document.getElementById('current-course-review');
+    if (COPILOT_ENTRY) {
+      target.innerHTML = '';
+      renderCopilotTranscriptResponse(courses, warnings);
+      return;
+    }
     target.innerHTML = courses.length ? `<div class="recognized-draft"><h3>Review recognized courses</h3><div class="recognized-chip-list">${courses.map((item, index) => `<label class="recognized-course-chip" title="Click to remove"><input type="checkbox" data-current-course="${index}" checked><span><strong>${escapeHtml(item.code)}</strong>${item.title ? ` · ${escapeHtml(item.title)}` : ''}</span></label>`).join('')}</div><button id="confirm-current-courses" type="button">Approve completed courses</button></div>` : '<p class="transcript-notice">No program courses were confidently recognized. Try course codes or use the visual selector.</p>';
     if (warnings.length) target.insertAdjacentHTML('beforeend', warnings.map(item => `<p class="transcript-notice">${escapeHtml(item)}</p>`).join(''));
     document.getElementById('confirm-current-courses')?.addEventListener('click', () => {
@@ -919,20 +963,23 @@
   }
 
   document.getElementById('current-analyze-transcript').addEventListener('click', analyzeCurrentTranscript);
+  document.getElementById('current-transcript-file').addEventListener('change', () => {
+    if (COPILOT_ENTRY && document.getElementById('current-transcript-file').files[0]) analyzeCurrentTranscript();
+  });
   document.getElementById('recognize-manual-courses').addEventListener('click', recognizeManualCourses);
   document.getElementById('open-completed-selector').addEventListener('click', () => openPlannerModal('coursework'));
-  document.getElementById('modal-elective-grid').addEventListener('click', event => {
-    const button = event.target.closest('[data-elective-code]');
-    if (!button) return;
-    const code = button.dataset.electiveCode;
-    modalSelectedCodes = modalSelectedCodes.includes(code) ? modalSelectedCodes.filter(item => item !== code) : [...modalSelectedCodes, code];
-    renderModalElectiveTracks();
-  });
   document.getElementById('transfer-school').addEventListener('change', populateTransferMajors);
   document.getElementById('open-next-semester-plan').addEventListener('click', openNextSemesterPlanner);
   document.getElementById('generate-ai-plan-here').addEventListener('click', () => {
     saveCurrentReferralSummary('Next-semester / degree planning');
-    openPlannerModal('next-semester');
+    if (COPILOT_ENTRY) {
+      streamCopilotResponse(document.getElementById('copilot-plan-response'), [
+        '<h3>Generating your academic plan…</h3><p>I am applying your completed courses, prerequisites, and selected program requirements.</p>'
+      ]);
+      openPlannerModal('next-semester', { background: true });
+    } else {
+      openPlannerModal('next-semester');
+    }
   });
   document.getElementById('show-transfer-options').addEventListener('click', event => {
     const panel = document.getElementById('transfer-intent-card');
@@ -957,6 +1004,16 @@
       closePlannerModal();
       renderCurrentStudentSummary();
       document.getElementById('saved-degree-plan')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+    if (event.data?.type === 'advising-degree-plan-generated' && COPILOT_ENTRY) {
+      const plan = event.data.plan || null;
+      closePlannerModal();
+      if (plan) renderCopilotPlanResponse(plan);
+      else streamCopilotResponse(document.getElementById('copilot-plan-response'), ['<h3>Plan generation needs attention</h3><p>The planner did not return a saved degree plan. Please try again or open the interactive planner.</p>']);
+    }
+    if (event.data?.type === 'advising-degree-plan-generation-failed' && COPILOT_ENTRY) {
+      closePlannerModal();
+      streamCopilotResponse(document.getElementById('copilot-plan-response'), [`<h3>Plan generation needs attention</h3><p>${escapeHtml(event.data.message || 'The academic plan could not be generated. Please try again.')}</p>`]);
     }
   });
 

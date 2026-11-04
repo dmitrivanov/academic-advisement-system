@@ -807,6 +807,30 @@ button:hover {
   border-top: 1px solid #e5e7eb;
 }
 
+.elective-track-tabs {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  margin: 0 0 12px;
+  padding: 2px 1px 5px;
+}
+.elective-track-tabs button {
+  flex: 0 0 auto;
+  border: 1px solid #b7c9df;
+  border-radius: 999px;
+  padding: 7px 10px;
+  color: #24558f;
+  background: #f8fbff;
+  font-size: 11px;
+  font-weight: 800;
+  cursor: pointer;
+}
+.elective-track-tabs button.active {
+  border-color: #2463c7;
+  color: #fff;
+  background: #2463c7;
+}
+
 .choice-subject-header {
   display: flex;
   align-items: baseline;
@@ -1893,6 +1917,12 @@ let LAST_DEGREE_PLAN = [];
 let OFFICIAL_DEGREE_MAP = null;
 let AUTO_IMPORTED_COURSES = new Set();
 let AUTO_IMPORTED_COURSE_LABELS = new Map();
+let ACTIVE_ELECTIVE_TRACK = "all";
+const PROGRAM_ELECTIVE_TRACKS = [
+  { id: "mobile", label: "Mobile", codes: ["CIS 272", "CIS 285", "CIS 364", "CIS 385"] },
+  { id: "data", label: "Data analytics", codes: ["CSC 103", "CSC 203", "CIS 317", "CIS 395"] },
+  { id: "cyber", label: "Cybersecurity", codes: ["CIS 316", "CIS 345", "CIS 359", "CIS 362"] }
+];
 
 const EMBEDDED_PARAMS = new URLSearchParams(window.location.search);
 if (EMBEDDED_PARAMS.has("embedded")) document.body.classList.add("embedded-transcript");
@@ -2762,8 +2792,36 @@ function configurePlannerSemesterOptions({ preserveSelection = false } = {}) {
 
 function refreshPlannerTimelineFromProgress() {
   if (!CURRENT_REQUIREMENTS) return;
+  syncReportedCompletedCoursesFromProgress();
   configurePlannerSemesterOptions({ preserveSelection: false });
   if (CURRENT_PLANNING_MODE === "ai") renderDegreePlan();
+}
+
+function syncReportedCompletedCoursesFromProgress() {
+  const catalog = allCoursesFromGroups();
+  const programCodes = new Set(Object.values(catalog).flatMap(course => [
+    course.code,
+    ...(course.choice_options || []).map(option => option.code)
+  ]));
+  const retained = REPORTED_COMPLETED_COURSES.filter(course => !programCodes.has(course.code));
+  const selected = [...getCompletedCourses()].map(code => {
+    const course = catalog[code] || Object.values(catalog)
+      .flatMap(item => item.choice_options || [])
+      .find(option => option.code === code) || {};
+    return { code, title: course.title || "", credits: course.credits ?? null, include: true, recognition_source: "planner-confirmed" };
+  });
+  REPORTED_COMPLETED_COURSES = reconcileCompletedCourseRecords(retained, selected).all;
+  sessionStorage.setItem("cunyBeyondImportedCoursesV1", JSON.stringify(REPORTED_COMPLETED_COURSES));
+
+  let summary = {};
+  try { summary = JSON.parse(sessionStorage.getItem("cunyBeyondReferralSummaryV1") || "{}"); }
+  catch (_) { summary = {}; }
+  const savedPlan = summary.academic_plan_document || summary.degree_plan;
+  if (savedPlan && completedCourseFingerprint() !== (savedPlan.completed_course_fingerprint || completedCourseFingerprint(savedPlan.reported_completed_courses))) {
+    delete summary.academic_plan_document;
+    delete summary.degree_plan;
+    sessionStorage.setItem("cunyBeyondReferralSummaryV1", JSON.stringify(summary));
+  }
 }
 
 function setTab(tabName, event) {
@@ -3325,6 +3383,15 @@ function renderCompletedCourseGrid() {
     const list = document.createElement("div");
     list.className = "course-list";
 
+    if (area.types.includes("program_elective") && /computer science/i.test(CURRENT_REQUIREMENTS?.program?.name || "")) {
+      const tabs = document.createElement("div");
+      tabs.className = "elective-track-tabs";
+      tabs.setAttribute("aria-label", "Program elective tracks");
+      const tabOptions = [{ id: "all", label: "All" }, ...PROGRAM_ELECTIVE_TRACKS];
+      tabs.innerHTML = tabOptions.map(track => `<button type="button" class="${ACTIVE_ELECTIVE_TRACK === track.id ? "active" : ""}" data-elective-track="${track.id}" aria-pressed="${ACTIVE_ELECTIVE_TRACK === track.id}">${track.label}</button>`).join("");
+      column.appendChild(tabs);
+    }
+
     const groups = getGroupsByTypes(area.types);
     const items = [];
 
@@ -3351,6 +3418,11 @@ function renderCompletedCourseGrid() {
     let hiddenSatisfiedCount = 0;
 
     const visibleItems = items.filter(item => {
+      if (area.types.includes("program_elective") && ACTIVE_ELECTIVE_TRACK !== "all") {
+        const track = PROGRAM_ELECTIVE_TRACKS.find(candidate => candidate.id === ACTIVE_ELECTIVE_TRACK);
+        const codes = item.type === "alternative" ? item.courses.map(course => course.code) : [item.course.code];
+        if (track && !codes.some(code => track.codes.includes(code))) return false;
+      }
       if (item.type === "alternative") return true;
       const course = item.course;
       const status = getCourseStatus(course.code, course, completed, item.group);
@@ -3387,6 +3459,13 @@ function renderCompletedCourseGrid() {
     container.appendChild(column);
   });
 }
+
+document.getElementById("completedCourseGrid").addEventListener("click", event => {
+  const tab = event.target.closest("[data-elective-track]");
+  if (!tab) return;
+  ACTIVE_ELECTIVE_TRACK = tab.dataset.electiveTrack || "all";
+  renderCompletedCourseGrid();
+});
 
 function createSelectableCourseCard(course) {
   const completed = getCompletedCourses();
@@ -4183,6 +4262,7 @@ function getAvailableCoursesForRecommendation() {
 function chooseRecommendedCourses() {
   const semester = detectNextSemester();
   const completed = getCompletedCourses();
+  const courses = Object.fromEntries(planningCoursePool(completed).map(course => [course.code, course]));
 
   let available = getAvailableCoursesForRecommendation();
 
@@ -4485,12 +4565,20 @@ function renderSequenceLanes() {
   `;
 }
 
-function renderDegreePlan() {
+function renderDegreePlan(savedPlan = null) {
   const container = document.getElementById("degreePlan");
   const summary = document.getElementById("degreePlanSummary");
   if (!container || !CURRENT_REQUIREMENTS) return;
 
-  LAST_DEGREE_PLAN = buildDegreePlan();
+  LAST_DEGREE_PLAN = savedPlan
+    ? (savedPlan.semesters || []).map(semester => ({
+        ...semester,
+        courses: (semester.courses || []).map(course => ({
+          ...course,
+          group_name: course.group_name || course.area || "Degree requirement"
+        }))
+      }))
+    : buildDegreePlan();
   container.innerHTML = "";
 
   if (!LAST_DEGREE_PLAN.length) {
@@ -4509,7 +4597,9 @@ function renderDegreePlan() {
   const schedulingNote = unscheduledCredits
     ? ` <strong>${unscheduledCredits} remaining required credit(s) could not be placed in this timeline</strong>; try a longer option or review missing prerequisites.`
     : "";
-  summary.innerHTML = `Suggested sequence: <strong>${desiredSemesters} remaining semester(s)</strong>, a target of <strong>${targetCreditLoad} credits per regular semester</strong>, and <strong>${totalCredits} planned credits</strong>. Elective slots remain unassigned until you choose an approved course.${schedulingNote}${sourceNote} This is a planning aid, not an official registration schedule. Course availability and advising approval still apply.`;
+  summary.innerHTML = savedPlan?.summary
+    ? String(savedPlan.summary).replace(/[&<>"']/g, character => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[character]))
+    : `Suggested sequence: <strong>${desiredSemesters} remaining semester(s)</strong>, a target of <strong>${targetCreditLoad} credits per regular semester</strong>, and <strong>${totalCredits} planned credits</strong>. Elective slots remain unassigned until you choose an approved course.${schedulingNote}${sourceNote} This is a planning aid, not an official registration schedule. Course availability and advising approval still apply.`;
 
   LAST_DEGREE_PLAN.forEach((semester, index) => {
     const details = document.createElement("details");
@@ -4529,6 +4619,44 @@ function renderDegreePlan() {
     container.appendChild(details);
   });
   renderSequenceLanes();
+}
+
+function completedCourseFingerprint(courses = REPORTED_COMPLETED_COURSES) {
+  return [...new Set((Array.isArray(courses) ? courses : [])
+    .map(course => String(typeof course === "string" ? course : course?.code || "").trim().toUpperCase())
+    .filter(Boolean))]
+    .sort()
+    .join("|");
+}
+
+function savedAcademicPlanForCurrentContext() {
+  let summary = {};
+  try { summary = JSON.parse(sessionStorage.getItem("cunyBeyondReferralSummaryV1") || "{}"); }
+  catch (_) { return null; }
+  const plan = summary.academic_plan_document || summary.degree_plan;
+  if (!plan?.semesters?.length) return null;
+
+  const savedProgramCode = String(plan.program_code || summary.current_program?.code || "").trim().toUpperCase();
+  const currentProgramCode = String(CURRENT_REQUIREMENTS?.program?.code || "").trim().toUpperCase();
+  if (savedProgramCode && currentProgramCode && savedProgramCode !== currentProgramCode) return null;
+
+  const savedFingerprint = plan.completed_course_fingerprint || completedCourseFingerprint(plan.reported_completed_courses || summary.completed_courses);
+  return savedFingerprint === completedCourseFingerprint() ? plan : null;
+}
+
+function renderSavedAcademicPlan(plan) {
+  const semesterCount = document.getElementById("targetSemesterCount");
+  const workloadPattern = document.getElementById("workloadPattern");
+  const targetCreditLoad = document.getElementById("targetCreditLoad");
+  if (semesterCount && plan.semesters?.length) semesterCount.value = String(plan.semesters.length);
+  if (workloadPattern && plan.workload_pattern) workloadPattern.value = plan.workload_pattern;
+  if (targetCreditLoad && plan.target_credit_load) targetCreditLoad.value = String(plan.target_credit_load);
+  renderDegreePlan(plan);
+  const explanation = document.getElementById("aiPlanExplanation");
+  if (explanation && plan.ai_explanation) {
+    explanation.style.display = "block";
+    explanation.innerHTML = formatAdvisorMarkdown(plan.ai_explanation);
+  }
 }
 
 async function generateAIStudyPlan() {
@@ -4587,6 +4715,16 @@ async function generateAIStudyPlan() {
     `;
     hideEmbeddedPlanLoading();
     openPlanProspectus("degree");
+    if (window.parent !== window && sessionStorage.getItem("cunyBeyondEntryPathV1") === "/current_student") {
+      savePlannerArtifactsForChatbot();
+      let savedSummary = {};
+      try { savedSummary = JSON.parse(sessionStorage.getItem("cunyBeyondReferralSummaryV1") || "{}"); }
+      catch (_) { savedSummary = {}; }
+      window.parent.postMessage({
+        type: "advising-degree-plan-generated",
+        plan: savedSummary.academic_plan_document || savedSummary.degree_plan || null
+      }, window.location.origin);
+    }
   }
 }
 
@@ -4698,8 +4836,16 @@ function savePlannerArtifactsForChatbot() {
   }));
   sessionStorage.setItem("cunyBeyondImportedCoursesV1", JSON.stringify(imported));
 
+  const entryPath = sessionStorage.getItem("cunyBeyondEntryPathV1") || "/advising-app_v1";
+  const entryMode = {
+    "/bmcc_student": "current_student",
+    "/high_school_student": "high_school_student",
+    "/current_student": "current_student_copilot",
+    "/prospective_student": "prospective_student_copilot"
+  }[entryPath];
+  const chatbotDraftKey = entryMode ? `cunyBeyondAnonymousDraftV1:${entryMode}` : "cunyBeyondAnonymousDraftV1";
   let chatbotDraft = {};
-  try { chatbotDraft = JSON.parse(localStorage.getItem("cunyBeyondAnonymousDraftV1") || "{}"); }
+  try { chatbotDraft = JSON.parse(localStorage.getItem(chatbotDraftKey) || "{}"); }
   catch (_) { chatbotDraft = {}; }
   chatbotDraft.transcriptCourses = imported;
   chatbotDraft.currentMajor = CURRENT_REQUIREMENTS.program.name;
@@ -4715,7 +4861,7 @@ function savePlannerArtifactsForChatbot() {
   };
   chatbotDraft.step = 5;
   chatbotDraft.expiresAt = Date.now() + 24 * 60 * 60 * 1000;
-  localStorage.setItem("cunyBeyondAnonymousDraftV1", JSON.stringify(chatbotDraft));
+  localStorage.setItem(chatbotDraftKey, JSON.stringify(chatbotDraft));
 
   let summary = {};
   try { summary = JSON.parse(sessionStorage.getItem("cunyBeyondReferralSummaryV1") || "{}"); }
@@ -4731,6 +4877,8 @@ function savePlannerArtifactsForChatbot() {
   };
   const academicPlanDocument = {
     generated_at: new Date().toISOString(),
+    program_code: CURRENT_REQUIREMENTS.program.code,
+    completed_course_fingerprint: completedCourseFingerprint(snapshot.completed_course_details),
     summary: document.getElementById("degreePlanSummary")?.innerText || "",
     ai_explanation: document.getElementById("aiPlanExplanation")?.innerText || "",
     workload_pattern: document.getElementById("workloadPattern")?.value || "balanced",
@@ -5005,7 +5153,16 @@ async function initializePage() {
   await loadPrograms();
   if (previewParams.get("mode") === "ai-plan") {
     setPlanningMode("ai");
-    if (previewParams.get("autogenerate") === "1") await generateAIStudyPlan();
+    const savedPlan = previewParams.get("reuse_saved_plan") === "1"
+      ? savedAcademicPlanForCurrentContext()
+      : null;
+    if (savedPlan) {
+      renderSavedAcademicPlan(savedPlan);
+      hideEmbeddedPlanLoading();
+      openPlanProspectus("degree");
+    } else if (previewParams.get("autogenerate") === "1") {
+      await generateAIStudyPlan();
+    }
   }
 }
 
@@ -5046,6 +5203,9 @@ initializePage().catch(err => {
   hideEmbeddedPlanLoading();
   document.getElementById("summary").innerHTML =
     `<span style="color:#b42318;font-weight:bold;">Error: ${err.message}</span>`;
+  if (window.parent !== window && sessionStorage.getItem("cunyBeyondEntryPathV1") === "/current_student") {
+    window.parent.postMessage({ type: "advising-degree-plan-generation-failed", message: err.message }, window.location.origin);
+  }
 });
 
 function toggleProgressDetails() {

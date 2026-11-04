@@ -134,3 +134,39 @@ if (corequisiteBundleAvailable(Object.values(courses), new Set())) {
         capture_output=True,
         text=True,
     )
+
+
+@pytest.mark.skipif(not shutil.which("node"), reason="Node.js is required for planner JavaScript scenarios")
+def test_next_semester_recommendation_has_course_map_for_corequisite_bundling():
+    planner = ROOT / "frontend" / "db_progress_graph.html"
+    script = r"""
+const fs = require("fs");
+const source = fs.readFileSync(process.argv[1], "utf8");
+const start = source.indexOf("function chooseRecommendedCourses(");
+const body = source.indexOf("{", start);
+let depth = 0, extracted = "";
+for (let index = body; index < source.length; index += 1) {
+  if (source[index] === "{") depth += 1;
+  if (source[index] === "}") depth -= 1;
+  if (depth === 0) { extracted = source.slice(start, index + 1); break; }
+}
+globalThis.detectNextSemester = () => ({maxCourses:5,maxCredits:18,minCredits:0,targetCredits:15});
+globalThis.getCompletedCourses = () => new Set();
+globalThis.planningCoursePool = () => [{code:"CSC 111",credits:4,group_type:"program_required"}];
+globalThis.getAvailableCoursesForRecommendation = () => planningCoursePool();
+globalThis.recommendationScore = () => 1;
+globalThis.pendingCorequisiteBundle = (course, courses) => {
+  if (!courses?.[course.code]) throw new Error("course map missing");
+  return [course];
+};
+globalThis.corequisiteBundleAvailable = () => true;
+eval(`${extracted}; globalThis.chooseRecommendedCourses=chooseRecommendedCourses`);
+const recommendation = chooseRecommendedCourses();
+if (recommendation.selected[0]?.code !== "CSC 111") throw new Error("recommendation was not built");
+"""
+    subprocess.run(
+        [shutil.which("node"), "-e", script, str(planner)],
+        check=True,
+        capture_output=True,
+        text=True,
+    )

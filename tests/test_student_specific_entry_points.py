@@ -62,8 +62,21 @@ def test_copilot_layout_is_scoped_and_keeps_the_legacy_entry_unchanged():
     assert ".copilot-entry .semester-choices" in css
     assert "COPILOT_ENTRY" in CHAT
     assert "if (!COPILOT_ENTRY) return" in CHAT
-    assert "modal-elective-tracks" in html
-    assert "PROGRAM_ELECTIVE_TRACKS" in CHAT
+    assert "modal-elective-tracks" not in html
+    assert 'id="copilot-course-response"' in html
+    assert 'id="copilot-plan-response"' in html
+    assert "advising-degree-plan-generated" in CHAT
+    assert "renderCopilotTranscriptResponse" in CHAT
+    assert "renderCopilotPlanResponse" in CHAT
+
+
+def test_program_elective_tracks_are_tabs_inside_the_existing_selector_column():
+    assert 'className = "elective-track-tabs"' in PLANNER
+    assert 'data-elective-track' in PLANNER
+    assert 'area.types.includes("program_elective")' in PLANNER
+    assert 'label: "Mobile"' in PLANNER
+    assert 'label: "Data analytics"' in PLANNER
+    assert 'label: "Cybersecurity"' in PLANNER
 
 
 def test_tool_return_paths_reuse_the_active_entry_url():

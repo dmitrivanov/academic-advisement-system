@@ -84,3 +84,74 @@ def test_saved_plan_keeps_reported_applied_and_pending_course_contexts():
     assert "Reported completed coursework" in referral
     assert "Applied to this plan" in referral
     assert "Needs advisor review" in referral
+
+
+def test_general_advising_workspace_reuses_saved_plan_until_coursework_changes():
+    advisor = (ROOT / "frontend/current_student_advisor.js").read_text(encoding="utf-8")
+    planner = (ROOT / "frontend/db_progress_graph.html").read_text(encoding="utf-8")
+
+    assert "reuse_saved_plan=1" in advisor
+    assert "function completedCourseFingerprint" in planner
+    assert "function savedAcademicPlanForCurrentContext" in planner
+    assert "function renderSavedAcademicPlan" in planner
+    assert 'previewParams.get("reuse_saved_plan") === "1"' in planner
+    assert "savedAcademicPlanForCurrentContext()" in planner
+    assert "completed_course_fingerprint" in planner
+    assert "workspaceCourseworkChanged" in advisor
+    assert "event.data?.type!=='advising-completed-courses'" in advisor
+
+
+@pytest.mark.skipif(not shutil.which("node"), reason="Node.js is required for planner JavaScript scenarios")
+def test_saved_workspace_plan_is_reused_only_for_matching_program_and_coursework():
+    planner = ROOT / "frontend" / "db_progress_graph.html"
+    script = r"""
+const fs = require("fs");
+const source = fs.readFileSync(process.argv[1], "utf8");
+function extract(name) {
+  const start = source.indexOf(`function ${name}(`);
+  if (start < 0) throw new Error(`Missing ${name}`);
+  const body = source.indexOf("{", start);
+  let depth = 0;
+  for (let index = body; index < source.length; index += 1) {
+    if (source[index] === "{") depth += 1;
+    if (source[index] === "}") depth -= 1;
+    if (depth === 0) return source.slice(start, index + 1);
+  }
+  throw new Error(`Unclosed ${name}`);
+}
+eval(`${extract("completedCourseFingerprint")}; globalThis.completedCourseFingerprint=completedCourseFingerprint`);
+eval(`${extract("savedAcademicPlanForCurrentContext")}; globalThis.savedAcademicPlanForCurrentContext=savedAcademicPlanForCurrentContext`);
+
+const scenarios = [
+  ["CS", ["ENG 101", "ENG 201", "CSC 101"]],
+  ["ACC", ["ENG 101", "ACC 122", "ACC 222"]],
+  ["NUR", ["ENG 101", "BIO 425", "PSY 100"]],
+  ["SCI", ["ENG 101", "BIO 210", "BIO 220"]],
+];
+for (const [programCode, codes] of scenarios) {
+  globalThis.CURRENT_REQUIREMENTS = {program:{code:programCode}};
+  globalThis.REPORTED_COMPLETED_COURSES = codes.map(code => ({code}));
+  const summary = {
+    current_program:{code:programCode},
+    academic_plan_document:{
+      program_code:programCode,
+      completed_course_fingerprint:completedCourseFingerprint(REPORTED_COMPLETED_COURSES),
+      reported_completed_courses:REPORTED_COMPLETED_COURSES,
+      semesters:[{name:"Next semester", courses:[]}]
+    }
+  };
+  globalThis.sessionStorage = {getItem:() => JSON.stringify(summary)};
+  if (!savedAcademicPlanForCurrentContext()) throw new Error(`${programCode}: matching saved plan was not reused`);
+  REPORTED_COMPLETED_COURSES = [...REPORTED_COMPLETED_COURSES, {code:"NEW 999"}];
+  if (savedAcademicPlanForCurrentContext()) throw new Error(`${programCode}: changed coursework reused a stale plan`);
+  REPORTED_COMPLETED_COURSES = codes.map(code => ({code}));
+  CURRENT_REQUIREMENTS = {program:{code:`${programCode}-OTHER`}};
+  if (savedAcademicPlanForCurrentContext()) throw new Error(`${programCode}: plan leaked into a different major`);
+}
+"""
+    subprocess.run(
+        [shutil.which("node"), "-e", script, str(planner)],
+        check=True,
+        capture_output=True,
+        text=True,
+    )

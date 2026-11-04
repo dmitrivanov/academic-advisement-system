@@ -79,8 +79,9 @@ def test_current_student_actions_are_compact_and_direct_plan_returns_with_saved_
     assert 'id="generate-ai-plan-here"' in html
     assert 'class="advising-goal-card primary plan-goal-card"' in html
     assert "Destination campus" in html and "Destination major" in html
-    assert "cuny_beyond.css?v=20261104-1" in html and "cuny_beyond.js?v=20261104-1" in html
-    assert "autogenerate=1&from=structured-chatbot" in js
+    assert "cuny_beyond.css?v=20261104-2" in html and "cuny_beyond.js?v=20261104-2" in html
+    assert "options.reuseSaved ? 'reuse_saved_plan=1' : 'autogenerate=1'" in js
+    assert "advising-degree-plan-generated" in js
     assert "advising-degree-plan-saved" in js and "advising-degree-plan-saved" in planner
     assert "generateAIStudyPlan()" in planner
     assert "...existing" in js
