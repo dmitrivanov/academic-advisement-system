@@ -4,9 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>AI Academic Advisement Chatbot | BMCC</title>
-  <link rel="stylesheet" href="/frontend/cuny_beyond.css?v=20261026-3">
+  <link rel="stylesheet" href="/frontend/cuny_beyond.css?v=20261104-1">
   <link rel="stylesheet" href="/frontend/curriculum_graph.css?v=5">
-  <script src="/frontend/cuny_beyond.js?v=20261026-3" defer></script>
+  <script src="/frontend/cuny_beyond.js?v=20261104-1" defer></script>
   <script src="/frontend/curriculum_graph.js?v=7" defer></script>
 </head>
 <body>
@@ -252,6 +252,10 @@
     <div class="planner-modal-backdrop" data-close-planner></div>
     <section class="planner-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="planner-modal-title">
       <header><div><strong id="planner-modal-title">Review recognized completed courses</strong><small id="planner-modal-copy">Review and change selections before continuing.</small></div><button id="close-planner-modal" type="button">Return to chatbot</button></header>
+      <section id="modal-elective-tracks" class="modal-elective-tracks" aria-labelledby="modal-elective-title" hidden>
+        <div class="modal-elective-heading"><div><strong id="modal-elective-title">Program elective tracks</strong><small>Choose completed electives from a track. This grouping is a visual aid and does not change program data.</small></div><span>4 courses per track</span></div>
+        <div id="modal-elective-grid" class="modal-elective-grid"></div>
+      </section>
       <iframe id="planner-modal-frame" title="Completed courses degree planner"></iframe>
     </section>
   </div>

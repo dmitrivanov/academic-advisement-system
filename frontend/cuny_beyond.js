@@ -4,9 +4,12 @@
   const BASE_STORAGE_KEY = 'cunyBeyondAnonymousDraftV1';
   const ENTRY_POINTS = Object.freeze({
     '/bmcc_student': { profile: 'current_bmcc', entryMode: 'current_student', welcome: 'Welcome, current BMCC student.' },
-    '/high_school_student': { profile: 'high_school', entryMode: 'high_school_student', welcome: 'Welcome, prospective BMCC student.' }
+    '/high_school_student': { profile: 'high_school', entryMode: 'high_school_student', welcome: 'Welcome, prospective BMCC student.' },
+    '/current_student': { profile: 'current_bmcc', entryMode: 'current_student_copilot', welcome: 'Welcome, current BMCC student.', copilot: true },
+    '/prospective_student': { profile: 'high_school', entryMode: 'prospective_student_copilot', welcome: 'Welcome, prospective BMCC student.', copilot: true }
   });
   const ENTRY_CONTEXT = ENTRY_POINTS[window.location.pathname] || null;
+  const COPILOT_ENTRY = Boolean(ENTRY_CONTEXT?.copilot);
   const STORAGE_KEY = ENTRY_CONTEXT ? `${BASE_STORAGE_KEY}:${ENTRY_CONTEXT.entryMode}` : BASE_STORAGE_KEY;
   const ENTRY_SESSION_KEY = 'cunyBeyondEntryPathV1';
   const MAX_SKILLS = 5;
@@ -50,6 +53,11 @@
   let availableProgramCourses = [];
   let plannerMode = '';
   let modalSelectedCodes = [];
+  const PROGRAM_ELECTIVE_TRACKS = [
+    { name: 'Mobile device programming', tone: 'mobile', codes: ['CIS 272', 'CIS 285', 'CIS 364', 'CIS 385'] },
+    { name: 'Data analytics', tone: 'data', codes: ['CSC 103', 'CSC 203', 'CIS 317', 'CIS 395'] },
+    { name: 'Cybersecurity', tone: 'cyber', codes: ['CIS 316', 'CIS 345', 'CIS 359', 'CIS 362'] }
+  ];
 
   const SESSION_CONTEXT_KEYS = [
     'cunyBeyondImportedCoursesV1', 'cunyBeyondReferralSummaryV1', 'cunyBeyondScheduleChecklistV1',
@@ -64,8 +72,86 @@
 
   function chatbotEntryUrl(query = '') {
     const path = state.entryPath || sessionStorage.getItem(ENTRY_SESSION_KEY) || '/advising-app_v1';
-    const safePath = ['/bmcc_student', '/high_school_student', '/advising-app_v1'].includes(path) ? path : '/advising-app_v1';
+    const safePath = ['/bmcc_student', '/high_school_student', '/current_student', '/prospective_student', '/advising-app_v1'].includes(path) ? path : '/advising-app_v1';
     return `${safePath}${query}`;
+  }
+
+  function configureCopilotEntry() {
+    if (!COPILOT_ENTRY) return;
+    document.body.classList.add('copilot-entry');
+
+    const majorPanel = document.getElementById('current-major-panel');
+    const majorChoices = document.getElementById('popular-major-choices');
+    majorPanel.insertBefore(document.getElementById('current-major-search'), majorChoices);
+    majorPanel.insertBefore(document.getElementById('current-major-results'), majorChoices);
+    majorPanel.insertBefore(document.getElementById('current-major-status'), majorChoices);
+    majorPanel.querySelector('label[for="current-major-search"]')?.remove();
+
+    const employmentInput = document.getElementById('employment-free');
+    const employmentChoices = employmentInput.closest('.step').querySelector('.choice-grid');
+    employmentChoices.before(employmentInput.closest('.step').querySelector('label[for="employment-free"]'), employmentInput);
+    const skillsPanel = document.getElementById('skills-panel');
+    const skillChoices = document.getElementById('skill-choices');
+    skillChoices.before(skillsPanel.querySelector('label[for="skills-free"]'), skillsPanel.querySelector('.inline-entry'));
+    const priorPanel = document.getElementById('prior-learning-panel');
+    const cplChoices = document.getElementById('cpl-choices');
+    cplChoices.before(priorPanel.querySelector('label[for="cpl-free"]'), document.getElementById('cpl-free'));
+
+    const semesterPanel = document.getElementById('semester-standing-panel');
+    const semesterChoices = semesterPanel.querySelector('.semester-choices');
+    const semesterComposer = document.createElement('div');
+    semesterComposer.className = 'copilot-semester-composer';
+    semesterComposer.innerHTML = '<label class="visually-hidden" for="semester-free-entry">Enter your semester</label><input id="semester-free-entry" class="career-input" type="text" list="semester-free-options" placeholder="Type your semester, for example: second"><datalist id="semester-free-options"><option value="First semester"><option value="Second semester"><option value="Third semester"><option value="Fourth semester"><option value="Fifth or later"></datalist>';
+    semesterPanel.insertBefore(semesterComposer, semesterChoices);
+    semesterComposer.querySelector('input').addEventListener('change', event => {
+      const value = event.target.value.toLowerCase();
+      const standing = value.includes('first') || /^1/.test(value) ? '1' : value.includes('second') || /^2/.test(value) ? '2' : value.includes('third') || /^3/.test(value) ? '3' : value.includes('fourth') || /^4/.test(value) ? '4' : value ? '5+' : '';
+      const choice = standing && form.querySelector(`input[name="semester_standing"][value="${standing}"]`);
+      if (choice) { choice.checked = true; state.semesterStanding = standing; saveDraft(); }
+    });
+
+    const options = document.querySelector('.course-intake-options');
+    const uploadCard = options.querySelector('.upload-course-card');
+    const manualCard = options.querySelector('.manual-course-card');
+    const visualCard = options.querySelector('.visual-selector-card');
+    const composer = document.createElement('div');
+    composer.className = 'copilot-course-composer';
+    const attachment = document.createElement('label');
+    attachment.className = 'copilot-attachment';
+    attachment.setAttribute('for', 'current-transcript-file');
+    attachment.setAttribute('title', 'Attach transcript');
+    attachment.innerHTML = '<span aria-hidden="true">+</span><span class="visually-hidden">Attach transcript</span>';
+    const transcriptInput = document.getElementById('current-transcript-file');
+    transcriptInput.classList.add('visually-hidden');
+    composer.append(attachment, transcriptInput, document.getElementById('manual-course-entry'));
+    const composerSubmit = document.createElement('button');
+    composerSubmit.type = 'button'; composerSubmit.className = 'copilot-composer-submit'; composerSubmit.textContent = 'Review';
+    composerSubmit.addEventListener('click', recognizeManualCourses);
+    composer.appendChild(composerSubmit);
+    options.before(composer);
+    const actions = document.createElement('div');
+    actions.className = 'copilot-quick-actions';
+    const uploadAction = document.createElement('button');
+    uploadAction.type = 'button'; uploadAction.className = 'copilot-action-chip'; uploadAction.textContent = 'Analyze attached transcript';
+    uploadAction.addEventListener('click', analyzeCurrentTranscript);
+    const visualAction = document.getElementById('open-completed-selector');
+    visualAction.classList.add('copilot-action-chip'); visualAction.textContent = 'Open visual course selector';
+    actions.append(uploadAction, visualAction);
+    composer.after(actions);
+    uploadCard.hidden = true; manualCard.hidden = true; visualCard.hidden = true;
+  }
+
+  function renderModalElectiveTracks() {
+    const section = document.getElementById('modal-elective-tracks');
+    const grid = document.getElementById('modal-elective-grid');
+    const isCs = /computer science/i.test(state.currentProgram?.name || '');
+    section.hidden = !COPILOT_ENTRY || plannerMode !== 'coursework' || !isCs;
+    if (section.hidden) { grid.innerHTML = ''; return; }
+    grid.innerHTML = PROGRAM_ELECTIVE_TRACKS.map(track => `<section class="modal-track modal-track-${track.tone}"><h3>${track.name}</h3><div>${track.codes.map(code => {
+      const course = courseFromCatalog(code);
+      const selected = modalSelectedCodes.includes(code);
+      return `<button type="button" class="modal-track-course${selected ? ' selected' : ''}" data-elective-code="${code}" aria-pressed="${selected}"><strong>${code}</strong><span>${escapeHtml(course.title || 'Program elective')}</span></button>`;
+    }).join('')}</div></section>`).join('');
   }
 
   function isCurrentStudent() { return ['current_bmcc', 'current_cuny'].includes(state.profile || selectedValue('profile')); }
@@ -138,6 +224,8 @@
     if (state.semesterStanding) {
       const semester = form.querySelector(`input[name="semester_standing"][value="${state.semesterStanding}"]`);
       if (semester) semester.checked = true;
+      const semesterFree = document.getElementById('semester-free-entry');
+      if (semesterFree) semesterFree.value = state.semesterStanding === '5+' ? 'Fifth or later' : `${['', 'First', 'Second', 'Third', 'Fourth'][Number(state.semesterStanding)]} semester`;
     }
     state.skills.forEach(skill => {
       const input = Array.from(form.querySelectorAll('input[name="skills"]')).find(item => item.value === skill);
@@ -288,6 +376,7 @@
     document.getElementById('planner-modal-frame').src = mode === 'next-semester'
       ? `/db-progress?embedded=workspace&mode=ai-plan&autogenerate=1&from=structured-chatbot&v=${Date.now()}`
       : `/db-progress?embedded=course-intake&mode=course-intake&from=structured-chatbot&v=${Date.now()}`;
+    renderModalElectiveTracks();
     modal.hidden = false;
     document.body.style.overflow = 'hidden';
     document.getElementById('close-planner-modal').focus();
@@ -832,6 +921,13 @@
   document.getElementById('current-analyze-transcript').addEventListener('click', analyzeCurrentTranscript);
   document.getElementById('recognize-manual-courses').addEventListener('click', recognizeManualCourses);
   document.getElementById('open-completed-selector').addEventListener('click', () => openPlannerModal('coursework'));
+  document.getElementById('modal-elective-grid').addEventListener('click', event => {
+    const button = event.target.closest('[data-elective-code]');
+    if (!button) return;
+    const code = button.dataset.electiveCode;
+    modalSelectedCodes = modalSelectedCodes.includes(code) ? modalSelectedCodes.filter(item => item !== code) : [...modalSelectedCodes, code];
+    renderModalElectiveTracks();
+  });
   document.getElementById('transfer-school').addEventListener('change', populateTransferMajors);
   document.getElementById('open-next-semester-plan').addEventListener('click', openNextSemesterPlanner);
   document.getElementById('generate-ai-plan-here').addEventListener('click', () => {
@@ -932,6 +1028,7 @@
 
 
   async function initialize() {
+    configureCopilotEntry();
     renderSkills();
     try {
       const response = await fetch('/api/cuny-beyond/config');

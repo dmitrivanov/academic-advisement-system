@@ -1,7 +1,7 @@
 (() => {
   'use strict';
 
-  const allowedPaths = new Set(['/bmcc_student', '/high_school_student', '/advising-app_v1']);
+  const allowedPaths = new Set(['/bmcc_student', '/high_school_student', '/current_student', '/prospective_student', '/advising-app_v1']);
   const storedPath = sessionStorage.getItem('cunyBeyondEntryPathV1');
   const entryPath = allowedPaths.has(storedPath) ? storedPath : '/advising-app_v1';
 

@@ -513,6 +513,16 @@ def serve_high_school_student_entry(request: Request):
     return serve_configured_advising_entry(request, "/high_school_student")
 
 
+@app.get("/current_student")
+def serve_current_student_copilot_entry(request: Request):
+    return serve_configured_advising_entry(request, "/current_student")
+
+
+@app.get("/prospective_student")
+def serve_prospective_student_copilot_entry(request: Request):
+    return serve_configured_advising_entry(request, "/prospective_student")
+
+
 @app.get("/cuny-beyond")
 def redirect_legacy_cuny_beyond(request: Request):
     target = "/advising-app_v1"
@@ -721,7 +731,7 @@ def submit_cuny_beyond_referral(payload: AdvisingReferralPayload):
 
 
 def safe_login_return_path(value: str) -> str:
-    return value if value in {"/bmcc_student", "/high_school_student", "/advising-app_v1", "/advising-app_v3"} else "/advising-app_v1"
+    return value if value in {"/bmcc_student", "/high_school_student", "/current_student", "/prospective_student", "/advising-app_v1", "/advising-app_v3"} else "/advising-app_v1"
 
 
 @app.post("/login")

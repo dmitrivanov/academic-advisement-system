@@ -15,6 +15,8 @@ def test_both_entry_routes_reuse_the_existing_chatbot_file_and_authentication():
     for route, handler in (
         ("/bmcc_student", "serve_bmcc_student_entry"),
         ("/high_school_student", "serve_high_school_student_entry"),
+        ("/current_student", "serve_current_student_copilot_entry"),
+        ("/prospective_student", "serve_prospective_student_copilot_entry"),
     ):
         assert f'@app.get("{route}")' in API
         assert f"def {handler}" in API
@@ -34,6 +36,9 @@ def test_legacy_entry_route_remains_independent():
 def test_direct_entries_preselect_and_namespace_the_student_context():
     assert "'/bmcc_student': { profile: 'current_bmcc', entryMode: 'current_student'" in CHAT
     assert "'/high_school_student': { profile: 'high_school', entryMode: 'high_school_student'" in CHAT
+    assert "'/current_student': { profile: 'current_bmcc', entryMode: 'current_student_copilot'" in CHAT
+    assert "'/prospective_student': { profile: 'high_school', entryMode: 'prospective_student_copilot'" in CHAT
+    assert "document.body.classList.add('copilot-entry')" in CHAT
     assert "state.step = Math.max(1, state.step)" in CHAT
     assert "ENTRY_CONTEXT && state.step === 1" in CHAT
     assert "`${BASE_STORAGE_KEY}:${ENTRY_CONTEXT.entryMode}`" in CHAT
@@ -45,9 +50,20 @@ def test_login_round_trip_is_allowlisted():
     assert 'name="next"' in LOGIN
     assert 'Form("", alias="next")' in API
     assert "safe_login_return_path(next_path)" in API
-    for path in ("/bmcc_student", "/high_school_student", "/advising-app_v1"):
+    for path in ("/bmcc_student", "/high_school_student", "/current_student", "/prospective_student", "/advising-app_v1"):
         assert path in API
         assert path in LOGIN
+
+
+def test_copilot_layout_is_scoped_and_keeps_the_legacy_entry_unchanged():
+    css = (ROOT / "frontend" / "cuny_beyond.css").read_text(encoding="utf-8")
+    html = (ROOT / "frontend" / "cuny_beyond.html").read_text(encoding="utf-8")
+    assert ".copilot-entry .copilot-course-composer" in css
+    assert ".copilot-entry .semester-choices" in css
+    assert "COPILOT_ENTRY" in CHAT
+    assert "if (!COPILOT_ENTRY) return" in CHAT
+    assert "modal-elective-tracks" in html
+    assert "PROGRAM_ELECTIVE_TRACKS" in CHAT
 
 
 def test_tool_return_paths_reuse_the_active_entry_url():
